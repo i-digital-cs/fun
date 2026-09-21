@@ -23,7 +23,9 @@
                     </select>
                 </form>
                 @auth
+                    <a href="{{ route('events.index') }}" class="text-muted hover:text-text">{{ __('events.discover') }}</a>
                     <a href="{{ route('settings.location.edit') }}" class="text-muted hover:text-text">{{ __('location.location_settings') }}</a>
+                    <a href="{{ route('events.mine') }}" class="text-muted hover:text-text">{{ __('events.my_events') }}</a>
                     @if (auth()->user()->isPlatformAdmin())
                         <a href="{{ route('admin.cities.index') }}" class="text-muted hover:text-text">{{ __('location.cities') }}</a>
                         <a href="{{ route('admin.categories.index') }}" class="text-muted hover:text-text">{{ __('catalog.categories') }}</a>
@@ -33,6 +35,7 @@
                         <button type="submit" class="text-muted hover:text-text">{{ __('ui.logout') }}</button>
                     </form>
                 @else
+                    <a href="{{ route('events.index') }}" class="text-muted hover:text-text">{{ __('events.discover') }}</a>
                     <a href="{{ route('login') }}" class="text-muted hover:text-text">{{ __('ui.login') }}</a>
                     <a href="{{ route('register') }}" class="rounded-lg bg-accent px-3 py-1.5 font-semibold text-white">{{ __('ui.register') }}</a>
                 @endauth

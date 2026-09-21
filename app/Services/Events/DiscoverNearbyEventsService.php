@@ -1,0 +1,138 @@
+<?php
+
+namespace App\Services\Events;
+
+use App\Enums\EventStatus;
+use App\Models\City;
+use App\Models\Event;
+use App\Models\User;
+use App\Support\GeoDistance;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
+
+class DiscoverNearbyEventsService
+{
+    /**
+     * @param  array{category_id?: int|null, q?: string|null, per_page?: int}  $filters
+     */
+    public function discover(?User $user, array $filters = []): LengthAwarePaginator
+    {
+        $perPage = (int) ($filters['per_page'] ?? 12);
+
+        $origin = $this->resolveOrigin($user, $filters);
+
+        $query = Event::query()
+            ->with(['category', 'city'])
+            ->withCount('members')
+            ->where('status', EventStatus::Published)
+            ->where('starts_at', '>=', now()->subDay());
+
+        if (! empty($filters['category_id'])) {
+            $query->where('category_id', (int) $filters['category_id']);
+        }
+
+        if (! empty($filters['q'])) {
+            $term = trim((string) $filters['q']);
+            $query->where(function (Builder $builder) use ($term) {
+                $builder->where('title', 'like', '%'.$term.'%')
+                    ->orWhere('venue', 'like', '%'.$term.'%')
+                    ->orWhere('description', 'like', '%'.$term.'%');
+            });
+        }
+
+        if ($origin !== null) {
+            $cityIds = $this->nearbyCityIds(
+                $origin['latitude'],
+                $origin['longitude'],
+                $origin['distance_km']
+            );
+
+            $query->whereIn('city_id', $cityIds->all());
+        }
+
+        /** @var LengthAwarePaginator $events */
+        $events = $query->orderBy('starts_at')->paginate($perPage)->withQueryString();
+
+        if ($origin !== null) {
+            $events->getCollection()->transform(function (Event $event) use ($origin) {
+                if ($event->city) {
+                    $event->setAttribute(
+                        'distance_km',
+                        round(GeoDistance::kilometers(
+                            $origin['latitude'],
+                            $origin['longitude'],
+                            (float) $event->city->latitude,
+                            (float) $event->city->longitude
+                        ), 1)
+                    );
+                }
+
+                return $event;
+            });
+        }
+
+        return $events;
+    }
+
+    /**
+     * @param  array{city_id?: int|null, distance_km?: int|null}  $filters
+     * @return array{latitude: float, longitude: float, distance_km: int, city: City}|null
+     */
+    private function resolveOrigin(?User $user, array $filters): ?array
+    {
+        $allowedDistances = config('location.distances_km');
+        $distance = (int) ($filters['distance_km']
+            ?? $user?->distance_km
+            ?? config('location.default_distance_km'));
+
+        if (! in_array($distance, $allowedDistances, true)) {
+            throw ValidationException::withMessages([
+                'distance_km' => [__('location.invalid_distance')],
+            ]);
+        }
+
+        $cityId = array_key_exists('city_id', $filters)
+            ? $filters['city_id']
+            : $user?->city_id;
+
+        if ($cityId === null) {
+            return null;
+        }
+
+        $city = City::query()->active()->find($cityId);
+
+        if ($city === null) {
+            throw ValidationException::withMessages([
+                'city_id' => [__('location.city_unavailable')],
+            ]);
+        }
+
+        return [
+            'latitude' => (float) $city->latitude,
+            'longitude' => (float) $city->longitude,
+            'distance_km' => $distance,
+            'city' => $city,
+        ];
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    private function nearbyCityIds(float $latitude, float $longitude, int $maxKm): Collection
+    {
+        return City::query()
+            ->active()
+            ->get(['id', 'latitude', 'longitude'])
+            ->filter(fn (City $city) => GeoDistance::isWithinKm(
+                $latitude,
+                $longitude,
+                (float) $city->latitude,
+                (float) $city->longitude,
+                $maxKm
+            ))
+            ->pluck('id')
+            ->values();
+    }
+}

@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Services\Events;
+
+use App\Enums\EventMemberRole;
+use App\Enums\JoinRequestStatus;
+use App\Exceptions\DomainException;
+use App\Models\Event;
+use App\Models\EventJoinRequest;
+use App\Models\EventMember;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
+class ReviewJoinRequestService
+{
+    public function accept(User $actor, EventJoinRequest $joinRequest): EventMember
+    {
+        return $this->review($actor, $joinRequest, JoinRequestStatus::Accepted);
+    }
+
+    public function reject(User $actor, EventJoinRequest $joinRequest): EventJoinRequest
+    {
+        return $this->review($actor, $joinRequest, JoinRequestStatus::Rejected);
+    }
+
+    private function review(
+        User $actor,
+        EventJoinRequest $joinRequest,
+        JoinRequestStatus $decision,
+    ): EventMember|EventJoinRequest {
+        if (! $joinRequest->event->isManagedBy($actor)) {
+            throw new DomainException(__('events.unauthorized'));
+        }
+
+        if (! $joinRequest->isPending()) {
+            throw new DomainException(__('events.join_not_pending'));
+        }
+
+        return DB::transaction(function () use ($actor, $joinRequest, $decision) {
+            $lockedEvent = Event::query()
+                ->whereKey($joinRequest->event_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $lockedRequest = EventJoinRequest::query()
+                ->whereKey($joinRequest->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedRequest->status !== JoinRequestStatus::Pending) {
+                throw new DomainException(__('events.join_not_pending'));
+            }
+
+            if ($decision === JoinRequestStatus::Accepted) {
+                if ($lockedEvent->members()->where('user_id', $lockedRequest->user_id)->exists()) {
+                    throw new DomainException(__('events.already_member'));
+                }
+
+                $membersCount = $lockedEvent->members()->lockForUpdate()->count();
+
+                if ($membersCount >= $lockedEvent->max_participants) {
+                    throw new DomainException(__('events.event_full'));
+                }
+
+                $member = EventMember::query()->create([
+                    'event_id' => $lockedEvent->id,
+                    'user_id' => $lockedRequest->user_id,
+                    'role' => EventMemberRole::Member,
+                ]);
+
+                $lockedRequest->forceFill([
+                    'status' => JoinRequestStatus::Accepted,
+                    'reviewed_by' => $actor->id,
+                    'reviewed_at' => now(),
+                ])->save();
+
+                return $member;
+            }
+
+            $lockedRequest->forceFill([
+                'status' => JoinRequestStatus::Rejected,
+                'reviewed_by' => $actor->id,
+                'reviewed_at' => now(),
+            ])->save();
+
+            return $lockedRequest->refresh();
+        });
+    }
+}

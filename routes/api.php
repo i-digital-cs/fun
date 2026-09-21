@@ -8,12 +8,16 @@ use App\Http\Controllers\Api\Auth\MeController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\CategoryListController;
 use App\Http\Controllers\Api\CityListController;
+use App\Http\Controllers\Api\Events\EventController as ApiEventController;
+use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/cities', CityListController::class);
 Route::get('/categories', CategoryListController::class);
+Route::get('/events', [ApiEventController::class, 'index']);
+Route::get('/events/{event}', [ApiEventController::class, 'show'])->whereNumber('event');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [RegisterController::class, 'store']);
@@ -28,6 +32,25 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('throttle:uploads');
 
     Route::put('/settings/location', [ApiLocationPreferenceController::class, 'update']);
+
+    Route::middleware('account.active')->group(function () {
+        Route::get('/my-events', [ApiEventController::class, 'mine']);
+        Route::post('/events', [ApiEventController::class, 'store'])->middleware('throttle:uploads');
+        Route::put('/events/{event}', [ApiEventController::class, 'update'])->middleware('throttle:uploads');
+        Route::post('/events/{event}/publish', [ApiEventController::class, 'publish']);
+        Route::post('/events/{event}/cancel', [ApiEventController::class, 'cancel']);
+        Route::post('/events/{event}/complete', [ApiEventController::class, 'complete']);
+
+        Route::post('/events/{event}/join', [ApiEventMembershipController::class, 'join']);
+        Route::get('/events/{event}/requests', [ApiEventMembershipController::class, 'requests']);
+        Route::post('/events/{event}/requests/{joinRequest}/accept', [ApiEventMembershipController::class, 'accept']);
+        Route::post('/events/{event}/requests/{joinRequest}/reject', [ApiEventMembershipController::class, 'reject']);
+        Route::get('/events/{event}/members', [ApiEventMembershipController::class, 'members']);
+        Route::post('/events/{event}/members/{user}/promote', [ApiEventMembershipController::class, 'promote']);
+        Route::post('/events/{event}/members/{user}/demote', [ApiEventMembershipController::class, 'demote']);
+        Route::post('/events/{event}/transfer', [ApiEventMembershipController::class, 'transfer']);
+        Route::post('/events/{event}/leave', [ApiEventMembershipController::class, 'leave']);
+    });
 
     Route::middleware('platform.admin')->prefix('admin')->group(function () {
         Route::post('/users/{user}/deactivate', [ApiUserModerationController::class, 'deactivate']);

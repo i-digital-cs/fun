@@ -26,6 +26,10 @@
                     <a href="{{ route('identity.create') }}" class="inline-flex items-center rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white">
                         {{ __('identity.title') }}
                     </a>
+                @else
+                    <a href="{{ route('events.index') }}" class="inline-flex items-center rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white">
+                        {{ __('events.discover') }}
+                    </a>
                 @endif
             @endguest
         </div>

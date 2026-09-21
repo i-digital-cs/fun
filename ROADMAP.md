@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 5 — Events CRUD + capacity
+**Next task:** Task 8 — Event chat (Reverb)
 
 ---
 
@@ -29,78 +29,68 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 ### Task 1 — Laravel 12 scaffold
 - **Status:** `done`
 - **Completed:** 2026-09-21
-- **Summary:** Laravel 12 + Sanctum + Tailwind 4 + Vite; service/controller folders; design tokens; local media disks + R2 placeholders; landing page; docs preserved
-- **Tests:** HomePage, Sanctum API, MediaConfig
-- **Notes:** Brand name still from `APP_NAME` until admin site settings
 
 ### Task 2 — Auth + identity documents + account status
 - **Status:** `done`
 - **Completed:** 2026-09-21
-- **Summary:**
-  - AR/EN + RTL/LTR locale switch
-  - Email/password register/login (Blade + Sanctum API)
-  - Google OAuth routes via Socialite (needs GOOGLE_* env)
-  - Identity docs upload → immediate `active`
-  - Full deactivate/reactivate services + web admin users page + API (Task 11 will polish UI)
-  - Platform roles: super_admin / moderator
-  - Rate limits: auth, uploads
-- **Tests:** Auth, identity, admin deactivate, locale, sanctum
-- **Depends on:** Task 1
-- **Notes:** Set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` for Gmail login; seed user `admin@example.com` / `password`
+- **Notes:** `admin@example.com` / `password`; Google OAuth needs env keys
 
 ### Task 3 — Cities + user location preferences
 - **Status:** `done`
 - **Completed:** 2026-09-21
-- **Summary:**
-  - `cities` table (name_en/ar, slug, lat/lng, is_active)
-  - Egypt seed (15 cities including Obour, Cairo, …)
-  - User `city_id` + `distance_km` (5/10/25/50)
-  - Admin city CRUD + activate/deactivate (web + API)
-  - User location settings page + API
-  - Public `GET /api/cities` + GeoDistance helper for later discovery
-- **Tests:** City management, location prefs, geo distance
-- **Depends on:** Task 2
 
 ### Task 4 — Categories (admin-managed)
 - **Status:** `done`
 - **Completed:** 2026-09-21
-- **Summary:**
-  - `categories` table (name_en/ar, slug, sort_order, is_active)
-  - Seed: Football, PlayStation, Basketball, Running, Gaming, Board Games, Cinema, Social, Outdoor, Tennis
-  - Admin CRUD + activate/deactivate (web + API)
-  - Public `GET /api/categories` (active only)
-  - Shared `UniqueSlug` helper (also used by cities)
-- **Tests:** 26 passed total (CategoryManagementTest added)
-- **UI checklist:** `GET /api/categories` 200 (10 items); admin API list 200; web index covered by feature test
-- **Security:** platform.admin + CategoryPolicy; inactive excluded from public list; no hard-coded category IDs
-- **Perf:** indexed `(is_active, sort_order)`; ordered list + pagination on admin endpoints
-- **Depends on:** Task 2
 
 ### Task 5 — Events CRUD + capacity
-- **Status:** `todo`
-- **Scope:**
-  - Create/edit/publish/cancel/complete events
-  - Event fields per MASTER_CONTEXT
-  - Max capacity enforced server-side (transactional)
-  - Creator auto-OWNER membership
-  - Statuses: `draft` | `published` | `cancelled` | `completed`
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `events` + `event_members` tables
+  - Statuses: draft → published → cancelled/completed
+  - Creator auto-OWNER membership (transactional)
+  - Capacity stored; cannot set below current members; owner counts toward capacity
+  - Optional event image on public media disk
+  - Web: `/events`, `/events/create`, `/my-events`, show/edit/publish/cancel/complete
+  - API: CRUD + status transitions; public published list
+- **Tests:** 32 passed total (EventManagementTest: create/owner/publish/capacity/authz)
+- **UI checklist:** `/events` 200; `/api/events` 200; `/events/create` guest → 302 login
+- **Security:** `account.active` for mutating routes; EventPolicy; inactive category/city blocked; no client-trusted ownership
+- **Perf:** indexes on status/starts_at/city/category; `withCount('members')` on lists
 - **Depends on:** Tasks 3–4
+- **Deferred to Task 6:** join requests / approve-reject race locking for new members
 
 ### Task 6 — Join requests + event roles
-- **Status:** `todo`
-- **Scope:**
-  - Request → owner/admin accept/reject
-  - Roles: OWNER / ADMIN / MEMBER
-  - Promote member; transfer ownership; leave-after-transfer rules
-  - Capacity race-condition tests
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `event_join_requests` (pending/accepted/rejected)
+  - Request → owner/admin accept/reject with `lockForUpdate` capacity checks
+  - Promote/demote admin; transfer ownership; leave (owner must transfer first)
+  - Join action states: request / pending / joined / rejected / full
+  - Web + API membership endpoints
+- **Tests:** 37 passed (EventMembershipTest added)
+- **UI checklist:** `/events` 200; join/members/transfer routes registered
+- **Security:** EventPolicy join/review/manageMembers/leave; capacity enforced server-side
+- **Perf:** row locks on accept; indexed `(event_id, status)`
+- **Note:** member notifications deferred to Task 8
 - **Depends on:** Task 5
 
 ### Task 7 — Discover / nearby feed + event cards UI
-- **Status:** `todo`
-- **Scope:**
-  - Nearby discovery by city center + distance preference
-  - Event cards/details per DESIGN.md
-  - Join-state UX (pending / joined / rejected / full)
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `DiscoverNearbyEventsService`: city-center Haversine via active cities within `distance_km` (5/10/25/50)
+  - Guest / no city → nationwide published feed; located user → nearby; `city_id=` clears to nationwide
+  - Filters: category, city, distance, search `q`
+  - Event card component (DESIGN.md): category, title—city, venue, when, capacity, cost, View Event + join-state badge
+  - Event details hierarchy tightened; batch `resolveMany` join actions on feed
+  - API `/api/events` returns `distance_km` + `join_action` when applicable
+- **Tests:** 44 passed (DiscoverNearbyEventsTest: nearby/far/distance override/filters/join_action/web cards)
+- **UI checklist:** `/events` 200 Discover + filters; `/api/events` 200; cards show View Event
+- **Security:** distance/city validated; only published upcoming-ish events; join state server-resolved
+- **Perf:** city set filtered in PHP (small), then `whereIn city_id`; batch join-action lookup
 - **Depends on:** Tasks 5–6
 
 ### Task 8 — Event chat (Reverb)
