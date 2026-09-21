@@ -33,6 +33,7 @@ class Event extends Model
         'expected_cost',
         'cost_per_person',
         'image_path',
+        'image_disk',
         'status',
     ];
 
@@ -148,6 +149,8 @@ class Event extends Model
             return null;
         }
 
-        return Storage::disk((string) config('media.disk'))->url($this->image_path);
+        $disk = $this->image_disk ?: \App\Support\MediaDisk::public();
+
+        return Storage::disk($disk)->url($this->image_path);
     }
 }

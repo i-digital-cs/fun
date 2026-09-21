@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\IdentityDocument;
 use App\Models\User;
+use App\Services\Media\PrivateMediaAccessService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -32,19 +32,14 @@ class IdentityDocumentModerationController extends Controller
         return view('admin.identity.show', compact('user', 'documents'));
     }
 
-    public function download(IdentityDocument $document): StreamedResponse
-    {
+    public function download(
+        IdentityDocument $document,
+        PrivateMediaAccessService $access,
+    ): StreamedResponse {
+        $document->loadMissing('user');
+
         $this->authorize('viewIdentityDocuments', $document->user);
 
-        abort_unless(Storage::disk($document->disk)->exists($document->path), 404);
-
-        return Storage::disk($document->disk)->response(
-            $document->path,
-            basename($document->path),
-            [
-                'Content-Type' => $document->mime_type ?: 'application/octet-stream',
-                'Content-Disposition' => 'inline',
-            ]
-        );
+        return $access->stream($document);
     }
 }

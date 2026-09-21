@@ -49,7 +49,7 @@ return [
 
         /*
         | Public application media (profile / event images).
-        | Switch MEDIA_DISK to "r2" when Cloudflare R2 is wired.
+        | Set MEDIA_DISK=r2 for Cloudflare R2.
         */
         'media' => [
             'driver' => 'local',
@@ -62,7 +62,7 @@ return [
 
         /*
         | Private / sensitive media (identity documents).
-        | Never expose this disk publicly. Switch MEDIA_PRIVATE_DISK to "r2_private" later.
+        | Never expose this disk publicly. Set MEDIA_PRIVATE_DISK=r2_private for R2.
         */
         'media_private' => [
             'driver' => 'local',
@@ -87,8 +87,9 @@ return [
         ],
 
         /*
-        | Cloudflare R2 (S3-compatible) — placeholders for later wiring.
-        | Set MEDIA_DISK=r2 and MEDIA_PRIVATE_DISK=r2_private when ready.
+        | Cloudflare R2 — public media bucket (S3-compatible).
+        | Example endpoint: https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+        | Example public URL: https://media.example.com (custom domain / r2.dev)
         */
         'r2' => [
             'driver' => 's3',
@@ -99,11 +100,17 @@ return [
             'url' => env('R2_URL'),
             'endpoint' => env('R2_ENDPOINT'),
             'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            'throw' => env('R2_THROW', true),
             'report' => false,
             'visibility' => 'public',
+            'root' => env('R2_ROOT', ''),
         ],
 
+        /*
+        | Cloudflare R2 — private / sensitive media bucket.
+        | Prefer a separate private bucket. Do not set a public CDN URL.
+        | Access only via authorized application streaming (admin identity view).
+        */
         'r2_private' => [
             'driver' => 's3',
             'key' => env('R2_ACCESS_KEY_ID'),
@@ -113,9 +120,10 @@ return [
             'url' => env('R2_PRIVATE_URL'),
             'endpoint' => env('R2_ENDPOINT'),
             'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            'throw' => env('R2_THROW', true),
             'report' => false,
             'visibility' => 'private',
+            'root' => env('R2_PRIVATE_ROOT', ''),
         ],
 
     ],

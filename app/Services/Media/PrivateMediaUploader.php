@@ -2,6 +2,7 @@
 
 namespace App\Services\Media;
 
+use App\Support\MediaDisk;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -13,7 +14,7 @@ class PrivateMediaUploader
      */
     public function storeIdentityDocument(UploadedFile $file, int $userId, string $type): array
     {
-        $disk = (string) config('media.private_disk');
+        $disk = MediaDisk::private();
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
         $safeExtension = preg_replace('/[^a-z0-9]/', '', $extension) ?: 'bin';
         $directory = sprintf('identity/%d', $userId);
@@ -38,6 +39,8 @@ class PrivateMediaUploader
 
     public function delete(string $disk, string $path): void
     {
+        MediaDisk::assertPrivateDisk($disk);
+
         Storage::disk($disk)->delete($path);
     }
 }

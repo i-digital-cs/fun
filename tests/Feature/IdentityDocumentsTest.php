@@ -56,4 +56,46 @@ class IdentityDocumentsTest extends TestCase
 
         $response->assertOk()->assertJsonPath('user.status', 'active');
     }
+
+    public function test_admin_can_download_identity_document_and_outsider_cannot(): void
+    {
+        Storage::fake(config('media.private_disk'));
+
+        $owner = User::factory()->create();
+        $this->actingAs($owner)->post(route('identity.store'), [
+            'id_front' => UploadedFile::fake()->image('front.jpg'),
+            'id_back' => UploadedFile::fake()->image('back.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
+        ])->assertRedirect();
+
+        $document = $owner->fresh()->identityDocuments()->firstOrFail();
+
+        $outsider = User::factory()->active()->create();
+        $this->actingAs($outsider)
+            ->get(route('admin.identity.download', $document))
+            ->assertForbidden();
+
+        $admin = User::factory()->superAdmin()->create();
+        $this->actingAs($admin)
+            ->get(route('admin.identity.download', $document))
+            ->assertOk();
+    }
+
+    public function test_identity_upload_uses_configured_private_disk_name(): void
+    {
+        config(['media.private_disk' => 'r2_private']);
+        Storage::fake('r2_private');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('identity.store'), [
+            'id_front' => UploadedFile::fake()->image('front.jpg'),
+            'id_back' => UploadedFile::fake()->image('back.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
+        ])->assertRedirect();
+
+        $document = $user->fresh()->identityDocuments()->firstOrFail();
+        $this->assertSame('r2_private', $document->disk);
+        Storage::disk('r2_private')->assertExists($document->path);
+    }
 }

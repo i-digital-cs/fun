@@ -70,10 +70,16 @@ class UpdateEventService
 
             if ($image !== null) {
                 if ($event->image_path) {
-                    $this->uploader->delete((string) config('media.disk'), $event->image_path);
+                    $this->uploader->delete(
+                        $event->image_disk ?: \App\Support\MediaDisk::public(),
+                        $event->image_path
+                    );
                 }
                 $stored = $this->uploader->storeEventImage($image, $event->id);
-                $event->forceFill(['image_path' => $stored['path']])->save();
+                $event->forceFill([
+                    'image_path' => $stored['path'],
+                    'image_disk' => $stored['disk'],
+                ])->save();
             }
 
             return $event->refresh()->load(['category', 'city', 'members']);

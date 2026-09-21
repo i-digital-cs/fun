@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 12 — Cloudflare R2 media wiring
+**Next task:** Task 13 — Hardening pass
 
 ---
 
@@ -155,12 +155,18 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Depends on:** Tasks 2–10 baselines
 
 ### Task 12 — Cloudflare R2 media wiring
-- **Status:** `todo`
-- **Scope:**
-  - Switch `MEDIA_DISK` / `MEDIA_PRIVATE_DISK` to R2
-  - Keep business logic storage-agnostic
-  - Validate private identity access still authorized
-- **Depends on:** Task 2 media abstraction (already scaffolded)
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - Installed `league/flysystem-aws-s3-v3`; fully configured `r2` + `r2_private` disks
+  - `MediaDisk` helper validates allowed public/private disk names
+  - Uploaders resolve disks via config only (local or R2 by env switch)
+  - Events store `image_disk` with path for storage-agnostic URLs
+  - `PrivateMediaAccessService` streams identity docs after auth (works local + R2)
+  - `.env.example` documents production R2 switch steps
+- **Tests:** 84 passed (MediaConfigTest + identity R2 disk name / admin download auth)
+- **Ops:** keep local defaults; set `MEDIA_DISK=r2` + `MEDIA_PRIVATE_DISK=r2_private` with R2 creds for production
+- **Depends on:** Task 2 media abstraction
 
 ### Task 13 — Hardening pass
 - **Status:** `todo`

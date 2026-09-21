@@ -4,6 +4,7 @@ namespace App\Services\Media;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use App\Support\MediaDisk;
 
 class PublicMediaUploader
 {
@@ -12,7 +13,7 @@ class PublicMediaUploader
      */
     public function storeEventImage(UploadedFile $file, int $eventId): array
     {
-        $disk = (string) config('media.disk');
+        $disk = MediaDisk::public();
         $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
         $safeExtension = preg_replace('/[^a-z0-9]/', '', $extension) ?: 'jpg';
         $directory = sprintf('events/%d', $eventId);
@@ -35,6 +36,10 @@ class PublicMediaUploader
 
     public function delete(string $disk, string $path): void
     {
+        if (! in_array($disk, MediaDisk::publicDisks(), true)) {
+            return;
+        }
+
         \Illuminate\Support\Facades\Storage::disk($disk)->delete($path);
     }
 }

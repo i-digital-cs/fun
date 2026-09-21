@@ -7,9 +7,8 @@ return [
     | Public Media Disk
     |--------------------------------------------------------------------------
     |
-    | Used for profile images, event images, and other non-sensitive media.
-    | V1: local public disk. Production target: Cloudflare R2 via S3-compatible
-    | driver (set MEDIA_DISK=r2 after credentials are configured).
+    | Used for event images and other non-sensitive media.
+    | Local default: "media". Production: set MEDIA_DISK=r2.
     |
     */
 
@@ -22,9 +21,20 @@ return [
     |
     | Used for identity documents and other sensitive uploads.
     | Must never be publicly accessible.
+    | Local default: "media_private". Production: set MEDIA_PRIVATE_DISK=r2_private.
     |
     */
 
     'private_disk' => env('MEDIA_PRIVATE_DISK', 'media_private'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Disk Names
+    |--------------------------------------------------------------------------
+    */
+
+    'public_disks' => ['media', 'r2'],
+
+    'private_disks' => ['media_private', 'r2_private'],
 
 ];

@@ -59,7 +59,10 @@ class CreateEventService
 
             if ($image !== null) {
                 $stored = $this->uploader->storeEventImage($image, $event->id);
-                $event->forceFill(['image_path' => $stored['path']])->save();
+                $event->forceFill([
+                    'image_path' => $stored['path'],
+                    'image_disk' => $stored['disk'],
+                ])->save();
             }
 
             // Capacity must leave room for the owner membership.
