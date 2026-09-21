@@ -8,10 +8,15 @@ use App\Exceptions\DomainException;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
+use App\Services\Safety\UserBlockService;
 use Illuminate\Support\Facades\DB;
 
 class RequestToJoinEventService
 {
+    public function __construct(private readonly UserBlockService $blocks)
+    {
+    }
+
     public function request(User $user, Event $event, ?string $message = null): EventJoinRequest
     {
         if (! $user->canParticipate()) {
@@ -28,6 +33,12 @@ class RequestToJoinEventService
 
         if ($event->isFull()) {
             throw new DomainException(__('events.event_full'));
+        }
+
+        $creator = $event->creator()->first();
+
+        if ($creator !== null && $this->blocks->isBlockedEitherWay($user, $creator)) {
+            throw new DomainException(__('safety.blocked_cannot_join'));
         }
 
         return DB::transaction(function () use ($user, $event, $message) {

@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 9 — Reports + block users
+**Next task:** Task 10 — Ratings
 
 ---
 
@@ -111,12 +111,18 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Depends on:** Task 6
 
 ### Task 9 — Reports + block users
-- **Status:** `todo`
-- **Scope:**
-  - Report users / events / messages
-  - Block user (V1)
-  - Moderation status fields
-- **Depends on:** Tasks 2, 5–6, 8 (messages)
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `user_blocks` + `reports` tables (reason/status/moderation_action)
+  - Block/unblock (web + API); blocked list settings
+  - Report users/events/messages; admin review queue (web + API)
+  - Enforcement: blocked either-way blocks join, accept, chat with creator; hide blocked creators in discover; hide blocked users in join-request lists & chat history
+  - Rate limit `throttle:reports` (5/min); description sanitized
+- **Tests:** 62 passed (SafetyReportsAndBlocksTest)
+- **UI checklist:** `/report` + `/settings/blocks` auth; event/members/chat report+block actions; `/admin/reports`
+- **Security:** cannot report self/own message; duplicate pending blocked; admin-only review; API cannot bypass block checks
+- **Depends on:** Tasks 2, 5–6, 8
 
 ### Task 10 — Ratings
 - **Status:** `todo`

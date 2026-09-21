@@ -24,8 +24,8 @@
                             <td class="px-4 py-3">{{ $member->user?->name }}</td>
                             <td class="px-4 py-3">{{ $member->role->value }}</td>
                             <td class="px-4 py-3">
-                                @can('manageMembers', $event)
-                                    <div class="flex flex-wrap gap-3">
+                                <div class="flex flex-wrap gap-3">
+                                    @can('manageMembers', $event)
                                         @if ($member->role->value === 'member')
                                             <form method="POST" action="{{ route('events.members.promote', [$event, $member->user_id]) }}">
                                                 @csrf
@@ -45,8 +45,15 @@
                                                 <button class="font-medium text-accent">{{ __('events.transfer_ownership') }}</button>
                                             </form>
                                         @endif
-                                    </div>
-                                @endcan
+                                    @endcan
+                                    @if ($member->user_id !== auth()->id() && auth()->user()->canParticipate())
+                                        <a href="{{ route('reports.create', ['reportable_type' => 'user', 'reportable_id' => $member->user_id]) }}" class="font-medium text-danger">{{ __('safety.report') }}</a>
+                                        <form method="POST" action="{{ route('users.block', $member->user_id) }}">
+                                            @csrf
+                                            <button class="font-medium text-muted">{{ __('safety.block') }}</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach

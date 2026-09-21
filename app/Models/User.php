@@ -71,6 +71,21 @@ class User extends Authenticatable
         return $this->belongsTo(City::class);
     }
 
+    public function blocks(): HasMany
+    {
+        return $this->hasMany(UserBlock::class, 'blocker_id');
+    }
+
+    public function blockedBy(): HasMany
+    {
+        return $this->hasMany(UserBlock::class, 'blocked_id');
+    }
+
+    public function reportsFiled(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reporter_id');
+    }
+
     public function isActive(): bool
     {
         return $this->status === AccountStatus::Active;

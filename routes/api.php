@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\CategoryController as ApiAdminCategoryController;
 use App\Http\Controllers\Api\Admin\CityController as ApiAdminCityController;
+use App\Http\Controllers\Api\Admin\ReportModerationController as ApiReportModerationController;
 use App\Http\Controllers\Api\Admin\UserModerationController as ApiUserModerationController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\MeController;
@@ -13,6 +14,8 @@ use App\Http\Controllers\Api\Events\EventController as ApiEventController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
+use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
+use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/cities', CityListController::class);
@@ -35,6 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/settings/location', [ApiLocationPreferenceController::class, 'update']);
 
     Route::middleware('account.active')->group(function () {
+        Route::post('/reports', [ApiReportController::class, 'store'])->middleware('throttle:reports');
+        Route::get('/blocks', [ApiBlockController::class, 'index']);
+        Route::post('/users/{user}/block', [ApiBlockController::class, 'store'])->whereNumber('user');
+        Route::delete('/users/{user}/block', [ApiBlockController::class, 'destroy'])->whereNumber('user');
+
         Route::get('/my-events', [ApiEventController::class, 'mine']);
         Route::post('/events', [ApiEventController::class, 'store'])->middleware('throttle:uploads');
         Route::put('/events/{event}', [ApiEventController::class, 'update'])->middleware('throttle:uploads');
@@ -60,6 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('platform.admin')->prefix('admin')->group(function () {
         Route::post('/users/{user}/deactivate', [ApiUserModerationController::class, 'deactivate']);
         Route::post('/users/{user}/reactivate', [ApiUserModerationController::class, 'reactivate']);
+
+        Route::get('/reports', [ApiReportModerationController::class, 'index']);
+        Route::put('/reports/{report}', [ApiReportModerationController::class, 'update']);
 
         Route::get('/cities', [ApiAdminCityController::class, 'index']);
         Route::post('/cities', [ApiAdminCityController::class, 'store']);

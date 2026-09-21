@@ -46,12 +46,15 @@ class EventMembershipController extends Controller
         ], 201);
     }
 
-    public function requests(Event $event): JsonResponse
+    public function requests(Event $event, \App\Services\Safety\UserBlockService $blocks): JsonResponse
     {
         $this->authorize('reviewJoinRequests', $event);
 
+        $blockedIds = $blocks->blockedUserIdsFor(request()->user());
+
         $requests = $event->joinRequests()
             ->with('user:id,name,email')
+            ->when($blockedIds !== [], fn ($q) => $q->whereNotIn('user_id', $blockedIds))
             ->latest()
             ->paginate(20);
 

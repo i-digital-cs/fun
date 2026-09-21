@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Models\City;
 use App\Models\Event;
 use App\Models\User;
+use App\Services\Safety\UserBlockService;
 use App\Support\GeoDistance;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 class DiscoverNearbyEventsService
 {
+    public function __construct(private readonly UserBlockService $blocks)
+    {
+    }
+
     /**
      * @param  array{category_id?: int|null, q?: string|null, per_page?: int}  $filters
      */
@@ -28,6 +33,14 @@ class DiscoverNearbyEventsService
             ->withCount('members')
             ->where('status', EventStatus::Published)
             ->where('starts_at', '>=', now()->subDay());
+
+        if ($user !== null) {
+            $blockedIds = $this->blocks->blockedUserIdsFor($user);
+
+            if ($blockedIds !== []) {
+                $query->whereNotIn('created_by', $blockedIds);
+            }
+        }
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', (int) $filters['category_id']);

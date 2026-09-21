@@ -104,6 +104,22 @@
                     @endif
                 @endauth
             </div>
+
+            @auth
+                @if (auth()->user()->canParticipate())
+                    <div class="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
+                        <a href="{{ route('reports.create', ['reportable_type' => 'event', 'reportable_id' => $event->id]) }}" class="rounded-lg border border-danger/30 px-3 py-2 text-sm font-medium text-danger">
+                            {{ __('safety.report') }}
+                        </a>
+                        @if ($event->created_by !== auth()->id())
+                            <form method="POST" action="{{ route('users.block', $event->created_by) }}">
+                                @csrf
+                                <button class="rounded-lg border border-border px-3 py-2 text-sm font-medium">{{ __('safety.block') }}</button>
+                            </form>
+                        @endif
+                    </div>
+                @endif
+            @endauth
         </div>
     </article>
 @endsection

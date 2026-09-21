@@ -39,12 +39,15 @@ class EventMembershipController extends Controller
         return back()->with('status', __('events.join_requested'));
     }
 
-    public function requests(Event $event): View
+    public function requests(Event $event, \App\Services\Safety\UserBlockService $blocks): View
     {
         $this->authorize('reviewJoinRequests', $event);
 
+        $blockedIds = $blocks->blockedUserIdsFor(request()->user());
+
         $requests = $event->joinRequests()
             ->with('user')
+            ->when($blockedIds !== [], fn ($q) => $q->whereNotIn('user_id', $blockedIds))
             ->latest()
             ->paginate(20);
 

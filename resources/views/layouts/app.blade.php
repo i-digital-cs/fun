@@ -25,8 +25,10 @@
                 @auth
                     <a href="{{ route('events.index') }}" class="text-muted hover:text-text">{{ __('events.discover') }}</a>
                     <a href="{{ route('settings.location.edit') }}" class="text-muted hover:text-text">{{ __('location.location_settings') }}</a>
+                    <a href="{{ route('blocks.index') }}" class="text-muted hover:text-text">{{ __('safety.blocked_users') }}</a>
                     <a href="{{ route('events.mine') }}" class="text-muted hover:text-text">{{ __('events.my_events') }}</a>
                     @if (auth()->user()->isPlatformAdmin())
+                        <a href="{{ route('admin.reports.index') }}" class="text-muted hover:text-text">{{ __('safety.reports') }}</a>
                         <a href="{{ route('admin.cities.index') }}" class="text-muted hover:text-text">{{ __('location.cities') }}</a>
                         <a href="{{ route('admin.categories.index') }}" class="text-muted hover:text-text">{{ __('catalog.categories') }}</a>
                     @endif

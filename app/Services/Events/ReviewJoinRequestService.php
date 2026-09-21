@@ -9,10 +9,15 @@ use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\EventMember;
 use App\Models\User;
+use App\Services\Safety\UserBlockService;
 use Illuminate\Support\Facades\DB;
 
 class ReviewJoinRequestService
 {
+    public function __construct(private readonly UserBlockService $blocks)
+    {
+    }
+
     public function accept(User $actor, EventJoinRequest $joinRequest): EventMember
     {
         return $this->review($actor, $joinRequest, JoinRequestStatus::Accepted);
@@ -49,6 +54,16 @@ class ReviewJoinRequestService
 
             if ($lockedRequest->status !== JoinRequestStatus::Pending) {
                 throw new DomainException(__('events.join_not_pending'));
+            }
+
+            $applicant = $lockedRequest->user()->first();
+
+            if (
+                $decision === JoinRequestStatus::Accepted
+                && $applicant !== null
+                && $this->blocks->isBlockedEitherWay($actor, $applicant)
+            ) {
+                throw new DomainException(__('safety.blocked_cannot_accept'));
             }
 
             if ($decision === JoinRequestStatus::Accepted) {

@@ -8,6 +8,7 @@ use App\Exceptions\DomainException;
 use App\Models\Event;
 use App\Models\EventMessage;
 use App\Models\User;
+use App\Services\Safety\UserBlockService;
 use App\Support\ChatMessageSanitizer;
 use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\Cache;
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\Log;
 class PostEventMessageService
 {
     public const MAX_LENGTH = 1000;
+
+    public function __construct(private readonly UserBlockService $blocks)
+    {
+    }
 
     public function post(User $user, Event $event, string $rawBody): EventMessage
     {
@@ -29,6 +34,12 @@ class PostEventMessageService
 
         if (! in_array($event->status, [EventStatus::Published, EventStatus::Completed], true)) {
             throw new DomainException(__('chat.event_not_open'));
+        }
+
+        $creator = $event->creator()->first();
+
+        if ($creator !== null && $this->blocks->isBlockedEitherWay($user, $creator)) {
+            throw new DomainException(__('safety.blocked_cannot_chat'));
         }
 
         $body = ChatMessageSanitizer::clean($rawBody);

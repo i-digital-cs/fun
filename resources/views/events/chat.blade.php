@@ -28,9 +28,14 @@
                     <div class="chat-message rounded-xl bg-background px-3 py-2" data-message-id="{{ $message->id }}">
                         <div class="flex items-baseline justify-between gap-2">
                             <p class="text-sm font-semibold">{{ $message->user?->name }}</p>
-                            <time class="text-xs text-muted" datetime="{{ $message->created_at?->toIso8601String() }}">
-                                {{ $message->created_at?->timezone(config('app.timezone'))->format('H:i') }}
-                            </time>
+                            <div class="flex items-center gap-2">
+                                @if ($message->user_id !== auth()->id())
+                                    <a href="{{ route('reports.create', ['reportable_type' => 'message', 'reportable_id' => $message->id]) }}" class="text-xs text-danger hover:underline">{{ __('safety.report') }}</a>
+                                @endif
+                                <time class="text-xs text-muted" datetime="{{ $message->created_at?->toIso8601String() }}">
+                                    {{ $message->created_at?->timezone(config('app.timezone'))->format('H:i') }}
+                                </time>
+                            </div>
                         </div>
                         <p class="mt-1 whitespace-pre-wrap break-words text-sm">{{ $message->body }}</p>
                     </div>

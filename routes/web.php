@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\AccountStatusController;
 use App\Http\Controllers\Web\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Web\Admin\CityController as AdminCityController;
+use App\Http\Controllers\Web\Admin\ReportModerationController;
 use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Identity\IdentityDocumentController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
+use App\Http\Controllers\Web\Safety\BlockController;
+use App\Http\Controllers\Web\Safety\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -52,6 +55,18 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/location', [LocationPreferenceController::class, 'update'])->name('settings.location.update');
 
     Route::middleware('account.active')->group(function () {
+        Route::get('/report', [ReportController::class, 'create'])->name('reports.create');
+        Route::post('/report', [ReportController::class, 'store'])
+            ->middleware('throttle:reports')
+            ->name('reports.store');
+        Route::get('/settings/blocks', [BlockController::class, 'index'])->name('blocks.index');
+        Route::post('/users/{user}/block', [BlockController::class, 'store'])
+            ->whereNumber('user')
+            ->name('users.block');
+        Route::delete('/users/{user}/block', [BlockController::class, 'destroy'])
+            ->whereNumber('user')
+            ->name('users.unblock');
+
         Route::get('/my-events', [EventController::class, 'mine'])->name('events.mine');
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])
@@ -115,6 +130,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', [UserModerationController::class, 'index'])->name('users.index');
         Route::post('/users/{user}/deactivate', [UserModerationController::class, 'deactivate'])->name('users.deactivate');
         Route::post('/users/{user}/reactivate', [UserModerationController::class, 'reactivate'])->name('users.reactivate');
+
+        Route::get('/reports', [ReportModerationController::class, 'index'])->name('reports.index');
+        Route::put('/reports/{report}', [ReportModerationController::class, 'update'])->name('reports.update');
 
         Route::get('/cities', [AdminCityController::class, 'index'])->name('cities.index');
         Route::get('/cities/create', [AdminCityController::class, 'create'])->name('cities.create');
