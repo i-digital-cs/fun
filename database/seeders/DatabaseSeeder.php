@@ -12,7 +12,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(CitySeeder::class);
+        $this->call([
+            CitySeeder::class,
+            CategorySeeder::class,
+        ]);
 
         User::query()->updateOrCreate(
             ['email' => 'admin@example.com'],

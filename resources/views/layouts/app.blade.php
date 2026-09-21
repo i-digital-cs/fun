@@ -26,6 +26,7 @@
                     <a href="{{ route('settings.location.edit') }}" class="text-muted hover:text-text">{{ __('location.location_settings') }}</a>
                     @if (auth()->user()->isPlatformAdmin())
                         <a href="{{ route('admin.cities.index') }}" class="text-muted hover:text-text">{{ __('location.cities') }}</a>
+                        <a href="{{ route('admin.categories.index') }}" class="text-muted hover:text-text">{{ __('catalog.categories') }}</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

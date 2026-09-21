@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AccountStatusController;
+use App\Http\Controllers\Web\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Web\Admin\CityController as AdminCityController;
 use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
@@ -54,5 +55,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/cities/{city}', [AdminCityController::class, 'update'])->name('cities.update');
         Route::post('/cities/{city}/deactivate', [AdminCityController::class, 'deactivate'])->name('cities.deactivate');
         Route::post('/cities/{city}/activate', [AdminCityController::class, 'activate'])->name('cities.activate');
+
+        Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+        Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
+        Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+        Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
+        Route::post('/categories/{category}/deactivate', [AdminCategoryController::class, 'deactivate'])->name('categories.deactivate');
+        Route::post('/categories/{category}/activate', [AdminCategoryController::class, 'activate'])->name('categories.activate');
     });
 });

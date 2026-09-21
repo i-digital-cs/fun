@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 4 — Categories (admin-managed)
+**Next task:** Task 5 — Events CRUD + capacity
 
 ---
 
@@ -30,7 +30,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Status:** `done`
 - **Completed:** 2026-09-21
 - **Summary:** Laravel 12 + Sanctum + Tailwind 4 + Vite; service/controller folders; design tokens; local media disks + R2 placeholders; landing page; docs preserved
-- **Tests:** HomePage, Sanctum API, MediaConfig — 5 passed
+- **Tests:** HomePage, Sanctum API, MediaConfig
 - **Notes:** Brand name still from `APP_NAME` until admin site settings
 
 ### Task 2 — Auth + identity documents + account status
@@ -58,13 +58,23 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
   - Admin city CRUD + activate/deactivate (web + API)
   - User location settings page + API
   - Public `GET /api/cities` + GeoDistance helper for later discovery
-- **Tests:** 22 passed total (city management, location prefs, geo distance)
+- **Tests:** City management, location prefs, geo distance
 - **Depends on:** Task 2
 
 ### Task 4 — Categories (admin-managed)
-- **Status:** `todo`
-- **Scope:** CRUD/deactivate categories; no hard-coded category IDs
-- **Depends on:** Task 2 (admin auth baseline)
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `categories` table (name_en/ar, slug, sort_order, is_active)
+  - Seed: Football, PlayStation, Basketball, Running, Gaming, Board Games, Cinema, Social, Outdoor, Tennis
+  - Admin CRUD + activate/deactivate (web + API)
+  - Public `GET /api/categories` (active only)
+  - Shared `UniqueSlug` helper (also used by cities)
+- **Tests:** 26 passed total (CategoryManagementTest added)
+- **UI checklist:** `GET /api/categories` 200 (10 items); admin API list 200; web index covered by feature test
+- **Security:** platform.admin + CategoryPolicy; inactive excluded from public list; no hard-coded category IDs
+- **Perf:** indexed `(is_active, sort_order)`; ordered list + pagination on admin endpoints
+- **Depends on:** Task 2
 
 ### Task 5 — Events CRUD + capacity
 - **Status:** `todo`

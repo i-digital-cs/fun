@@ -4,8 +4,8 @@ namespace App\Services\Location;
 
 use App\Exceptions\DomainException;
 use App\Models\City;
+use App\Support\UniqueSlug;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class ManageCityService
 {
@@ -18,7 +18,7 @@ class ManageCityService
             return City::query()->create([
                 'name_en' => $data['name_en'],
                 'name_ar' => $data['name_ar'],
-                'slug' => $this->uniqueSlug($data['slug'] ?? $data['name_en']),
+                'slug' => UniqueSlug::for(City::class, $data['slug'] ?? $data['name_en'], null, 'city'),
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
                 'is_active' => $data['is_active'] ?? true,
@@ -33,9 +33,7 @@ class ManageCityService
     {
         return DB::transaction(function () use ($city, $data) {
             if (array_key_exists('slug', $data) && filled($data['slug'])) {
-                $data['slug'] = $this->uniqueSlug((string) $data['slug'], $city->id);
-            } elseif (array_key_exists('name_en', $data) && ! array_key_exists('slug', $data)) {
-                // keep existing slug unless explicitly changed
+                $data['slug'] = UniqueSlug::for(City::class, (string) $data['slug'], $city->id, 'city');
             }
 
             $city->fill(collect($data)->only([
@@ -71,24 +69,5 @@ class ManageCityService
         $city->forceFill(['is_active' => true])->save();
 
         return $city->refresh();
-    }
-
-    private function uniqueSlug(string $value, ?int $ignoreId = null): string
-    {
-        $base = Str::slug($value) ?: 'city';
-        $slug = $base;
-        $i = 1;
-
-        while (
-            City::query()
-                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
-                ->where('slug', $slug)
-                ->exists()
-        ) {
-            $slug = $base.'-'.$i;
-            $i++;
-        }
-
-        return $slug;
     }
 }
