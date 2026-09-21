@@ -32,6 +32,7 @@ class EventResource extends JsonResource
             'cost_per_person' => $this->cost_per_person,
             'image_url' => $this->imageUrl(),
             'status' => $this->status->value,
+            'ready_for_ratings' => $this->isReadyForRatings(),
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,
                 'name' => $this->category->localizedName(),

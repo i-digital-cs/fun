@@ -78,4 +78,12 @@ class EventPolicy
             && $event->isMember($user)
             && in_array($event->status, [EventStatus::Published, EventStatus::Completed], true);
     }
+
+    public function rate(User $user, Event $event): bool
+    {
+        return $user->canParticipate()
+            && $event->isReadyForRatings()
+            && $event->isMember($user)
+            && (int) $event->created_by !== (int) $user->id;
+    }
 }

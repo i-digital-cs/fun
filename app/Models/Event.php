@@ -80,6 +80,24 @@ class Event extends Model
         return $this->hasMany(EventMessage::class);
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(EventRating::class);
+    }
+
+    public function isReadyForRatings(): bool
+    {
+        if ($this->status === EventStatus::Cancelled) {
+            return false;
+        }
+
+        if ($this->status === EventStatus::Completed) {
+            return true;
+        }
+
+        return $this->ends_at !== null && $this->ends_at->isPast();
+    }
+
     public function isMember(User $user): bool
     {
         return $this->members()->where('user_id', $user->id)->exists();

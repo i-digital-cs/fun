@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 10 — Ratings
+**Next task:** Task 11 — Admin panel
 
 ---
 
@@ -125,11 +125,17 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Depends on:** Tasks 2, 5–6, 8
 
 ### Task 10 — Ratings
-- **Status:** `todo`
-- **Scope:**
-  - Rate event creator after event end + accepted membership
-  - 1–5 stars + optional comment
-  - Creator cannot rate self
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `event_ratings` (unique per event+rater); rates creator (`rated_user_id`)
+  - Allowed when event `completed` OR `ends_at` past; member only; no self-rate; block-aware
+  - 1–5 stars + optional sanitized comment; upsert update allowed
+  - Web form on event show; organizer average; recent ratings list
+  - API: `POST/GET …/ratings`, `GET …/ratings/me`; show includes `can_rate` / `creator_rating`
+- **Tests:** 71 passed (EventRatingTest)
+- **UI checklist:** completed-event member sees rate form; creator does not
+- **Security:** EventPolicy `rate`; throttle:ratings; XSS-safe comments
 - **Depends on:** Tasks 5–6
 
 ### Task 11 — Admin panel

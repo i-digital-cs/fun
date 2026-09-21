@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CityListController;
 use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatController;
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
+use App\Http\Controllers\Api\Events\EventRatingController as ApiEventRatingController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
@@ -22,6 +23,7 @@ Route::get('/cities', CityListController::class);
 Route::get('/categories', CategoryListController::class);
 Route::get('/events', [ApiEventController::class, 'index']);
 Route::get('/events/{event}', [ApiEventController::class, 'show'])->whereNumber('event');
+Route::get('/events/{event}/ratings', [ApiEventRatingController::class, 'index'])->whereNumber('event');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [RegisterController::class, 'store']);
@@ -63,6 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/events/{event}/messages', [ApiEventChatController::class, 'index']);
         Route::post('/events/{event}/messages', [ApiEventChatController::class, 'store'])
             ->middleware('throttle:messages');
+
+        Route::get('/events/{event}/ratings/me', [ApiEventRatingController::class, 'mine']);
+        Route::post('/events/{event}/ratings', [ApiEventRatingController::class, 'store'])
+            ->middleware('throttle:ratings');
     });
 
     Route::middleware('platform.admin')->prefix('admin')->group(function () {

@@ -10,7 +10,9 @@ use App\Http\Requests\Events\UpdateEventRequest;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
+use App\Models\EventRating;
 use App\Services\Events\CreateEventService;
+use App\Services\Events\CreatorRatingSummaryService;
 use App\Services\Events\DiscoverNearbyEventsService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\TransitionEventStatusService;
@@ -94,15 +96,45 @@ class EventController extends Controller
             ->with('status', __('events.created'));
     }
 
-    public function show(Event $event, ResolveEventJoinActionService $joinActionService): View
-    {
+    public function show(
+        Event $event,
+        ResolveEventJoinActionService $joinActionService,
+        CreatorRatingSummaryService $ratingSummary,
+    ): View {
         $this->authorize('view', $event);
 
-        $event->load(['category', 'city', 'members.user'])->loadCount('members');
+        $event->load(['category', 'city', 'members.user', 'creator:id,name'])->loadCount('members');
+
+        $user = auth()->user();
+        $userRating = null;
+
+        if ($user !== null) {
+            $userRating = EventRating::query()
+                ->where('event_id', $event->id)
+                ->where('rater_id', $user->id)
+                ->first();
+        }
+
+        $ratings = $event->isReadyForRatings()
+            ? EventRating::query()
+                ->with('rater:id,name')
+                ->where('event_id', $event->id)
+                ->latest()
+                ->limit(10)
+                ->get()
+            : collect();
+
+        $creatorSummary = $event->creator
+            ? $ratingSummary->forUser($event->creator)
+            : ['average' => null, 'count' => 0];
 
         return view('events.show', [
             'event' => $event,
-            'joinAction' => $joinActionService->resolve(auth()->user(), $event),
+            'joinAction' => $joinActionService->resolve($user, $event),
+            'canRate' => $user !== null && $user->can('rate', $event),
+            'userRating' => $userRating,
+            'ratings' => $ratings,
+            'creatorSummary' => $creatorSummary,
         ]);
     }
 

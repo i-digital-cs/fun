@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\Events\EventChatController;
 use App\Http\Controllers\Web\Events\EventController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
+use App\Http\Controllers\Web\Events\EventRatingController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Identity\IdentityDocumentController;
 use App\Http\Controllers\Web\LocaleController;
@@ -124,6 +125,11 @@ Route::middleware('auth')->group(function () {
             ->whereNumber('event')
             ->middleware('throttle:messages')
             ->name('events.chat.store');
+
+        Route::post('/events/{event}/ratings', [EventRatingController::class, 'store'])
+            ->whereNumber('event')
+            ->middleware('throttle:ratings')
+            ->name('events.ratings.store');
     });
 
     Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {

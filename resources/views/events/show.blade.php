@@ -121,5 +121,65 @@
                 @endif
             @endauth
         </div>
+
+        @if ($event->creator)
+            <section class="rounded-2xl border border-border bg-surface p-6">
+                <h2 class="text-lg font-semibold">{{ __('ratings.organizer_rating') }}</h2>
+                <p class="mt-1 text-sm text-muted">{{ $event->creator->name }}</p>
+                @if (($creatorSummary['count'] ?? 0) > 0)
+                    <p class="mt-2 text-sm font-medium">
+                        {{ __('ratings.average', ['average' => $creatorSummary['average'], 'count' => $creatorSummary['count']]) }}
+                    </p>
+                @else
+                    <p class="mt-2 text-sm text-muted">{{ __('ratings.no_ratings_yet') }}</p>
+                @endif
+            </section>
+        @endif
+
+        @if ($canRate ?? false)
+            <section class="rounded-2xl border border-border bg-surface p-6">
+                <h2 class="text-lg font-semibold">{{ __('ratings.title') }}</h2>
+                @if ($userRating)
+                    <p class="mt-1 text-sm text-muted">{{ __('ratings.your_rating') }}: {{ $userRating->stars }}/5</p>
+                @endif
+                <form method="POST" action="{{ route('events.ratings.store', $event) }}" class="mt-4 space-y-3">
+                    @csrf
+                    <div>
+                        <label for="stars" class="mb-1 block text-sm font-medium">{{ __('ratings.stars') }}</label>
+                        <select id="stars" name="stars" required class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                            @for ($i = 5; $i >= 1; $i--)
+                                <option value="{{ $i }}" @selected((int) old('stars', $userRating?->stars ?? 5) === $i)>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div>
+                        <label for="comment" class="mb-1 block text-sm font-medium">{{ __('ratings.comment') }}</label>
+                        <textarea id="comment" name="comment" rows="3" maxlength="1000" class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">{{ old('comment', $userRating?->comment) }}</textarea>
+                    </div>
+                    <button type="submit" class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">
+                        {{ $userRating ? __('ratings.update') : __('ratings.submit') }}
+                    </button>
+                </form>
+            </section>
+        @endif
+
+        @if (($ratings ?? collect())->isNotEmpty())
+            <section class="rounded-2xl border border-border bg-surface p-6">
+                <h2 class="text-lg font-semibold">{{ __('ratings.ratings') }}</h2>
+                <div class="mt-4 space-y-3">
+                    @foreach ($ratings as $rating)
+                        <div class="rounded-xl bg-background px-3 py-2">
+                            <div class="flex items-baseline justify-between gap-2">
+                                <p class="text-sm font-semibold">{{ $rating->rater?->name }}</p>
+                                <p class="text-sm font-medium">{{ $rating->stars }}/5</p>
+                            </div>
+                            @if ($rating->comment)
+                                <p class="mt-1 whitespace-pre-wrap text-sm text-muted">{{ $rating->comment }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
     </article>
 @endsection

@@ -9,7 +9,9 @@ use App\Http\Requests\Events\StoreEventRequest;
 use App\Http\Requests\Events\UpdateEventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\EventRating;
 use App\Services\Events\CreateEventService;
+use App\Services\Events\CreatorRatingSummaryService;
 use App\Services\Events\DiscoverNearbyEventsService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\TransitionEventStatusService;
@@ -66,15 +68,38 @@ class EventController extends Controller
         return (new EventResource($event->loadCount('members')))->response()->setStatusCode(201);
     }
 
-    public function show(Event $event, ResolveEventJoinActionService $joinActionService): JsonResponse
-    {
+    public function show(
+        Event $event,
+        ResolveEventJoinActionService $joinActionService,
+        CreatorRatingSummaryService $ratingSummary,
+    ): JsonResponse {
         $this->authorize('view', $event);
 
-        $event->load(['category', 'city'])->loadCount('members');
+        $event->load(['category', 'city', 'creator:id,name'])->loadCount('members');
+
+        $user = auth()->user();
+        $userRating = null;
+
+        if ($user !== null) {
+            $userRating = EventRating::query()
+                ->where('event_id', $event->id)
+                ->where('rater_id', $user->id)
+                ->first();
+        }
+
+        $creatorSummary = $event->creator
+            ? $ratingSummary->forUser($event->creator)
+            : ['average' => null, 'count' => 0];
 
         return response()->json([
             'data' => (new EventResource($event))->resolve(),
-            'join_action' => $joinActionService->resolve(auth()->user(), $event)->value,
+            'join_action' => $joinActionService->resolve($user, $event)->value,
+            'ready_for_ratings' => $event->isReadyForRatings(),
+            'can_rate' => $user !== null && $user->can('rate', $event),
+            'my_rating' => $userRating
+                ? (new \App\Http\Resources\EventRatingResource($userRating))->resolve()
+                : null,
+            'creator_rating' => $creatorSummary,
         ]);
     }
 
