@@ -35,8 +35,7 @@ class CreateEventService
         $this->assertCapacity((int) $data['max_participants']);
 
         return DB::transaction(function () use ($creator, $data, $image) {
-            $event = Event::query()->create([
-                'created_by' => $creator->id,
+            $event = new Event([
                 'category_id' => $data['category_id'],
                 'city_id' => $data['city_id'],
                 'title' => $data['title'],
@@ -48,8 +47,11 @@ class CreateEventService
                 'requirements' => $data['requirements'] ?? null,
                 'expected_cost' => $data['expected_cost'] ?? null,
                 'cost_per_person' => $data['cost_per_person'] ?? null,
-                'status' => EventStatus::Draft,
             ]);
+            $event->forceFill([
+                'created_by' => $creator->id,
+                'status' => EventStatus::Draft,
+            ])->save();
 
             EventMember::query()->create([
                 'event_id' => $event->id,

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EventMemberRole;
 use App\Enums\EventStatus;
+use App\Support\MediaDisk;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,6 @@ class Event extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'created_by',
         'category_id',
         'city_id',
         'title',
@@ -34,7 +34,6 @@ class Event extends Model
         'cost_per_person',
         'image_path',
         'image_disk',
-        'status',
     ];
 
     /**
@@ -101,6 +100,10 @@ class Event extends Model
 
     public function isMember(User $user): bool
     {
+        if ($this->relationLoaded('members')) {
+            return $this->members->contains('user_id', $user->id);
+        }
+
         return $this->members()->where('user_id', $user->id)->exists();
     }
 
@@ -116,6 +119,14 @@ class Event extends Model
 
     public function acceptedMembersCount(): int
     {
+        if (array_key_exists('members_count', $this->attributes)) {
+            return (int) $this->attributes['members_count'];
+        }
+
+        if ($this->relationLoaded('members')) {
+            return $this->members->count();
+        }
+
         return $this->members()->count();
     }
 
@@ -131,6 +142,12 @@ class Event extends Model
 
     public function memberRoleFor(User $user): ?EventMemberRole
     {
+        if ($this->relationLoaded('members')) {
+            $member = $this->members->firstWhere('user_id', $user->id);
+
+            return $member?->role;
+        }
+
         $member = $this->members()->where('user_id', $user->id)->first();
 
         return $member?->role;
@@ -149,7 +166,7 @@ class Event extends Model
             return null;
         }
 
-        $disk = $this->image_disk ?: \App\Support\MediaDisk::public();
+        $disk = $this->image_disk ?: MediaDisk::public();
 
         return Storage::disk($disk)->url($this->image_path);
     }

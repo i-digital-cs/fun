@@ -19,7 +19,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['user_id', 'type']);
-            $table->index(['user_id', 'type']);
         });
     }
 

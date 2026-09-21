@@ -45,4 +45,16 @@ class MediaConfigTest extends TestCase
         $this->assertSame('r2', MediaDisk::public());
         $this->assertSame('r2_private', MediaDisk::private());
     }
+
+    public function test_r2_private_bucket_is_not_fallback_to_public_bucket(): void
+    {
+        $this->assertArrayHasKey('bucket', config('filesystems.disks.r2_private'));
+        // Empty/unset private bucket must not silently reuse the public R2 bucket.
+        $private = config('filesystems.disks.r2_private.bucket');
+        $public = config('filesystems.disks.r2.bucket');
+
+        if (filled($public)) {
+            $this->assertNotSame($public, $private);
+        }
+    }
 }

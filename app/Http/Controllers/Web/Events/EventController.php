@@ -103,7 +103,7 @@ class EventController extends Controller
     ): View {
         $this->authorize('view', $event);
 
-        $event->load(['category', 'city', 'members.user', 'creator:id,name'])->loadCount('members');
+        $event->load(['category', 'city', 'creator:id,name'])->loadCount('members');
 
         $user = auth()->user();
         $userRating = null;

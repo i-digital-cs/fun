@@ -17,16 +17,16 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
         ]);
 
-        User::query()->updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Super Admin',
-                'password' => Hash::make('password'),
-                'status' => AccountStatus::Active,
-                'platform_role' => PlatformRole::SuperAdmin,
-                'locale' => 'en',
-                'email_verified_at' => now(),
-            ]
-        );
+        $admin = User::query()->firstOrNew(['email' => 'admin@example.com']);
+        $admin->fill([
+            'name' => 'Super Admin',
+            'password' => Hash::make('password'),
+            'locale' => 'en',
+        ]);
+        $admin->forceFill([
+            'status' => AccountStatus::Active,
+            'platform_role' => PlatformRole::SuperAdmin,
+            'email_verified_at' => now(),
+        ])->save();
     }
 }

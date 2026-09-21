@@ -5,7 +5,6 @@ namespace App\Services\Auth;
 use App\Enums\AccountStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class RegisterUserService
 {
@@ -15,13 +14,17 @@ class RegisterUserService
     public function register(array $data): User
     {
         return DB::transaction(function () use ($data) {
-            return User::query()->create([
+            $user = new User([
                 'name' => $data['name'],
                 'email' => strtolower($data['email']),
                 'password' => $data['password'],
-                'status' => AccountStatus::PendingDocuments,
                 'locale' => $data['locale'] ?? app()->getLocale(),
             ]);
+            $user->forceFill([
+                'status' => AccountStatus::PendingDocuments,
+            ])->save();
+
+            return $user;
         });
     }
 }

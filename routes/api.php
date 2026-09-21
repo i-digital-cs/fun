@@ -39,13 +39,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/identity', [ApiIdentityDocumentController::class, 'store'])
         ->middleware('throttle:uploads');
 
-    Route::put('/settings/location', [ApiLocationPreferenceController::class, 'update']);
-
     Route::middleware('account.active')->group(function () {
+        Route::put('/settings/location', [ApiLocationPreferenceController::class, 'update']);
+
         Route::post('/reports', [ApiReportController::class, 'store'])->middleware('throttle:reports');
         Route::get('/blocks', [ApiBlockController::class, 'index']);
-        Route::post('/users/{user}/block', [ApiBlockController::class, 'store'])->whereNumber('user');
-        Route::delete('/users/{user}/block', [ApiBlockController::class, 'destroy'])->whereNumber('user');
+        Route::post('/users/{user}/block', [ApiBlockController::class, 'store'])
+            ->whereNumber('user')
+            ->middleware('throttle:blocks');
+        Route::delete('/users/{user}/block', [ApiBlockController::class, 'destroy'])
+            ->whereNumber('user')
+            ->middleware('throttle:blocks');
 
         Route::get('/my-events', [ApiEventController::class, 'mine']);
         Route::post('/events', [ApiEventController::class, 'store'])->middleware('throttle:uploads');
@@ -54,7 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/events/{event}/cancel', [ApiEventController::class, 'cancel']);
         Route::post('/events/{event}/complete', [ApiEventController::class, 'complete']);
 
-        Route::post('/events/{event}/join', [ApiEventMembershipController::class, 'join']);
+        Route::post('/events/{event}/join', [ApiEventMembershipController::class, 'join'])
+            ->middleware('throttle:joins');
         Route::get('/events/{event}/requests', [ApiEventMembershipController::class, 'requests']);
         Route::post('/events/{event}/requests/{joinRequest}/accept', [ApiEventMembershipController::class, 'accept']);
         Route::post('/events/{event}/requests/{joinRequest}/reject', [ApiEventMembershipController::class, 'reject']);

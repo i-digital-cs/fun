@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 13 — Hardening pass
+**V1 roadmap complete.** Next work is ops/deploy or post-V1 features (not listed until MASTER_CONTEXT is updated).
 
 ---
 
@@ -169,12 +169,13 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Depends on:** Task 2 media abstraction
 
 ### Task 13 — Hardening pass
-- **Status:** `todo`
-- **Scope:**
-  - Security review (IDOR, authz, uploads, rate limits)
-  - Performance (N+1, indexes, pagination)
-  - Dead code / unused DB cleanup
-  - Full regression test suite
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - Security: members API no longer returns emails; join/block throttles; User/Event privileged columns off fillable; location settings require active account; R2 private bucket no longer falls back to public bucket
+  - Perf: `Event::isFull` / `acceptedMembersCount` / membership helpers use `members_count` or loaded relations; members lists paginated; nearby city IDs cached (version-bumped on city admin changes); event show skips loading full members for capacity
+  - Cleanup: redundant identity_documents index removed from migration; `profile_image_path` exposed on `/api/user`
+- **Tests:** 90 passed (HardeningPassTest + full regression)
 - **Depends on:** Tasks 2–12
 
 ---

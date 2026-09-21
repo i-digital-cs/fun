@@ -32,16 +32,20 @@ class GoogleAuthService
                 return $user->refresh();
             }
 
-            return User::query()->create([
+            $user = new User([
                 'name' => $googleUser->getName() ?: $email,
                 'email' => $email,
                 'password' => null,
                 'google_id' => $googleUser->getId(),
-                'email_verified_at' => now(),
-                'status' => AccountStatus::PendingDocuments,
                 'locale' => $locale ?? app()->getLocale(),
                 'profile_image_path' => $googleUser->getAvatar(),
             ]);
+            $user->forceFill([
+                'email_verified_at' => now(),
+                'status' => AccountStatus::PendingDocuments,
+            ])->save();
+
+            return $user;
         });
     }
 

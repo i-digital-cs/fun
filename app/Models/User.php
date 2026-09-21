@@ -25,16 +25,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'status',
-        'platform_role',
         'google_id',
         'locale',
         'city_id',
         'distance_km',
         'profile_image_path',
-        'deactivated_at',
-        'deactivated_by',
-        'deactivation_reason',
     ];
 
     /**

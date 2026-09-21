@@ -19,7 +19,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($event->members as $member)
+                    @foreach ($members as $member)
                         <tr class="border-t border-border">
                             <td class="px-4 py-3">{{ $member->user?->name }}</td>
                             <td class="px-4 py-3">{{ $member->role->value }}</td>
@@ -59,6 +59,10 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+
+        <div>
+            {{ $members->links() }}
         </div>
     </div>
 @endsection

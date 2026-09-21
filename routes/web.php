@@ -58,10 +58,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:uploads')
         ->name('identity.store');
 
-    Route::get('/settings/location', [LocationPreferenceController::class, 'edit'])->name('settings.location.edit');
-    Route::put('/settings/location', [LocationPreferenceController::class, 'update'])->name('settings.location.update');
-
     Route::middleware('account.active')->group(function () {
+        Route::get('/settings/location', [LocationPreferenceController::class, 'edit'])->name('settings.location.edit');
+        Route::put('/settings/location', [LocationPreferenceController::class, 'update'])->name('settings.location.update');
+
         Route::get('/report', [ReportController::class, 'create'])->name('reports.create');
         Route::post('/report', [ReportController::class, 'store'])
             ->middleware('throttle:reports')
@@ -69,9 +69,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/blocks', [BlockController::class, 'index'])->name('blocks.index');
         Route::post('/users/{user}/block', [BlockController::class, 'store'])
             ->whereNumber('user')
+            ->middleware('throttle:blocks')
             ->name('users.block');
         Route::delete('/users/{user}/block', [BlockController::class, 'destroy'])
             ->whereNumber('user')
+            ->middleware('throttle:blocks')
             ->name('users.unblock');
 
         Route::get('/my-events', [EventController::class, 'mine'])->name('events.mine');
@@ -98,6 +100,7 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/events/{event}/join', [EventMembershipController::class, 'join'])
             ->whereNumber('event')
+            ->middleware('throttle:joins')
             ->name('events.join');
         Route::get('/events/{event}/requests', [EventMembershipController::class, 'requests'])
             ->whereNumber('event')

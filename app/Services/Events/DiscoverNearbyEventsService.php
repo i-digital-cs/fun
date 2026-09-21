@@ -15,9 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class DiscoverNearbyEventsService
 {
-    public function __construct(private readonly UserBlockService $blocks)
-    {
-    }
+    public function __construct(private readonly UserBlockService $blocks) {}
 
     /**
      * @param  array{category_id?: int|null, q?: string|null, per_page?: int}  $filters
@@ -135,17 +133,22 @@ class DiscoverNearbyEventsService
      */
     private function nearbyCityIds(float $latitude, float $longitude, int $maxKm): Collection
     {
-        return City::query()
-            ->active()
-            ->get(['id', 'latitude', 'longitude'])
-            ->filter(fn (City $city) => GeoDistance::isWithinKm(
-                $latitude,
-                $longitude,
-                (float) $city->latitude,
-                (float) $city->longitude,
-                $maxKm
-            ))
-            ->pluck('id')
-            ->values();
+        $version = (int) cache()->get('nearby_cities_version', 0);
+        $cacheKey = sprintf('nearby_cities:v%d:%.5f:%.5f:%d', $version, $latitude, $longitude, $maxKm);
+
+        return cache()->remember($cacheKey, now()->addMinutes(10), function () use ($latitude, $longitude, $maxKm) {
+            return City::query()
+                ->active()
+                ->get(['id', 'latitude', 'longitude'])
+                ->filter(fn (City $city) => GeoDistance::isWithinKm(
+                    $latitude,
+                    $longitude,
+                    (float) $city->latitude,
+                    (float) $city->longitude,
+                    $maxKm
+                ))
+                ->pluck('id')
+                ->values();
+        });
     }
 }

@@ -21,6 +21,7 @@ class MeController extends Controller
             'platform_role' => $user->platform_role?->value,
             'city_id' => $user->city_id,
             'distance_km' => $user->distance_km,
+            'profile_image_path' => $user->profile_image_path,
             'city' => $user->city ? [
                 'id' => $user->city->id,
                 'name' => $user->city->localizedName(),

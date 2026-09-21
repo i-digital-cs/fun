@@ -13,6 +13,7 @@ use App\Services\Events\RequestToJoinEventService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ReviewJoinRequestService;
 use App\Services\Events\TransferEventOwnershipService;
+use App\Services\Safety\UserBlockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -46,14 +47,14 @@ class EventMembershipController extends Controller
         ], 201);
     }
 
-    public function requests(Event $event, \App\Services\Safety\UserBlockService $blocks): JsonResponse
+    public function requests(Event $event, UserBlockService $blocks): JsonResponse
     {
         $this->authorize('reviewJoinRequests', $event);
 
         $blockedIds = $blocks->blockedUserIdsFor(request()->user());
 
         $requests = $event->joinRequests()
-            ->with('user:id,name,email')
+            ->with('user:id,name')
             ->when($blockedIds !== [], fn ($q) => $q->whereNotIn('user_id', $blockedIds))
             ->latest()
             ->paginate(20);
@@ -112,15 +113,23 @@ class EventMembershipController extends Controller
     {
         $this->authorize('view', $event);
 
-        $members = $event->members()->with('user:id,name,email')->get();
+        $members = $event->members()
+            ->with('user:id,name')
+            ->orderBy('id')
+            ->paginate(50);
 
         return response()->json([
-            'members' => $members->map(fn ($member) => [
+            'data' => $members->getCollection()->map(fn ($member) => [
                 'user_id' => $member->user_id,
                 'role' => $member->role->value,
                 'name' => $member->user?->name,
-                'email' => $member->user?->email,
-            ]),
+            ])->values(),
+            'meta' => [
+                'current_page' => $members->currentPage(),
+                'last_page' => $members->lastPage(),
+                'per_page' => $members->perPage(),
+                'total' => $members->total(),
+            ],
         ]);
     }
 

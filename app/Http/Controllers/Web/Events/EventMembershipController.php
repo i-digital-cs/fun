@@ -13,6 +13,7 @@ use App\Services\Events\RequestToJoinEventService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ReviewJoinRequestService;
 use App\Services\Events\TransferEventOwnershipService;
+use App\Services\Safety\UserBlockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -39,7 +40,7 @@ class EventMembershipController extends Controller
         return back()->with('status', __('events.join_requested'));
     }
 
-    public function requests(Event $event, \App\Services\Safety\UserBlockService $blocks): View
+    public function requests(Event $event, UserBlockService $blocks): View
     {
         $this->authorize('reviewJoinRequests', $event);
 
@@ -92,10 +93,14 @@ class EventMembershipController extends Controller
     {
         $this->authorize('view', $event);
 
-        $event->load(['members.user']);
+        $members = $event->members()
+            ->with('user:id,name')
+            ->orderBy('id')
+            ->paginate(50);
 
         return view('events.members', [
             'event' => $event,
+            'members' => $members,
             'joinAction' => $joinActionService->resolve(auth()->user(), $event),
         ]);
     }

@@ -5,6 +5,7 @@ namespace App\Services\Location;
 use App\Exceptions\DomainException;
 use App\Models\City;
 use App\Support\UniqueSlug;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ManageCityService
@@ -15,7 +16,7 @@ class ManageCityService
     public function create(array $data): City
     {
         return DB::transaction(function () use ($data) {
-            return City::query()->create([
+            $city = City::query()->create([
                 'name_en' => $data['name_en'],
                 'name_ar' => $data['name_ar'],
                 'slug' => UniqueSlug::for(City::class, $data['slug'] ?? $data['name_en'], null, 'city'),
@@ -23,6 +24,10 @@ class ManageCityService
                 'longitude' => $data['longitude'],
                 'is_active' => $data['is_active'] ?? true,
             ]);
+
+            $this->bumpNearbyCitiesCache();
+
+            return $city;
         });
     }
 
@@ -45,6 +50,8 @@ class ManageCityService
                 'is_active',
             ])->all())->save();
 
+            $this->bumpNearbyCitiesCache();
+
             return $city->refresh();
         });
     }
@@ -56,6 +63,7 @@ class ManageCityService
         }
 
         $city->forceFill(['is_active' => false])->save();
+        $this->bumpNearbyCitiesCache();
 
         return $city->refresh();
     }
@@ -67,7 +75,13 @@ class ManageCityService
         }
 
         $city->forceFill(['is_active' => true])->save();
+        $this->bumpNearbyCitiesCache();
 
         return $city->refresh();
+    }
+
+    private function bumpNearbyCitiesCache(): void
+    {
+        Cache::forever('nearby_cities_version', ((int) Cache::get('nearby_cities_version', 0)) + 1);
     }
 }
