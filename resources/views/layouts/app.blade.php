@@ -12,7 +12,7 @@
 <body class="min-h-screen bg-background text-text">
     <header class="border-b border-border/60 bg-surface/80 backdrop-blur">
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-            <a href="{{ url('/') }}" class="text-lg font-semibold text-primary">{{ config('app.name') }}</a>
+            <a href="{{ url('/') }}" class="text-lg font-semibold text-primary">{{ $siteName ?? site_display_name() }}</a>
             <div class="flex items-center gap-3 text-sm">
                 <form method="POST" action="{{ route('locale.update') }}" class="flex items-center gap-2">
                     @csrf
@@ -28,9 +28,7 @@
                     <a href="{{ route('blocks.index') }}" class="text-muted hover:text-text">{{ __('safety.blocked_users') }}</a>
                     <a href="{{ route('events.mine') }}" class="text-muted hover:text-text">{{ __('events.my_events') }}</a>
                     @if (auth()->user()->isPlatformAdmin())
-                        <a href="{{ route('admin.reports.index') }}" class="text-muted hover:text-text">{{ __('safety.reports') }}</a>
-                        <a href="{{ route('admin.cities.index') }}" class="text-muted hover:text-text">{{ __('location.cities') }}</a>
-                        <a href="{{ route('admin.categories.index') }}" class="text-muted hover:text-text">{{ __('catalog.categories') }}</a>
+                        <a href="{{ route('admin.dashboard') }}" class="text-muted hover:text-text">{{ __('admin.dashboard') }}</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

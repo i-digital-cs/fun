@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class DeactivateUserService
 {
+    public function __construct(private readonly AdminAuditLogger $audit)
+    {
+    }
+
     public function deactivate(User $actor, User $target, ?string $reason = null): User
     {
         $this->assertCanModerate($actor, $target);
@@ -28,6 +32,10 @@ class DeactivateUserService
 
             $target->tokens()->delete();
 
+            $this->audit->log($actor, 'user.deactivated', User::class, $target->id, [
+                'reason' => $reason,
+            ]);
+
             return $target->refresh();
         });
     }
@@ -40,7 +48,7 @@ class DeactivateUserService
             throw new DomainException(__('admin.not_deactivated'));
         }
 
-        return DB::transaction(function () use ($target) {
+        return DB::transaction(function () use ($actor, $target) {
             $hasDocuments = $target->hasRequiredIdentityDocuments();
 
             $target->forceFill([
@@ -49,6 +57,8 @@ class DeactivateUserService
                 'deactivated_by' => null,
                 'deactivation_reason' => null,
             ])->save();
+
+            $this->audit->log($actor, 'user.reactivated', User::class, $target->id);
 
             return $target->refresh();
         });

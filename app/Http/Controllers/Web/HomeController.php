@@ -10,7 +10,7 @@ class HomeController extends Controller
     public function __invoke(): View
     {
         return view('home.index', [
-            'appName' => config('app.name'),
+            'appName' => site_display_name(),
         ]);
     }
 }

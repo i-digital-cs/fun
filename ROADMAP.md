@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 11 — Admin panel
+**Next task:** Task 12 — Cloudflare R2 media wiring
 
 ---
 
@@ -139,12 +139,19 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Depends on:** Tasks 5–6
 
 ### Task 11 — Admin panel
-- **Status:** `todo`
-- **Scope:**
-  - Roles: SUPER_ADMIN / MODERATOR
-  - Users, identity docs, deactivate, events, reports, moderation, categories, cities
-  - Site settings (changeable display/brand name)
-  - Audit activity where required
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - Admin dashboard `/admin` with stats + shared admin nav
+  - Site settings: configurable `display_name` (super_admin only); `site_display_name()` used in layout/home
+  - Identity docs review + private download (authorized)
+  - Event moderation: list/cancel/complete; chat message delete
+  - Audit log (`admin_audit_logs`) for deactivate, settings, reports, events, chat deletes
+  - Explicit `PlatformRole` capability methods; settings/audit super_admin-only
+  - API: `/api/admin/settings`, `/api/admin/events` cancel/complete
+- **Tests:** 79 passed (AdminPanelTest)
+- **UI checklist:** `/admin` 200 for admin; moderator blocked from settings/audit
+- **Security:** platform.admin middleware; identity docs gated by UserPolicy; private disk streaming
 - **Depends on:** Tasks 2–10 baselines
 
 ### Task 12 — Cloudflare R2 media wiring

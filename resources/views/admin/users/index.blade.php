@@ -3,6 +3,7 @@
 @section('title', __('admin.users'))
 
 @section('content')
+    @include('admin._nav')
     <div class="space-y-4">
         <h1 class="text-2xl font-semibold">{{ __('admin.users') }}</h1>
         <div class="overflow-x-auto rounded-xl border border-border bg-surface">

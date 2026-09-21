@@ -111,6 +111,11 @@ class User extends Authenticatable
         return $this->platform_role instanceof PlatformRole;
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->platform_role === PlatformRole::SuperAdmin;
+    }
+
     public function hasRequiredIdentityDocuments(): bool
     {
         $types = $this->identityDocuments()->pluck('type')->map(

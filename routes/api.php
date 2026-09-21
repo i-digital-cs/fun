@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\Admin\CategoryController as ApiAdminCategoryController;
 use App\Http\Controllers\Api\Admin\CityController as ApiAdminCityController;
+use App\Http\Controllers\Api\Admin\EventModerationController as ApiEventModerationController;
 use App\Http\Controllers\Api\Admin\ReportModerationController as ApiReportModerationController;
+use App\Http\Controllers\Api\Admin\SiteSettingsController as ApiSiteSettingsController;
 use App\Http\Controllers\Api\Admin\UserModerationController as ApiUserModerationController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\MeController;
@@ -77,6 +79,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/reports', [ApiReportModerationController::class, 'index']);
         Route::put('/reports/{report}', [ApiReportModerationController::class, 'update']);
+
+        Route::get('/events', [ApiEventModerationController::class, 'index']);
+        Route::post('/events/{event}/cancel', [ApiEventModerationController::class, 'cancel']);
+        Route::post('/events/{event}/complete', [ApiEventModerationController::class, 'complete']);
+
+        Route::get('/settings', [ApiSiteSettingsController::class, 'show']);
+        Route::put('/settings', [ApiSiteSettingsController::class, 'update']);
 
         Route::get('/cities', [ApiAdminCityController::class, 'index']);
         Route::post('/cities', [ApiAdminCityController::class, 'store']);

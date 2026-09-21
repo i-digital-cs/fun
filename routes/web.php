@@ -1,9 +1,15 @@
 <?php
 
 use App\Http\Controllers\Web\AccountStatusController;
+use App\Http\Controllers\Web\Admin\AuditLogController;
 use App\Http\Controllers\Web\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Web\Admin\ChatModerationController;
 use App\Http\Controllers\Web\Admin\CityController as AdminCityController;
+use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Web\Admin\EventModerationController;
+use App\Http\Controllers\Web\Admin\IdentityDocumentModerationController;
 use App\Http\Controllers\Web\Admin\ReportModerationController;
+use App\Http\Controllers\Web\Admin\SiteSettingsController;
 use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
@@ -133,12 +139,40 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', AdminDashboardController::class)->name('dashboard');
+
         Route::get('/users', [UserModerationController::class, 'index'])->name('users.index');
         Route::post('/users/{user}/deactivate', [UserModerationController::class, 'deactivate'])->name('users.deactivate');
         Route::post('/users/{user}/reactivate', [UserModerationController::class, 'reactivate'])->name('users.reactivate');
 
+        Route::get('/identity', [IdentityDocumentModerationController::class, 'index'])->name('identity.index');
+        Route::get('/identity/users/{user}', [IdentityDocumentModerationController::class, 'show'])->name('identity.show');
+        Route::get('/identity/documents/{document}', [IdentityDocumentModerationController::class, 'download'])
+            ->whereNumber('document')
+            ->name('identity.download');
+
+        Route::get('/events', [EventModerationController::class, 'index'])->name('events.index');
+        Route::post('/events/{event}/cancel', [EventModerationController::class, 'cancel'])
+            ->whereNumber('event')
+            ->name('events.cancel');
+        Route::post('/events/{event}/complete', [EventModerationController::class, 'complete'])
+            ->whereNumber('event')
+            ->name('events.complete');
+
+        Route::get('/events/{event}/chat', [ChatModerationController::class, 'index'])
+            ->whereNumber('event')
+            ->name('chat.index');
+        Route::delete('/events/{event}/chat/{message}', [ChatModerationController::class, 'destroy'])
+            ->whereNumber('event')
+            ->name('chat.destroy');
+
         Route::get('/reports', [ReportModerationController::class, 'index'])->name('reports.index');
         Route::put('/reports/{report}', [ReportModerationController::class, 'update'])->name('reports.update');
+
+        Route::get('/settings', [SiteSettingsController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [SiteSettingsController::class, 'update'])->name('settings.update');
+
+        Route::get('/audit', [AuditLogController::class, 'index'])->name('audit.index');
 
         Route::get('/cities', [AdminCityController::class, 'index'])->name('cities.index');
         Route::get('/cities/create', [AdminCityController::class, 'create'])->name('cities.create');

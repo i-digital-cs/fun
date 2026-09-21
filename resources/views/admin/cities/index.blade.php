@@ -3,6 +3,7 @@
 @section('title', __('location.cities'))
 
 @section('content')
+    @include('admin._nav')
     <div class="mb-4 flex items-center justify-between gap-3">
         <h1 class="text-2xl font-semibold">{{ __('location.cities') }}</h1>
         <a href="{{ route('admin.cities.create') }}" class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">
