@@ -71,4 +71,11 @@ class EventPolicy
     {
         return $event->isMember($user);
     }
+
+    public function chat(User $user, Event $event): bool
+    {
+        return $user->canParticipate()
+            && $event->isMember($user)
+            && in_array($event->status, [EventStatus::Published, EventStatus::Completed], true);
+    }
 }

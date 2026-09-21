@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Auth\MeController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\CategoryListController;
 use App\Http\Controllers\Api\CityListController;
+use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatController;
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
@@ -50,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/events/{event}/members/{user}/demote', [ApiEventMembershipController::class, 'demote']);
         Route::post('/events/{event}/transfer', [ApiEventMembershipController::class, 'transfer']);
         Route::post('/events/{event}/leave', [ApiEventMembershipController::class, 'leave']);
+
+        Route::get('/events/{event}/messages', [ApiEventChatController::class, 'index']);
+        Route::post('/events/{event}/messages', [ApiEventChatController::class, 'store'])
+            ->middleware('throttle:messages');
     });
 
     Route::middleware('platform.admin')->prefix('admin')->group(function () {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
+use App\Http\Controllers\Web\Events\EventChatController;
 use App\Http\Controllers\Web\Events\EventController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
 use App\Http\Controllers\Web\HomeController;
@@ -100,6 +101,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/events/{event}/leave', [EventMembershipController::class, 'leave'])
             ->whereNumber('event')
             ->name('events.leave');
+
+        Route::get('/events/{event}/chat', [EventChatController::class, 'show'])
+            ->whereNumber('event')
+            ->name('events.chat');
+        Route::post('/events/{event}/chat', [EventChatController::class, 'store'])
+            ->whereNumber('event')
+            ->middleware('throttle:messages')
+            ->name('events.chat.store');
     });
 
     Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {

@@ -75,6 +75,11 @@ class Event extends Model
         return $this->hasMany(EventJoinRequest::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(EventMessage::class);
+    }
+
     public function isMember(User $user): bool
     {
         return $this->members()->where('user_id', $user->id)->exists();

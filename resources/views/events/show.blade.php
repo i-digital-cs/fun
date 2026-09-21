@@ -67,6 +67,7 @@
                         <span class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted">{{ __('events.request_pending') }}</span>
                     @elseif ($joinAction->value === 'joined')
                         <span class="rounded-lg bg-success/10 px-4 py-2 text-sm font-medium text-success">{{ __('events.joined') }}</span>
+                        <a href="{{ route('events.chat', $event) }}" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">{{ __('chat.open_chat') }}</a>
                         <a href="{{ route('events.members', $event) }}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium">{{ __('events.members') }}</a>
                         @unless($event->isOwnedBy(auth()->user()))
                             <form method="POST" action="{{ route('events.leave', $event) }}">

@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Next task:** Task 8 — Event chat (Reverb)
+**Next task:** Task 9 — Reports + block users
 
 ---
 
@@ -94,11 +94,20 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Depends on:** Tasks 5–6
 
 ### Task 8 — Event chat (Reverb)
-- **Status:** `todo`
-- **Scope:**
-  - One public chat per event
-  - Members only; channel auth server-side
-  - Spam/flood/XSS protections + rate limits
+- **Status:** `done`
+- **Completed:** 2026-09-21
+- **Summary:**
+  - `event_messages` table; members-only chat for published/completed events
+  - Laravel Reverb + Echo (`private-events.{id}.chat`); `EventChatChannel` authorizer
+  - `PostEventMessageService` / `ListEventMessagesService`; broadcast best-effort if Reverb down
+  - XSS: strip_tags + Blade/JS escaping; max 1000 chars; duplicate window 10s; `throttle:messages` (20/min)
+  - Web: `/events/{event}/chat`; API: `GET/POST /api/events/{event}/messages`
+  - Event show → Open chat for members
+- **Tests:** 54 passed (EventChatTest + ChatMessageSanitizerTest)
+- **UI checklist:** guest `/events/{id}/chat` → 302 login; member chat page 200
+- **Security:** EventPolicy `chat`; IDOR denied; channel auth members-only; deactivated/pending blocked
+- **Perf:** indexed `(event_id, id)`; paginated history
+- **Ops:** run `php artisan reverb:start` for live updates; HTTP send works without it
 - **Depends on:** Task 6
 
 ### Task 9 — Reports + block users
