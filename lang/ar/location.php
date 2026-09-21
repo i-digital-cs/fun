@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'city_created' => 'تم إنشاء المدينة بنجاح.',
+    'city_updated' => 'تم تحديث المدينة بنجاح.',
+    'city_deactivated' => 'تم إيقاف المدينة بنجاح.',
+    'city_activated' => 'تم تفعيل المدينة بنجاح.',
+    'city_already_inactive' => 'هذه المدينة موقوفة بالفعل.',
+    'city_already_active' => 'هذه المدينة مفعلة بالفعل.',
+    'city_unavailable' => 'المدينة المحددة غير متاحة.',
+    'invalid_distance' => 'المسافة المحددة غير مسموحة.',
+    'preferences_saved' => 'تم حفظ تفضيلات الموقع.',
+    'cities' => 'المدن',
+    'add_city' => 'إضافة مدينة',
+    'edit_city' => 'تعديل مدينة',
+    'name_en' => 'الاسم (إنجليزي)',
+    'name_ar' => 'الاسم (عربي)',
+    'latitude' => 'خط العرض',
+    'longitude' => 'خط الطول',
+    'active' => 'نشطة',
+    'inactive' => 'موقوفة',
+    'location_settings' => 'إعدادات الموقع',
+    'your_city' => 'مدينتك',
+    'discovery_distance' => 'مسافة الاستكشاف',
+    'save' => 'حفظ التفضيلات',
+    'km' => 'كم',
+];

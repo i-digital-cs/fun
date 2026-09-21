@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'city_created' => 'City created successfully.',
+    'city_updated' => 'City updated successfully.',
+    'city_deactivated' => 'City deactivated successfully.',
+    'city_activated' => 'City activated successfully.',
+    'city_already_inactive' => 'This city is already inactive.',
+    'city_already_active' => 'This city is already active.',
+    'city_unavailable' => 'Selected city is unavailable.',
+    'invalid_distance' => 'Selected distance is not allowed.',
+    'preferences_saved' => 'Location preferences saved.',
+    'cities' => 'Cities',
+    'add_city' => 'Add city',
+    'edit_city' => 'Edit city',
+    'name_en' => 'Name (English)',
+    'name_ar' => 'Name (Arabic)',
+    'latitude' => 'Latitude',
+    'longitude' => 'Longitude',
+    'active' => 'Active',
+    'inactive' => 'Inactive',
+    'location_settings' => 'Location settings',
+    'your_city' => 'Your city',
+    'discovery_distance' => 'Discovery distance',
+    'save' => 'Save preferences',
+    'km' => 'km',
+];
