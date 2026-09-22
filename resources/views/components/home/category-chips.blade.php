@@ -21,7 +21,7 @@
         </a>
 
         @foreach ($categories as $category)
-            <a href="{{ route('events.index', ['category_id' => $category->id]) }}"
+            <a href="{{ route('events.index', ['category_id' => $category->id, 'city_id' => '']) }}"
                @class([
                    'inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-colors',
                    'bg-primary text-white' => (int) $activeCategoryId === (int) $category->id,

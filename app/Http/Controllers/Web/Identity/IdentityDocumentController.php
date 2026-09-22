@@ -26,7 +26,7 @@ class IdentityDocumentController extends Controller
             return back()->withErrors(['identity' => $exception->getMessage()]);
         }
 
-        return redirect()->route('home')
+        return redirect()->route('dashboard')
             ->with('status', __('identity.activated'));
     }
 }

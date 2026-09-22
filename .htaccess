@@ -1,11 +1,16 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
 
     # Keep Let's Encrypt ACME challenges served from the web root
     RewriteRule ^\.well-known/ - [L]
 
     # Keep cgi-bin untouched
     RewriteRule ^cgi-bin/ - [L]
+
+    # Never expose /public in the browser URL (document root is project root).
+    RewriteCond %{THE_REQUEST} \s/+public([/?\s]) [NC]
+    RewriteRule ^public(?:/(.*))?$ /$1 [L,R=301]
 
     # Route everything else through Laravel's public/ front controller
     RewriteRule ^(.*)$ public/$1 [L]

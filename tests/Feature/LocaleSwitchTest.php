@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class LocaleSwitchTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_locale_switch_sets_arabic_and_rtl_direction(): void
     {
         $this->from(route('home'))
@@ -15,6 +18,6 @@ class LocaleSwitchTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('dir="rtl"', false)
-            ->assertSee(__('home.headline', [], 'ar'), false);
+            ->assertSee(__('design.welcome_guest', [], 'ar'), false);
     }
 }

@@ -1,0 +1,26 @@
+---
+description: Platform UI must follow DESIGN.md (community shell, tokens, CTAs, event cards).
+alwaysApply: true
+---
+
+# Design system (platform-wide)
+
+Follow `/DESIGN.md` for all frontend work.
+
+## Required
+
+- `/` is always the **marketing home** (community glass navbar). Authenticated members use **`/dashboard`** (`layouts/dashboard.blade.php`, sidebar + topbar + mobile nav from `together_home_page.html`).
+- Other member pages still use community glass navbar until migrated to dashboard shell.
+- Brand tokens: indigo primary, orange→amber CTA gradients, emerald trust/success, slate neutrals — via CSS `@theme` / Tailwind tokens only.
+- Event lists use the rich media event card pattern on marketing surfaces; dashboard nearby uses `x-dashboard.event-card`.
+- Forms: rounded-xl/2xl, indigo focus rings; Create Event CTAs orange gradient.
+- EN/AR + `dir` sync; prefer logical CSS (`start`/`end`, `ms`/`me`).
+- Atmosphere utilities in `app.css`: `animate-aurora`, `animate-float`, `bg-dots`, `bg-dots-slate`, `bg-noise`, `fancy-scroll`, plus `.dash-sidebar` / `.dash-main` / `.dash-hero`.
+
+## Do not
+
+- Invent one-off color themes per page
+- Ship flat gray admin-panel aesthetics on member surfaces
+- Duplicate a second navigation chrome
+
+When unsure, match `resources/views/components/community/*` and `DESIGN.md`.

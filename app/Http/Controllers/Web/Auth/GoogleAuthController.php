@@ -35,6 +35,6 @@ class GoogleAuthController extends Controller
             return redirect()->route('identity.create');
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route('dashboard'));
     }
 }

@@ -33,3 +33,109 @@
         @apply bg-background text-text font-sans;
     }
 }
+
+@keyframes aurora {
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(48px, -32px) scale(1.08);
+    }
+    66% {
+        transform: translate(-36px, 24px) scale(0.94);
+    }
+}
+
+@keyframes float-y {
+    0%,
+    100% {
+        transform: translateY(0) rotate(var(--float-rot, 0deg));
+    }
+    50% {
+        transform: translateY(-14px) rotate(var(--float-rot, 0deg));
+    }
+}
+
+@utility animate-aurora {
+    animation: aurora 14s ease-in-out infinite;
+}
+
+@utility animate-float {
+    animation: float-y 6s ease-in-out infinite;
+}
+
+@utility bg-dots {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.16) 1px, transparent 1.4px);
+    background-size: 22px 22px;
+}
+
+@utility bg-dots-slate {
+    background-image: radial-gradient(circle, rgba(15, 23, 42, 0.055) 1px, transparent 1.4px);
+    background-size: 24px 24px;
+}
+
+@utility bg-noise {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.05'/></svg>");
+}
+
+@utility fancy-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+
+    &::-webkit-scrollbar {
+        height: 6px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.3);
+        border-radius: 999px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.55);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-aurora,
+    .animate-float {
+        animation: none;
+    }
+}
+
+/* Authenticated member dashboard (together_home_page.html → Blade) */
+.dash-sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 30;
+    width: 15.5rem;
+    border-inline-end: 1px solid #e7ebf3;
+    background: #fff;
+    padding: 1.25rem 0.95rem;
+}
+
+.dash-main {
+    margin-inline-start: 15.5rem;
+    min-width: 0;
+    width: calc(100% - 15.5rem);
+}
+
+.dash-hero {
+    background:
+        linear-gradient(90deg, rgba(8, 19, 44, 0.94) 0%, rgba(8, 19, 44, 0.73) 48%, rgba(8, 19, 44, 0.12) 100%),
+        url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1800&q=88') center / cover;
+}
+
+@media (max-width: 850px) {
+    .dash-sidebar {
+        display: none;
+    }
+
+    .dash-main {
+        margin-inline-start: 0;
+        width: 100%;
+    }
+}

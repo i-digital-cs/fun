@@ -9,18 +9,20 @@
     <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-screen flex-col bg-background text-text antialiased">
-    <x-layout.site-header />
+<body class="relative flex min-h-screen flex-col antialiased">
+    <x-community.ambient />
 
-    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-4 sm:px-6">
+    <x-community.navbar />
+
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
         @if (session('status'))
-            <div class="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-success" role="status">
+            <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
                 {{ session('status') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">
+            <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
                 <ul class="list-disc ps-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -32,7 +34,7 @@
         @yield('content')
     </main>
 
-    <x-layout.site-footer />
+    <x-community.footer />
 
     @stack('scripts')
 </body>

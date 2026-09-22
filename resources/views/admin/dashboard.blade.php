@@ -10,9 +10,9 @@
 
     <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($stats as $key => $value)
-            <div class="rounded-2xl border border-border bg-surface p-5">
-                <p class="text-xs font-semibold uppercase tracking-wide text-muted">{{ __('admin.stat_'.$key) }}</p>
-                <p class="mt-2 text-3xl font-semibold">{{ $value }}</p>
+            <div class="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('admin.stat_'.$key) }}</p>
+                <p class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">{{ $value }}</p>
             </div>
         @endforeach
     </div>

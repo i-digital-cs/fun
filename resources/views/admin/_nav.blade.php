@@ -10,11 +10,11 @@
     ];
 @endphp
 
-<nav class="mb-6 flex flex-wrap gap-2 rounded-2xl border border-border bg-surface p-3 text-sm">
+<nav class="mb-6 flex flex-wrap gap-2 rounded-3xl border border-slate-200/70 bg-white/80 p-3 text-sm shadow-sm backdrop-blur">
     @foreach ($links as $link)
         <a
             href="{{ route($link['route']) }}"
-            class="rounded-lg px-3 py-1.5 {{ request()->routeIs($link['route']) ? 'bg-primary text-white' : 'text-muted hover:bg-background hover:text-text' }}"
+            class="rounded-full px-3.5 py-1.5 font-medium transition {{ request()->routeIs($link['route']) ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-700' }}"
         >
             {{ $link['label'] }}
         </a>
@@ -22,13 +22,13 @@
     @if (auth()->user()?->isSuperAdmin())
         <a
             href="{{ route('admin.settings.edit') }}"
-            class="rounded-lg px-3 py-1.5 {{ request()->routeIs('admin.settings.*') ? 'bg-primary text-white' : 'text-muted hover:bg-background hover:text-text' }}"
+            class="rounded-full px-3.5 py-1.5 font-medium transition {{ request()->routeIs('admin.settings.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-700' }}"
         >
             {{ __('admin.site_settings') }}
         </a>
         <a
             href="{{ route('admin.audit.index') }}"
-            class="rounded-lg px-3 py-1.5 {{ request()->routeIs('admin.audit.*') ? 'bg-primary text-white' : 'text-muted hover:bg-background hover:text-text' }}"
+            class="rounded-full px-3.5 py-1.5 font-medium transition {{ request()->routeIs('admin.audit.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25' : 'text-slate-500 hover:bg-indigo-50 hover:text-indigo-700' }}"
         >
             {{ __('admin.audit') }}
         </a>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web\Events;
 
+use App\Enums\EventStatus;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Events\DiscoverEventsRequest;
@@ -30,29 +31,50 @@ class EventController extends Controller
     ): View {
         $filters = $request->filters();
         $events = $discover->discover($request->user(), $filters);
-        $joinActionsById = $joinActions->resolveMany($request->user(), $events->getCollection());
 
         $hasNearbyOrigin = array_key_exists('city_id', $filters)
             ? $filters['city_id'] !== null
             : $request->user()?->city_id !== null;
 
+        $nationwideFallback = false;
+        if ($hasNearbyOrigin && $events->total() === 0) {
+            $fallback = $discover->discover($request->user(), array_merge($filters, ['city_id' => null]));
+            if ($fallback->total() > 0) {
+                $events = $fallback;
+                $nationwideFallback = true;
+                $hasNearbyOrigin = false;
+            }
+        }
+
+        $joinActionsById = $joinActions->resolveMany($request->user(), $events->getCollection());
+
         return view('events.index', [
             'events' => $events,
             'joinActionsById' => $joinActionsById,
-            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
+            'categories' => Category::query()
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('name_en')
+                ->withCount([
+                    'events as published_events_count' => fn ($q) => $q
+                        ->where('status', EventStatus::Published)
+                        ->where('starts_at', '>=', now()->subDay()),
+                ])
+                ->get(),
             'cities' => City::query()->active()->orderBy('name_en')->get(),
             'distances' => config('location.distances_km'),
             'filters' => [
                 'category_id' => $filters['category_id'] ?? null,
                 'city_id' => array_key_exists('city_id', $filters)
                     ? $filters['city_id']
-                    : $request->user()?->city_id,
+                    : ($nationwideFallback ? null : $request->user()?->city_id),
                 'distance_km' => $filters['distance_km']
                     ?? $request->user()?->distance_km
                     ?? config('location.default_distance_km'),
                 'q' => $filters['q'] ?? null,
             ],
             'hasNearbyOrigin' => $hasNearbyOrigin,
+            'nationwideFallback' => $nationwideFallback,
         ]);
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Event;
 use App\Services\Events\DiscoverNearbyEventsService;
 use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
@@ -44,9 +45,20 @@ class HomeController extends Controller
         }
 
         $events = $discover->discover($user, $filters);
+        $hasNearbyOrigin = $user?->city_id !== null;
+        $nationwideFallback = false;
+
+        if ($hasNearbyOrigin && $events->total() === 0) {
+            $fallback = $discover->discover($user, array_merge($filters, ['city_id' => null]));
+            if ($fallback->total() > 0) {
+                $events = $fallback;
+                $nationwideFallback = true;
+            }
+        }
+
         $joinActionsById = $joinActions->resolveMany($user, $events->getCollection());
 
-        $hasNearbyOrigin = $user?->city_id !== null;
+        $cityName = $user?->city?->localizedName();
 
         $memberships = Collection::make();
         $pendingRequests = Collection::make();
@@ -57,17 +69,51 @@ class HomeController extends Controller
             $pendingRequests = $homeParticipations['pendingRequests'];
         }
 
+        $weekStart = now()->startOfWeek();
+        $weekEnd = now()->endOfWeek();
+
+        $weekEvents = Event::query()
+            ->where('status', EventStatus::Published)
+            ->whereBetween('starts_at', [$weekStart, $weekEnd])
+            ->withCount('members')
+            ->get();
+
+        $todayEvents = Event::query()
+            ->where('status', EventStatus::Published)
+            ->whereDate('starts_at', today())
+            ->withCount('members')
+            ->get();
+
+        $stats = [
+            'events' => $weekEvents->count(),
+            'going' => (int) $weekEvents->sum('members_count'),
+            'left' => (int) $todayEvents->sum(fn (Event $event) => $event->remainingCapacity()),
+        ];
+
+        $highlight = Event::query()
+            ->with(['category', 'city', 'creator'])
+            ->withCount('members')
+            ->where('status', EventStatus::Published)
+            ->whereDate('starts_at', today())
+            ->where('starts_at', '>=', now())
+            ->orderBy('starts_at')
+            ->first();
+
         return view('home.index', [
             'appName' => site_display_name(),
             'categories' => $categories,
             'publishedTotal' => (int) $categories->sum('published_events_count'),
             'user' => $user,
+            'cityName' => $cityName,
             'when' => is_string($when) ? $when : null,
             'events' => $events,
             'joinActionsById' => $joinActionsById,
             'hasNearbyOrigin' => $hasNearbyOrigin,
+            'nationwideFallback' => $nationwideFallback,
             'memberships' => $memberships,
             'pendingRequests' => $pendingRequests,
+            'stats' => $stats,
+            'highlight' => $highlight,
         ]);
     }
 }

@@ -26,7 +26,7 @@ class IdentityDocumentsTest extends TestCase
             'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
-        $response->assertRedirect(route('home'));
+        $response->assertRedirect(route('dashboard'));
         $user->refresh();
 
         $this->assertSame(AccountStatus::Active, $user->status);

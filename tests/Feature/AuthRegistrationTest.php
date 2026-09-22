@@ -44,7 +44,7 @@ class AuthRegistrationTest extends TestCase
             'password' => 'Password1!',
         ]);
 
-        $response->assertRedirect(route('home'));
+        $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
     }
 

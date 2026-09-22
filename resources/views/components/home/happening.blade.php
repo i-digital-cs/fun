@@ -2,6 +2,7 @@
     'events',
     'joinActionsById' => [],
     'hasNearbyOrigin' => false,
+    'nationwideFallback' => false,
     'user' => null,
 ])
 
@@ -10,7 +11,7 @@
         <div>
             <div class="flex flex-wrap items-center gap-2">
                 <h2 id="home-happening-heading" class="text-xl font-bold tracking-tight text-text sm:text-2xl">
-                    @if ($hasNearbyOrigin && $user?->city)
+                    @if ($hasNearbyOrigin && $user?->city && ! $nationwideFallback)
                         {{ __('home.happening_near', ['city' => $user->city->localizedName()]) }}
                     @else
                         {{ __('home.happening') }}
@@ -38,12 +39,12 @@
         </div>
     </div>
 
-    @if (! $hasNearbyOrigin && $events->isNotEmpty())
+    @if ($nationwideFallback || (! $hasNearbyOrigin && $events->isNotEmpty()))
         <p class="rounded-lg border border-info/30 bg-info/10 px-4 py-3 text-sm text-info">{{ __('events.nationwide_notice') }}</p>
     @endif
 
     @if ($events->isEmpty())
-        <div class="rounded-2xl border border-border bg-surface px-6 py-10 text-center">
+        <div class="rounded-2xl border border-border bg-surface px-6 py-10 text-center shadow-sm">
             <p class="text-base font-medium text-text">{{ __('events.empty_nearby') }}</p>
             <p class="mt-2 text-sm text-muted">{{ __('home.empty_hint') }}</p>
             <div class="mt-5 flex flex-wrap justify-center gap-2">

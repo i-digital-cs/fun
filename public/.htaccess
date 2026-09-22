@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # If this folder was hit as /public/... in the browser, strip that prefix.
+    RewriteCond %{THE_REQUEST} \s/+public/([^\s?]*) [NC]
+    RewriteRule ^ /%1 [L,R=301]
+    RewriteCond %{THE_REQUEST} \s/+public[\s?] [NC]
+    RewriteRule ^ / [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

@@ -14,6 +14,7 @@ return [
     'english' => 'English',
     'arabic' => 'العربية',
     'home' => 'الرئيسية',
+    'dashboard' => 'لوحة التحكم',
     'primary_nav' => 'القائمة الرئيسية',
     'menu' => 'القائمة',
     'chat' => 'المحادثة',

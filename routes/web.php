@@ -14,6 +14,7 @@ use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
+use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\Events\EventChatController;
 use App\Http\Controllers\Web\Events\EventController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
@@ -54,6 +55,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
     Route::get('/account/deactivated', [AccountStatusController::class, 'deactivated'])->name('account.deactivated');
 
     Route::get('/identity', [IdentityDocumentController::class, 'create'])->name('identity.create');

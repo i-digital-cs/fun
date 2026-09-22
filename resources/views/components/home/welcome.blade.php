@@ -9,7 +9,7 @@
     $cityName = $user?->city?->localizedName();
     $isActive = $user?->canParticipate() === true;
     $needsDocs = $user?->needsIdentityDocuments() === true;
-    $activeWhen = in_array($when, ['today', 'tomorrow', 'weekend'], true) ? $when : 'today';
+    $activeWhen = in_array($when, ['today', 'tomorrow', 'weekend'], true) ? $when : null;
 @endphp
 
 <section class="mb-4 space-y-3">
@@ -48,19 +48,19 @@
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-1 self-start rounded-xl bg-slate-100 p-1 md:self-auto" role="group" aria-label="{{ __('home.date_filter') }}">
+        <div class="flex flex-wrap items-center gap-1 self-start rounded-xl bg-slate-100 p-1 shadow-sm md:self-auto" role="group" aria-label="{{ __('home.date_filter') }}">
             @foreach (['today' => __('home.today'), 'tomorrow' => __('home.tomorrow'), 'weekend' => __('home.weekend')] as $key => $label)
                 <a href="{{ route('home', ['when' => $key]) }}"
                    @class([
-                       'rounded-lg px-3 py-1.5 text-xs font-medium sm:text-sm',
+                       'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm',
                        'bg-surface font-semibold text-primary shadow-sm' => $activeWhen === $key,
-                       'text-muted hover:text-text' => $activeWhen !== $key,
+                       'text-muted hover:bg-surface/70 hover:text-text' => $activeWhen !== $key,
                    ])>
                     {{ $label }}
                 </a>
             @endforeach
             <a href="{{ route('events.index') }}"
-               class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:text-text sm:text-sm">
+               class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-surface/70 hover:text-text sm:text-sm">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <rect x="3" y="5" width="18" height="16" rx="2"/>
                     <path d="M3 10h18M8 3v4M16 3v4"/>

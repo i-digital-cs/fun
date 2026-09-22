@@ -2,394 +2,251 @@
 
 # Product Design System
 
+**This file is the single source of truth for UI across the whole platform** (home, discover, event details, auth, settings, safety, and admin chrome). Blade implementations must follow it. Do not invent one-off visual patterns per page.
+
+---
+
 ## 1. Design Goal
 
-The application should feel like a modern, trustworthy community platform.
+The product should feel like a **vibrant, trustworthy neighborhood meetup platform** — not a flat admin panel and not a generic social feed.
 
-The design should communicate:
+Communicate:
 
-* community
-* activity
-* trust
-* safety
-* simplicity
-* locality
+* community & locality
+* energy & activity
+* trust & safety
+* simplicity of the join journey
 * real-world interaction
 
-Avoid making the interface look like a generic admin dashboard or generic social-media clone.
+Visual atmosphere is required: aurora ambient background, glass surfaces, soft gradients, and intentional motion. Flat gray-on-white alone is not enough.
 
 ---
 
-# 2. Core UX Principle
+## 2. Core UX Principle
 
-The primary user journey should be extremely simple:
+Primary journey:
 
-Discover
-→ View
-→ Request to Join
-→ Get Accepted
-→ Participate
-→ Chat
-→ Attend
-→ Rate
+Discover → View → Request to Join → Get Accepted → Participate → Chat → Attend → Rate
 
-Creating an event should also be simple:
+Create journey:
 
-Create Event
-→ Choose Activity
-→ Choose Location
-→ Choose Date
-→ Set Capacity
-→ Add Requirements
-→ Publish
+Create Event → Activity → Location → Date → Capacity → Requirements → Publish
 
 ---
 
-# 3. Primary Screens
+## 3. Primary Screens
 
-## Public
+### Public / member
 
-* Landing page
-* Discover events
-* Event details
-* Login
-* Registration
+* Home (hero + participations + discover + trust)
+* Discover / Nearby events
+* Event details, members, requests, chat
+* Login / Register
+* Identity upload
+* Location settings
+* Report / Block / Safety guidelines
 
-## Authenticated
+### Administration
 
-* Home
-* Nearby events
-* My events
-* Create event
-* Event details
-* Join requests
-* Event members
-* Event chat
-* Profile
-* Settings
-* Reports
+* Dashboard, users, identity, events, reports, categories, cities, settings, audit
 
-## Administration
-
-* Dashboard
-* Users
-* Identity documents
-* Events
-* Reports
-* Moderation
-* Categories
-* Cities
-* Site settings (display name / brand title)
-* Audit activity
+Admin keeps denser data tables but **must use the same brand tokens, typography, radius, and CTA styles**. Admin may keep `admin._nav` under the shared community shell.
 
 ---
 
-# 4. Event Card
+## 4. Shells
 
-Event cards should communicate the most important information immediately.
+### A) Marketing / guest shell (`layouts/home.blade.php`, `layouts/app.blade.php` for guests & public flows)
 
-Example:
+1. **Ambient layer** — aurora + dots + noise (`x-community.ambient`)
+2. **Glass sticky navbar** (`x-community.navbar`)
+3. **Main** — `max-w-7xl`
+4. **Footer** (`x-community.footer`)
 
-Football
+### B) Authenticated member dashboard (`layouts/dashboard.blade.php`)
 
-Football — Obour
+Source mock: `public/together_home_page.html`.
 
-Al Ahly Club Playground
+1. **Fixed sidebar** — brand, Home / Discover / My Events / Create, explore categories, city+distance card (`x-dashboard.sidebar`)
+2. **Sticky topbar** — search, locale, notifications, profile (`x-dashboard.topbar`)
+3. **Main canvas** — soft `#f5f7fb` background, greeting, photo hero with find-events form, category grid, nearby events + starting-soon + safety side stack, how-it-works, create CTA
+4. **Mobile bottom nav** (`x-dashboard.mobile-nav`)
 
-Today · 8:00 PM
+`/` is always the **marketing home** (guest shell). Authenticated members use **`/dashboard`** for the sidebar dashboard.
 
-7 / 10 members
+Brand tokens stay indigo primary + orange Create CTAs (prefer orange Create over mock’s blue create button). Typography remains IBM Plex (not Inter from the static mock).
 
-80 EGP / person
-
-[View Event]
-
-The card should not expose unnecessary information.
-
----
-
-# 5. Event Details
-
-Recommended hierarchy:
-
-1. Activity/title
-2. Image
-3. Date/time
-4. Location
-5. Venue
-6. Description
-7. Requirements
-8. Cost information
-9. Capacity
-10. Members
-11. Join request
-12. Chat for members
+Do not reintroduce the old flat `site-header` / `site-footer` on member pages.
 
 ---
 
-# 6. Join Request UX
+## 5. Typography
 
-The primary action should be obvious.
-
-Before requesting:
-
-[Request to Join]
-
-After requesting:
-
-[Request Pending]
-
-After approval:
-
-[Joined]
-
-After rejection:
-
-[Request Rejected]
-
-After full capacity:
-
-[Event Full]
-
-The backend remains the authority for all states.
+* English: IBM Plex Sans
+* Arabic: IBM Plex Sans Arabic
+* `html[lang]` + `dir` always match locale (`ltr` / `rtl`)
+* Headings: extrabold / semibold, tight tracking
+* Body: readable slate; muted for secondary
 
 ---
 
-# 7. Event Ownership
-
-Owner controls should be visually distinct.
-
-Owner actions:
-
-* Edit event
-* Manage members
-* Approve/reject requests
-* Promote member
-* Transfer ownership
-* Moderate event chat
-* Leave after ownership transfer
-
----
-
-# 8. Chat UI
-
-Event chat should feel lightweight and realtime.
-
-Display:
-
-* sender
-* message
-* timestamp
-* moderation actions where authorized
-
-Avoid unnecessary social-media features in V1.
-
----
-
-# 9. Identity UI
-
-The identity flow should communicate why documents are required without making unnecessary security promises.
-
-Recommended language:
-
-"Identity documents are required to help maintain a safer community."
-
-Upload zones:
-
-* large dashed border (`slate-300`)
-* clear indigo iconography
-* immediate emerald success confirmation after successful upload/activation
-
-Avoid absolute claims such as:
-
-"This app is 100% safe."
-"This platform is 100% secured."
-
-Prefer concrete safer-community language unless product explicitly overrides this rule in MASTER_CONTEXT.md.
-
-Admin interfaces may display identity documents only to authorized staff.
-
----
-
-# 10. Safety UX
-
-Safety features should be easy to find.
-
-Include:
-
-* Report
-* Block user (V1)
-* Event moderation
-* Account deactivation handling
-
-Do not hide reporting or blocking behind complicated menus.
-
----
-
-# 11. Typography
-
-Use a professional readable font system supporting:
-
-* Arabic
-* English
-
-The UI must support:
-
-* LTR for English
-* RTL for Arabic
-
-`dir` and locale must stay in sync.
-
-Typography must remain readable on:
-
-* desktop
-* tablet
-* mobile
-
----
-
-# 12. Color System
-
-Approved V1 brand palette:
+## 6. Color System
 
 | Token | Role | Value |
 |------|------|-------|
-| Primary | Trust & community | Indigo `#4F46E5` (Tailwind `indigo-600`) |
-| Accent | Energy & CTA | Orange `#F97316` (Tailwind `orange-500`) |
-| Success / trust feedback | Approval & positive status | Emerald `#10B981` (Tailwind `emerald-500`) |
-| Background | App background | Slate `#F8FAFC` (Tailwind `slate-50`) |
-| Surface | Cards / panels | White |
-| Text | Primary text | Slate `#0F172A` (Tailwind `slate-900`) |
-| Muted | Secondary text | Slate `#64748B` (Tailwind `slate-500`) |
-| Border | Borders / dashed upload zones | Slate `#CBD5E1` (Tailwind `slate-300`) |
+| Primary | Trust, nav active, progress | Indigo `#4F46E5` |
+| Primary deep | Hero gradients | Indigo/Violet `#4338CA` → `#6D28D9` |
+| Accent | High-conversion CTAs | Orange `#F97316` → Amber `#F59E0B` gradients |
+| Success / trust | Verified, positive | Emerald `#10B981` / teal trust banners |
+| Background | Page (under ambient) | Slate `#F8FAFC` |
+| Surface | Cards | White / `white/80` glass |
+| Text | Primary text | Slate `#0F172A` |
+| Muted | Secondary | Slate `#64748B` |
+| Border | Dividers | Slate `#CBD5E1` / soft `slate-200/70` |
 
-Semantic colors required:
+**Usage rules**
 
-* Primary
-* Secondary / Accent
-* Background
-* Surface
-* Text
-* Muted
-* Border
-* Success
-* Warning
-* Danger
-* Info
+* Primary indigo: active nav pills, links, progress bars (not urgent)
+* Accent orange gradients: Create Event, Search CTA, View Event, Request to Join, chat ping dots
+* Emerald: verified badge, confirmed attendance, trust banner (`from-emerald-600 to-teal-600`)
+* Location chips: `bg-indigo-100 text-indigo-700`
+* Do not invent page-specific brand colors
 
-Usage rules:
-
-* Primary (Indigo): navbar, headings, active navigation, own chat bubbles
-* Accent (Orange): high-conversion CTAs only — Create Event, Join / Request to Join, chat notification pings
-* Success (Emerald): account approved states, active indicators, positive confirmation
-* Incoming chat bubbles: `slate-100`
-* Own chat bubbles: `indigo-600` with white text
-* Location tags: soft indigo pill (`bg-indigo-100 text-indigo-700`)
-
-Semantic colors must be used consistently via CSS variables / design tokens.
-
-Do not introduce arbitrary colors per page.
+CSS tokens live in `resources/css/app.css` (`@theme` + atmosphere utilities: `animate-aurora`, `animate-float`, `bg-dots`, `bg-dots-slate`, `bg-noise`, `fancy-scroll`).
 
 ---
 
-# 13. Components
+## 7. Shape, depth, motion
 
-Create reusable components for:
-
-* buttons
-* inputs
-* selects
-* cards
-* event cards
-* badges
-* alerts
-* modals
-* avatars
-* pagination
-* empty states
-* loading states
-* error states
-* chat messages
+* Large radii: pages/cards `rounded-3xl` / `rounded-[2rem]`; pills `rounded-full`; controls `rounded-xl` / `rounded-2xl`
+* Soft borders: `border-slate-200/70`
+* Shadows: soft elevation; indigo/orange tinted shadows on primary CTAs (`shadow-orange-500/30`, `shadow-indigo-600/25`)
+* Hover: slight lift (`-translate-y-0.5` / `-translate-y-1`) on cards and CTAs
+* Motion: aurora + float on decorative layers; respect `prefers-reduced-motion`
+* Prefer logical CSS (`start`/`end`, `ms`/`me`) for RTL
 
 ---
 
-# 14. Responsive Design
+## 8. Buttons & CTAs
 
-Mobile is a first-class experience.
+| Kind | Style |
+|------|--------|
+| Primary conversion | `bg-gradient-to-r from-orange-500 to-amber-500`, bold white, rounded-full or rounded-xl, orange glow shadow |
+| Secondary brand | Indigo→violet gradient or solid indigo |
+| Ghost / quiet | White/border slate, hover indigo border |
+| Destructive | Danger text/border; never orange |
 
-The application must work properly at:
-
-* mobile
-* tablet
-* desktop
-
-Do not simply shrink desktop layouts.
-
-Navigation and actions should be redesigned appropriately for smaller screens.
+One primary orange CTA per view when possible.
 
 ---
 
-# 15. Empty States
+## 9. Forms & inputs
 
-Every major collection needs a useful empty state.
-
-Example:
-
-"No events nearby yet."
-
-Then provide an appropriate action:
-
-[Create an Event]
+* Labels: small, muted, medium weight
+* Fields: `rounded-xl` or `rounded-2xl`, soft border, focus ring indigo (`focus:ring-4 focus:ring-indigo-100`)
+* Filter panels: white/glass card `rounded-3xl`, not dense admin tables on member pages
+* Upload zones: dashed slate border, indigo iconography, emerald success
 
 ---
 
-# 16. Error States
+## 10. Event card (platform standard)
 
-Errors should be understandable.
+Reuse `x-events.card` / discover card pattern everywhere events are listed.
 
-Avoid technical messages such as:
+Must show:
 
-"SQLSTATE[23000]..."
+* Cover image (real or `public/images/activities/*.png` fallback via `event_cover_url`)
+* Category emoji + name chip
+* Price or Free chip
+* Urgency chip when useful (Almost full / Filling fast / New / Popular)
+* Schedule line (indigo)
+* Title, venue
+* Attendance progress + host initials
+* Full-width orange **View Event** CTA
 
-Users should see a human-readable message.
-
-Technical details belong in logs, not normal user-facing UI.
-
----
-
-# 17. Accessibility
-
-UI should consider:
-
-* keyboard navigation
-* readable contrast
-* semantic HTML
-* labels
-* focus states
-* screen-reader-friendly controls
-* touch target sizes
+No flat border-only cards without media treatment on member surfaces.
 
 ---
 
-# 18. Trust
+## 11. Event details
 
-The visual system should communicate trust through:
+Hierarchy:
 
-* clean hierarchy
-* clear identity state
-* clear event ownership
-* transparent event information
-* visible moderation/reporting tools
-* consistent feedback
+1. Media / category
+2. Title
+3. Date/time & venue
+4. Description & requirements
+5. Cost & capacity
+6. Primary join CTA (orange)
+7. Owner tools (visually secondary)
+8. Members / chat entry
 
-Trust should come from concrete product behavior, not exaggerated marketing claims.
+Use a single large `rounded-3xl` surface card; primary action obvious.
 
 ---
 
-# 19. Design Rule
+## 12. Join request states
 
-Do not implement a new component or visual pattern if an existing component can be reused.
+* Request to Join — orange CTA  
+* Request Pending — muted outline  
+* Joined — emerald soft badge + chat CTA  
+* Rejected / Full — muted/warning  
 
-The design system is a single source of truth for frontend appearance.
+Backend remains authority for state.
 
-Changes to the visual system should be reflected consistently across the application.
+---
+
+## 13. Home-specific (already shipped)
+
+* Gradient indigo hero with glass search, date chips, stats, tonight highlight
+* Category rail (`fancy-scroll`)
+* Participation stepper cards
+* Discover grid + orange “Gather neighbors” host CTA card
+* Emerald trust strip
+
+Other pages do not need a full hero; they need the **same shell + card/CTA language**.
+
+---
+
+## 14. Empty & error states
+
+Empty collections: clear copy + one orange or indigo action (e.g. Create an Event).
+
+Errors: human-readable only; no SQL/stack traces in UI.
+
+---
+
+## 15. Accessibility
+
+* Semantic HTML, labels, focus rings
+* Contrast on gradients (white text on indigo/orange)
+* Touch targets ≥ 40px where possible
+* Keyboard-reachable nav and menus
+
+---
+
+## 16. i18n / RTL
+
+* All user strings via `lang/{en,ar}` (`design.php`, `home.php`, `events.php`, …)
+* Locale toggle in navbar + footer
+* Mirror layouts with logical properties; test AR on key screens
+
+---
+
+## 17. Components to reuse
+
+Prefer existing community components and helpers:
+
+* `x-community.ambient` / `navbar` / `footer` / `trust`
+* `x-events.card`
+* Helpers: `site_display_name()`, `category_emoji()`, `event_cover_url()`, `user_initials()`
+
+Do not add a second header/footer system.
+
+---
+
+## 18. Design rule
+
+If an existing pattern can be reused, reuse it.
+
+Any visual-system change starts in **this file**, then lands in `resources/css/app.css` and shared Blade components, then propagates to pages — never the reverse.
