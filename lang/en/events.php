@@ -53,6 +53,7 @@ return [
     'view_event' => 'View Event',
     'today' => 'Today',
     'tomorrow' => 'Tomorrow',
+    'free' => 'Free',
     'distance_away' => ':km km away',
     'cost_per_person_amount' => ':amount EGP / person',
     'request_to_join' => 'Request to Join',

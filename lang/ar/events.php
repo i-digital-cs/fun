@@ -53,6 +53,7 @@ return [
     'view_event' => 'عرض الفعالية',
     'today' => 'اليوم',
     'tomorrow' => 'غدًا',
+    'free' => 'مجاني',
     'distance_away' => 'على بعد :km كم',
     'cost_per_person_amount' => ':amount ج.م / فرد',
     'request_to_join' => 'طلب الانضمام',

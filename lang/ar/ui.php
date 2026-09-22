@@ -16,6 +16,8 @@ return [
     'home' => 'الرئيسية',
     'primary_nav' => 'القائمة الرئيسية',
     'menu' => 'القائمة',
+    'chat' => 'المحادثة',
+    'notifications' => 'الإشعارات',
     'account_deactivated_title' => 'تم إيقاف الحساب',
     'account_deactivated_body' => 'تم إيقاف حسابك بواسطة المسؤول. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.',
 ];

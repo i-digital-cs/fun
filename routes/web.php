@@ -24,11 +24,14 @@ use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
 use App\Http\Controllers\Web\Safety\BlockController;
 use App\Http\Controllers\Web\Safety\ReportController;
+use App\Http\Controllers\Web\Safety\SafetyGuidelinesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
+
+Route::get('/safety', SafetyGuidelinesController::class)->name('safety.guidelines');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])

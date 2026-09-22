@@ -52,4 +52,12 @@ return [
         'resolved' => 'Resolved',
         'dismissed' => 'Dismissed',
     ],
+    'guidelines_title' => 'Safety guidelines',
+    'guidelines_intro' => 'How we keep community events clearer and safer to join.',
+    'guideline_identity_title' => 'Identity documents',
+    'guideline_report_title' => 'Report when something is wrong',
+    'guideline_report_body' => 'You can report users, events, or messages. Moderators review reports and can take action.',
+    'guideline_block_title' => 'Block users',
+    'guideline_block_body' => 'Blocking hides that person’s events from your discover feed and stops join/chat interactions between you.',
+    'guidelines_disclaimer' => 'These tools help maintain a safer community. They do not guarantee that every interaction is risk-free.',
 ];

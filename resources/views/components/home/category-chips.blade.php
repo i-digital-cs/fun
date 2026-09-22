@@ -4,7 +4,7 @@
     'activeCategoryId' => null,
 ])
 
-<section class="mb-8" aria-label="{{ __('home.categories') }}">
+<section class="mb-4" aria-label="{{ __('home.categories') }}">
     <div class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         <a href="{{ route('events.index') }}"
            @class([

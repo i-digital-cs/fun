@@ -16,6 +16,8 @@ return [
     'home' => 'Home',
     'primary_nav' => 'Primary',
     'menu' => 'Menu',
+    'chat' => 'Chat',
+    'notifications' => 'Notifications',
     'account_deactivated_title' => 'Account deactivated',
     'account_deactivated_body' => 'Your account has been deactivated by an administrator. Contact support if you believe this is a mistake.',
 ];

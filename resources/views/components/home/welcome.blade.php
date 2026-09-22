@@ -1,6 +1,7 @@
 @props([
     'appName',
     'user' => null,
+    'when' => null,
 ])
 
 @php
@@ -8,19 +9,22 @@
     $cityName = $user?->city?->localizedName();
     $isActive = $user?->canParticipate() === true;
     $needsDocs = $user?->needsIdentityDocuments() === true;
+    $activeWhen = in_array($when, ['today', 'tomorrow', 'weekend'], true) ? $when : 'today';
 @endphp
 
-<section class="mb-8 space-y-4">
-    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div class="min-w-0 space-y-2">
-            <div class="flex flex-wrap items-center gap-2">
+<section class="mb-4 space-y-3">
+    <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div class="min-w-0 space-y-1">
+            <div class="mb-1 flex flex-wrap items-center gap-2">
                 @if ($isAuth)
                     <h1 class="text-2xl font-bold tracking-tight text-text sm:text-3xl">
                         {{ __('home.welcome_back', ['name' => $user->name]) }}
                     </h1>
                     @if ($isActive)
-                        <span class="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-success shadow-sm">
-                            <span class="inline-block h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true"></span>
+                        <span class="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm">
+                            <svg class="h-3.5 w-3.5 text-success" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.06 14.54l-3.48-3.48 1.41-1.41 2.07 2.07 4.24-4.24 1.41 1.41-5.65 5.65z"/>
+                            </svg>
                             @if ($cityName)
                                 {{ __('home.active_in_city', ['city' => $cityName]) }}
                             @else
@@ -33,33 +37,28 @@
                         </span>
                     @endif
                 @else
-                    <p class="text-sm font-medium uppercase tracking-wide text-primary">{{ $appName }}</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-text sm:text-3xl">
+                        {{ __('home.headline') }}
+                    </h1>
                 @endif
             </div>
 
-            @if ($isAuth)
-                <p class="max-w-2xl text-sm text-muted sm:text-base">{{ __('home.welcome_sub') }}</p>
-            @else
-                <h1 class="max-w-2xl text-3xl font-semibold tracking-tight text-text sm:text-4xl">
-                    {{ __('home.headline') }}
-                </h1>
-                <p class="max-w-xl text-base text-muted sm:text-lg">{{ __('home.subheadline') }}</p>
-            @endif
+            <p class="max-w-2xl text-sm text-muted sm:text-base">
+                {{ $isAuth ? __('home.welcome_sub') : __('home.subheadline') }}
+            </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-1.5 self-start rounded-xl bg-slate-100 p-1 shadow-sm md:self-auto" role="group" aria-label="{{ __('home.date_filter') }}">
-            <a href="{{ route('events.index', ['when' => 'today']) }}"
-               class="rounded-lg bg-surface px-3 py-1.5 text-xs font-semibold text-primary shadow-sm sm:text-sm">
-                {{ __('home.today') }}
-            </a>
-            <a href="{{ route('events.index', ['when' => 'tomorrow']) }}"
-               class="rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-text sm:text-sm">
-                {{ __('home.tomorrow') }}
-            </a>
-            <a href="{{ route('events.index', ['when' => 'weekend']) }}"
-               class="rounded-lg px-3 py-1.5 text-xs font-medium text-muted hover:text-text sm:text-sm">
-                {{ __('home.weekend') }}
-            </a>
+        <div class="flex flex-wrap items-center gap-1 self-start rounded-xl bg-slate-100 p-1 md:self-auto" role="group" aria-label="{{ __('home.date_filter') }}">
+            @foreach (['today' => __('home.today'), 'tomorrow' => __('home.tomorrow'), 'weekend' => __('home.weekend')] as $key => $label)
+                <a href="{{ route('home', ['when' => $key]) }}"
+                   @class([
+                       'rounded-lg px-3 py-1.5 text-xs font-medium sm:text-sm',
+                       'bg-surface font-semibold text-primary shadow-sm' => $activeWhen === $key,
+                       'text-muted hover:text-text' => $activeWhen !== $key,
+                   ])>
+                    {{ $label }}
+                </a>
+            @endforeach
             <a href="{{ route('events.index') }}"
                class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:text-text sm:text-sm">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -70,34 +69,4 @@
             </a>
         </div>
     </div>
-
-    <div class="flex flex-wrap gap-2">
-        @guest
-            <a href="{{ route('register') }}" class="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:brightness-95">
-                {{ __('ui.register') }}
-            </a>
-            <a href="{{ route('login') }}" class="inline-flex items-center rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:border-primary/40">
-                {{ __('ui.login') }}
-            </a>
-        @else
-            @if ($needsDocs)
-                <a href="{{ route('identity.create') }}" class="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:brightness-95">
-                    {{ __('identity.title') }}
-                </a>
-            @elseif ($isActive)
-                <a href="{{ route('events.index') }}" class="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:brightness-95">
-                    {{ __('events.discover') }}
-                </a>
-                @if ($user->city_id === null)
-                    <a href="{{ route('settings.location.edit') }}" class="inline-flex items-center rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-text">
-                        {{ __('location.location_settings') }}
-                    </a>
-                @endif
-            @endif
-        @endguest
-    </div>
-
-    @guest
-        <p class="max-w-lg text-sm text-muted">{{ __('identity.help') }}</p>
-    @endguest
 </section>

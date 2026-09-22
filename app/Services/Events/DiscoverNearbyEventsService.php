@@ -28,7 +28,7 @@ class DiscoverNearbyEventsService
         $origin = $this->resolveOrigin($user, $filters);
 
         $query = Event::query()
-            ->with(['category', 'city'])
+            ->with(['category', 'city', 'creator'])
             ->withCount('members')
             ->where('status', EventStatus::Published)
             ->where('starts_at', '>=', now()->subDay());

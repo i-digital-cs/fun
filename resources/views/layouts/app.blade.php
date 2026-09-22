@@ -12,7 +12,7 @@
 <body class="flex min-h-screen flex-col bg-background text-text antialiased">
     <x-layout.site-header />
 
-    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-4 sm:px-6">
         @if (session('status'))
             <div class="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-success" role="status">
                 {{ session('status') }}
@@ -31,6 +31,8 @@
 
         @yield('content')
     </main>
+
+    <x-layout.site-footer />
 
     @stack('scripts')
 </body>
