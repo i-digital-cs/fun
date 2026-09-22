@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', __('admin.identity_documents').' — '.$user->name)
 
 @section('content')
-    @include('admin._nav')
 
     <div class="mb-4">
         <h1 class="text-2xl font-semibold">{{ $user->name }}</h1>

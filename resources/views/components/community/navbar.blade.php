@@ -158,7 +158,9 @@
                         <a href="{{ route('dashboard') }}" class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
                             {{ __('ui.dashboard') }}
                         </a>
-                        <a href="{{ route('settings.location.edit') }}" class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
+                        <a href="{{ route('settings.location.edit') }}"
+                           data-location-modal-open
+                           class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
                             {{ __('dashboard.nav_location') }}
                         </a>
                         <a href="{{ route('blocks.index') }}" class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">

@@ -139,3 +139,15 @@
         width: 100%;
     }
 }
+
+/* Native <dialog> UA padding/max-width break modal layouts */
+.location-modal {
+    padding: 0;
+    max-width: min(100% - 2rem, 24rem);
+    border: 0;
+    background: transparent;
+}
+
+.location-modal::backdrop {
+    background: rgb(2 6 23 / 0.5);
+}

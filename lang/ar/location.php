@@ -10,6 +10,7 @@ return [
     'city_unavailable' => 'المدينة المحددة غير متاحة.',
     'invalid_distance' => 'المسافة المحددة غير مسموحة.',
     'preferences_saved' => 'تم حفظ تفضيلات الموقع.',
+    'modal_sub' => 'اختر مدينتك والمسافة للبحث عن الفعاليات.',
     'cities' => 'المدن',
     'add_city' => 'إضافة مدينة',
     'edit_city' => 'تعديل مدينة',
@@ -23,5 +24,6 @@ return [
     'your_city' => 'مدينتك',
     'discovery_distance' => 'مسافة الاستكشاف',
     'save' => 'حفظ التفضيلات',
+    'save_short' => 'حفظ',
     'km' => 'كم',
 ];

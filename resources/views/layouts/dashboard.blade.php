@@ -40,6 +40,8 @@
 
     <x-dashboard.mobile-nav />
 
+    <x-location-modal />
+
     @stack('scripts')
 </body>
 </html>

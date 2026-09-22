@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', __('catalog.categories'))
 
 @section('content')
-    @include('admin._nav')
     <div class="mb-4 flex items-center justify-between gap-3">
         <h1 class="text-2xl font-semibold">{{ __('catalog.categories') }}</h1>
         <a href="{{ route('admin.categories.create') }}" class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white">

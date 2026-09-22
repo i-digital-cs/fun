@@ -115,6 +115,7 @@
     </nav>
 
     <a href="{{ route('settings.location.edit') }}"
+       data-location-modal-open
        class="absolute inset-x-[0.95rem] bottom-[1.0625rem] block rounded-[14px] border border-[#dfe8fb] bg-[#f6f9ff] px-3 py-3 no-underline transition hover:border-indigo-200">
         <span class="flex items-center gap-2 text-[13px] font-bold text-slate-800">
             <svg class="h-4 w-4 shrink-0 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

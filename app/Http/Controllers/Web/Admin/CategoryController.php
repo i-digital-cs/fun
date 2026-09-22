@@ -18,6 +18,7 @@ class CategoryController extends Controller
         $this->authorize('viewAny', Category::class);
 
         $categories = Category::query()
+            ->withCount('events')
             ->orderBy('sort_order')
             ->orderBy('name_en')
             ->paginate(30);
@@ -86,5 +87,19 @@ class CategoryController extends Controller
         }
 
         return back()->with('status', __('catalog.category_activated'));
+    }
+
+    public function destroy(Category $category, ManageCategoryService $service): RedirectResponse
+    {
+        $this->authorize('delete', $category);
+
+        try {
+            $service->delete($category);
+        } catch (DomainException $exception) {
+            return back()->withErrors(['category' => $exception->getMessage()]);
+        }
+
+        return redirect()->route('admin.categories.index')
+            ->with('status', __('catalog.category_deleted'));
     }
 }

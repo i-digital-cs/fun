@@ -29,7 +29,31 @@ class AdminPanelTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $this->actingAs($admin)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee(__('admin.dashboard'));
+            ->assertSee(__('admin.dashboard'))
+            ->assertSee(__('admin.stat_active_users'), false)
+            ->assertSee(__('admin.chart_activity'), false);
+    }
+
+    public function test_admin_users_lists_active_users_with_event_counts(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $city = City::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $owner = User::factory()->active()->create(['name' => 'Event Owner']);
+
+        Event::factory()->published()->create([
+            'created_by' => $owner->id,
+            'category_id' => $category->id,
+            'city_id' => $city->id,
+            'title' => 'Admin Visible Meetup',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Event Owner', false)
+            ->assertSee(__('admin.created_events_count', ['count' => 1]), false)
+            ->assertSee('Admin Visible Meetup', false);
     }
 
     public function test_super_admin_can_update_display_name(): void

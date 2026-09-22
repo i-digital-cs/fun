@@ -58,7 +58,9 @@
             <a href="{{ route('events.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.clear_filters') }}</a>
             @auth
                 @unless (auth()->user()->city_id)
-                    <a href="{{ route('settings.location.edit') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">{{ __('events.set_location_cta') }}</a>
+                    <a href="{{ route('settings.location.edit') }}"
+                       data-location-modal-open
+                       class="text-sm font-medium text-indigo-600 hover:text-indigo-800">{{ __('events.set_location_cta') }}</a>
                 @endunless
             @endauth
         </div>

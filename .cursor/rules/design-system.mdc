@@ -9,7 +9,7 @@ Follow `/DESIGN.md` for all frontend work.
 
 ## Required
 
-- `/` is always the **marketing home** (community glass navbar). Authenticated members use **`/dashboard`** (`layouts/dashboard.blade.php`, sidebar + topbar + mobile nav from `together_home_page.html`).
+- `/` is always the **marketing home** (community glass navbar). Authenticated members use **`/dashboard`** (`layouts/dashboard.blade.php`). Platform admins use **`/admin`** (`layouts/admin.blade.php` — same sidebar/topbar shell pattern).
 - Other member pages still use community glass navbar until migrated to dashboard shell.
 - Brand tokens: indigo primary, orange→amber CTA gradients, emerald trust/success, slate neutrals — via CSS `@theme` / Tailwind tokens only.
 - Event lists use the rich media event card pattern on marketing surfaces; dashboard nearby uses `x-dashboard.event-card`.

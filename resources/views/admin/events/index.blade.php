@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', __('admin.events'))
 
 @section('content')
-    @include('admin._nav')
 
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h1 class="text-2xl font-semibold">{{ __('admin.events') }}</h1>

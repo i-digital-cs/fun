@@ -17,6 +17,19 @@ class UserPolicy
         return $this->canModerate($actor, $target);
     }
 
+    public function update(User $actor, User $target): bool
+    {
+        if (! $actor->platform_role instanceof PlatformRole) {
+            return false;
+        }
+
+        if ($target->platform_role === PlatformRole::SuperAdmin && $actor->platform_role !== PlatformRole::SuperAdmin) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function viewIdentityDocuments(User $actor, User $target): bool
     {
         return $actor->platform_role instanceof PlatformRole;

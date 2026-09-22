@@ -36,6 +36,8 @@
 
     <x-community.footer />
 
+    <x-location-modal />
+
     @stack('scripts')
 </body>
 </html>

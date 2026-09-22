@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Enums\AccountStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthRegistrationTest extends TestCase
@@ -46,6 +44,22 @@ class AuthRegistrationTest extends TestCase
 
         $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_platform_admin_login_redirects_to_admin_dashboard(): void
+    {
+        $admin = User::factory()->superAdmin()->create([
+            'email' => 'admin-login@example.com',
+            'password' => 'Password1!',
+        ]);
+
+        $this->post('/login', [
+            'email' => 'admin-login@example.com',
+            'password' => 'Password1!',
+        ])
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->assertAuthenticatedAs($admin);
     }
 
     public function test_api_register_and_login_return_sanctum_token(): void

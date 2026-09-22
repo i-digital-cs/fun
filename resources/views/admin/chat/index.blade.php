@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', __('admin.moderate_chat').' — '.$event->title)
 
 @section('content')
-    @include('admin._nav')
 
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>

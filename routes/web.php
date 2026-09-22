@@ -151,6 +151,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
 
         Route::get('/users', [UserModerationController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}/edit', [UserModerationController::class, 'edit'])
+            ->whereNumber('user')
+            ->name('users.edit');
+        Route::put('/users/{user}', [UserModerationController::class, 'update'])
+            ->whereNumber('user')
+            ->name('users.update');
         Route::post('/users/{user}/deactivate', [UserModerationController::class, 'deactivate'])->name('users.deactivate');
         Route::post('/users/{user}/reactivate', [UserModerationController::class, 'reactivate'])->name('users.reactivate');
 
@@ -161,6 +167,7 @@ Route::middleware('auth')->group(function () {
             ->name('identity.download');
 
         Route::get('/events', [EventModerationController::class, 'index'])->name('events.index');
+        Route::get('/events/calendar', [EventModerationController::class, 'calendar'])->name('events.calendar');
         Route::post('/events/{event}/cancel', [EventModerationController::class, 'cancel'])
             ->whereNumber('event')
             ->name('events.cancel');
@@ -198,5 +205,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
         Route::post('/categories/{category}/deactivate', [AdminCategoryController::class, 'deactivate'])->name('categories.deactivate');
         Route::post('/categories/{category}/activate', [AdminCategoryController::class, 'activate'])->name('categories.activate');
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
     });
 });

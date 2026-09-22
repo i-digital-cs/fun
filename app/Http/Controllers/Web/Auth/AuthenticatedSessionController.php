@@ -30,11 +30,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('account.deactivated');
         }
 
-        if ($user->needsIdentityDocuments()) {
+        if (! $user->isPlatformAdmin() && $user->needsIdentityDocuments()) {
             return redirect()->route('identity.create');
         }
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->intended(route($user->defaultHomeRoute()));
     }
 
     public function destroy(Request $request): RedirectResponse

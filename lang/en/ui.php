@@ -15,6 +15,8 @@ return [
     'arabic' => 'العربية',
     'home' => 'Home',
     'dashboard' => 'Dashboard',
+    'close' => 'Close',
+    'cancel' => 'Cancel',
     'primary_nav' => 'Primary',
     'menu' => 'Menu',
     'chat' => 'Chat',

@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', __('safety.reports'))
 
 @section('content')
-    @include('admin._nav')
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h1 class="text-2xl font-semibold">{{ __('safety.reports') }}</h1>
         <form method="GET" action="{{ route('admin.reports.index') }}" class="flex gap-2">

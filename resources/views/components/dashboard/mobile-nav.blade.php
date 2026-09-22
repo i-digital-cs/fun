@@ -66,6 +66,7 @@
     </a>
 
     <a href="{{ route('settings.location.edit') }}"
+       data-location-modal-open
        @class([
            'flex flex-col items-center gap-0.5 text-[9px] font-semibold no-underline',
            'font-extrabold text-indigo-600' => $isProfile,

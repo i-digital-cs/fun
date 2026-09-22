@@ -50,7 +50,7 @@ Create Event → Activity → Location → Date → Capacity → Requirements �
 
 * Dashboard, users, identity, events, reports, categories, cities, settings, audit
 
-Admin keeps denser data tables but **must use the same brand tokens, typography, radius, and CTA styles**. Admin may keep `admin._nav` under the shared community shell.
+Admin keeps denser data tables but **must use the same brand tokens, typography, radius, and CTA styles**. Admin uses **`layouts/admin`** (sidebar + topbar + footer, same shell pattern as the member dashboard).
 
 ---
 

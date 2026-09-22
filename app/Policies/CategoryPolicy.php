@@ -27,4 +27,9 @@ class CategoryPolicy
     {
         return $user->platform_role instanceof PlatformRole;
     }
+
+    public function delete(User $user, Category $category): bool
+    {
+        return $user->platform_role instanceof PlatformRole;
+    }
 }

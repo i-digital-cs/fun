@@ -10,6 +10,7 @@ return [
     'city_unavailable' => 'Selected city is unavailable.',
     'invalid_distance' => 'Selected distance is not allowed.',
     'preferences_saved' => 'Location preferences saved.',
+    'modal_sub' => 'Choose your city and how far to search for events.',
     'cities' => 'Cities',
     'add_city' => 'Add city',
     'edit_city' => 'Edit city',
@@ -23,5 +24,6 @@ return [
     'your_city' => 'Your city',
     'discovery_distance' => 'Discovery distance',
     'save' => 'Save preferences',
+    'save_short' => 'Save',
     'km' => 'km',
 ];

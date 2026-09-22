@@ -81,6 +81,16 @@ class User extends Authenticatable
         return $this->hasMany(Report::class, 'reporter_id');
     }
 
+    public function createdEvents(): HasMany
+    {
+        return $this->hasMany(Event::class, 'created_by');
+    }
+
+    public function eventMemberships(): HasMany
+    {
+        return $this->hasMany(EventMember::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === AccountStatus::Active;
@@ -109,6 +119,14 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->platform_role === PlatformRole::SuperAdmin;
+    }
+
+    /**
+     * Default route after login / identity completion.
+     */
+    public function defaultHomeRoute(): string
+    {
+        return $this->isPlatformAdmin() ? 'admin.dashboard' : 'dashboard';
     }
 
     public function hasRequiredIdentityDocuments(): bool

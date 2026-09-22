@@ -68,4 +68,13 @@ class ManageCategoryService
 
         return $category->refresh();
     }
+
+    public function delete(Category $category): void
+    {
+        if ($category->events()->exists()) {
+            throw new DomainException(__('catalog.category_has_events'));
+        }
+
+        $category->delete();
+    }
 }

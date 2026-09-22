@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', __('admin.audit'))
 
 @section('content')
-    @include('admin._nav')
 
     <h1 class="text-2xl font-semibold">{{ __('admin.audit') }}</h1>
 
