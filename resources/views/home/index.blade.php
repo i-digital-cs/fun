@@ -9,5 +9,11 @@
             :categories="$categories"
             :published-total="$publishedTotal"
         />
+        <x-home.happening
+            :events="$events"
+            :join-actions-by-id="$joinActionsById"
+            :has-nearby-origin="$hasNearbyOrigin"
+            :user="$user"
+        />
     </div>
 @endsection

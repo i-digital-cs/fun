@@ -15,4 +15,9 @@ return [
     'pick_date' => 'Pick Date',
     'categories' => 'Categories',
     'all_activities' => 'All Activities',
+    'happening' => 'Happening Near You',
+    'happening_near' => 'Happening Near You in :city',
+    'happening_sub' => 'Find nearby activities and request to join',
+    'empty_hint' => 'Be the first to create something people nearby can join.',
+    'create_an_event' => 'Create an Event',
 ];
