@@ -22,6 +22,7 @@ class DiscoverEventsRequest extends FormRequest
             'city_id' => ['sometimes', 'nullable', 'integer', 'exists:cities,id'],
             'distance_km' => ['sometimes', 'nullable', 'integer', Rule::in(config('location.distances_km'))],
             'q' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'when' => ['sometimes', 'nullable', 'string', Rule::in(['today', 'tomorrow', 'weekend'])],
             'per_page' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
@@ -32,6 +33,7 @@ class DiscoverEventsRequest extends FormRequest
      *     city_id?: int|null,
      *     distance_km?: int,
      *     q?: string,
+     *     when?: string,
      *     per_page?: int
      * }
      */
@@ -53,6 +55,10 @@ class DiscoverEventsRequest extends FormRequest
 
         if ($this->filled('q')) {
             $filters['q'] = $this->string('q')->trim()->toString();
+        }
+
+        if ($this->filled('when')) {
+            $filters['when'] = $this->string('when')->toString();
         }
 
         if ($this->filled('per_page')) {

@@ -3,7 +3,9 @@
 return [
     'events' => 'Events',
     'my_events' => 'My events',
+    'nearby_events' => 'Nearby Events',
     'create_event' => 'Create event',
+    'create_event_cta' => '+ Create Event',
     'edit_event' => 'Edit event',
     'title' => 'Title',
     'description' => 'Description',

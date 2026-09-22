@@ -1,793 +1,955 @@
 <!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community Platform</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  <link id="bootstrap-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    :root {
+      --bs-primary: #4F46E5;
+      --bs-primary-rgb: 79, 70, 229;
+      --bs-success: #10B981;
+      --bs-success-rgb: 16, 185, 129;
+      --bs-warning: #F59E0B;
+      --bs-danger: #EF4444;
+      --bs-info: #0EA5E9;
+      --bs-body-bg: #F8FAFC;
+      --bs-body-color: #0F172A;
+      --bs-secondary-color: #64748B;
+      --bs-border-color: #CBD5E1;
+      --bs-font-sans-serif: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --brand-accent: #F97316;
+      --brand-accent-hover: #EA580C;
+      --brand-surface: #FFFFFF;
+      --brand-location-bg: #E0E7FF;
+      --brand-location-text: #3730A3;
+      --brand-primary-soft: #E0E7FF;
+    }
 
-<html lang="en" dir="ltr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>
-@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}
-::-webkit-scrollbar{display:none;}
-html{scroll-behavior:smooth;}
-body{font-family:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;}
-html[dir="rtl"] body{font-family:'IBM Plex Sans Arabic','IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;}
-/* Flip directional icons in RTL */
-html[dir="rtl"] .i-dir{transform:scaleX(-1);}
-/* Logical absolute corners used by badges */
-html[dir="rtl"] .pos-start-2{left:auto;right:0.625rem;}
-html[dir="rtl"] .pos-end-2{right:auto;left:0.625rem;}
-html[dir="rtl"] .pos-end-badge{right:auto;left:-0.125rem;}
-</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"error":"#EF4444","inverse-primary":"#c3c0ff","border-subtle":"#CBD5E1","on-primary-fixed-variant":"#3323cc","surface-container-lowest":"#ffffff","secondary-fixed":"#FFEDD5","on-secondary-container":"#5c2400","on-tertiary-container":"#67f4b7","tertiary":"#059669","location-tag-text":"#3730A3","surface-tint":"#4d44e3","surface-dim":"#E2E8F0","on-tertiary-fixed":"#002113","on-secondary-fixed":"#341100","secondary-fixed-dim":"#FED7AA","surface-container-high":"#CBD5E1","on-error-container":"#93000a","secondary":"#EA580C","primary-container":"#4F46E5","secondary-container":"#F97316","primary":"#4F46E5","location-tag-bg":"#E0E7FF","surface-variant":"#E2E8F0","surface":"#FFFFFF","on-tertiary":"#ffffff","on-primary-fixed":"#0f0069","on-error":"#ffffff","on-primary":"#ffffff","surface-bright":"#faf8ff","surface-container-low":"#F1F5F9","tertiary-container":"#10B981","on-tertiary-fixed-variant":"#005236","on-surface":"#0F172A","tertiary-fixed-dim":"#6EE7B7","error-container":"#ffdad6","primary-fixed":"#E0E7FF","outline-variant":"#c7c4d8","surface-container-highest":"#dae2fd","on-secondary-fixed-variant":"#783200","outline":"#777587","surface-container":"#E2E8F0","background":"#F8FAFC","on-surface-variant":"#64748B","on-secondary":"#ffffff","primary-fixed-dim":"#C7D2FE","inverse-on-surface":"#eef0ff","tertiary-fixed":"#A7F3D0","on-primary-container":"#dad7ff","on-background":"#0F172A","app-bg":"#F8FAFC","inverse-surface":"#283044","text-muted":"#64748B"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin":"1rem","margin-md":"1.5rem","gutter-md":"1.5rem","space-xl":"2rem","space-lg":"1.5rem","space-md":"1rem","gutter":"1rem","gutter-lg":"2rem","margin-lg":"3rem","space-sm":"0.5rem","space-xs":"0.25rem"},"fontFamily":{"headline-md":["IBM Plex Sans"],"body-sm":["IBM Plex Sans"],"headline-lg":["IBM Plex Sans"],"headline-lg-mobile":["IBM Plex Sans"],"label-lg":["IBM Plex Sans"],"headline-xl-mobile":["IBM Plex Sans"],"label-md":["IBM Plex Sans"],"body-lg":["IBM Plex Sans"],"headline-xl":["IBM Plex Sans"],"headline-sm":["IBM Plex Sans"],"label-sm":["IBM Plex Sans"],"body-md":["IBM Plex Sans"]},"fontSize":{"headline-md":["22px",{"lineHeight":"28px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.015em","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-xl-mobile":["30px",{"lineHeight":"38px","letterSpacing":"-0.01em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-xl":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}]}}}}</script></head><body class="bg-app-bg font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-7xl mx-auto px-margin md:px-margin-md lg:px-margin-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg flex-shrink-0"><a class="flex items-center gap-space-sm" data-path="home" href="#"><img alt="Community Platform Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WBY0x2dXhsWyB2gZCSbaeiL3LDYUW9EWUC6-E9-q-ftqaSbqluJlkDqHIQky5O1u6zZE4bekFtx506Cgoy-xAvodwg3psZKTJeri5RtyKDBMstH_I9J-S4Xt_LK3fmuzB9KXHyx4UNG06vTfsqZUHFeNFB4Y_ru-Yt7NRI-xYdHCGqf9Y0l0XPxOnnX-rB-ABoYkq9c6cDOY_jujPDxEEzpLrz0GgM1TvFped7KBaBMg"/><span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight" data-i18n="brand">Community Platform</span></a><div class="hidden xl:flex items-center bg-surface-container-low rounded-lg px-space-sm py-1.5"><div class="flex items-center gap-space-xs text-location-tag-text font-label-md text-label-md bg-location-tag-bg px-space-sm py-1 rounded-full"><span class="material-symbols-outlined text-[16px]">location_on</span><span data-i18n="location_cairo">Cairo / Obour</span></div><div class="h-4 w-[1px] bg-border-subtle mx-space-sm"></div><div class="flex items-center text-text-muted"><span class="material-symbols-outlined text-[18px] me-1">search</span><input class="bg-transparent text-on-surface placeholder:text-text-muted font-body-sm text-body-sm focus:outline-none w-44" placeholder="Search activities, places..." data-i18n-placeholder="search_ph" type="text"/></div></div></div><nav class="hidden lg:flex items-center gap-space-lg h-full" data-active-classes="text-primary font-label-lg border-b-2 border-primary pb-5 -mb-5"><a aria-current="page" class="transition-colors text-primary font-label-lg border-b-2 border-primary pb-5 -mb-5" data-path="home" href="#" data-i18n="nav_home">Home</a><a class="text-on-surface-variant font-label-lg text-label-lg transition-colors hover:text-on-surface" data-path="nearby-events" href="#" data-i18n="nav_nearby">Nearby Events</a><a class="text-on-surface-variant font-label-lg text-label-lg transition-colors hover:text-on-surface" data-path="my-events" href="#" data-i18n="nav_my">My Events</a><a class="relative text-on-surface-variant font-label-lg text-label-lg transition-colors hover:text-on-surface flex items-center gap-1" data-path="chat" href="#"><span data-i18n="nav_chat">Chat</span><span class="w-2 h-2 rounded-full bg-secondary-container"></span></a></nav><div class="flex items-center gap-space-md flex-shrink-0"><div class="hidden sm:flex items-center gap-1 rounded-lg border border-border-subtle bg-surface px-2 py-1 text-sm" role="group" aria-label="Language"><button type="button" data-set-locale="en" class="locale-btn rounded px-1.5 py-0.5 font-medium text-on-surface">EN</button><span class="text-border-subtle">|</span><button type="button" data-set-locale="ar" class="locale-btn rounded px-1.5 py-0.5 text-text-muted hover:text-on-surface">ع</button></div><button class="bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg px-4 py-2 rounded-lg flex items-center gap-space-xs shadow-sm transition-colors" type="button"><span data-i18n="create_event">+ Create Event</span></button><div class="flex items-center gap-space-sm"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container-low text-tertiary-container" title="Active account"><span class="material-symbols-outlined text-[20px]">verified</span></div><button class="flex items-center justify-center w-8 h-8 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span></button><div class="relative flex items-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1HHw1HKyLP72OeTjA7j5scByTEYkpYabH5d33CfRHlim_vqxGQhzXhAshHrUqKxyCQLmzmgsJmVhhjBpbyu9TkRo2kkE0du9VT9n2csmhrqwMIio_2uetO7-fOf3PPV-3RJUGtPqHXA7p0TTfDWqRVg-XtcZeIJ4GLgP95K6ZcoXf7KNY5QuI6exNnd4QCaQMWHjN7_SrDlVQRJ3lBun328rRwUg3x4Fb7vL_nEPP"/><span class="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-3.5 h-3.5 rounded-full bg-surface"><span class="material-symbols-outlined text-[13px] text-tertiary-container font-bold">check_circle</span></span></div></div></div></div></header><main class="w-full pt-16 bg-app-bg min-h-screen"><div class="flex flex-col w-full">
-<div class="max-w-7xl mx-auto w-full px-margin md:px-margin-md lg:px-margin-lg py-space-lg md:py-space-xl flex flex-col gap-space-xl">
-<!-- Community Welcome & Context Banner -->
-<section class="flex flex-col gap-space-lg">
-<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
-<div class="flex flex-col gap-space-xs">
-<div class="flex items-center gap-space-sm flex-wrap">
-<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight" data-i18n="welcome">Welcome back, Kareem</h1>
-<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low text-tertiary font-label-sm text-label-sm shadow-sm">
-<span class="material-symbols-outlined text-[16px] text-tertiary-container" style="font-variation-settings: 'FILL' 1;">verified</span>
-<span data-i18n="active_obour">Active · Obour City</span>
-</div>
-</div>
-<p class="font-body-md text-body-md text-text-muted" data-i18n="welcome_sub">Explore active community events happening in your neighborhood this week.</p>
-</div>
-<!-- Quick Date Filter Chips -->
-<div class="flex items-center gap-1.5 p-1 rounded-xl bg-surface-container-low self-start md:self-auto shadow-sm">
-<button class="date-chip px-3 py-1.5 rounded-lg bg-surface text-primary font-label-md text-label-md shadow-sm transition-all" data-active="true" type="button" data-i18n="today">Today</button>
-<button class="date-chip px-3 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:text-on-surface transition-all" data-active="false" type="button" data-i18n="tomorrow">Tomorrow</button>
-<button class="date-chip px-3 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:text-on-surface transition-all" data-active="false" type="button" data-i18n="weekend">This Weekend</button>
-<button class="date-chip px-2.5 py-1.5 rounded-lg text-text-muted hover:text-on-surface font-label-md text-label-md flex items-center gap-1 transition-all" data-active="false" type="button">
-<span class="material-symbols-outlined text-[16px]">calendar_month</span>
-<span data-i18n="pick_date">Pick Date</span>
-</button>
-</div>
-</div>
-<!-- Activity Category Scroller -->
-<div class="flex items-center gap-space-xs overflow-x-auto pb-1 scrollbar-none -mx-margin px-margin md:mx-0 md:px-0">
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span data-i18n="all_activities">All Activities</span>
-<span class="px-1.5 py-0.5 rounded-full bg-on-primary/20 text-[11px] leading-tight font-semibold">24</span>
-</button>
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span>⚽ Football</span>
-</button>
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span>🎾 Padel &amp; Tennis</span>
-</button>
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span>🏃 Running Club</span>
-</button>
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span>♟️ Chess &amp; Board Games</span>
-</button>
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span>📚 Book Discussion</span>
-</button>
-<button class="activity-pill shrink-0 px-4 py-2 rounded-full bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
-<span>🚴 Cycling</span>
-</button>
-</div>
-</section>
-<!-- My Upcoming Active Participations Section -->
-<section class="flex flex-col gap-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="material-symbols-outlined text-primary text-[22px]">event_repeat</span>
-<h2 class="font-headline-sm text-headline-sm text-on-surface" data-i18n="your_participations">Your Active Participations</h2>
-<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm" data-i18n="scheduled">2 scheduled</span>
-</div>
-<a class="text-primary hover:text-on-primary-fixed-variant font-label-md text-label-md flex items-center gap-0.5" data-path="my-events" href="#">
-<span data-i18n="manage_all">Manage all</span>
-<span class="material-symbols-outlined text-[16px] i-dir">chevron_right</span>
-</a>
-</div>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
-<!-- Confirmed Participation Card -->
-<div class="bg-surface rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between gap-space-md">
-<div class="flex flex-col gap-space-sm">
-<div class="flex items-start justify-between gap-space-sm">
-<div class="flex items-center gap-space-sm">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-container/10 text-tertiary font-label-md text-label-md font-semibold">
-<span class="w-2 h-2 rounded-full bg-tertiary"></span>
-                  <span data-i18n="confirmed">Confirmed Attendance</span>
-                </span>
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-location-tag-bg text-location-tag-text font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[14px]">sports_soccer</span>
-                  Obour Sporting Club
-                </span>
-</div>
-<span class="font-label-sm text-label-sm text-text-muted">Tonight · 9:00 PM</span>
-</div>
-<div class="flex flex-col">
-<h3 class="font-headline-sm text-headline-sm text-on-surface">7-a-side Friendly Match &amp; Tactics</h3>
-<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1 mt-1">
-<span class="material-symbols-outlined text-[16px]">place</span>
-                Pitch 4, Obour Sporting Club, District 2
-              </p>
-</div>
-<!-- Participation Stepper Mini Display -->
-<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between text-center gap-2">
-<div class="flex items-center gap-1.5 text-tertiary">
-<span class="material-symbols-outlined text-[16px]">check_circle</span>
-<span class="font-label-sm text-label-sm font-semibold">Requested</span>
-</div>
-<div class="h-0.5 flex-1 bg-tertiary-fixed-dim"></div>
-<div class="flex items-center gap-1.5 text-tertiary">
-<span class="material-symbols-outlined text-[16px]">how_to_reg</span>
-<span class="font-label-sm text-label-sm font-semibold">Accepted</span>
-</div>
-<div class="h-0.5 flex-1 bg-outline-variant"></div>
-<div class="flex items-center gap-1.5 text-text-muted">
-<span class="material-symbols-outlined text-[16px]">pin_drop</span>
-<span class="font-label-sm text-label-sm">Gathering</span>
-</div>
-</div>
-</div>
-<div class="flex items-center justify-between pt-space-xs">
-<div class="flex items-center gap-2">
-<div class="w-7 h-7 rounded-full bg-surface-variant flex items-center justify-center font-label-sm text-label-sm text-primary font-bold">YM</div>
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold">Youssef Mansour</span>
-<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight">Host</span>
-</div>
-</div>
-<div class="flex items-center gap-space-xs">
-<a class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1 transition-colors" data-path="directions" href="#">
-<span class="material-symbols-outlined text-[16px] text-primary">directions</span>
-<span data-i18n="map">Map</span>
-</a>
-<a class="px-3.5 py-1.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md flex items-center gap-1.5 shadow-sm transition-colors" data-path="chat" href="#">
-<span class="material-symbols-outlined text-[16px]">chat</span>
-<span data-i18n="open_chat">Open Event Chat</span>
-</a>
-</div>
-</div>
-</div>
-<!-- Pending Approval Card -->
-<div class="bg-surface rounded-xl p-space-md shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between gap-space-md">
-<div class="flex flex-col gap-space-sm">
-<div class="flex items-start justify-between gap-space-sm">
-<div class="flex items-center gap-space-sm">
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed/50 text-secondary font-label-md text-label-md font-semibold">
-<span class="material-symbols-outlined text-[14px]">hourglass_top</span>
-                  <span data-i18n="request_pending">Request Pending</span>
-                </span>
-<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-location-tag-bg text-location-tag-text font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[14px]">local_cafe</span>
-                  Golf City Mall
-                </span>
-</div>
-<span class="font-label-sm text-label-sm text-text-muted">Thursday · 7:30 PM</span>
-</div>
-<div class="flex flex-col">
-<h3 class="font-headline-sm text-headline-sm text-on-surface">Community Civic Tech &amp; Urban Design Circle</h3>
-<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1 mt-1">
-<span class="material-symbols-outlined text-[16px]">place</span>
-                Caribou Coffee terrace, Zone B
-              </p>
-</div>
-<!-- Pending Review Notice -->
-<div class="bg-surface-container-low rounded-lg p-2.5 flex items-center justify-between text-text-muted gap-2">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-secondary text-[18px]">info</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">The organizer verifies all first-time RSVPs within 4 hours.</span>
-</div>
-<span class="shrink-0 text-[11px] font-label-sm text-text-muted font-semibold">Spot Reserved #6</span>
-</div>
-</div>
-<div class="flex items-center justify-between pt-space-xs">
-<div class="flex items-center gap-2">
-<div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center font-label-sm text-label-sm text-on-surface font-bold">NS</div>
-<div class="flex flex-col">
-<span class="font-label-sm text-label-sm text-on-surface font-semibold">Nourhan Samir</span>
-<span class="font-body-sm text-body-sm text-text-muted text-[11px] leading-tight">Organizer · 4.9 ★ (18 events)</span>
-</div>
-</div>
-<div class="flex items-center gap-space-xs">
-<button class="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-container-low text-text-muted hover:text-error font-label-md text-label-md transition-colors" type="button" data-i18n="cancel">
-                Cancel
-              </button>
-<a class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1 transition-colors" data-path="event-details" href="#">
-<span data-i18n="view_details">View Details</span>
-<span class="material-symbols-outlined text-[16px] i-dir">arrow_forward</span>
-</a>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Main Content: Discover Grid & Neighborhood Pulse -->
-<section class="flex flex-col gap-space-lg">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
-<div class="flex flex-col">
-<div class="flex items-center gap-2">
-<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight" data-i18n="happening">Happening Near You in Obour</h2>
-<span class="flex h-2.5 w-2.5 relative">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-container opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary-container"></span>
-</span>
-</div>
-<p class="font-body-sm text-body-sm text-text-muted" data-i18n="happening_sub">Find nearby activities and request to join</p>
-</div>
-<!-- Filter / Map View Toggles -->
-<div class="flex items-center gap-space-sm self-start sm:self-auto">
-<button class="px-3.5 py-2 rounded-lg bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md flex items-center gap-1.5 shadow-sm transition-colors" id="toggle-filter-btn" type="button">
-<span class="material-symbols-outlined text-[18px]">tune</span>
-<span data-i18n="filters">Filters</span>
-</button>
-<a class="px-3.5 py-2 rounded-lg bg-surface text-on-surface hover:bg-surface-container-low font-label-md text-label-md flex items-center gap-1.5 shadow-sm transition-colors" data-path="nearby-events" href="#">
-<span class="material-symbols-outlined text-[18px] text-primary">map</span>
-<span data-i18n="view_map">View Map</span>
-</a>
-</div>
-</div>
-<!-- 4 Core Event Cards Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg">
-<!-- Card 1: Football — Obour -->
-<article class="bg-surface rounded-xl p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
-<div class="flex flex-col gap-space-md">
-<!-- Image Thumbnail -->
-<div class="relative w-full h-40 rounded-lg overflow-hidden bg-surface-container">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Vibrant evening amateur community football match on fresh green turf under floodlights in Obour City Cairo, energetic players in recreational jerseys laughing, crisp evening lighting, photographic style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjgVzRC8C0kIgKUiEbqE4M_qnjPXYm2T4Qs2fC8E4SL3TFLu3tqISQRmcncUnoKFeUAVUHccdYPbxgv1nArtf22zK26N6cTkyyxxawXK4x7cEY1YvJBw80bcW6nlYM0iJtcnJQGiijB35KsFKezN3vqkM-DtskfkzmomLWmAJgG4_mFBPY8k6RASwPATPLeHR7zBbGWgmutO_qWLefObleTL4ZZScqmIoMRJEcLUbY"/>
-<div class="absolute top-2.5 start-2.5 pos-start-2">
-<span class="px-2.5 py-1 rounded-full bg-surface/90 backdrop-blur text-primary font-label-sm text-label-sm shadow-sm font-semibold flex items-center gap-1">
-<span>⚽ Football</span>
-</span>
-</div>
-<div class="absolute bottom-2.5 end-2.5 pos-end-2">
-<span class="px-2 py-0.5 rounded-md bg-inverse-surface/80 backdrop-blur text-inverse-on-surface font-label-sm text-label-sm font-semibold">
-                  80 EGP / person
-                </span>
-</div>
-</div>
-<!-- Event Details -->
-<div class="flex flex-col gap-1.5">
-<div class="flex items-center gap-1 text-location-tag-text font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[15px]">schedule</span>
-<span class="font-semibold text-on-surface">Today · 8:00 PM</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
-                Football — Obour
-              </h3>
-<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
-<span class="material-symbols-outlined text-[15px] shrink-0">location_on</span>
-<span class="truncate">Al Ahly Club Playground, District 1</span>
-</p>
-</div>
-<!-- Capacity Progress -->
-<div class="flex flex-col gap-1 bg-surface-container-low p-2.5 rounded-lg">
-<div class="flex items-center justify-between font-label-sm text-label-sm">
-<span class="text-text-muted">Attendance</span>
-<span class="font-semibold text-on-surface">7 / 10 members</span>
-</div>
-<div class="w-full h-1.5 bg-surface-dim rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 70%;"></div>
-</div>
-<div class="flex items-center justify-between text-[11px] text-text-muted pt-0.5">
-<span>3 spots left</span>
-<span class="text-tertiary font-medium">Filling fast</span>
-</div>
-</div>
-</div>
-<!-- Card Footer: Host & CTA -->
-<div class="flex flex-col gap-space-sm pt-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 min-w-0">
-<div class="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center font-label-sm text-[11px] text-primary font-bold shrink-0">AS</div>
-<div class="truncate">
-<span class="font-label-sm text-label-sm text-on-surface truncate block font-medium">Ahmed S.</span>
-</div>
-</div>
-<span class="inline-flex items-center gap-0.5 text-tertiary font-label-sm text-[11px] font-semibold shrink-0">
-<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">verified</span>
-                Host
-              </span>
-</div>
-<button class="view-event-btn w-full py-2.5 px-4 rounded-lg bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]" data-event="Football — Obour" type="button">
-<span data-i18n="view_event">View Event</span>
-<span class="material-symbols-outlined text-[18px] i-dir">arrow_forward</span>
-</button>
-</div>
-</article>
-<!-- Card 2: Friendly Doubles Match — Intermediate -->
-<article class="bg-surface rounded-xl p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
-<div class="flex flex-col gap-space-md">
-<!-- Image Thumbnail -->
-<div class="relative w-full h-40 rounded-lg overflow-hidden bg-surface-container">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Two doubles padel players on modern blue glass court holding rackets preparing for a serve, late afternoon sunlight, modern padel club scenery, clean crisp composition" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8v6EI6dncJpW8wj4tfyETaUCi2PM5eAr_GxIvKy839qCiygOcT-jANxXOfdeUVGZF7c5AeqlMC_yplNHd8HY9IFl79VW69zoCow0LbkROXT83lA9HKNNVBaPQcMpHqZpCs6PfVzWrZpvkifGAjzVNl5bXfVuqynHxR2ZA66rEfUbinRbwEAqmR5iglPG1-0hXpOuRRdZiO7sWSMFlBirmGuJ9UxnqXIM4YRzsSsXP"/>
-<div class="absolute top-2.5 start-2.5 pos-start-2">
-<span class="px-2.5 py-1 rounded-full bg-surface/90 backdrop-blur text-primary font-label-sm text-label-sm shadow-sm font-semibold flex items-center gap-1">
-<span>🎾 Padel</span>
-</span>
-</div>
-<div class="absolute bottom-2.5 end-2.5 pos-end-2">
-<span class="px-2 py-0.5 rounded-md bg-inverse-surface/80 backdrop-blur text-inverse-on-surface font-label-sm text-label-sm font-semibold">
-                  120 EGP / person
-                </span>
-</div>
-</div>
-<!-- Event Details -->
-<div class="flex flex-col gap-1.5">
-<div class="flex items-center gap-1 text-location-tag-text font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[15px]">schedule</span>
-<span class="font-semibold text-on-surface">Tomorrow · 6:30 PM</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
-                Friendly Doubles Match — Intermediate
-              </h3>
-<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
-<span class="material-symbols-outlined text-[15px] shrink-0">location_on</span>
-<span class="truncate">Smash Padel Academy, District 5</span>
-</p>
-</div>
-<!-- Capacity Progress -->
-<div class="flex flex-col gap-1 bg-surface-container-low p-2.5 rounded-lg">
-<div class="flex items-center justify-between font-label-sm text-label-sm">
-<span class="text-text-muted">Attendance</span>
-<span class="font-semibold text-on-surface">3 / 4 members</span>
-</div>
-<div class="w-full h-1.5 bg-surface-dim rounded-full overflow-hidden">
-<div class="h-full bg-secondary-container rounded-full" style="width: 75%;"></div>
-</div>
-<div class="flex items-center justify-between text-[11px] text-text-muted pt-0.5">
-<span class="text-error font-medium">1 final spot open</span>
-<span>Level 2.5-3.5</span>
-</div>
-</div>
-</div>
-<!-- Card Footer: Host & CTA -->
-<div class="flex flex-col gap-space-sm pt-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 min-w-0">
-<div class="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center font-label-sm text-[11px] text-on-surface font-bold shrink-0">MA</div>
-<div class="truncate">
-<span class="font-label-sm text-label-sm text-on-surface truncate block font-medium">Mohamed Adel</span>
-</div>
-</div>
-<span class="inline-flex items-center gap-0.5 text-tertiary font-label-sm text-[11px] font-semibold shrink-0">
-<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">verified</span>
-                Host
-              </span>
-</div>
-<button class="view-event-btn w-full py-2.5 px-4 rounded-lg bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]" data-event="Friendly Doubles Match — Intermediate" type="button">
-<span data-i18n="view_event">View Event</span>
-<span class="material-symbols-outlined text-[18px] i-dir">arrow_forward</span>
-</button>
-</div>
-</article>
-<!-- Card 3: Sunrise 5K Neighborhood Jog -->
-<article class="bg-surface rounded-xl p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
-<div class="flex flex-col gap-space-md">
-<!-- Image Thumbnail -->
-<div class="relative w-full h-40 rounded-lg overflow-hidden bg-surface-container">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Community runners of mixed ages running together at early sunrise along a paved palm-lined suburban parkway in Cairo, soft golden morning light, clear sky, healthy lifestyle photograph" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ7iPwgo9P4iybplpZROUsZi_wgCJmTaM8riFeuGPrGkYiOUhsdO1CjpMQoASYx87UBst8zpxoNan7jLUJSlV_3y5v5t-WSxTTFlpvgkZE00q2jf-SAXHWY3VVDnIsIgPUVKXDmdPtRhK9w34Fuz4qL5QZtH-OOCsnOk_gUWhul25bnf95WkN8YkTnulMyEBD0yqq80qYIYbLgt7N9NT4aXbbVrhmjbXyV4PMp_TkK"/>
-<div class="absolute top-2.5 start-2.5 pos-start-2">
-<span class="px-2.5 py-1 rounded-full bg-surface/90 backdrop-blur text-primary font-label-sm text-label-sm shadow-sm font-semibold flex items-center gap-1">
-<span>🏃 Running Club</span>
-</span>
-</div>
-<div class="absolute bottom-2.5 end-2.5 pos-end-2">
-<span class="px-2 py-0.5 rounded-md bg-tertiary text-on-tertiary font-label-sm text-label-sm font-semibold">
-                  Free
-                </span>
-</div>
-</div>
-<!-- Event Details -->
-<div class="flex flex-col gap-1.5">
-<div class="flex items-center gap-1 text-location-tag-text font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[15px]">schedule</span>
-<span class="font-semibold text-on-surface">Friday · 6:30 AM</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
-                Sunrise 5K Neighborhood Jog
-              </h3>
-<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
-<span class="material-symbols-outlined text-[15px] shrink-0">location_on</span>
-<span class="truncate">City Promenade Park Gate 2</span>
-</p>
-</div>
-<!-- Capacity Progress -->
-<div class="flex flex-col gap-1 bg-surface-container-low p-2.5 rounded-lg">
-<div class="flex items-center justify-between font-label-sm text-label-sm">
-<span class="text-text-muted">Attendance</span>
-<span class="font-semibold text-on-surface">14 / 20 members</span>
-</div>
-<div class="w-full h-1.5 bg-surface-dim rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 70%;"></div>
-</div>
-<div class="flex items-center justify-between text-[11px] text-text-muted pt-0.5">
-<span>Pace: 6:00 min/km</span>
-<span class="text-primary font-medium">6 spots left</span>
-</div>
-</div>
-</div>
-<!-- Card Footer: Host & CTA -->
-<div class="flex flex-col gap-space-sm pt-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 min-w-0">
-<div class="w-6 h-6 rounded-full bg-primary-fixed-dim flex items-center justify-center font-label-sm text-[11px] text-primary font-bold shrink-0">LT</div>
-<div class="truncate">
-<span class="font-label-sm text-label-sm text-on-surface truncate block font-medium">Layla Tarek</span>
-</div>
-</div>
-<span class="inline-flex items-center gap-0.5 text-tertiary font-label-sm text-[11px] font-semibold shrink-0">
-<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">verified</span>
-                Host
-              </span>
-</div>
-<button class="view-event-btn w-full py-2.5 px-4 rounded-lg bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]" data-event="Sunrise 5K Neighborhood Jog" type="button">
-<span data-i18n="view_event">View Event</span>
-<span class="material-symbols-outlined text-[18px] i-dir">arrow_forward</span>
-</button>
-</div>
-</article>
-<!-- Card 4: Casual Chess & Coffee Evening -->
-<article class="bg-surface rounded-xl p-space-md shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
-<div class="flex flex-col gap-space-md">
-<!-- Image Thumbnail -->
-<div class="relative w-full h-40 rounded-lg overflow-hidden bg-surface-container">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Handcrafted wooden chess board with pieces on cozy cafe table, specialty espresso cups nearby, warm indoor boutique ambient lights, neighborhood cafe setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_iIZdZ-s7kYLejUYhy1m0M7ZvpQyEbV-U3VZP2TK4QODMue_R_Mn7l4jMCTHg-7-Feg4i13ylCpilivPLLwbsGfl5SolZBNQQ8F0jm1B6Qu5jKPWsnW_2DQlBsIdiwm6W7U2681qO6srqkoWI8CUVIrn4Qv-dnf3V893DAa1m-SGhJoH97QEkqQgR9pfN_WwdGWiLKUrgkf_mPeEQ6zSNLaL986wXCkzOFu-j67u8"/>
-<div class="absolute top-2.5 start-2.5 pos-start-2">
-<span class="px-2.5 py-1 rounded-full bg-surface/90 backdrop-blur text-primary font-label-sm text-label-sm shadow-sm font-semibold flex items-center gap-1">
-<span>♟️ Chess</span>
-</span>
-</div>
-<div class="absolute bottom-2.5 end-2.5 pos-end-2">
-<span class="px-2 py-0.5 rounded-md bg-surface-container-high text-on-surface font-label-sm text-label-sm font-medium">
-                  Free (Order drink)
-                </span>
-</div>
-</div>
-<!-- Event Details -->
-<div class="flex flex-col gap-1.5">
-<div class="flex items-center gap-1 text-location-tag-text font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-[15px]">schedule</span>
-<span class="font-semibold text-on-surface">Saturday · 7:00 PM</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
-                Casual Chess &amp; Coffee Evening
-              </h3>
-<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
-<span class="material-symbols-outlined text-[15px] shrink-0">location_on</span>
-<span class="truncate">Espresso Lab, Golf City Mall</span>
-</p>
-</div>
-<!-- Capacity Progress -->
-<div class="flex flex-col gap-1 bg-surface-container-low p-2.5 rounded-lg">
-<div class="flex items-center justify-between font-label-sm text-label-sm">
-<span class="text-text-muted">Attendance</span>
-<span class="font-semibold text-on-surface">6 / 8 members</span>
-</div>
-<div class="w-full h-1.5 bg-surface-dim rounded-full overflow-hidden">
-<div class="h-full bg-primary rounded-full" style="width: 75%;"></div>
-</div>
-<div class="flex items-center justify-between text-[11px] text-text-muted pt-0.5">
-<span>All skill levels welcome</span>
-<span class="text-primary font-medium">2 spots left</span>
-</div>
-</div>
-</div>
-<!-- Card Footer: Host & CTA -->
-<div class="flex flex-col gap-space-sm pt-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 min-w-0">
-<div class="w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center font-label-sm text-[11px] text-primary font-bold shrink-0">KG</div>
-<div class="truncate">
-<span class="font-label-sm text-label-sm text-on-surface truncate block font-medium">Khaled Gamal</span>
-</div>
-</div>
-<span class="inline-flex items-center gap-0.5 text-tertiary font-label-sm text-[11px] font-semibold shrink-0">
-<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">verified</span>
-                Member
-              </span>
-</div>
-<button class="view-event-btn w-full py-2.5 px-4 rounded-lg bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]" data-event="Casual Chess &amp; Coffee Evening" type="button">
-<span data-i18n="view_event">View Event</span>
-<span class="material-symbols-outlined text-[18px] i-dir">arrow_forward</span>
-</button>
-</div>
-</article>
-</div>
-</section>
-<!-- Neighborhood Activity Highlights & Map Mini-Widget -->
-<section class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg items-stretch">
-<!-- Live Map Preview Area -->
-<div class="lg:col-span-2 bg-surface rounded-xl p-space-md shadow-sm flex flex-col justify-between gap-space-md">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-space-xs">
-<span class="material-symbols-outlined text-primary text-[20px]">explore</span>
-<span class="font-headline-sm text-headline-sm text-on-surface">Obour City Map Radar</span>
-</div>
-<span class="font-label-sm text-label-sm text-location-tag-text font-medium bg-location-tag-bg px-2.5 py-0.5 rounded-full">
-            Active within 4.5 km
-          </span>
-</div>
-<!-- Google Static Map Container with data-location -->
-<div class="relative w-full h-56 rounded-lg overflow-hidden bg-cover bg-center flex items-end p-space-md" data-location="Obour City, Cairo, Egypt" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAYInusDdZZbeWjRUTAqU-44F8QB49CoRc2lZ4uhVaESvW22cGGEWixynaT6dhBm9EHoOwn5b2Sc_MV5FPhL6e0tQMEnLW6uGWAEYChi3nse7zcix21EFsRSJ_yc-Q3b3qmJC3yLPMcKgG5F2piFML5qH-ujFAOpQDO96NKVl0LFkd-_qoaJD25WvE9HfdFxGvEWH5IDlSsFbx5-Rcsf6bl8a9p8zuwHUSVZ_ol9AHe')">
-<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent pointer-events-none"></div>
-<!-- Map Overlay Details -->
-<div class="relative z-10 w-full flex items-center justify-between text-surface">
-<div class="flex items-center gap-space-sm">
-<span class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-container text-on-primary shadow">
-<span class="material-symbols-outlined text-[18px]">near_me</span>
-</span>
-<div>
-<p class="font-label-md text-label-md font-semibold text-white">Central Obour Hub</p>
-<p class="font-body-sm text-body-sm text-surface-container-high text-[11px]">8 active community hubs nearby</p>
-</div>
-</div>
-<a class="px-3 py-1.5 rounded-lg bg-surface text-on-surface hover:bg-surface-container-low font-label-sm text-label-sm font-semibold shadow-sm transition-colors" data-path="nearby-events" href="#">
-              Expand Radar
+    html[dir="rtl"] body {
+      font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--bs-font-sans-serif);
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main { flex: 1; }
+
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+      vertical-align: middle;
+      line-height: 1;
+    }
+
+    html[dir="rtl"] .i-dir { transform: scaleX(-1); }
+
+    .app-navbar {
+      --bs-navbar-padding-y: 0.75rem;
+      min-height: 4rem;
+    }
+
+    .app-navbar .navbar-brand {
+      gap: 0.5rem;
+      margin-inline-end: 1rem;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      background: var(--bs-primary);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-mark .material-symbols-outlined {
+      font-size: 1.15rem;
+      font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+    }
+
+    .brand-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--bs-body-color);
+      line-height: 1.2;
+    }
+
+    .app-navbar .navbar-nav {
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .app-navbar .nav-link {
+      white-space: nowrap;
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: #64748B;
+      border-bottom: 2px solid transparent;
+      line-height: 1.25;
+    }
+
+    .app-navbar .nav-link:hover {
+      color: var(--bs-body-color);
+    }
+
+    .app-navbar .nav-link.active {
+      color: var(--bs-primary) !important;
+      font-weight: 600;
+      border-bottom-color: var(--bs-primary);
+    }
+
+    .header-search {
+      flex: 1 1 14rem;
+      max-width: 22rem;
+      min-width: 12rem;
+      background: #F1F5F9;
+      border-radius: 0.625rem;
+      padding: 0.35rem 0.65rem;
+    }
+
+    .header-search .form-control {
+      min-width: 0;
+      font-size: 0.875rem;
+    }
+
+    .header-actions {
+      flex-shrink: 0;
+      gap: 0.5rem !important;
+    }
+
+    .header-actions .btn-accent {
+      white-space: nowrap;
+    }
+
+    .btn-accent {
+      --bs-btn-color: #fff;
+      --bs-btn-bg: var(--brand-accent);
+      --bs-btn-border-color: var(--brand-accent);
+      --bs-btn-hover-color: #fff;
+      --bs-btn-hover-bg: var(--brand-accent-hover);
+      --bs-btn-hover-border-color: var(--brand-accent-hover);
+      --bs-btn-active-color: #fff;
+      --bs-btn-active-bg: var(--brand-accent-hover);
+      --bs-btn-active-border-color: var(--brand-accent-hover);
+      --bs-btn-disabled-color: #fff;
+      --bs-btn-disabled-bg: var(--brand-accent);
+      --bs-btn-disabled-border-color: var(--brand-accent);
+    }
+
+    .badge-location {
+      background-color: var(--brand-location-bg);
+      color: var(--brand-location-text);
+    }
+
+    .badge-soft-primary {
+      background-color: var(--brand-primary-soft);
+      color: var(--bs-primary);
+    }
+
+    .badge-soft-success {
+      background-color: rgba(16, 185, 129, 0.12);
+      color: #059669;
+    }
+
+    .badge-soft-accent {
+      background-color: #FFEDD5;
+      color: #EA580C;
+    }
+
+    .chip-group {
+      background: #F1F5F9;
+      border-radius: 0.75rem;
+      padding: 0.25rem;
+    }
+
+    .chip-group .btn.active {
+      background: #fff;
+      color: var(--bs-primary);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    .category-scroll {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .category-scroll .btn {
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .card-event .card-img-top {
+      height: 10rem;
+      object-fit: cover;
+    }
+
+    .card-media {
+      position: relative;
+    }
+
+    .card-media .badge-overlay-start {
+      position: absolute;
+      inset-block-start: 0.625rem;
+      inset-inline-start: 0.625rem;
+    }
+
+    .card-media .badge-overlay-end {
+      position: absolute;
+      inset-block-end: 0.625rem;
+      inset-inline-end: 0.625rem;
+    }
+
+    .avatar {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--brand-primary-soft);
+      color: var(--bs-primary);
+    }
+
+    .avatar-lg {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .profile-wrap { position: relative; }
+    .profile-wrap .status-dot {
+      position: absolute;
+      inset-block-end: -2px;
+      inset-inline-end: -2px;
+      width: 0.9rem;
+      height: 0.9rem;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .map-preview {
+      min-height: 14rem;
+      background-size: cover;
+      background-position: center;
+      border-radius: 0.5rem;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 1rem;
+      color: #fff;
+    }
+
+    .map-preview::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(to top, rgba(40, 48, 68, 0.8), transparent 55%);
+    }
+
+    .map-preview > * { position: relative; z-index: 1; }
+
+    .toast-host {
+      position: fixed;
+      inset-block-end: 1.5rem;
+      inset-inline-end: 1.5rem;
+      z-index: 1080;
+    }
+
+    .locale-btn[aria-pressed="true"] {
+      color: var(--bs-primary) !important;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg app-navbar bg-white border-bottom sticky-top shadow-sm">
+    <div class="container-xxl d-flex align-items-center flex-wrap flex-lg-nowrap gap-2">
+      <a class="navbar-brand d-flex align-items-center mb-0" href="#" aria-label="Community Platform home">
+        <span class="brand-mark" aria-hidden="true">
+          <span class="material-symbols-outlined">groups</span>
+        </span>
+        <span class="brand-name" data-i18n="brand">Community Platform</span>
+      </a>
+
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse align-items-lg-center" id="mainNav">
+        <ul class="navbar-nav mb-2 mb-lg-0 flex-lg-row flex-lg-nowrap">
+          <li class="nav-item"><a class="nav-link active" href="#" aria-current="page" data-i18n="nav_home">Home</a></li>
+          <li class="nav-item"><a class="nav-link text-nowrap" href="#" data-i18n="nav_nearby">Nearby Events</a></li>
+          <li class="nav-item"><a class="nav-link text-nowrap" href="#" data-i18n="nav_my">My Events</a></li>
+          <li class="nav-item">
+            <a class="nav-link text-nowrap d-inline-flex align-items-center gap-1" href="#">
+              <span data-i18n="nav_chat">Chat</span>
+              <span class="rounded-circle d-inline-block" style="width:.45rem;height:.45rem;background:var(--brand-accent)" aria-hidden="true"></span>
             </a>
-</div>
-</div>
-<!-- Quick Neighborhood Stats Bar -->
-<div class="grid grid-cols-3 gap-space-sm pt-space-xs">
-<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg text-center">
-<span class="font-headline-sm text-headline-sm text-primary">128</span>
-<span class="font-body-sm text-body-sm text-text-muted text-[11px]">Neighbors nearby</span>
-</div>
-<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg text-center">
-<span class="font-headline-sm text-headline-sm text-tertiary">14</span>
-<span class="font-body-sm text-body-sm text-text-muted text-[11px]">Events this Week</span>
-</div>
-<div class="flex flex-col bg-surface-container-low p-space-sm rounded-lg text-center">
-<span class="font-headline-sm text-headline-sm text-secondary-container">12</span>
-<span class="font-body-sm text-body-sm text-text-muted text-[11px]">This week active</span>
-</div>
-</div>
-</div>
-<!-- Quick Host an Event Teaser -->
-<div class="bg-surface rounded-xl p-space-lg shadow-sm flex flex-col justify-between gap-space-md bg-gradient-to-br from-surface via-surface to-surface-container-low">
-<div class="flex flex-col gap-space-sm">
-<div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary">
-<span class="material-symbols-outlined text-[28px]">add_circle</span>
-</div>
-<h3 class="font-headline-sm text-headline-sm text-on-surface" data-i18n="gather_title">Gather Neighbors Around Your Passion</h3>
-<p class="font-body-sm text-body-sm text-text-muted">
-            <span data-i18n="gather_body">Have a game, a running trail, or a skill you want to share? Creating an event takes less than 2 minutes. You control who joins.</span>
-          </p>
-<div class="flex flex-col gap-1.5 pt-1 text-on-surface-variant font-label-sm text-label-sm">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-tertiary text-[16px]">check</span>
-<span>Screen attendee profiles before accepting</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-tertiary text-[16px]">check</span>
-<span>Automated attendee headcount tracking</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-tertiary text-[16px]">check</span>
-<span>Event chat for accepted members</span>
-</div>
-</div>
-</div>
-<button class="w-full py-3 px-4 rounded-lg bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]" type="button">
-<span class="material-symbols-outlined text-[18px]">add</span>
-<span data-i18n="create_cta">Create an Event</span>
-</button>
-</div>
-</section>
-<!-- Community Trust & Real-World Safety Card (Section 9 & 18) -->
-<section class="bg-surface rounded-xl p-space-lg shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-space-lg">
-<div class="flex items-start gap-space-md max-w-3xl">
-<div class="w-12 h-12 rounded-xl bg-tertiary-container/10 flex items-center justify-center text-tertiary-container shrink-0 mt-0.5">
-<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">shield_person</span>
-</div>
-<div class="flex flex-col gap-1">
-<div class="flex items-center gap-2 flex-wrap">
-<h3 class="font-headline-sm text-headline-sm text-on-surface" data-i18n="trust_title">Real-World Trust &amp; Community Accountability</h3>
-<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-container/10 text-tertiary font-label-sm text-[11px] font-semibold">
-<span class="material-symbols-outlined text-[13px]">verified</span>
-              Safer community
+          </li>
+        </ul>
+
+        <form class="header-search d-none d-xl-flex align-items-center gap-2 mx-lg-3 my-2 my-lg-0" role="search">
+          <span class="badge rounded-pill badge-location d-inline-flex align-items-center gap-1 flex-shrink-0">
+            <span class="material-symbols-outlined" style="font-size:1rem">location_on</span>
+            <span data-i18n="location_cairo">Cairo / Obour</span>
+          </span>
+          <div class="vr flex-shrink-0"></div>
+          <div class="input-group input-group-sm flex-grow-1">
+            <span class="input-group-text bg-transparent border-0 text-secondary px-1">
+              <span class="material-symbols-outlined" style="font-size:1.1rem">search</span>
             </span>
-</div>
-<p class="font-body-md text-body-md text-on-surface-variant">
-            <span data-i18n="trust_body">Identity documents are required to help maintain a safer community. Report and block tools are available when you need them.</span>
-          </p>
-</div>
-</div>
-<div class="flex items-center gap-space-sm shrink-0 self-stretch sm:self-auto justify-end">
-<a class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" data-path="report-issue" href="#">
-<span class="material-symbols-outlined text-[16px] text-text-muted">flag</span>
-<span data-i18n="report">Report an Issue</span>
-</a>
-<a class="px-4 py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md shadow-sm transition-colors flex items-center gap-1" data-path="community-safety-guidelines" href="#">
-<span class="material-symbols-outlined text-[16px]">menu_book</span>
-<span data-i18n="safety">Safety Guidelines</span>
-</a>
-</div>
-</section>
-</div>
-<!-- Interactive Modal / Notification Toast Container -->
-<div class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none" id="join-feedback-toast">
-<div class="bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
-<span class="material-symbols-outlined text-tertiary-fixed text-[22px]">task_alt</span>
-<div class="flex flex-col">
-<span class="font-label-md text-label-md font-semibold" id="toast-title">View Event</span>
-<span class="font-body-sm text-body-sm text-inverse-on-surface/80" id="toast-msg">The organizer has been notified. Check 'My Events' for updates.</span>
-</div>
-</div>
-</div>
-<script>
-    (function initHomeInteractions() {
-      // Activity Category Filtering Pills Micro-interaction
-      const pills = document.querySelectorAll('.activity-pill');
-      pills.forEach(pill => {
+            <input class="form-control border-0 bg-transparent shadow-none px-1" type="search" placeholder="Search activities, places..." data-i18n-placeholder="search_ph" aria-label="Search">
+          </div>
+        </form>
+
+        <div class="header-actions d-flex align-items-center ms-lg-auto py-2 py-lg-0">
+          <div class="btn-group btn-group-sm" role="group" aria-label="Language">
+            <button type="button" class="btn btn-outline-secondary locale-btn" data-set-locale="en" aria-pressed="true">EN</button>
+            <button type="button" class="btn btn-outline-secondary locale-btn" data-set-locale="ar" aria-pressed="false">ع</button>
+          </div>
+          <button type="button" class="btn btn-accent btn-sm fw-semibold px-3">
+            <span data-i18n="create_event">+ Create Event</span>
+          </button>
+          <span class="text-success d-inline-flex align-items-center" title="Active account" aria-label="Active account">
+            <span class="material-symbols-outlined" style="font-size:1.25rem">verified</span>
+          </span>
+          <button type="button" class="btn btn-light btn-sm rounded-circle p-1 d-inline-flex align-items-center justify-content-center" aria-label="Notifications" style="width:2rem;height:2rem">
+            <span class="material-symbols-outlined" style="font-size:1.2rem">notifications</span>
+          </button>
+          <div class="profile-wrap flex-shrink-0">
+            <img class="rounded-circle" width="32" height="32" alt="Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1HHw1HKyLP72OeTjA7j5scByTEYkpYabH5d33CfRHlim_vqxGQhzXhAshHrUqKxyCQLmzmgsJmVhhjBpbyu9TkRo2kkE0du9VT9n2csmhrqwMIio_2uetO7-fOf3PPV-3RJUGtPqHXA7p0TTfDWqRVg-XtcZeIJ4GLgP95K6ZcoXf7KNY5QuI6exNnd4QCaQMWHjN7_SrDlVQRJ3lBun328rRwUg3x4Fb7vL_nEPP">
+            <span class="status-dot text-success"><span class="material-symbols-outlined" style="font-size:.8rem;font-variation-settings:'FILL' 1">check_circle</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-4">
+    <div class="container-xxl">
+
+      <!-- Welcome -->
+      <section class="mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
+          <div>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <h1 class="h3 mb-0 fw-bold" data-i18n="welcome">Welcome back, Kareem</h1>
+              <span class="badge rounded-pill text-bg-light border d-inline-flex align-items-center gap-1">
+                <span class="material-symbols-outlined text-success" style="font-size:1rem;font-variation-settings:'FILL' 1">verified</span>
+                <span data-i18n="active_obour">Active · Obour City</span>
+              </span>
+            </div>
+            <p class="text-secondary mb-0" data-i18n="welcome_sub">Explore active community events happening in your neighborhood this week.</p>
+          </div>
+          <div class="chip-group btn-group" role="group" aria-label="Date filter">
+            <button type="button" class="btn btn-sm date-chip active" data-i18n="today">Today</button>
+            <button type="button" class="btn btn-sm date-chip" data-i18n="tomorrow">Tomorrow</button>
+            <button type="button" class="btn btn-sm date-chip" data-i18n="weekend">This Weekend</button>
+            <button type="button" class="btn btn-sm date-chip d-inline-flex align-items-center gap-1">
+              <span class="material-symbols-outlined" style="font-size:1rem">calendar_month</span>
+              <span data-i18n="pick_date">Pick Date</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="category-scroll" role="toolbar" aria-label="Categories">
+          <button type="button" class="btn btn-primary btn-sm rounded-pill activity-pill active">
+            <span data-i18n="all_activities">All Activities</span>
+            <span class="badge text-bg-light text-primary ms-1">24</span>
+          </button>
+          <button type="button" class="btn btn-light btn-sm rounded-pill activity-pill border">⚽ Football</button>
+          <button type="button" class="btn btn-light btn-sm rounded-pill activity-pill border">🎾 Padel &amp; Tennis</button>
+          <button type="button" class="btn btn-light btn-sm rounded-pill activity-pill border">🏃 Running Club</button>
+          <button type="button" class="btn btn-light btn-sm rounded-pill activity-pill border">♟️ Chess &amp; Board Games</button>
+          <button type="button" class="btn btn-light btn-sm rounded-pill activity-pill border">📚 Book Discussion</button>
+          <button type="button" class="btn btn-light btn-sm rounded-pill activity-pill border">🚴 Cycling</button>
+        </div>
+      </section>
+
+      <!-- Participations -->
+      <section class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined text-primary">event_repeat</span>
+            <h2 class="h5 mb-0 fw-semibold" data-i18n="your_participations">Your Active Participations</h2>
+            <span class="badge badge-soft-primary rounded-pill" data-i18n="scheduled">2 scheduled</span>
+          </div>
+          <a href="#" class="link-primary text-decoration-none small fw-semibold d-inline-flex align-items-center">
+            <span data-i18n="manage_all">Manage all</span>
+            <span class="material-symbols-outlined i-dir" style="font-size:1rem">chevron_right</span>
+          </a>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="card h-100 shadow-sm border-0">
+              <div class="card-body d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="badge badge-soft-success rounded-pill d-inline-flex align-items-center gap-1">
+                      <span class="rounded-circle bg-success" style="width:.5rem;height:.5rem"></span>
+                      <span data-i18n="confirmed">Confirmed Attendance</span>
+                    </span>
+                    <span class="badge badge-location rounded-pill">⚽ Obour Sporting Club</span>
+                  </div>
+                  <small class="text-secondary">Tonight · 9:00 PM</small>
+                </div>
+                <div>
+                  <h3 class="h6 fw-semibold mb-1">7-a-side Friendly Match &amp; Tactics</h3>
+                  <p class="small text-secondary mb-0">
+                    <span class="material-symbols-outlined" style="font-size:1rem">place</span>
+                    Pitch 4, Obour Sporting Club, District 2
+                  </p>
+                </div>
+                <div class="bg-light rounded-3 p-2 d-flex align-items-center justify-content-between gap-2 small">
+                  <span class="text-success fw-semibold d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size:1rem">check_circle</span> Requested</span>
+                  <div class="flex-grow-1 border-top border-success border-2 opacity-50"></div>
+                  <span class="text-success fw-semibold d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size:1rem">how_to_reg</span> Accepted</span>
+                  <div class="flex-grow-1 border-top"></div>
+                  <span class="text-secondary d-inline-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size:1rem">pin_drop</span> Gathering</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-2 mt-auto flex-wrap">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar avatar-lg">YM</span>
+                    <div>
+                      <div class="small fw-semibold">Youssef Mansour</div>
+                      <div class="text-secondary" style="font-size:.7rem">Host</div>
+                    </div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <a href="#" class="btn btn-light btn-sm"><span class="material-symbols-outlined text-primary" style="font-size:1rem">directions</span> <span data-i18n="map">Map</span></a>
+                    <a href="#" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:1rem">chat</span> <span data-i18n="open_chat">Open Event Chat</span></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card h-100 shadow-sm border-0">
+              <div class="card-body d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="badge badge-soft-accent rounded-pill d-inline-flex align-items-center gap-1">
+                      <span class="material-symbols-outlined" style="font-size:.9rem">hourglass_top</span>
+                      <span data-i18n="request_pending">Request Pending</span>
+                    </span>
+                    <span class="badge badge-location rounded-pill">☕ Golf City Mall</span>
+                  </div>
+                  <small class="text-secondary">Thursday · 7:30 PM</small>
+                </div>
+                <div>
+                  <h3 class="h6 fw-semibold mb-1">Community Civic Tech &amp; Urban Design Circle</h3>
+                  <p class="small text-secondary mb-0">
+                    <span class="material-symbols-outlined" style="font-size:1rem">place</span>
+                    Caribou Coffee terrace, Zone B
+                  </p>
+                </div>
+                <div class="alert alert-light border mb-0 py-2 small d-flex justify-content-between gap-2">
+                  <span><span class="material-symbols-outlined text-warning" style="font-size:1.1rem">info</span> The organizer verifies all first-time RSVPs within 4 hours.</span>
+                  <span class="fw-semibold text-nowrap">Spot #6</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-2 mt-auto flex-wrap">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar avatar-lg bg-secondary-subtle text-body">NS</span>
+                    <div>
+                      <div class="small fw-semibold">Nourhan Samir</div>
+                      <div class="text-secondary" style="font-size:.7rem">Organizer · 4.9 ★</div>
+                    </div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-i18n="cancel">Cancel</button>
+                    <a href="#" class="btn btn-light btn-sm">
+                      <span data-i18n="view_details">View Details</span>
+                      <span class="material-symbols-outlined i-dir" style="font-size:1rem">arrow_forward</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Discover -->
+      <section class="mb-4">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+          <div>
+            <h2 class="h4 fw-bold mb-1 d-inline-flex align-items-center gap-2">
+              <span data-i18n="happening">Happening Near You in Obour</span>
+              <span class="badge rounded-pill" style="background:var(--brand-accent);width:.55rem;height:.55rem;padding:0" aria-hidden="true"></span>
+            </h2>
+            <p class="small text-secondary mb-0" data-i18n="happening_sub">Find nearby activities and request to join</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-light btn-sm border">
+              <span class="material-symbols-outlined" style="font-size:1.1rem">tune</span>
+              <span data-i18n="filters">Filters</span>
+            </button>
+            <a href="#" class="btn btn-light btn-sm border">
+              <span class="material-symbols-outlined text-primary" style="font-size:1.1rem">map</span>
+              <span data-i18n="view_map">View Map</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-4">
+          <!-- Event card 1 -->
+          <div class="col">
+            <article class="card card-event h-100 shadow-sm border-0">
+              <div class="card-media">
+                <img class="card-img-top" alt="Football event" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjgVzRC8C0kIgKUiEbqE4M_qnjPXYm2T4Qs2fC8E4SL3TFLu3tqISQRmcncUnoKFeUAVUHccdYPbxgv1nArtf22zK26N6cTkyyxxawXK4x7cEY1YvJBw80bcW6nlYM0iJtcnJQGiijB35KsFKezN3vqkM-DtskfkzmomLWmAJgG4_mFBPY8k6RASwPATPLeHR7zBbGWgmutO_qWLefObleTL4ZZScqmIoMRJEcLUbY">
+                <span class="badge text-bg-light badge-overlay-start">⚽ Football</span>
+                <span class="badge text-bg-dark badge-overlay-end">80 EGP / person</span>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <div class="small text-primary fw-semibold mb-1"><span class="material-symbols-outlined" style="font-size:.95rem">schedule</span> Today · 8:00 PM</div>
+                <h3 class="h6 fw-semibold">Football — Obour</h3>
+                <p class="small text-secondary text-truncate"><span class="material-symbols-outlined" style="font-size:.95rem">location_on</span> Al Ahly Club Playground</p>
+                <div class="bg-light rounded-3 p-2 mb-3">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-secondary">Attendance</span>
+                    <span class="fw-semibold">7 / 10 members</span>
+                  </div>
+                  <div class="progress" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="height:.4rem">
+                    <div class="progress-bar" style="width:70%;background:var(--bs-primary)"></div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar">AS</span>
+                    <span class="small fw-medium">Ahmed S.</span>
+                  </div>
+                  <span class="small text-success fw-semibold">Host</span>
+                </div>
+                <button type="button" class="btn btn-accent w-100 mt-auto view-event-btn" data-event="Football — Obour">
+                  <span data-i18n="view_event">View Event</span>
+                  <span class="material-symbols-outlined i-dir" style="font-size:1.1rem">arrow_forward</span>
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Event card 2 -->
+          <div class="col">
+            <article class="card card-event h-100 shadow-sm border-0">
+              <div class="card-media">
+                <img class="card-img-top" alt="Padel event" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8v6EI6dncJpW8wj4tfyETaUCi2PM5eAr_GxIvKy839qCiygOcT-jANxXOfdeUVGZF7c5AeqlMC_yplNHd8HY9IFl79VW69zoCow0LbkROXT83lA9HKNNVBaPQcMpHqZpCs6PfVzWrZpvkifGAjzVNl5bXfVuqynHxR2ZA66rEfUbinRbwEAqmR5iglPG1-0hXpOuRRdZiO7sWSMFlBirmGuJ9UxnqXIM4YRzsSsXP">
+                <span class="badge text-bg-light badge-overlay-start">🎾 Padel</span>
+                <span class="badge text-bg-dark badge-overlay-end">120 EGP / person</span>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <div class="small text-primary fw-semibold mb-1"><span class="material-symbols-outlined" style="font-size:.95rem">schedule</span> Tomorrow · 6:30 PM</div>
+                <h3 class="h6 fw-semibold">Friendly Doubles Match — Intermediate</h3>
+                <p class="small text-secondary text-truncate"><span class="material-symbols-outlined" style="font-size:.95rem">location_on</span> Smash Padel Academy</p>
+                <div class="bg-light rounded-3 p-2 mb-3">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-secondary">Attendance</span>
+                    <span class="fw-semibold">3 / 4 members</span>
+                  </div>
+                  <div class="progress" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="height:.4rem">
+                    <div class="progress-bar" style="width:75%;background:var(--brand-accent)"></div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar bg-secondary-subtle text-body">MA</span>
+                    <span class="small fw-medium">Mohamed Adel</span>
+                  </div>
+                  <span class="small text-success fw-semibold">Host</span>
+                </div>
+                <button type="button" class="btn btn-accent w-100 mt-auto view-event-btn" data-event="Friendly Doubles Match">
+                  <span data-i18n="view_event">View Event</span>
+                  <span class="material-symbols-outlined i-dir" style="font-size:1.1rem">arrow_forward</span>
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Event card 3 -->
+          <div class="col">
+            <article class="card card-event h-100 shadow-sm border-0">
+              <div class="card-media">
+                <img class="card-img-top" alt="Running event" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ7iPwgo9P4iybplpZROUsZi_wgCJmTaM8riFeuGPrGkYiOUhsdO1CjpMQoASYx87UBst8zpxoNan7jLUJSlV_3y5v5t-WSxTTFlpvgkZE00q2jf-SAXHWY3VVDnIsIgPUVKXDmdPtRhK9w34Fuz4qL5QZtH-OOCsnOk_gUWhul25bnf95WkN8YkTnulMyEBD0yqq80qYIYbLgt7N9NT4aXbbVrhmjbXyV4PMp_TkK">
+                <span class="badge text-bg-light badge-overlay-start">🏃 Running Club</span>
+                <span class="badge text-bg-success badge-overlay-end">Free</span>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <div class="small text-primary fw-semibold mb-1"><span class="material-symbols-outlined" style="font-size:.95rem">schedule</span> Friday · 6:30 AM</div>
+                <h3 class="h6 fw-semibold">Sunrise 5K Neighborhood Jog</h3>
+                <p class="small text-secondary text-truncate"><span class="material-symbols-outlined" style="font-size:.95rem">location_on</span> City Promenade Park Gate 2</p>
+                <div class="bg-light rounded-3 p-2 mb-3">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-secondary">Attendance</span>
+                    <span class="fw-semibold">14 / 20 members</span>
+                  </div>
+                  <div class="progress" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" style="height:.4rem">
+                    <div class="progress-bar" style="width:70%;background:var(--bs-primary)"></div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar">LT</span>
+                    <span class="small fw-medium">Layla Tarek</span>
+                  </div>
+                  <span class="small text-success fw-semibold">Host</span>
+                </div>
+                <button type="button" class="btn btn-accent w-100 mt-auto view-event-btn" data-event="Sunrise 5K Neighborhood Jog">
+                  <span data-i18n="view_event">View Event</span>
+                  <span class="material-symbols-outlined i-dir" style="font-size:1.1rem">arrow_forward</span>
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Event card 4 -->
+          <div class="col">
+            <article class="card card-event h-100 shadow-sm border-0">
+              <div class="card-media">
+                <img class="card-img-top" alt="Chess event" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_iIZdZ-s7kYLejUYhy1m0M7ZvpQyEbV-U3VZP2TK4QODMue_R_Mn7l4jMCTHg-7-Feg4i13ylCpilivPLLwbsGfl5SolZBNQQ8F0jm1B6Qu5jKPWsnW_2DQlBsIdiwm6W7U2681qO6srqkoWI8CUVIrn4Qv-dnf3V893DAa1m-SGhJoH97QEkqQgR9pfN_WwdGWiLKUrgkf_mPeEQ6zSNLaL986wXCkzOFu-j67u8">
+                <span class="badge text-bg-light badge-overlay-start">♟️ Chess</span>
+                <span class="badge text-bg-secondary badge-overlay-end">Free (Order drink)</span>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <div class="small text-primary fw-semibold mb-1"><span class="material-symbols-outlined" style="font-size:.95rem">schedule</span> Saturday · 7:00 PM</div>
+                <h3 class="h6 fw-semibold">Casual Chess &amp; Coffee Evening</h3>
+                <p class="small text-secondary text-truncate"><span class="material-symbols-outlined" style="font-size:.95rem">location_on</span> Espresso Lab, Golf City Mall</p>
+                <div class="bg-light rounded-3 p-2 mb-3">
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-secondary">Attendance</span>
+                    <span class="fw-semibold">6 / 8 members</span>
+                  </div>
+                  <div class="progress" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="height:.4rem">
+                    <div class="progress-bar" style="width:75%;background:var(--bs-primary)"></div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="avatar">KG</span>
+                    <span class="small fw-medium">Khaled Gamal</span>
+                  </div>
+                  <span class="small text-success fw-semibold">Member</span>
+                </div>
+                <button type="button" class="btn btn-accent w-100 mt-auto view-event-btn" data-event="Casual Chess & Coffee Evening">
+                  <span data-i18n="view_event">View Event</span>
+                  <span class="material-symbols-outlined i-dir" style="font-size:1.1rem">arrow_forward</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Map + create teaser -->
+      <section class="mb-4">
+        <div class="row g-3">
+          <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">explore</span>
+                    <h2 class="h6 mb-0 fw-semibold">Obour City Map Radar</h2>
+                  </div>
+                  <span class="badge badge-location rounded-pill">Active within 4.5 km</span>
+                </div>
+                <div class="map-preview mb-3" style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuAYInusDdZZbeWjRUTAqU-44F8QB49CoRc2lZ4uhVaESvW22cGGEWixynaT6dhBm9EHoOwn5b2Sc_MV5FPhL6e0tQMEnLW6uGWAEYChi3nse7zcix21EFsRSJ_yc-Q3b3qmJC3yLPMcKgG5F2piFML5qH-ujFAOpQDO96NKVl0LFkd-_qoaJD25WvE9HfdFxGvEWH5IDlSsFbx5-Rcsf6bl8a9p8zuwHUSVZ_ol9AHe')" data-location="Obour City, Cairo, Egypt">
+                  <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                      <div class="fw-semibold">Central Obour Hub</div>
+                      <div class="small opacity-75">8 active community hubs nearby</div>
+                    </div>
+                    <a href="#" class="btn btn-light btn-sm">Expand Radar</a>
+                  </div>
+                </div>
+                <div class="row g-2 text-center">
+                  <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="fw-bold text-primary">128</div><div class="small text-secondary">Neighbors nearby</div></div></div>
+                  <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="fw-bold text-success">14</div><div class="small text-secondary">Events this Week</div></div></div>
+                  <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="fw-bold" style="color:var(--brand-accent)">12</div><div class="small text-secondary">This week active</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body d-flex flex-column">
+                <div class="rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:3rem;height:3rem;background:#FFEDD5;color:var(--brand-accent)">
+                  <span class="material-symbols-outlined">add_circle</span>
+                </div>
+                <h3 class="h6 fw-semibold" data-i18n="gather_title">Gather Neighbors Around Your Passion</h3>
+                <p class="small text-secondary" data-i18n="gather_body">Have a game, a running trail, or a skill you want to share? Creating an event takes less than 2 minutes. You control who joins.</p>
+                <ul class="list-unstyled small text-secondary mb-4">
+                  <li class="mb-1"><span class="material-symbols-outlined text-success" style="font-size:1rem">check</span> Screen attendee profiles before accepting</li>
+                  <li class="mb-1"><span class="material-symbols-outlined text-success" style="font-size:1rem">check</span> Automated attendee headcount tracking</li>
+                  <li><span class="material-symbols-outlined text-success" style="font-size:1rem">check</span> Event chat for accepted members</li>
+                </ul>
+                <button type="button" class="btn btn-accent w-100 mt-auto">
+                  <span class="material-symbols-outlined" style="font-size:1.1rem">add</span>
+                  <span data-i18n="create_cta">Create an Event</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Trust -->
+      <section class="mb-2">
+        <div class="card shadow-sm border-0">
+          <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="d-flex gap-3">
+              <div class="rounded-3 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:3rem;height:3rem;background:rgba(16,185,129,.12);color:var(--bs-success)">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">shield_person</span>
+              </div>
+              <div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                  <h3 class="h6 mb-0 fw-semibold" data-i18n="trust_title">Real-World Trust &amp; Community Accountability</h3>
+                  <span class="badge badge-soft-success rounded-pill">Safer community</span>
+                </div>
+                <p class="mb-0 text-secondary" data-i18n="trust_body">Identity documents are required to help maintain a safer community. Report and block tools are available when you need them.</p>
+              </div>
+            </div>
+            <div class="d-flex gap-2 flex-shrink-0">
+              <a href="#" class="btn btn-light btn-sm">
+                <span class="material-symbols-outlined" style="font-size:1rem">flag</span>
+                <span data-i18n="report">Report an Issue</span>
+              </a>
+              <a href="#" class="btn btn-primary btn-sm">
+                <span class="material-symbols-outlined" style="font-size:1rem">menu_book</span>
+                <span data-i18n="safety">Safety Guidelines</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white border-top py-4 mt-auto">
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-2">
+        <span class="fw-bold" data-i18n="brand">Community Platform</span>
+        <span class="text-secondary">•</span>
+        <span class="small text-secondary">© Community Platform</span>
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-3 small">
+        <a href="#" class="link-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+          <span class="material-symbols-outlined" style="font-size:1rem">shield</span>
+          <span data-i18n="safety">Safety Guidelines</span>
+        </a>
+        <a href="#" class="link-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+          <span class="material-symbols-outlined" style="font-size:1rem">verified_user</span>
+          <span data-i18n="trust_center">Trust Center</span>
+        </a>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Language">
+          <button type="button" class="btn btn-outline-secondary locale-btn" data-set-locale="en">English</button>
+          <button type="button" class="btn btn-outline-secondary locale-btn" data-set-locale="ar">العربية</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast-host">
+    <div id="feedbackToast" class="toast align-items-center text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <strong id="toast-title">View Event</strong>
+          <div id="toast-msg" class="small opacity-75">Open details, then Request to Join.</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function () {
+      const BOOTSTRAP_LTR = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css';
+      const BOOTSTRAP_RTL = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css';
+
+      const dict = {
+        en: {
+          brand: 'Community Platform',
+          nav_home: 'Home',
+          nav_nearby: 'Nearby Events',
+          nav_my: 'My Events',
+          nav_chat: 'Chat',
+          create_event: '+ Create Event',
+          search_ph: 'Search activities, places...',
+          welcome: 'Welcome back, Kareem',
+          active_obour: 'Active · Obour City',
+          welcome_sub: 'Explore active community events happening in your neighborhood this week.',
+          today: 'Today',
+          tomorrow: 'Tomorrow',
+          weekend: 'This Weekend',
+          pick_date: 'Pick Date',
+          all_activities: 'All Activities',
+          your_participations: 'Your Active Participations',
+          scheduled: '2 scheduled',
+          manage_all: 'Manage all',
+          happening: 'Happening Near You in Obour',
+          happening_sub: 'Find nearby activities and request to join',
+          filters: 'Filters',
+          view_map: 'View Map',
+          view_event: 'View Event',
+          request_pending: 'Request Pending',
+          confirmed: 'Confirmed Attendance',
+          open_chat: 'Open Event Chat',
+          view_details: 'View Details',
+          cancel: 'Cancel',
+          map: 'Map',
+          create_cta: 'Create an Event',
+          gather_title: 'Gather Neighbors Around Your Passion',
+          gather_body: 'Have a game, a running trail, or a skill you want to share? Creating an event takes less than 2 minutes. You control who joins.',
+          trust_title: 'Real-World Trust & Community Accountability',
+          trust_body: 'Identity documents are required to help maintain a safer community. Report and block tools are available when you need them.',
+          report: 'Report an Issue',
+          safety: 'Safety Guidelines',
+          trust_center: 'Trust Center',
+          toast_view: 'View Event',
+          toast_view_msg: 'Open details, then Request to Join.',
+          location_cairo: 'Cairo / Obour'
+        },
+        ar: {
+          brand: 'منصة المجتمع',
+          nav_home: 'الرئيسية',
+          nav_nearby: 'فعاليات قريبة',
+          nav_my: 'فعالياتي',
+          nav_chat: 'المحادثة',
+          create_event: '+ إنشاء فعالية',
+          search_ph: 'ابحث عن أنشطة وأماكن...',
+          welcome: 'مرحباً بعودتك، كريم',
+          active_obour: 'نشط · مدينة العبور',
+          welcome_sub: 'استكشف فعاليات المجتمع النشطة في حيّك هذا الأسبوع.',
+          today: 'اليوم',
+          tomorrow: 'غداً',
+          weekend: 'نهاية الأسبوع',
+          pick_date: 'اختر تاريخاً',
+          all_activities: 'كل الأنشطة',
+          your_participations: 'مشاركاتك النشطة',
+          scheduled: '٢ مجدولة',
+          manage_all: 'إدارة الكل',
+          happening: 'يحدث بالقرب منك في العبور',
+          happening_sub: 'اعثر على أنشطة قريبة واطلب الانضمام',
+          filters: 'تصفية',
+          view_map: 'عرض الخريطة',
+          view_event: 'عرض الفعالية',
+          request_pending: 'الطلب قيد الانتظار',
+          confirmed: 'تم تأكيد الحضور',
+          open_chat: 'فتح محادثة الفعالية',
+          view_details: 'عرض التفاصيل',
+          cancel: 'إلغاء',
+          map: 'خريطة',
+          create_cta: 'إنشاء فعالية',
+          gather_title: 'اجمع الجيران حول شغفك',
+          gather_body: 'هل لديك مباراة أو مسار جري أو مهارة تريد مشاركتها؟ إنشاء فعالية يستغرق أقل من دقيقتين. أنت تتحكم بمن ينضم.',
+          trust_title: 'ثقة واقعية ومساءلة مجتمعية',
+          trust_body: 'مستندات الهوية مطلوبة للمساعدة في الحفاظ على مجتمع أكثر أماناً. أدوات الإبلاغ والحظر متاحة عند الحاجة.',
+          report: 'الإبلاغ عن مشكلة',
+          safety: 'إرشادات السلامة',
+          trust_center: 'مركز الثقة',
+          toast_view: 'عرض الفعالية',
+          toast_view_msg: 'افتح التفاصيل ثم اطلب الانضمام.',
+          location_cairo: 'القاهرة / العبور'
+        }
+      };
+
+      function swapBootstrapCss(locale) {
+        const link = document.getElementById('bootstrap-css');
+        const next = locale === 'ar' ? BOOTSTRAP_RTL : BOOTSTRAP_LTR;
+        if (link.getAttribute('href') !== next) {
+          link.setAttribute('href', next);
+        }
+      }
+
+      function applyLocale(locale) {
+        const t = dict[locale] || dict.en;
+        document.documentElement.lang = locale;
+        document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+        localStorage.setItem('ui_locale', locale);
+        swapBootstrapCss(locale);
+
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+          const key = el.getAttribute('data-i18n');
+          if (t[key] != null) el.textContent = t[key];
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+          const key = el.getAttribute('data-i18n-placeholder');
+          if (t[key] != null) el.setAttribute('placeholder', t[key]);
+        });
+        document.querySelectorAll('.locale-btn').forEach((btn) => {
+          const active = btn.getAttribute('data-set-locale') === locale;
+          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+          btn.classList.toggle('active', active);
+        });
+      }
+
+      window.__t = function (key) {
+        const locale = document.documentElement.lang || 'en';
+        return (dict[locale] || dict.en)[key] || key;
+      };
+
+      document.querySelectorAll('[data-set-locale]').forEach((btn) => {
+        btn.addEventListener('click', () => applyLocale(btn.getAttribute('data-set-locale')));
+      });
+
+      document.querySelectorAll('.activity-pill').forEach((pill) => {
         pill.addEventListener('click', () => {
-          pills.forEach(p => {
-            p.classList.remove('bg-primary-container', 'text-on-primary');
-            p.classList.add('bg-surface', 'text-on-surface');
+          document.querySelectorAll('.activity-pill').forEach((p) => {
+            p.classList.remove('btn-primary', 'active');
+            p.classList.add('btn-light', 'border');
           });
-          pill.classList.remove('bg-surface', 'text-on-surface');
-          pill.classList.add('bg-primary-container', 'text-on-primary');
+          pill.classList.remove('btn-light', 'border');
+          pill.classList.add('btn-primary', 'active');
         });
       });
 
-      // Date Selector Chips Micro-interaction
-      const dateChips = document.querySelectorAll('.date-chip');
-      dateChips.forEach(chip => {
+      document.querySelectorAll('.date-chip').forEach((chip) => {
         chip.addEventListener('click', () => {
-          dateChips.forEach(c => {
-            c.classList.remove('bg-surface', 'text-primary', 'shadow-sm');
-            c.classList.add('text-on-surface-variant');
-            c.dataset.active = 'false';
-          });
-          chip.classList.remove('text-on-surface-variant');
-          chip.classList.add('bg-surface', 'text-primary', 'shadow-sm');
-          chip.dataset.active = 'true';
+          document.querySelectorAll('.date-chip').forEach((c) => c.classList.remove('active'));
+          chip.classList.add('active');
         });
       });
 
-      // View Event CTA (join happens on event details per DESIGN.md)
-      document.querySelectorAll('.view-event-btn').forEach(btn => {
+      const toastEl = document.getElementById('feedbackToast');
+      const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 });
+
+      document.querySelectorAll('.view-event-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const eventName = btn.getAttribute('data-event') || 'Event';
-          const toast = document.getElementById('join-feedback-toast');
-          const toastTitle = document.getElementById('toast-title');
-          const toastMsg = document.getElementById('toast-msg');
-          toastTitle.textContent = window.__t ? window.__t('toast_view') : 'View Event';
-          toastMsg.textContent = (window.__t ? window.__t('toast_view_msg') : 'Open details, then Request to Join.') + ' (' + eventName + ')';
-          toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-          toast.classList.add('translate-y-0', 'opacity-100');
-          setTimeout(() => {
-            toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-            toast.classList.remove('translate-y-0', 'opacity-100');
-          }, 3000);
+          document.getElementById('toast-title').textContent = window.__t('toast_view');
+          document.getElementById('toast-msg').textContent = window.__t('toast_view_msg') + ' (' + eventName + ')';
+          toast.show();
         });
       });
+
+      applyLocale(localStorage.getItem('ui_locale') === 'ar' ? 'ar' : 'en');
     })();
   </script>
-</div></main><footer class="w-full bg-surface shadow-[0_-1px_8px_rgba(0,0,0,0.03)] py-space-xl mt-auto"><div class="max-w-7xl mx-auto px-margin md:px-margin-md lg:px-margin-lg flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md"><span class="font-headline-sm text-headline-sm text-on-surface font-bold" data-i18n="brand">Community Platform</span><span class="text-border-subtle">•</span><p class="font-body-sm text-body-sm text-text-muted">© Community Platform</p></div><div class="flex flex-wrap items-center gap-space-lg font-label-md text-label-md text-on-surface-variant"><a class="hover:text-primary transition-colors flex items-center gap-1" data-path="community-safety-guidelines" href="#"><span class="material-symbols-outlined text-[16px]">shield</span><span data-i18n="safety">Safety Guidelines</span></a><a class="hover:text-primary transition-colors flex items-center gap-1" data-path="trust-center" href="#"><span class="material-symbols-outlined text-[16px]">verified_user</span data-i18n="trust_center">Trust Center</a><div class="flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded-md text-text-muted" role="group" aria-label="Language">
-<span class="material-symbols-outlined text-[16px]">language</span>
-<button type="button" data-set-locale="en" class="locale-btn text-on-surface font-medium hover:text-primary">English</button>
-<span class="text-border-subtle">/</span>
-<button type="button" data-set-locale="ar" class="locale-btn hover:text-on-surface hover:text-primary cursor-pointer">العربية</button>
-</div></div></div></footer>
-<script>
-(function initLocale() {
-  const dict = {
-    en: {
-      brand: 'Community Platform',
-      nav_home: 'Home',
-      nav_nearby: 'Nearby Events',
-      nav_my: 'My Events',
-      nav_chat: 'Chat',
-      create_event: '+ Create Event',
-      search_ph: 'Search activities, places...',
-      welcome: 'Welcome back, Kareem',
-      active_obour: 'Active · Obour City',
-      welcome_sub: 'Explore active community events happening in your neighborhood this week.',
-      today: 'Today',
-      tomorrow: 'Tomorrow',
-      weekend: 'This Weekend',
-      pick_date: 'Pick Date',
-      all_activities: 'All Activities',
-      your_participations: 'Your Active Participations',
-      scheduled: '2 scheduled',
-      manage_all: 'Manage all',
-      happening: 'Happening Near You in Obour',
-      happening_sub: 'Find nearby activities and request to join',
-      filters: 'Filters',
-      view_map: 'View Map',
-      view_event: 'View Event',
-      request_pending: 'Request Pending',
-      confirmed: 'Confirmed Attendance',
-      open_chat: 'Open Event Chat',
-      view_details: 'View Details',
-      cancel: 'Cancel',
-      map: 'Map',
-      create_cta: 'Create an Event',
-      gather_title: 'Gather Neighbors Around Your Passion',
-      gather_body: 'Have a game, a running trail, or a skill you want to share? Creating an event takes less than 2 minutes. You control who joins.',
-      trust_title: 'Real-World Trust & Community Accountability',
-      trust_body: 'Identity documents are required to help maintain a safer community. Report and block tools are available when you need them.',
-      report: 'Report an Issue',
-      safety: 'Safety Guidelines',
-      trust_center: 'Trust Center',
-      toast_view: 'View Event',
-      toast_view_msg: 'Open details, then Request to Join.',
-      location_cairo: 'Cairo / Obour'
-    },
-    ar: {
-      brand: 'منصة المجتمع',
-      nav_home: 'الرئيسية',
-      nav_nearby: 'فعاليات قريبة',
-      nav_my: 'فعالياتي',
-      nav_chat: 'المحادثة',
-      create_event: '+ إنشاء فعالية',
-      search_ph: 'ابحث عن أنشطة وأماكن...',
-      welcome: 'مرحباً بعودتك، كريم',
-      active_obour: 'نشط · مدينة العبور',
-      welcome_sub: 'استكشف فعاليات المجتمع النشطة في حيّك هذا الأسبوع.',
-      today: 'اليوم',
-      tomorrow: 'غداً',
-      weekend: 'نهاية الأسبوع',
-      pick_date: 'اختر تاريخاً',
-      all_activities: 'كل الأنشطة',
-      your_participations: 'مشاركاتك النشطة',
-      scheduled: '٢ مجدولة',
-      manage_all: 'إدارة الكل',
-      happening: 'يحدث بالقرب منك في العبور',
-      happening_sub: 'اعثر على أنشطة قريبة واطلب الانضمام',
-      filters: 'تصفية',
-      view_map: 'عرض الخريطة',
-      view_event: 'عرض الفعالية',
-      request_pending: 'الطلب قيد الانتظار',
-      confirmed: 'تم تأكيد الحضور',
-      open_chat: 'فتح محادثة الفعالية',
-      view_details: 'عرض التفاصيل',
-      cancel: 'إلغاء',
-      map: 'خريطة',
-      create_cta: 'إنشاء فعالية',
-      gather_title: 'اجمع الجيران حول شغفك',
-      gather_body: 'هل لديك مباراة أو مسار جري أو مهارة تريد مشاركتها؟ إنشاء فعالية يستغرق أقل من دقيقتين. أنت تتحكم بمن ينضم.',
-      trust_title: 'ثقة واقعية ومساءلة مجتمعية',
-      trust_body: 'مستندات الهوية مطلوبة للمساعدة في الحفاظ على مجتمع أكثر أماناً. أدوات الإبلاغ والحظر متاحة عند الحاجة.',
-      report: 'الإبلاغ عن مشكلة',
-      safety: 'إرشادات السلامة',
-      trust_center: 'مركز الثقة',
-      toast_view: 'عرض الفعالية',
-      toast_view_msg: 'افتح التفاصيل ثم اطلب الانضمام.',
-      location_cairo: 'القاهرة / العبور'
-    }
-  };
-
-  function applyLocale(locale) {
-    const t = dict[locale] || dict.en;
-    const root = document.documentElement;
-    root.lang = locale;
-    root.dir = locale === 'ar' ? 'rtl' : 'ltr';
-    localStorage.setItem('ui_locale', locale);
-
-    document.querySelectorAll('[data-i18n]').forEach((el) => {
-      const key = el.getAttribute('data-i18n');
-      if (t[key] != null) el.textContent = t[key];
-    });
-    document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
-      const key = el.getAttribute('data-i18n-placeholder');
-      if (t[key] != null) el.setAttribute('placeholder', t[key]);
-    });
-
-    document.querySelectorAll('.locale-btn').forEach((btn) => {
-      const active = btn.getAttribute('data-set-locale') === locale;
-      btn.classList.toggle('text-primary', active);
-      btn.classList.toggle('font-semibold', active);
-      btn.classList.toggle('text-on-surface', active);
-      btn.classList.toggle('text-text-muted', !active);
-      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
-  }
-
-  document.querySelectorAll('[data-set-locale]').forEach((btn) => {
-    btn.addEventListener('click', () => applyLocale(btn.getAttribute('data-set-locale')));
-  });
-
-  const saved = localStorage.getItem('ui_locale');
-  applyLocale(saved === 'ar' ? 'ar' : 'en');
-
-  // Expose for toast messages
-  window.__t = function (key) {
-    const locale = document.documentElement.lang || 'en';
-    return (dict[locale] || dict.en)[key] || key;
-  };
-})();
-</script>
-</body></html>
+</body>
+</html>

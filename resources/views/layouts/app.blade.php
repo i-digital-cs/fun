@@ -4,46 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', config('app.name'))</title>
+    <title>@yield('title', $siteName ?? site_display_name())</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-background text-text">
-    <header class="border-b border-border/60 bg-surface/80 backdrop-blur">
-        <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-            <a href="{{ url('/') }}" class="text-lg font-semibold text-primary">{{ $siteName ?? site_display_name() }}</a>
-            <div class="flex items-center gap-3 text-sm">
-                <form method="POST" action="{{ route('locale.update') }}" class="flex items-center gap-2">
-                    @csrf
-                    <label for="locale" class="sr-only">{{ __('ui.language') }}</label>
-                    <select id="locale" name="locale" onchange="this.form.submit()" class="rounded-lg border border-border bg-surface px-2 py-1 text-sm">
-                        <option value="en" @selected(app()->getLocale() === 'en')>{{ __('ui.english') }}</option>
-                        <option value="ar" @selected(app()->getLocale() === 'ar')>{{ __('ui.arabic') }}</option>
-                    </select>
-                </form>
-                @auth
-                    <a href="{{ route('events.index') }}" class="text-muted hover:text-text">{{ __('events.discover') }}</a>
-                    <a href="{{ route('settings.location.edit') }}" class="text-muted hover:text-text">{{ __('location.location_settings') }}</a>
-                    <a href="{{ route('blocks.index') }}" class="text-muted hover:text-text">{{ __('safety.blocked_users') }}</a>
-                    <a href="{{ route('events.mine') }}" class="text-muted hover:text-text">{{ __('events.my_events') }}</a>
-                    @if (auth()->user()->isPlatformAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="text-muted hover:text-text">{{ __('admin.dashboard') }}</a>
-                    @endif
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="text-muted hover:text-text">{{ __('ui.logout') }}</button>
-                    </form>
-                @else
-                    <a href="{{ route('events.index') }}" class="text-muted hover:text-text">{{ __('events.discover') }}</a>
-                    <a href="{{ route('login') }}" class="text-muted hover:text-text">{{ __('ui.login') }}</a>
-                    <a href="{{ route('register') }}" class="rounded-lg bg-accent px-3 py-1.5 font-semibold text-white">{{ __('ui.register') }}</a>
-                @endauth
-            </div>
-        </div>
-    </header>
+<body class="flex min-h-screen flex-col bg-background text-text antialiased">
+    <x-layout.site-header />
 
-    <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
         @if (session('status'))
             <div class="mb-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-success" role="status">
                 {{ session('status') }}
@@ -62,6 +31,7 @@
 
         @yield('content')
     </main>
+
     @stack('scripts')
 </body>
 </html>

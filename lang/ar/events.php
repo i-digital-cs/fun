@@ -3,7 +3,9 @@
 return [
     'events' => 'الفعاليات',
     'my_events' => 'فعالياتي',
+    'nearby_events' => 'فعاليات قريبة',
     'create_event' => 'إنشاء فعالية',
+    'create_event_cta' => '+ إنشاء فعالية',
     'edit_event' => 'تعديل فعالية',
     'title' => 'العنوان',
     'description' => 'الوصف',

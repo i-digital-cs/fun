@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\User;
 use App\Services\Safety\UserBlockService;
 use App\Support\GeoDistance;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -42,6 +43,10 @@ class DiscoverNearbyEventsService
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', (int) $filters['category_id']);
+        }
+
+        if (! empty($filters['when'])) {
+            $this->applyWhenFilter($query, (string) $filters['when']);
         }
 
         if (! empty($filters['q'])) {
@@ -150,5 +155,40 @@ class DiscoverNearbyEventsService
                 ->pluck('id')
                 ->values();
         });
+    }
+
+    private function applyWhenFilter(Builder $query, string $when): void
+    {
+        $tz = config('app.timezone');
+        $now = now($tz);
+
+        match ($when) {
+            'today' => $query->whereBetween('starts_at', [
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay(),
+            ]),
+            'tomorrow' => $query->whereBetween('starts_at', [
+                $now->copy()->addDay()->startOfDay(),
+                $now->copy()->addDay()->endOfDay(),
+            ]),
+            'weekend' => $query->whereBetween('starts_at', $this->upcomingWeekendBounds($now)),
+            default => null,
+        };
+    }
+
+    /**
+     * @return array{0: CarbonInterface, 1: CarbonInterface}
+     */
+    private function upcomingWeekendBounds(CarbonInterface $now): array
+    {
+        if ($now->isSaturday()) {
+            $saturday = $now->copy()->startOfDay();
+        } elseif ($now->isSunday()) {
+            $saturday = $now->copy()->subDay()->startOfDay();
+        } else {
+            $saturday = $now->copy()->next('Saturday')->startOfDay();
+        }
+
+        return [$saturday, $saturday->copy()->addDay()->endOfDay()];
     }
 }

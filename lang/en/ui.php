@@ -14,6 +14,8 @@ return [
     'english' => 'English',
     'arabic' => 'العربية',
     'home' => 'Home',
+    'primary_nav' => 'Primary',
+    'menu' => 'Menu',
     'account_deactivated_title' => 'Account deactivated',
     'account_deactivated_body' => 'Your account has been deactivated by an administrator. Contact support if you believe this is a mistake.',
 ];

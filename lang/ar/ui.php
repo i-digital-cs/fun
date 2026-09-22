@@ -14,6 +14,8 @@ return [
     'english' => 'English',
     'arabic' => 'العربية',
     'home' => 'الرئيسية',
+    'primary_nav' => 'القائمة الرئيسية',
+    'menu' => 'القائمة',
     'account_deactivated_title' => 'تم إيقاف الحساب',
     'account_deactivated_body' => 'تم إيقاف حسابك بواسطة المسؤول. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.',
 ];
