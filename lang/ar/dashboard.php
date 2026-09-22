@@ -45,6 +45,8 @@ return [
     'nav_my_events' => 'فعالياتي',
     'nav_create' => 'إنشاء فعالية',
     'nav_profile' => 'الملف',
+    'nav_location' => 'الموقع',
+    'nav_blocked' => 'المحظورون',
     'view_event' => 'عرض الفعالية',
     'empty_nearby' => 'مفيش فعاليات قريبة لسه. كن أول من ينشئ واحدة.',
 ];

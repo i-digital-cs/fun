@@ -14,6 +14,7 @@
     $isDiscover = request()->routeIs('events.index');
     $isMine = request()->routeIs('events.mine');
     $isCreate = request()->routeIs('events.create', 'identity.create');
+    $isBlocked = request()->routeIs('blocks.index');
 @endphp
 
 <aside class="dash-sidebar relative min-h-screen pb-28">
@@ -79,6 +80,20 @@
                 <path stroke-linecap="round" d="M16 2v4M8 2v4M12 11v6M9 14h6"/>
             </svg>
             {{ __('dashboard.nav_create') }}
+        </a>
+
+        <a href="{{ route('blocks.index') }}"
+           @class([
+               'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
+               'bg-indigo-50 text-indigo-600' => $isBlocked,
+               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isBlocked,
+           ])
+           @if ($isBlocked) aria-current="page" @endif>
+            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/>
+                <path stroke-linecap="round" d="M7 7l10 10"/>
+            </svg>
+            {{ __('dashboard.nav_blocked') }}
         </a>
 
         @if ($exploreCategories->isNotEmpty())

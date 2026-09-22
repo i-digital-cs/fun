@@ -55,19 +55,24 @@
                     <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
                 </svg>
             </summary>
-            <div class="absolute end-0 top-full z-30 mt-2 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
-                <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
+            <div class="absolute end-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                @if (request()->routeIs('dashboard'))
+                    <a href="{{ route('home') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
+                        {{ __('ui.home') }}
+                    </a>
+                @endif
+                <a href="{{ route('dashboard') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
                     {{ __('ui.dashboard') }}
                 </a>
-                <a href="{{ route('settings.location.edit') }}" class="block px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
-                    {{ __('dashboard.nav_profile') }}
+                <a href="{{ route('settings.location.edit') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
+                    {{ __('dashboard.nav_location') }}
                 </a>
-                <a href="{{ route('blocks.index') }}" class="block px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
-                    {{ __('safety.blocked_users') }}
+                <a href="{{ route('blocks.index') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
+                    {{ __('dashboard.nav_blocked') }}
                 </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="block w-full px-4 py-2 text-start text-sm font-medium text-slate-600 hover:bg-slate-50">
+                    <button type="submit" class="block w-full whitespace-nowrap px-4 py-2 text-start text-sm font-medium text-slate-600 hover:bg-slate-50">
                         {{ __('ui.logout') }}
                     </button>
                 </form>

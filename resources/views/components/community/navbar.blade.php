@@ -153,21 +153,21 @@
                             <path stroke-linecap="round" d="M6 9l6 6 6-6"/>
                         </svg>
                     </summary>
-                    <div class="absolute end-0 top-full z-40 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200/80 bg-white py-1.5 shadow-xl shadow-slate-900/10">
+                    <div class="absolute end-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200/80 bg-white py-1.5 shadow-xl shadow-slate-900/10">
                         <p class="truncate px-4 py-2 text-xs font-semibold text-slate-400">{{ $user->name }}</p>
-                        <a href="{{ route('dashboard') }}" class="block px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
+                        <a href="{{ route('dashboard') }}" class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
                             {{ __('ui.dashboard') }}
                         </a>
-                        <a href="{{ route('settings.location.edit') }}" class="block px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
-                            {{ __('location.title') }}
+                        <a href="{{ route('settings.location.edit') }}" class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
+                            {{ __('dashboard.nav_location') }}
                         </a>
-                        <a href="{{ route('blocks.index') }}" class="block px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
-                            {{ __('safety.blocked_users') }}
+                        <a href="{{ route('blocks.index') }}" class="block whitespace-nowrap px-4 py-2.5 text-sm font-medium text-slate-700 no-underline hover:bg-indigo-50 hover:text-indigo-700">
+                            {{ __('dashboard.nav_blocked') }}
                         </a>
                         <div class="my-1 border-t border-slate-100"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="block w-full px-4 py-2.5 text-start text-sm font-medium text-red-600 hover:bg-red-50">
+                            <button type="submit" class="block w-full whitespace-nowrap px-4 py-2.5 text-start text-sm font-medium text-red-600 hover:bg-red-50">
                                 {{ __('ui.logout') }}
                             </button>
                         </form>
