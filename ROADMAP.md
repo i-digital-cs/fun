@@ -20,7 +20,30 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**V1 roadmap complete.** Next work is ops/deploy or post-V1 features (not listed until MASTER_CONTEXT is updated).
+**Flutter mobile client — production build phases in progress / largely complete.** Continue polish and device QA.
+
+---
+
+## Flutter mobile
+
+### Task F1 — Flutter scaffold + auth + discover
+- **Status:** `done`
+- **Completed:** 2026-09-22
+
+### Task F2 — Create event + location settings + chat
+- **Status:** `done`
+- **Completed:** 2026-09-22
+- **Notes:** Clean Architecture folders, secure tokens, l10n, location, create/edit/publish, membership, chat, lifecycle.
+
+### Task F3 — Identity upload + blocks/reports + ratings
+- **Status:** `done`
+- **Completed:** 2026-09-22
+- **Notes:** Account gates, identity upload, blocks, reports, safety guidelines, ratings.
+
+### Task F4 — Perf / flavors / release / tests
+- **Status:** `done`
+- **Completed:** 2026-09-22
+- **Notes:** Image memCache bounds, catalog TTL cache, dart-define flavors, widget+unit tests, obfuscation build command documented.
 
 ---
 
