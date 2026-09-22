@@ -78,20 +78,28 @@
             <div class="border-t border-slate-100 px-4 py-4 sm:px-5">
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <h3 class="text-sm font-extrabold text-slate-900">{{ __('admin.user_events') }}</h3>
-                    @if ($user->isDeactivated())
-                        <form method="POST" action="{{ route('admin.users.reactivate', $user) }}">
-                            @csrf
-                            <button class="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-white">{{ __('admin.reactivate') }}</button>
-                        </form>
-                    @elseif (! $user->isPlatformAdmin() || auth()->user()->isSuperAdmin())
-                        @can('deactivate', $user)
-                            <form method="POST" action="{{ route('admin.users.deactivate', $user) }}" class="flex flex-wrap items-center gap-2">
-                                @csrf
-                                <input type="text" name="reason" placeholder="{{ __('admin.reason') }}" class="rounded-xl border border-slate-200 px-3 py-2 text-xs">
-                                <button class="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white">{{ __('admin.deactivate') }}</button>
-                            </form>
+                    <div class="flex flex-wrap items-center gap-2">
+                        @can('update', $user)
+                            <a href="{{ route('admin.users.edit', $user) }}"
+                               class="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 no-underline hover:bg-indigo-100">
+                                {{ __('admin.edit_user') }}
+                            </a>
                         @endcan
-                    @endif
+                        @if ($user->isDeactivated())
+                            <form method="POST" action="{{ route('admin.users.reactivate', $user) }}">
+                                @csrf
+                                <button class="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-white">{{ __('admin.reactivate') }}</button>
+                            </form>
+                        @elseif (! $user->isPlatformAdmin() || auth()->user()->isSuperAdmin())
+                            @can('deactivate', $user)
+                                <form method="POST" action="{{ route('admin.users.deactivate', $user) }}" class="flex flex-wrap items-center gap-2">
+                                    @csrf
+                                    <input type="text" name="reason" placeholder="{{ __('admin.reason') }}" class="rounded-xl border border-slate-200 px-3 py-2 text-xs">
+                                    <button class="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white">{{ __('admin.deactivate') }}</button>
+                                </form>
+                            @endcan
+                        @endif
+                    </div>
                 </div>
 
                 @if ($user->createdEvents->isEmpty())

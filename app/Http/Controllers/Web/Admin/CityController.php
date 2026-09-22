@@ -17,7 +17,10 @@ class CityController extends Controller
     {
         $this->authorize('viewAny', City::class);
 
-        $cities = City::query()->orderBy('name_en')->paginate(30);
+        $cities = City::query()
+            ->withCount('events')
+            ->orderBy('name_en')
+            ->paginate(30);
 
         return view('admin.cities.index', compact('cities'));
     }
@@ -80,5 +83,19 @@ class CityController extends Controller
         }
 
         return back()->with('status', __('location.city_activated'));
+    }
+
+    public function destroy(City $city, ManageCityService $service): RedirectResponse
+    {
+        $this->authorize('delete', $city);
+
+        try {
+            $service->delete($city);
+        } catch (DomainException $exception) {
+            return back()->withErrors(['city' => $exception->getMessage()]);
+        }
+
+        return redirect()->route('admin.cities.index')
+            ->with('status', __('location.city_deleted'));
     }
 }

@@ -27,4 +27,9 @@ class CityPolicy
     {
         return $user->platform_role instanceof PlatformRole;
     }
+
+    public function delete(User $user, City $city): bool
+    {
+        return $user->platform_role instanceof PlatformRole;
+    }
 }

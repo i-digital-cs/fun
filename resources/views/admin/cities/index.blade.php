@@ -44,6 +44,20 @@
                                         <button class="text-success font-medium">{{ __('admin.reactivate') }}</button>
                                     </form>
                                 @endif
+                                @can('delete', $city)
+                                    @if ($city->events_count === 0)
+                                        <form method="POST" action="{{ route('admin.cities.destroy', $city) }}"
+                                              onsubmit="return confirm(@json(__('location.confirm_delete_city')))">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="text-danger font-medium">{{ __('location.remove_city') }}</button>
+                                        </form>
+                                    @else
+                                        <span class="text-xs text-muted" title="{{ __('location.city_has_events') }}">
+                                            {{ __('location.events_count', ['count' => $city->events_count]) }}
+                                        </span>
+                                    @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>

@@ -86,4 +86,9 @@ class EventPolicy
             && $event->isMember($user)
             && (int) $event->created_by !== (int) $user->id;
     }
+
+    public function moderate(User $user, Event $event): bool
+    {
+        return $user->platform_role?->canModerateEvents() === true;
+    }
 }

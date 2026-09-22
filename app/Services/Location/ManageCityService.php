@@ -80,6 +80,18 @@ class ManageCityService
         return $city->refresh();
     }
 
+    public function delete(City $city): void
+    {
+        if ($city->events()->exists()) {
+            throw new DomainException(__('location.city_has_events'));
+        }
+
+        DB::transaction(function () use ($city) {
+            $city->delete();
+            $this->bumpNearbyCitiesCache();
+        });
+    }
+
     private function bumpNearbyCitiesCache(): void
     {
         Cache::forever('nearby_cities_version', ((int) Cache::get('nearby_cities_version', 0)) + 1);

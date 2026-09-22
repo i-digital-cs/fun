@@ -15,5 +15,10 @@ return [
     'category_activated' => 'تم تفعيل التصنيف بنجاح.',
     'category_already_inactive' => 'هذا التصنيف موقوف بالفعل.',
     'category_already_active' => 'هذا التصنيف مفعل بالفعل.',
+    'category_deleted' => 'تم حذف التصنيف بنجاح.',
+    'category_has_events' => 'لا يمكن حذف تصنيف مرتبط بفعاليات. أوقفه بدلًا من ذلك، أو أعد تعيين الفعاليات أولًا.',
+    'remove_category' => 'حذف',
+    'confirm_delete_category' => 'حذف هذا التصنيف نهائيًا؟',
+    'events_count' => ':count فعالية',
     'save' => 'حفظ',
 ];

@@ -44,6 +44,20 @@
                                         <button class="font-medium text-success">{{ __('admin.reactivate') }}</button>
                                     </form>
                                 @endif
+                                @can('delete', $category)
+                                    @if ($category->events_count === 0)
+                                        <form method="POST" action="{{ route('admin.categories.destroy', $category) }}"
+                                              onsubmit="return confirm(@json(__('catalog.confirm_delete_category')))">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="font-medium text-danger">{{ __('catalog.remove_category') }}</button>
+                                        </form>
+                                    @else
+                                        <span class="text-xs text-muted" title="{{ __('catalog.category_has_events') }}">
+                                            {{ __('catalog.events_count', ['count' => $category->events_count]) }}
+                                        </span>
+                                    @endif
+                                @endcan
                             </div>
                         </td>
                     </tr>

@@ -168,6 +168,15 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/events', [EventModerationController::class, 'index'])->name('events.index');
         Route::get('/events/calendar', [EventModerationController::class, 'calendar'])->name('events.calendar');
+        Route::get('/events/{event}/edit', [EventModerationController::class, 'edit'])
+            ->whereNumber('event')
+            ->name('events.edit');
+        Route::put('/events/{event}', [EventModerationController::class, 'update'])
+            ->whereNumber('event')
+            ->name('events.update');
+        Route::delete('/events/{event}', [EventModerationController::class, 'destroy'])
+            ->whereNumber('event')
+            ->name('events.destroy');
         Route::post('/events/{event}/cancel', [EventModerationController::class, 'cancel'])
             ->whereNumber('event')
             ->name('events.cancel');
@@ -197,6 +206,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/cities/{city}', [AdminCityController::class, 'update'])->name('cities.update');
         Route::post('/cities/{city}/deactivate', [AdminCityController::class, 'deactivate'])->name('cities.deactivate');
         Route::post('/cities/{city}/activate', [AdminCityController::class, 'activate'])->name('cities.activate');
+        Route::delete('/cities/{city}', [AdminCityController::class, 'destroy'])->name('cities.destroy');
 
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
         Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');

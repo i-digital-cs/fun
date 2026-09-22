@@ -6,15 +6,20 @@
 
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h1 class="text-2xl font-semibold">{{ __('admin.events') }}</h1>
-        <form method="GET" class="flex gap-2">
-            <select name="status" class="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
-                <option value="">{{ __('admin.all_statuses') }}</option>
-                @foreach (['draft', 'published', 'cancelled', 'completed'] as $option)
-                    <option value="{{ $option }}" @selected($status === $option)>{{ $option }}</option>
-                @endforeach
-            </select>
-            <button class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white">{{ __('admin.filter') }}</button>
-        </form>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.events.calendar') }}" class="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-primary no-underline hover:bg-background">
+                {{ __('admin.events_calendar') }}
+            </a>
+            <form method="GET" class="flex gap-2">
+                <select name="status" class="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+                    <option value="">{{ __('admin.all_statuses') }}</option>
+                    @foreach (['draft', 'published', 'cancelled', 'completed'] as $option)
+                        <option value="{{ $option }}" @selected($status === $option)>{{ $option }}</option>
+                    @endforeach
+                </select>
+                <button class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white">{{ __('admin.filter') }}</button>
+            </form>
+        </div>
     </div>
 
     <div class="space-y-3">
@@ -29,6 +34,7 @@
                         </p>
                     </div>
                     <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('admin.events.edit', $event) }}" class="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-primary">{{ __('admin.edit_event') }}</a>
                         <a href="{{ route('admin.chat.index', $event) }}" class="rounded-lg border border-border px-3 py-1.5 text-sm">{{ __('admin.moderate_chat') }}</a>
                         @if (in_array($event->status->value, ['draft', 'published'], true))
                             <form method="POST" action="{{ route('admin.events.cancel', $event) }}">
@@ -42,6 +48,12 @@
                                 <button class="rounded-lg bg-success px-3 py-1.5 text-sm font-medium text-white">{{ __('admin.complete_event') }}</button>
                             </form>
                         @endif
+                        <form method="POST" action="{{ route('admin.events.destroy', $event) }}"
+                              onsubmit="return confirm(@json(__('admin.confirm_delete_event')))">
+                            @csrf
+                            @method('DELETE')
+                            <button class="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white">{{ __('admin.delete') }}</button>
+                        </form>
                     </div>
                 </div>
             </div>
