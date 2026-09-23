@@ -49,8 +49,11 @@ class _EventCardState extends State<EventCard> {
             .format(event.startsAt!.toLocal())
             .toUpperCase()
         : '';
-    // Match web/Uiverse chip: free check or currency short (e.g. EGP)
-    final priceChip = event.isFree ? l10n.free : l10n.currencyShort;
+    // Match Blade: free label or full "25.00 EGP / person"
+    final priceChip = event.isFree
+        ? l10n.free
+        : l10n.costPerPersonAmount('${event.costPerPerson}');
+    final currencyPill = event.isFree ? '✓' : l10n.currencyShort;
     final cityName = event.city?.name.trim() ?? '';
     final venue = event.venue.trim();
     final venueLine = [
@@ -246,10 +249,10 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ),
 
-                // Bookmark sits above the logo stack (web: top-right).
+                // Bookmark — match Blade: below media on end side (not on logo)
                 if (widget.onFavorite != null)
                   PositionedDirectional(
-                    top: 14,
+                    top: 118,
                     end: 14,
                     child: Material(
                       color: Colors.white.withValues(alpha: 0.95),
@@ -389,18 +392,22 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ),
 
-                // CSS .bottom — social pills + view-more
+                // CSS .bottom — pills match Blade: members + currency + %
                 Positioned(
                   left: 20,
                   right: 20,
                   bottom: 18,
                   child: Row(
                     children: [
-                      // Web card: members + fill% only (currency is the orange chip)
                       _SocialPill(
                         label:
                             '${event.membersCount}/${event.maxParticipants}',
                         wide: true,
+                        hover: _hover,
+                      ),
+                      const SizedBox(width: 10),
+                      _SocialPill(
+                        label: currencyPill,
                         hover: _hover,
                       ),
                       const SizedBox(width: 10),
