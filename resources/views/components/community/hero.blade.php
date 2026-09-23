@@ -41,7 +41,7 @@
         $hlVenue = $highlight->venue . ($highlight->city ? ' · ' . $highlight->city->localizedName() : '');
         $hlTime = $highlight->starts_at?->timezone(config('app.timezone'))->translatedFormat('l · g:i A') ?? '';
         $hlSpots = $highlight->remainingCapacity();
-        $hlImage = event_cover_url($highlight->imageUrl(), $highlight->id);
+        $hlImage = $highlight->coverUrl();
         $hlLink = route('events.show', $highlight);
         $hlGoing = $highlight->acceptedMembersCount();
     } elseif ($user?->canParticipate()) {

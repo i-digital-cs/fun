@@ -175,4 +175,19 @@ class Event extends Model
 
         return Storage::disk($disk)->url($this->image_path);
     }
+
+    /**
+     * Uploaded cover or category-matched stock activity image.
+     */
+    public function coverUrl(): string
+    {
+        $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+
+        return event_cover_url(
+            $this->imageUrl(),
+            (int) $this->id,
+            $category?->slug,
+            trim($this->title.' '.($category?->name_en ?? '').' '.($category?->name_ar ?? ''))
+        );
+    }
 }

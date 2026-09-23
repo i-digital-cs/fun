@@ -224,7 +224,7 @@ For each screen:
 - Empty / nationwide-fallback messaging when applicable  
 - Orange Create when allowed  
 
-**Rich card must show:** cover, category chip, Free/`EGP`|`ج.م` price chip (Egyptian pound — not Riyal), urgency chip, schedule, title, venue, members progress, join-state banner, full-width orange **View event**. Same `x-events.card` on marketing home discover and dashboard nearby.
+**Rich card must show:** cover (uploaded or **category-matched** stock activity image — football/running/chess/etc., not random by id), category chip, Free/`EGP`|`ج.م` price chip (Egyptian pound — not Riyal), urgency chip, schedule, title, venue, members progress, join-state banner, full-width orange **View event**. Same `x-events.card` on marketing home discover and dashboard nearby. API `image_url` uses the same `Event::coverUrl()` fallback.
 
 **Live search (typed → API wait):** when the user types in search (topbar, home, Discover `q`, admin users), show the wifi **Searching** indicator **only** while the debounced request is in flight — never as a page/spinner loader for navigation.
 
