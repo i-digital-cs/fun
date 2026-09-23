@@ -1,6 +1,7 @@
 @props([
     'events',
     'joinActionsById' => [],
+    'favoritedIds' => [],
     'user' => null,
     'cityName' => null,
     'nationwideFallback' => false,
@@ -117,6 +118,13 @@
                         @endif
                         <span class="{{ $urgencyClass }}">{{ __('design.' . $urgencyKey) }}</span>
                     </span>
+                    <div class="absolute end-3 bottom-3 z-10 drop-shadow-md">
+                        <x-events.favorite-bookmark
+                            :event="$event"
+                            :favorited="isset($favoritedIds[$event->id])"
+                            :id-suffix="'home-'.$event->id"
+                        />
+                    </div>
                 </div>
 
                 <div class="flex flex-1 flex-col gap-3 p-5">

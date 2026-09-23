@@ -37,6 +37,10 @@
                  class="h-full w-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent"></div>
 
+            <div class="absolute end-4 top-4 z-10 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur">
+                <x-events.favorite-bookmark :event="$event" :favorited="$isFavorited" id-suffix="show" />
+            </div>
+
             <div class="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-3 p-5 sm:p-7">
                 <div class="min-w-0">
                     @if ($event->category)
@@ -125,9 +129,9 @@
                         <a href="{{ route('events.chat', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition hover:brightness-105">{{ __('chat.open_chat') }}</a>
                         <a href="{{ route('events.members', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.members') }}</a>
                         @unless($event->isOwnedBy(auth()->user()))
-                            <form method="POST" action="{{ route('events.leave', $event) }}">
+                            <form method="POST" action="{{ route('events.leave', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_leave_event') }}">
                                 @csrf
-                                <button class="inline-flex items-center justify-center rounded-xl border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50">{{ __('events.leave_event') }}</button>
+                                <x-ui.cancel-btn type="submit" :label="__('events.leave_event')" />
                             </form>
                         @endunless
                     @elseif ($joinAction->value === 'event_full')
@@ -145,7 +149,10 @@
                             <form method="POST" action="{{ route('events.publish', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.publish') }}</button></form>
                         @endif
                         @if (in_array($event->status->value, ['draft', 'published'], true))
-                            <form method="POST" action="{{ route('events.cancel', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700">{{ __('events.cancel') }}</button></form>
+                            <form method="POST" action="{{ route('events.cancel', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_cancel_event') }}">
+                                @csrf
+                                <x-ui.cancel-btn type="submit" :label="__('events.cancel')" />
+                            </form>
                         @endif
                         @if ($event->status->value === 'published')
                             <form method="POST" action="{{ route('events.complete', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105">{{ __('events.complete') }}</button></form>

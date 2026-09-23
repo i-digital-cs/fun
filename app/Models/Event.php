@@ -70,6 +70,11 @@ class Event extends Model
         return $this->hasMany(EventMember::class);
     }
 
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(EventFavorite::class);
+    }
+
     public function joinRequests(): HasMany
     {
         return $this->hasMany(EventJoinRequest::class);

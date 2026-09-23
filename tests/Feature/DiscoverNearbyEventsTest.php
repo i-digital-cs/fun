@@ -187,4 +187,30 @@ class DiscoverNearbyEventsTest extends TestCase
         $this->assertTrue($ids->contains($near->id));
         $this->assertTrue($ids->contains($far->id));
     }
+
+    public function test_web_explicit_city_with_no_nearby_does_not_fallback_nationwide(): void
+    {
+        $hurghada = $this->city('Hurghada', 27.2579, 33.8116);
+        $cairo = $this->city('Cairo', 30.0444, 31.2357);
+
+        $this->publishedIn($cairo, null, ['title' => 'Cairo Only Meetup']);
+
+        $user = User::factory()->active()->create([
+            'city_id' => $cairo->id,
+            'distance_km' => 25,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('events.index', [
+                'city_id' => $hurghada->id,
+                'distance_km' => 5,
+            ]))
+            ->assertOk()
+            ->assertDontSee('Cairo Only Meetup')
+            ->assertSee(__('events.empty_nearby_city', [
+                'city' => 'Hurghada',
+                'km' => 5,
+            ]), false)
+            ->assertDontSee(__('events.nationwide_notice'), false);
+    }
 }

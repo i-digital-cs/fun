@@ -1,6 +1,7 @@
 @props([
     'event',
     'joinAction' => null,
+    'favorited' => false,
 ])
 
 @php
@@ -39,6 +40,13 @@
                 {{ $distanceLabel }}
             </span>
         @endif
+        <div @class([
+            'absolute z-10 drop-shadow-md',
+            'end-3 bottom-3' => $distanceLabel,
+            'end-3 top-3' => ! $distanceLabel,
+        ])>
+            <x-events.favorite-bookmark :event="$event" :favorited="$favorited" id-suffix="dash" />
+        </div>
     </div>
 
     <div class="p-3.5">

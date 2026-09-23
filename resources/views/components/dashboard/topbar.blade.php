@@ -1,3 +1,6 @@
+<header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
+    {{-- Blur on a separate layer so the live-search dropdown is not clipped --}}
+    <div class="pointer-events-none absolute inset-0 -z-10 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
 @php
     $user = auth()->user();
     $locale = app()->getLocale();
@@ -7,19 +10,36 @@
     $profilePhoto = filled($user?->profile_image_path) ? $user->profile_image_path : null;
 @endphp
 
-<header class="sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-[#e7ebf3] bg-white/90 px-4 backdrop-blur-xl sm:px-[1.875rem]">
-    <form method="GET" action="{{ route('events.index') }}" class="flex h-[42px] w-full max-w-[540px] items-center gap-2 rounded-xl border border-[#e7ebf3] bg-[#f7f9fc] px-3 sm:w-[min(540px,55vw)]" role="search">
-        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"/>
-            <path stroke-linecap="round" d="M20 20l-3-3"/>
-        </svg>
-        <input type="search"
-               name="q"
-               value="{{ request('q') }}"
-               placeholder="{{ __('dashboard.search_placeholder') }}"
-               aria-label="{{ __('dashboard.search_placeholder') }}"
-               class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400">
-    </form>
+    <div
+        class="live-search relative w-full max-w-[540px] sm:w-[min(540px,55vw)]"
+        data-live-search
+        data-live-search-type="events"
+        data-live-search-url="{{ route('search.suggest') }}"
+        data-live-search-empty="{{ __('ui.search_empty') }}"
+        data-live-search-see-all="{{ __('ui.search_see_all') }}"
+        data-live-search-error="{{ __('ui.search_failed') }}"
+    >
+        <form method="GET" action="{{ route('events.index') }}" class="flex h-[42px] w-full items-center gap-2 rounded-xl border border-[#e7ebf3] bg-[#f7f9fc] px-3" role="search">
+            <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/>
+                <path stroke-linecap="round" d="M20 20l-3-3"/>
+            </svg>
+            <input type="search"
+                   name="q"
+                   value="{{ request('q') }}"
+                   placeholder="{{ __('dashboard.search_placeholder') }}"
+                   aria-label="{{ __('dashboard.search_placeholder') }}"
+                   autocomplete="off"
+                   data-live-search-input
+                   class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400">
+        </form>
+        <div class="live-search__panel" data-live-search-panel hidden>
+            <div class="live-search__searching" data-live-search-searching hidden>
+                <x-ui.searching size="sm" />
+            </div>
+            <div class="live-search__results" data-live-search-results></div>
+        </div>
+    </div>
 
     <div class="ms-3 flex shrink-0 items-center gap-3 sm:gap-4">
         <form method="POST" action="{{ route('locale.update') }}" class="hidden sm:inline-flex">

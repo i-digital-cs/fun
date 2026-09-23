@@ -1,6 +1,7 @@
 @props([
     'events',
     'joinActionsById' => [],
+    'favoritedIds' => [],
     'hasNearbyOrigin' => false,
     'nationwideFallback' => false,
     'user' => null,
@@ -66,7 +67,11 @@
     @else
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             @foreach ($events as $event)
-                <x-events.card :event="$event" :join-action="$joinActionsById[$event->id] ?? null" />
+                <x-events.card
+                    :event="$event"
+                    :join-action="$joinActionsById[$event->id] ?? null"
+                    :favorited="isset($favoritedIds[$event->id])"
+                />
             @endforeach
         </div>
     @endif

@@ -18,14 +18,28 @@
         <h1 class="text-[25px] font-extrabold tracking-tight text-slate-900">{{ __('admin.users') }}</h1>
         <p class="mt-1 text-sm text-slate-500">{{ __('admin.users_sub') }}</p>
     </div>
-    <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap items-center gap-2">
+    <form method="GET" action="{{ route('admin.users.index') }}" class="live-search relative flex flex-wrap items-center gap-2"
+          data-live-search
+          data-live-search-type="users"
+          data-live-search-url="{{ route('search.suggest') }}"
+          data-live-search-empty="{{ __('ui.search_empty') }}"
+          data-live-search-see-all="{{ __('ui.search_see_all') }}"
+          data-live-search-error="{{ __('ui.search_failed') }}">
         <input type="hidden" name="status" value="{{ $status }}">
         <input type="search"
                name="q"
                value="{{ $q }}"
                placeholder="{{ __('admin.search_users') }}"
+               autocomplete="off"
+               data-live-search-input
                class="h-10 w-56 rounded-xl border border-slate-200 bg-white px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
         <button type="submit" class="h-10 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white">{{ __('admin.filter') }}</button>
+        <div class="live-search__panel absolute end-0 top-full z-20 mt-2 w-full min-w-[18rem]" data-live-search-panel hidden>
+            <div class="live-search__searching" data-live-search-searching hidden>
+                <x-ui.searching size="sm" />
+            </div>
+            <div class="live-search__results" data-live-search-results></div>
+        </div>
     </form>
 </div>
 
@@ -92,7 +106,7 @@
                             </form>
                         @elseif (! $user->isPlatformAdmin() || auth()->user()->isSuperAdmin())
                             @can('deactivate', $user)
-                                <form method="POST" action="{{ route('admin.users.deactivate', $user) }}" class="flex flex-wrap items-center gap-2">
+                                <form method="POST" action="{{ route('admin.users.deactivate', $user) }}" class="flex flex-wrap items-center gap-2" data-confirm="{{ __('ui.confirm_deactivate_user') }}">
                                     @csrf
                                     <input type="text" name="reason" placeholder="{{ __('admin.reason') }}" class="rounded-xl border border-slate-200 px-3 py-2 text-xs">
                                     <button class="rounded-xl bg-red-500 px-3 py-2 text-xs font-bold text-white">{{ __('admin.deactivate') }}</button>

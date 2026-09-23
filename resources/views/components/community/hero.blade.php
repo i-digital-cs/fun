@@ -89,22 +89,40 @@
                     </p>
                 </div>
 
-                <form method="GET" action="{{ route('events.index') }}" class="flex max-w-xl items-center gap-2 rounded-2xl border border-white/20 bg-white/10 p-2 backdrop-blur-xl transition focus-within:border-white/40 focus-within:bg-white/15">
-                    <svg class="ms-2 h-5 w-5 shrink-0 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"/>
-                        <path stroke-linecap="round" d="M20 20l-3-3"/>
-                    </svg>
-                    <input type="search" name="q" value="{{ request('q') }}"
-                           placeholder="{{ __('design.search_ph') }}"
-                           aria-label="{{ __('design.search_ph') }}"
-                           class="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-indigo-200/70">
-                    <button type="submit" class="flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 text-sm font-bold text-white shadow-lg shadow-orange-900/30 transition hover:brightness-110 active:scale-95">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                <div
+                    class="live-search relative max-w-xl"
+                    data-live-search
+                    data-live-search-type="events"
+                    data-live-search-url="{{ route('search.suggest') }}"
+                    data-live-search-empty="{{ __('ui.search_empty') }}"
+                    data-live-search-see-all="{{ __('ui.search_see_all') }}"
+                    data-live-search-error="{{ __('ui.search_failed') }}"
+                >
+                    <form method="GET" action="{{ route('events.index') }}" class="flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 p-2 backdrop-blur-xl transition focus-within:border-white/40 focus-within:bg-white/15">
+                        <svg class="ms-2 h-5 w-5 shrink-0 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path stroke-linecap="round" d="M20 20l-3-3"/>
                         </svg>
-                        <span class="hidden sm:inline">{{ __('design.search_cta') }}</span>
-                    </button>
-                </form>
+                        <input type="search" name="q" value="{{ request('q') }}"
+                               placeholder="{{ __('design.search_ph') }}"
+                               aria-label="{{ __('design.search_ph') }}"
+                               autocomplete="off"
+                               data-live-search-input
+                               class="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-indigo-200/70">
+                        <button type="submit" class="flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 text-sm font-bold text-white shadow-lg shadow-orange-900/30 transition hover:brightness-110 active:scale-95">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                            </svg>
+                            <span class="hidden sm:inline">{{ __('design.search_cta') }}</span>
+                        </button>
+                    </form>
+                    <div class="live-search__panel live-search__panel--on-dark" data-live-search-panel hidden>
+                        <div class="live-search__searching" data-live-search-searching hidden>
+                            <x-ui.searching size="sm" />
+                        </div>
+                        <div class="live-search__results" data-live-search-results></div>
+                    </div>
+                </div>
 
                 <div class="flex flex-wrap gap-2" role="tablist" aria-label="{{ __('design.pick_date') }}">
                     @foreach ($dateChips as $chipId => $chipLabel)

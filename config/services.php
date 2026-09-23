@@ -47,4 +47,12 @@ return [
         ])),
     ],
 
+    'weather' => [
+        // Open-Meteo — free, no API key required: https://open-meteo.com/
+        'driver' => env('WEATHER_DRIVER', 'open_meteo'),
+        'base_url' => env('WEATHER_BASE_URL', 'https://api.open-meteo.com/v1/forecast'),
+        'cache_minutes' => (int) env('WEATHER_CACHE_MINUTES', 30),
+        'forecast_days' => (int) env('WEATHER_FORECAST_DAYS', 5),
+    ],
+
 ];

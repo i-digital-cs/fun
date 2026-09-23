@@ -91,6 +91,11 @@ class User extends Authenticatable
         return $this->hasMany(EventMember::class);
     }
 
+    public function eventFavorites(): HasMany
+    {
+        return $this->hasMany(EventFavorite::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === AccountStatus::Active;

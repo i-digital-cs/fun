@@ -11,7 +11,8 @@
     $isMine = request()->routeIs('events.mine');
 @endphp
 
-<header class="sticky top-0 z-50 border-b border-white/60 bg-white/70 shadow-[0_8px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+<header class="relative sticky top-0 z-50 border-b border-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+    <div class="pointer-events-none absolute inset-0 -z-10 bg-white/70 backdrop-blur-xl" aria-hidden="true"></div>
     <nav class="mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 py-3 sm:px-6" aria-label="{{ __('ui.primary_nav') }}">
         <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-2.5 no-underline" aria-label="{{ $brand }}">
             @if ($siteLogoUrl ?? site_logo_url())
@@ -80,23 +81,41 @@
             @endauth
         </div>
 
-        <form method="GET" action="{{ route('events.index') }}" class="mx-2 hidden min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200/80 bg-slate-100/80 px-3 py-2 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-100 xl:flex" role="search">
-            <span class="hidden shrink-0 items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700 sm:flex">
-                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
+        <div
+            class="live-search relative mx-2 hidden min-w-0 flex-1 xl:block"
+            data-live-search
+            data-live-search-type="events"
+            data-live-search-url="{{ route('search.suggest') }}"
+            data-live-search-empty="{{ __('ui.search_empty') }}"
+            data-live-search-see-all="{{ __('ui.search_see_all') }}"
+            data-live-search-error="{{ __('ui.search_failed') }}"
+        >
+            <form method="GET" action="{{ route('events.index') }}" class="flex w-full items-center gap-2 rounded-full border border-slate-200/80 bg-slate-100/80 px-3 py-2 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-100" role="search">
+                <span class="hidden shrink-0 items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700 sm:flex">
+                    <svg class="h-3 w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
+                    </svg>
+                    {{ $cityLabel }}
+                </span>
+                <span class="h-4 w-px shrink-0 bg-slate-300" aria-hidden="true"></span>
+                <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path stroke-linecap="round" d="M20 20l-3-3"/>
                 </svg>
-                {{ $cityLabel }}
-            </span>
-            <span class="h-4 w-px shrink-0 bg-slate-300" aria-hidden="true"></span>
-            <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="11" cy="11" r="7"/>
-                <path stroke-linecap="round" d="M20 20l-3-3"/>
-            </svg>
-            <input type="search" name="q" value="{{ request('q') }}"
-                   placeholder="{{ __('design.search_ph') }}"
-                   aria-label="{{ __('design.search_ph') }}"
-                   class="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400">
-        </form>
+                <input type="search" name="q" value="{{ request('q') }}"
+                       placeholder="{{ __('design.search_ph') }}"
+                       aria-label="{{ __('design.search_ph') }}"
+                       autocomplete="off"
+                       data-live-search-input
+                       class="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400">
+            </form>
+            <div class="live-search__panel" data-live-search-panel hidden>
+                <div class="live-search__searching" data-live-search-searching hidden>
+                    <x-ui.searching size="sm" />
+                </div>
+                <div class="live-search__results" data-live-search-results></div>
+            </div>
+        </div>
 
         <div class="ms-auto flex items-center gap-2 lg:ms-0">
             <form method="POST" action="{{ route('locale.update') }}" class="inline-flex">
@@ -219,16 +238,34 @@
                                 {{ __('ui.chat') }}
                             </a>
                         @endauth
-                        <form method="GET" action="{{ route('events.index') }}" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-                            <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <circle cx="11" cy="11" r="7"/>
-                                <path stroke-linecap="round" d="M20 20l-3-3"/>
-                            </svg>
-                            <input type="search" name="q" value="{{ request('q') }}"
-                                   placeholder="{{ __('design.search_ph') }}"
-                                   aria-label="{{ __('design.search_ph') }}"
-                                   class="w-full bg-transparent text-sm outline-none placeholder:text-slate-400">
-                        </form>
+                        <div
+                            class="live-search relative"
+                            data-live-search
+                            data-live-search-type="events"
+                            data-live-search-url="{{ route('search.suggest') }}"
+                            data-live-search-empty="{{ __('ui.search_empty') }}"
+                            data-live-search-see-all="{{ __('ui.search_see_all') }}"
+                            data-live-search-error="{{ __('ui.search_failed') }}"
+                        >
+                            <form method="GET" action="{{ route('events.index') }}" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="7"/>
+                                    <path stroke-linecap="round" d="M20 20l-3-3"/>
+                                </svg>
+                                <input type="search" name="q" value="{{ request('q') }}"
+                                       placeholder="{{ __('design.search_ph') }}"
+                                       aria-label="{{ __('design.search_ph') }}"
+                                       autocomplete="off"
+                                       data-live-search-input
+                                       class="w-full bg-transparent text-sm outline-none placeholder:text-slate-400">
+                            </form>
+                            <div class="live-search__panel" data-live-search-panel hidden>
+                                <div class="live-search__searching" data-live-search-searching hidden>
+                                    <x-ui.searching size="sm" />
+                                </div>
+                                <div class="live-search__results" data-live-search-results></div>
+                            </div>
+                        </div>
                         @if ($canParticipate)
                             <a href="{{ route('events.create') }}" class="flex w-full items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/30">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">

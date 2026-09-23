@@ -6,7 +6,8 @@
     $firstName = filled($user?->name) ? explode(' ', trim($user->name))[0] : '';
 @endphp
 
-<header class="sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-[#e7ebf3] bg-white/90 px-4 backdrop-blur-xl sm:px-[1.875rem]">
+<header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
+    <div class="pointer-events-none absolute inset-0 -z-10 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
     <div>
         <p class="text-[11px] font-bold uppercase tracking-widest text-indigo-500">{{ __('admin.panel') }}</p>
         <p class="text-sm font-extrabold text-slate-900">@yield('topbar_title', __('admin.dashboard'))</p>

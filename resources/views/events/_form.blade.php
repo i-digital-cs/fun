@@ -55,7 +55,15 @@
     <label class="{{ $labelClass }}" for="cost_per_person">{{ __('events.cost_per_person') }}</label>
     <input id="cost_per_person" type="number" step="0.01" min="0" name="cost_per_person" value="{{ old('cost_per_person', $event?->cost_per_person) }}" class="{{ $inputClass }}">
 </div>
-<div>
-    <label class="{{ $labelClass }}" for="image">{{ __('events.image') }}</label>
-    <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp" class="w-full rounded-xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-6 text-sm text-slate-600 file:me-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-indigo-700">
-</div>
+    <div>
+        <x-ui.attachment-folder
+            name="image"
+            :label="__('events.image')"
+            accept="image/jpeg,image/png,image/webp"
+            :existing-url="$event?->imageUrl()"
+            :existing-name="$event?->image_path ? basename($event->image_path) : null"
+            :existing-tag="$event?->image_path ? 'IMG' : null"
+            data-add-label="{{ __('ui.attachment_add') }}"
+            data-drop-label="{{ __('ui.attachment_drop') }}"
+        />
+    </div>

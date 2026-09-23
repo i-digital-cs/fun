@@ -59,26 +59,44 @@
                 @endauth
             </nav>
 
-            <form method="GET" action="{{ route('events.index') }}" class="mx-3 hidden min-w-[12rem] max-w-[22rem] flex-1 items-center gap-2 rounded-[0.625rem] bg-slate-100 px-2.5 py-1.5 xl:flex" role="search">
-                <a href="{{ auth()->check() ? route('settings.location.edit') : route('login') }}"
-                   class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-ink no-underline">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
-                    </svg>
-                    <span class="max-w-[7rem] truncate">{{ $cityLabel ?? __('home.location_default') }}</span>
-                </a>
-                <span class="h-4 w-px shrink-0 bg-border" aria-hidden="true"></span>
-                <label class="flex min-w-0 flex-1 items-center gap-1">
-                    <svg class="h-4 w-4 shrink-0 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"/>
-                        <path stroke-linecap="round" d="M20 20l-3-3"/>
-                    </svg>
-                    <input type="search" name="q" value="{{ request('q') }}"
-                           placeholder="{{ __('home.search_placeholder') }}"
-                           aria-label="{{ __('events.search') }}"
-                           class="min-w-0 flex-1 border-0 bg-transparent text-sm text-text shadow-none outline-none placeholder:text-muted">
-                </label>
-            </form>
+            <div
+                class="live-search relative mx-3 hidden min-w-[12rem] max-w-[22rem] flex-1 xl:block"
+                data-live-search
+                data-live-search-type="events"
+                data-live-search-url="{{ route('search.suggest') }}"
+                data-live-search-empty="{{ __('ui.search_empty') }}"
+                data-live-search-see-all="{{ __('ui.search_see_all') }}"
+                data-live-search-error="{{ __('ui.search_failed') }}"
+            >
+                <form method="GET" action="{{ route('events.index') }}" class="flex w-full items-center gap-2 rounded-[0.625rem] bg-slate-100 px-2.5 py-1.5" role="search">
+                    <a href="{{ auth()->check() ? route('settings.location.edit') : route('login') }}"
+                       class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-ink no-underline">
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
+                        </svg>
+                        <span class="max-w-[7rem] truncate">{{ $cityLabel ?? __('home.location_default') }}</span>
+                    </a>
+                    <span class="h-4 w-px shrink-0 bg-border" aria-hidden="true"></span>
+                    <label class="flex min-w-0 flex-1 items-center gap-1">
+                        <svg class="h-4 w-4 shrink-0 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path stroke-linecap="round" d="M20 20l-3-3"/>
+                        </svg>
+                        <input type="search" name="q" value="{{ request('q') }}"
+                               placeholder="{{ __('home.search_placeholder') }}"
+                               aria-label="{{ __('events.search') }}"
+                               autocomplete="off"
+                               data-live-search-input
+                               class="min-w-0 flex-1 border-0 bg-transparent text-sm text-text shadow-none outline-none placeholder:text-muted">
+                    </label>
+                </form>
+                <div class="live-search__panel" data-live-search-panel hidden>
+                    <div class="live-search__searching" data-live-search-searching hidden>
+                        <x-ui.searching size="sm" />
+                    </div>
+                    <div class="live-search__results" data-live-search-results></div>
+                </div>
+            </div>
 
             <div class="ms-auto flex shrink-0 items-center gap-2">
                 <form method="POST" action="{{ route('locale.update') }}" class="inline-flex overflow-hidden rounded-lg border border-border text-sm" role="group" aria-label="{{ __('ui.language') }}">

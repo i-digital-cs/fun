@@ -31,9 +31,9 @@
                                                 @csrf
                                                 <button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-105">{{ __('events.accept') }}</button>
                                             </form>
-                                            <form method="POST" action="{{ route('events.requests.reject', [$event, $joinRequest]) }}">
+                                            <form method="POST" action="{{ route('events.requests.reject', [$event, $joinRequest]) }}" class="cancel-btn-slot py-2" data-confirm="{{ __('ui.confirm_reject_request') }}">
                                                 @csrf
-                                                <button class="inline-flex items-center justify-center rounded-xl bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-red-700">{{ __('events.reject') }}</button>
+                                                <x-ui.cancel-btn type="submit" size="sm" :label="__('events.reject')" />
                                             </form>
                                         </div>
                                     @endif

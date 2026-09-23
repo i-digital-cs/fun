@@ -79,22 +79,32 @@
             @if ($documents->isNotEmpty())
                 <div class="mt-6">
                     <h2 class="text-sm font-bold text-slate-900">{{ __('identity.view_documents') }}</h2>
-                    <div class="mt-3 grid gap-3 sm:grid-cols-3">
-                        @foreach (['id_front' => __('identity.id_front'), 'id_back' => __('identity.id_back'), 'selfie' => __('identity.selfie')] as $type => $label)
-                            @php($doc = $documents->get($type))
-                            <div class="overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50">
-                                <p class="border-b border-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">{{ $label }}</p>
-                                @if ($doc)
-                                    <a href="{{ route('identity.documents.show', $doc) }}" target="_blank" rel="noopener" class="block">
-                                        <img src="{{ route('identity.documents.show', $doc) }}"
-                                             alt="{{ $label }}"
-                                             class="aspect-[4/3] w-full object-cover">
-                                    </a>
-                                @else
-                                    <div class="flex aspect-[4/3] items-center justify-center text-xs text-slate-400">—</div>
-                                @endif
-                            </div>
-                        @endforeach
+                    <div class="mt-4 flex flex-wrap justify-center gap-10 sm:justify-start">
+                        @php
+                            $viewFiles = collect([
+                                'id_front' => __('identity.id_front'),
+                                'id_back' => __('identity.id_back'),
+                                'selfie' => __('identity.selfie'),
+                            ])->map(function ($label, $type) use ($documents) {
+                                $doc = $documents->get($type);
+                                if (! $doc) {
+                                    return null;
+                                }
+                                $ext = strtoupper(pathinfo((string) $doc->path, PATHINFO_EXTENSION) ?: 'IMG');
+                                $kb = $doc->size ? number_format($doc->size / 1024, 1).' KB' : null;
+
+                                return [
+                                    'name' => $label,
+                                    'url' => route('identity.documents.show', $doc),
+                                    'tag' => collect([$ext, $kb])->filter()->implode(' · '),
+                                ];
+                            })->filter()->values()->all();
+                        @endphp
+                        <x-ui.attachment-folder
+                            mode="view"
+                            :label="__('identity.view_documents')"
+                            :files="$viewFiles"
+                        />
                     </div>
                 </div>
             @endif
@@ -106,24 +116,27 @@
                         <p class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ $message }}</p>
                     @enderror
 
-                    @foreach ([
-                        'id_front' => __('identity.id_front'),
-                        'id_back' => __('identity.id_back'),
-                        'selfie' => __('identity.selfie'),
-                    ] as $name => $label)
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700" for="{{ $name }}">{{ $label }}</label>
-                            <div class="overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50/80">
-                                <img data-preview-for="{{ $name }}" alt="" class="hidden aspect-[4/3] w-full object-cover">
-                                <input id="{{ $name }}" type="file" name="{{ $name }}" accept="image/jpeg,image/png,image/webp" required
-                                       data-identity-file="{{ $name }}"
-                                       class="w-full px-4 py-8 text-sm text-slate-600 file:me-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-indigo-700">
+                    <div class="flex flex-wrap justify-center gap-10 sm:justify-start">
+                        @foreach ([
+                            'id_front' => __('identity.id_front'),
+                            'id_back' => __('identity.id_back'),
+                            'selfie' => __('identity.selfie'),
+                        ] as $name => $label)
+                            <div>
+                                <x-ui.attachment-folder
+                                    :name="$name"
+                                    :label="$label"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    :required="true"
+                                    data-add-label="{{ __('ui.attachment_add') }}"
+                                    data-drop-label="{{ __('ui.attachment_drop') }}"
+                                />
+                                @error($name)
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
                             </div>
-                            @error($name)
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
 
                     <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:shadow-xl hover:shadow-orange-500/45 hover:brightness-105">
                         {{ $resubmitRequired ? __('identity.resubmit') : __('identity.submit') }}
@@ -161,10 +174,10 @@
                     </div>
                 </div>
 
-                <p data-footer-theater class="mt-6 hidden text-center text-sm text-slate-400">
-                    <button type="button" data-auth-resend class="font-semibold text-indigo-500 transition hover:text-indigo-700">
-                        {{ __('ui.cancel') }}
-                    </button>
+                <p data-footer-theater class="mt-6 hidden text-center">
+                    <span class="cancel-btn-slot inline-flex justify-center">
+                        <x-ui.cancel-btn type="button" data-auth-resend :label="__('ui.cancel')" />
+                    </span>
                 </p>
             @elseif ($user->isActive() && $user->hasRequiredIdentityDocuments())
                 <p class="mt-6 text-sm text-slate-500">{{ __('identity.submitted_help') }}</p>
@@ -178,15 +191,4 @@
 
 @push('scripts')
     @vite(['resources/js/auth-access.js'])
-    <script>
-        document.querySelectorAll('[data-identity-file]').forEach((input) => {
-            input.addEventListener('change', () => {
-                const preview = document.querySelector(`[data-preview-for="${input.dataset.identityFile}"]`);
-                const file = input.files?.[0];
-                if (!preview || !file) return;
-                preview.src = URL.createObjectURL(file);
-                preview.classList.remove('hidden');
-            });
-        });
-    </script>
 @endpush

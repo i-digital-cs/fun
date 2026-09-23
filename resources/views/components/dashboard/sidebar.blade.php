@@ -13,6 +13,7 @@
     $isHome = request()->routeIs('dashboard');
     $isDiscover = request()->routeIs('events.index');
     $isMine = request()->routeIs('events.mine');
+    $isFavorites = request()->routeIs('events.favorites');
     $isCreate = request()->routeIs('events.create');
     $isIdentity = request()->routeIs('identity.create');
     $isBlocked = request()->routeIs('blocks.index');
@@ -73,6 +74,19 @@
                 <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
             </svg>
             {{ __('dashboard.nav_my_events') }}
+        </a>
+
+        <a href="{{ route('events.favorites') }}"
+           @class([
+               'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
+               'bg-indigo-50 text-indigo-600' => $isFavorites,
+               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isFavorites,
+           ])
+           @if ($isFavorites) aria-current="page" @endif>
+            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+                <path d="M27 4v27a1 1 0 0 1-1.625.781L16 24.281l-9.375 7.5A1 1 0 0 1 5 31V4a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4z"/>
+            </svg>
+            {{ __('dashboard.nav_favorites') }}
         </a>
 
         <a href="{{ $createRoute }}"

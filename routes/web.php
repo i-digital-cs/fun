@@ -19,6 +19,7 @@ use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\Events\EventChatController;
 use App\Http\Controllers\Web\Events\EventController;
+use App\Http\Controllers\Web\Events\EventFavoriteController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
 use App\Http\Controllers\Web\Events\EventRatingController;
 use App\Http\Controllers\Web\Events\EventTicketController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Web\Profile\ProfileController;
 use App\Http\Controllers\Web\Safety\BlockController;
 use App\Http\Controllers\Web\Safety\ReportController;
 use App\Http\Controllers\Web\Safety\SafetyGuidelinesController;
+use App\Http\Controllers\Web\SearchSuggestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -37,6 +39,10 @@ Route::get('/', HomeController::class)->name('home');
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::get('/safety', SafetyGuidelinesController::class)->name('safety.guidelines');
+
+Route::get('/search/suggest', SearchSuggestController::class)
+    ->middleware('throttle:60,1')
+    ->name('search.suggest');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])
@@ -119,6 +125,11 @@ Route::middleware('auth')->group(function () {
             ->name('users.unblock');
 
         Route::get('/my-events', [EventController::class, 'mine'])->name('events.mine');
+        Route::get('/favorites', [EventFavoriteController::class, 'index'])->name('events.favorites');
+        Route::post('/events/{event}/favorite', [EventFavoriteController::class, 'toggle'])
+            ->whereNumber('event')
+            ->middleware('throttle:joins')
+            ->name('events.favorite.toggle');
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])
             ->middleware('throttle:uploads')

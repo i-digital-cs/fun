@@ -53,6 +53,10 @@ class EventResource extends JsonResource
                 $this->join_action !== null,
                 fn () => $this->join_action
             ),
+            'is_favorited' => $this->when(
+                isset($this->is_favorited),
+                fn () => (bool) $this->is_favorited
+            ),
             'created_by' => $this->created_by,
             'creator' => $this->whenLoaded('creator', fn () => [
                 'id' => $this->creator->id,

@@ -170,7 +170,12 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <span class="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-600">Cancel</span>
+                        <span class="cancel-btn-slot py-1">
+                            <span class="cancel-btn cancel-btn--sm pointer-events-none" aria-hidden="true">
+                                <span class="cancel-btn__txt cancel-btn__txt--idle">{{ __('ui.cancel') }}</span>
+                                <span class="cancel-btn__txt cancel-btn__txt--stop">{{ __('ui.stop') }}</span>
+                            </span>
+                        </span>
                         <a href="{{ route('events.index') }}" class="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0">
                             {{ __('events.view_event') }}
                             <svg class="h-3.5 w-3.5 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

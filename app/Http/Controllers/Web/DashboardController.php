@@ -8,8 +8,11 @@ use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
 use App\Services\Events\DiscoverNearbyEventsService;
+use App\Services\Events\ListEventNowPlayingService;
 use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
+use App\Services\Events\ToggleEventFavoriteService;
+use App\Services\Weather\OpenMeteoWeatherService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -20,6 +23,9 @@ class DashboardController extends Controller
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
         ListUserHomeParticipationsService $participations,
+        OpenMeteoWeatherService $weatherService,
+        ListEventNowPlayingService $nowPlaying,
+        ToggleEventFavoriteService $favorites,
     ): View {
         $user = $request->user();
         $user->loadMissing('city');
@@ -31,8 +37,9 @@ class DashboardController extends Controller
         }
 
         $cityId = $request->query('city_id');
-        if ($cityId !== null && $cityId !== '') {
-            $filters['city_id'] = (int) $cityId;
+        $explicitCityFilter = array_key_exists('city_id', $request->query());
+        if ($explicitCityFilter) {
+            $filters['city_id'] = ($cityId !== null && $cityId !== '') ? (int) $cityId : null;
         }
 
         $distanceKm = $request->integer('distance_km') ?: null;
@@ -41,12 +48,12 @@ class DashboardController extends Controller
         }
 
         $events = $discover->discover($user, $filters);
-        $hasNearbyOrigin = array_key_exists('city_id', $filters)
-            ? $filters['city_id'] !== null
+        $hasNearbyOrigin = $explicitCityFilter
+            ? ($filters['city_id'] ?? null) !== null
             : $user->city_id !== null;
         $nationwideFallback = false;
 
-        if ($hasNearbyOrigin && $events->total() === 0) {
+        if ($hasNearbyOrigin && ! $explicitCityFilter && $events->total() === 0) {
             $fallback = $discover->discover($user, array_merge($filters, ['city_id' => null]));
             if ($fallback->total() > 0) {
                 $events = $fallback;
@@ -55,6 +62,7 @@ class DashboardController extends Controller
         }
 
         $joinActionsById = $joinActions->resolveMany($user, $events->getCollection());
+        $favoritedIds = $favorites->favoritedIdsFor($user, $events->getCollection());
 
         $categories = Category::query()
             ->active()
@@ -87,7 +95,16 @@ class DashboardController extends Controller
             ->limit(4)
             ->get();
 
+        $playback = $nowPlaying->forUser($user, $resolvedCityId ? (int) $resolvedCityId : null);
+
         $homeParticipations = $participations->forUser($user);
+
+        $weatherCity = $resolvedCityId
+            ? City::query()->active()->find($resolvedCityId)
+            : $user->city;
+        $weather = $weatherCity
+            ? $weatherService->forCity($weatherCity, app()->getLocale())
+            : null;
 
         return view('home.dashboard', [
             'appName' => site_display_name(),
@@ -97,13 +114,16 @@ class DashboardController extends Controller
             'distances' => config('location.distances_km'),
             'events' => $events,
             'joinActionsById' => $joinActionsById,
+            'favoritedIds' => $favoritedIds,
             'startingSoon' => $startingSoon,
+            'nowPlaying' => $playback,
             'cityName' => $cityName,
             'distanceKm' => $selectedDistance,
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
             'memberships' => $homeParticipations['memberships'],
             'pendingRequests' => $homeParticipations['pendingRequests'],
+            'weather' => $weather,
         ]);
     }
 }

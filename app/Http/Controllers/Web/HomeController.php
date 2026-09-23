@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Web;
 use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\City;
 use App\Models\Event;
 use App\Services\Events\DiscoverNearbyEventsService;
+use App\Services\Events\ListEventNowPlayingService;
 use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
+use App\Services\Events\ToggleEventFavoriteService;
+use App\Services\Weather\OpenMeteoWeatherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -20,6 +24,9 @@ class HomeController extends Controller
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
         ListUserHomeParticipationsService $participations,
+        OpenMeteoWeatherService $weatherService,
+        ListEventNowPlayingService $nowPlaying,
+        ToggleEventFavoriteService $favorites,
     ): View {
         $user = auth()->user();
 
@@ -57,6 +64,9 @@ class HomeController extends Controller
         }
 
         $joinActionsById = $joinActions->resolveMany($user, $events->getCollection());
+        $favoritedIds = $user !== null
+            ? $favorites->favoritedIdsFor($user, $events->getCollection())
+            : [];
 
         $cityName = $user?->city?->localizedName();
 
@@ -99,6 +109,14 @@ class HomeController extends Controller
             ->orderBy('starts_at')
             ->first();
 
+        $weatherCity = $user?->city
+            ?? City::query()->active()->orderBy('name_en')->first();
+        $weather = $weatherCity
+            ? $weatherService->forCity($weatherCity, app()->getLocale())
+            : null;
+
+        $playback = $nowPlaying->forUser($user, $user?->city_id);
+
         return view('home.index', [
             'appName' => site_display_name(),
             'categories' => $categories,
@@ -108,12 +126,15 @@ class HomeController extends Controller
             'when' => is_string($when) ? $when : null,
             'events' => $events,
             'joinActionsById' => $joinActionsById,
+            'favoritedIds' => $favoritedIds,
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
             'memberships' => $memberships,
             'pendingRequests' => $pendingRequests,
             'stats' => $stats,
             'highlight' => $highlight,
+            'weather' => $weather,
+            'nowPlaying' => $playback,
         ]);
     }
 }

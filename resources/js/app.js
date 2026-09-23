@@ -1,4 +1,7 @@
 import './bootstrap';
+import { initLiveSearch } from './live-search';
+import { initAttachmentFolders } from './attachment-folder';
+import { initConfirmDialog } from './confirm-dialog';
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -19,3 +22,12 @@ window.Echo = enabled
           enabledTransports: ['ws', 'wss'],
       })
     : null;
+
+initLiveSearch();
+document.documentElement.dataset.liveSearchReady = '1';
+
+initAttachmentFolders();
+document.documentElement.dataset.attachmentFolderReady = '1';
+
+initConfirmDialog();
+document.documentElement.dataset.confirmDialogReady = '1';

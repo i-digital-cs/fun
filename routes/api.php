@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\CategoryListController;
 use App\Http\Controllers\Api\CityListController;
 use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatController;
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
+use App\Http\Controllers\Api\Events\EventFavoriteController as ApiEventFavoriteController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
+use App\Http\Controllers\Api\Events\EventNowPlayingController as ApiEventNowPlayingController;
 use App\Http\Controllers\Api\Events\EventRatingController as ApiEventRatingController;
 use App\Http\Controllers\Api\Events\EventTicketController as ApiEventTicketController;
 use App\Http\Controllers\Api\HomeParticipationsController;
@@ -26,12 +28,14 @@ use App\Http\Controllers\Api\Profile\ProfileController as ApiProfileController;
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
 use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
 use App\Http\Controllers\Api\SiteBrandingController;
+use App\Http\Controllers\Api\WeatherController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/site', SiteBrandingController::class);
 Route::get('/cities', CityListController::class);
 Route::get('/categories', CategoryListController::class);
 Route::get('/events', [ApiEventController::class, 'index']);
+Route::get('/events/now-playing', ApiEventNowPlayingController::class);
 Route::get('/events/{event}', [ApiEventController::class, 'show'])->whereNumber('event');
 Route::get('/events/{event}/ratings', [ApiEventRatingController::class, 'index'])->whereNumber('event');
 
@@ -49,6 +53,7 @@ Route::middleware('throttle:auth-codes')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [MeController::class, 'show']);
+    Route::get('/weather', WeatherController::class)->middleware('throttle:60,1');
     Route::post('/logout', [LoginController::class, 'destroy']);
 
     Route::post('/email/verify', [EmailVerificationController::class, 'verify'])
@@ -80,6 +85,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->middleware('throttle:blocks');
 
         Route::get('/my-events', [ApiEventController::class, 'mine']);
+        Route::get('/favorites', [ApiEventFavoriteController::class, 'index']);
+        Route::post('/events/{event}/favorite', [ApiEventFavoriteController::class, 'toggle'])
+            ->whereNumber('event')
+            ->middleware('throttle:joins');
         Route::post('/events', [ApiEventController::class, 'store'])->middleware('throttle:uploads');
         Route::put('/events/{event}', [ApiEventController::class, 'update'])->middleware('throttle:uploads');
         Route::post('/events/{event}/publish', [ApiEventController::class, 'publish']);

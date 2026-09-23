@@ -34,7 +34,7 @@
                             <div class="flex flex-wrap gap-2">
                                 <a href="{{ route('admin.cities.edit', $city) }}" class="text-primary font-medium">{{ __('location.edit_city') }}</a>
                                 @if ($city->is_active)
-                                    <form method="POST" action="{{ route('admin.cities.deactivate', $city) }}">
+                                    <form method="POST" action="{{ route('admin.cities.deactivate', $city) }}" data-confirm="{{ __('ui.confirm_deactivate') }}">
                                         @csrf
                                         <button class="text-danger font-medium">{{ __('admin.deactivate') }}</button>
                                     </form>
@@ -47,7 +47,7 @@
                                 @can('delete', $city)
                                     @if ($city->events_count === 0)
                                         <form method="POST" action="{{ route('admin.cities.destroy', $city) }}"
-                                              onsubmit="return confirm(@json(__('location.confirm_delete_city')))">
+                                              data-confirm="{{ __('location.confirm_delete_city') }}">
                                             @csrf
                                             @method('DELETE')
                                             <button class="text-danger font-medium">{{ __('location.remove_city') }}</button>

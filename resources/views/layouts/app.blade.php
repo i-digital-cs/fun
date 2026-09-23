@@ -38,6 +38,9 @@
 
     <x-location-modal />
 
+    <x-ui.cancel-filters />
+    <x-ui.confirm-dialog />
+
     @stack('scripts')
 </body>
 </html>

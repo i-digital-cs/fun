@@ -37,9 +37,9 @@
                         <a href="{{ route('admin.events.edit', $event) }}" class="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-primary">{{ __('admin.edit_event') }}</a>
                         <a href="{{ route('admin.chat.index', $event) }}" class="rounded-lg border border-border px-3 py-1.5 text-sm">{{ __('admin.moderate_chat') }}</a>
                         @if (in_array($event->status->value, ['draft', 'published'], true))
-                            <form method="POST" action="{{ route('admin.events.cancel', $event) }}">
+                            <form method="POST" action="{{ route('admin.events.cancel', $event) }}" class="cancel-btn-slot py-1" data-confirm="{{ __('ui.confirm_cancel_event') }}">
                                 @csrf
-                                <button class="rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-white">{{ __('admin.cancel_event') }}</button>
+                                <x-ui.cancel-btn type="submit" size="sm" :label="__('admin.cancel_event')" />
                             </form>
                         @endif
                         @if ($event->status->value === 'published')
@@ -49,7 +49,7 @@
                             </form>
                         @endif
                         <form method="POST" action="{{ route('admin.events.destroy', $event) }}"
-                              onsubmit="return confirm(@json(__('admin.confirm_delete_event')))">
+                              data-confirm="{{ __('admin.confirm_delete_event') }}">
                             @csrf
                             @method('DELETE')
                             <button class="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white">{{ __('admin.delete') }}</button>

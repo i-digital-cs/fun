@@ -10,22 +10,22 @@
         class="location-modal fixed inset-0 m-auto h-fit max-h-[min(90vh,40rem)] w-[min(100%-2rem,24rem)] overflow-visible rounded-3xl border-0 bg-transparent p-0 shadow-none outline-none backdrop:bg-slate-950/50"
         aria-labelledby="location-modal-title"
         @if ($openOnError) data-open-on-load="1" @endif>
-    <div class="box-border flex w-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/25">
-        <div class="flex items-start justify-between gap-4 px-6 pb-4 pt-5">
+    <div class="box-border flex w-full flex-col overflow-visible rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/25">
+        <div class="flex items-start justify-between gap-4 px-6 pb-4 pt-8">
             <div class="min-w-0 flex-1">
                 <h2 id="location-modal-title" class="text-lg font-extrabold tracking-tight text-slate-900">
                     {{ __('location.location_settings') }}
                 </h2>
                 <p class="mt-1 text-sm leading-snug text-slate-500">{{ __('location.modal_sub') }}</p>
             </div>
-            <button type="button"
+            <div class="cancel-btn-slot shrink-0 py-0">
+                <x-ui.cancel-btn
+                    type="button"
+                    size="sm"
                     data-location-modal-close
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-800"
-                    aria-label="{{ __('ui.close') }}">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
-                </svg>
-            </button>
+                    :label="__('ui.close')"
+                />
+            </div>
         </div>
 
         <div class="mx-6 border-t border-slate-100"></div>
@@ -69,12 +69,15 @@
                 @enderror
             </div>
 
-            <div class="mt-1 grid w-full grid-cols-2 gap-3">
-                <button type="button"
+            <div class="mt-1 grid w-full grid-cols-1 gap-2 sm:grid-cols-2 sm:items-center">
+                <div class="cancel-btn-slot">
+                    <x-ui.cancel-btn
+                        type="button"
+                        size="block"
                         data-location-modal-close
-                        class="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">
-                    {{ __('ui.cancel') }}
-                </button>
+                        :label="__('ui.cancel')"
+                    />
+                </div>
                 <button type="submit"
                         class="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3 py-3 text-sm font-extrabold text-white shadow-lg shadow-orange-500/25 transition hover:brightness-105">
                     {{ __('location.save_short') }}

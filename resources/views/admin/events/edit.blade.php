@@ -46,7 +46,7 @@
     </form>
 
     <form method="POST" action="{{ route('admin.events.destroy', $event) }}" class="mt-6 border-t border-slate-100 pt-6"
-          onsubmit="return confirm(@json(__('admin.confirm_delete_event')))">
+          data-confirm="{{ __('admin.confirm_delete_event') }}">
         @csrf
         @method('DELETE')
         <button type="submit" class="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-600">

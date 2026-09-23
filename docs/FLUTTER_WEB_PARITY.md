@@ -49,9 +49,9 @@ For each screen:
 | Auth | `POST /register` · `/login` · `/auth/google` · `/logout` · `/email/verify` · `/email/verify/resend` · `/forgot-password` · `/forgot-password/verify` · `/reset-password` |
 | Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `can_participate`, `has_password`, city…) |
 | Profile | `PUT /api/settings/profile` · `PUT /api/settings/location` |
-| Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) |
+| Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
-| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · publish/cancel/complete · `GET /api/events/{id}/ticket` |
+| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting) |
 | Join | `POST .../join|leave` · requests accept/reject · members promote/demote/transfer |
 | Chat | `GET/POST /api/events/{id}/messages` |
 | Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
@@ -99,7 +99,7 @@ For each screen:
 
 **Profile** tab: **Profile settings** + links to location / identity / blocks.
 
-**Topbar:** search → Discover; locale; avatar menu (Profile · Location · Identity · Blocks · Logout).  
+**Topbar:** live search → suggestions via `GET /search/suggest` (wifi **Searching** while typed query awaits API); Enter / See all → Discover; locale; avatar menu (Profile · Location · Identity · Blocks · Logout).
 *(Web bell icon is decorative → My Events — do not invent a notifications API.)*
 
 ---
@@ -118,9 +118,11 @@ For each screen:
 **Sections (order):**
 
 1. Hero (`x-community.hero`) — brand, CTA into discover/create  
-2. Participations (`x-community.participations`) — **auth + canParticipate only**  
-3. Discover strip (`x-community.discover`) — rich event cards  
-4. Trust (`x-community.trust`)
+2. **Weather** (`x-dashboard.weather-card`) — user city when set, else first active city; guests see sample city + sign-in link  
+3. **Now playing** (`x-dashboard.now-playing`) — live / up next / just wrapped events (`GET /api/events/now-playing`)  
+4. Participations (`x-community.participations`) — **auth + canParticipate only**  
+5. Discover strip (`x-community.discover`) — rich event cards  
+6. Trust (`x-community.trust`)
 
 **Flutter note:** Phone apps often skip a separate marketing home and open **Login** or **Member Home (`/dashboard`)**. If you keep a guest home, mirror these four sections. Prefer matching **dashboard** for logged-in users (next screen).
 
@@ -133,7 +135,7 @@ For each screen:
 | **Route** | `dashboard` → `/dashboard` |
 | **Blade** | `home/dashboard.blade.php` |
 | **Auth** | Required |
-| **API** | `GET /api/site`, `GET /api/user`, `GET /api/events` (nearby + Bearer), `GET /api/categories` (`published_events_count`), `GET /api/cities`, `GET /api/home/participations` |
+| **API** | `GET /api/site`, `GET /api/user`, `GET /api/events` (nearby + Bearer), `GET /api/categories` (`published_events_count`), `GET /api/cities`, `GET /api/home/participations`, `GET /api/weather` |
 
 **Sections (order) — implement all:**
 
@@ -141,13 +143,66 @@ For each screen:
 2. **Hero** — dark photo/gradient block, titles “Find people. / Do what you love.”, **Find events** (indigo) → Discover, trust chips  
 3. **Your participations** — `GET /api/home/participations`: **confirmed memberships** + **pending join requests** (no demo cards); empty → Discover CTA; confirmed rows link to ticket + chat  
 4. **What are you into?** — category grid (emoji + name + count) → Discover filtered by category  
-5. **Happening near you** — compact cards (`x-dashboard.event-card`) + safety card (indigo gradient)  
+5. **Happening near you** — compact cards + weather + **now-playing** (live/next/previous) + starting soon + safety  
 6. **How {brand} works** — 3 steps  
 7. **CTA banner** — “Can’t find your activity?” + orange create  
 
 **Card style here:** compact dashboard card (indigo soft “View event”), **not** the full Discover rich card.
 
 **My events `/my-events`:** two blocks — **Waiting for acceptance** (pending) then **Events you joined** (memberships + View ticket).
+
+**Favorites `/favorites`:** bookmarked events (sidebar after My Events); toggle via amber bookmark on cards/detail (`POST /api/events/{id}/favorite`).
+
+### 2.2a Weather card *(required — dashboard + Flutter home)*
+
+| | |
+|--|--|
+| **Web** | `x-dashboard.weather-card` on `/` (marketing home) and `/dashboard` (nearby sidebar) |
+| **API** | `GET /api/weather?city_id=` (optional; defaults to `user.city_id`) · Bearer |
+| **Source** | [Open-Meteo](https://open-meteo.com/) (no API key) using city `latitude` / `longitude` |
+| **Cache** | ~30 minutes per city + locale |
+
+**Response shape:**
+
+```json
+{
+  "data": {
+    "provider": "open_meteo",
+    "city": { "id": 1, "name": "Cairo", "latitude": 30.04, "longitude": 31.23 },
+    "local_time": "14:05",
+    "local_date": "WED 09-23",
+    "temperature": 36,
+    "high": 42,
+    "low": 28,
+    "range": "42°/28°",
+    "condition": "clear",
+    "label": "Sunny",
+    "icon": "sun",
+    "theme": "sunny",
+    "forecast": [
+      { "day": "Thu", "condition": "rain", "icon": "rain", "high": 30, "low": 22 }
+    ]
+  }
+}
+```
+
+**Flutter:** same card on Home when `user.city_id` set; else CTA → location settings. Themes: `sunny` / `cloudy` / `rain`. Icons: `sun` / `cloud` / `rain`.
+
+### 2.2b Now playing *(required — home + dashboard)*
+
+| | |
+|--|--|
+| **Web** | `x-dashboard.now-playing` on `/` and `/dashboard` |
+| **API** | `GET /api/events/now-playing?city_id=` (optional; prefers user/city, falls back nationwide) |
+| **Brand** | Site logo + indigo/orange equalizer (not Spotify green) |
+
+**Payload:** `{ running: Event|null, next: Event[], previous: Event[] }`
+
+- **running** — published, started, not yet ended (or open-ended within 6h of start)  
+- **next** — upcoming published (up to 2)  
+- **previous** — recently finished (up to 2)  
+
+**Flutter UI:** playlist-style rows — live row with animated bars; next/previous with play chevron; tap → event detail. Use cover `image_url`, title, category + city as subtitle.
 
 ---
 
@@ -171,6 +226,17 @@ For each screen:
 
 **Rich card must show:** cover, category chip, Free/price chip, urgency chip, schedule, title, venue, members progress, join-state banner, full-width orange **View event**.
 
+**Live search (typed → API wait):** when the user types in search (topbar, home, Discover `q`, admin users), show the wifi **Searching** indicator **only** while the debounced request is in flight — never as a page/spinner loader for navigation.
+
+| | |
+|--|--|
+| **Web suggest** | `GET /search/suggest?q=&type=events\|users` |
+| **API list** | `GET /api/events?q=` (Flutter) |
+| **Min chars** | 2 · debounce ~350ms |
+| **UI** | wifi arcs + lowercase “Searching” / “جاري البحث” (`ui.searching`) |
+
+Flutter: overlay/inline Searching animation on query change; hide when results arrive or input cleared.
+
 ---
 
 ### 2.4 Event detail `/events/{id}`
@@ -183,7 +249,7 @@ For each screen:
 
 **Layout hierarchy (same as web):**
 
-1. Cover + category chip + city + title + **status badge**  
+1. Cover + category chip + city + title + **status badge** + **favorite bookmark**  
 2. Date/time chip + venue chip  
 3. Description  
 4. Requirements box  
@@ -289,6 +355,38 @@ Same fields as create. Keep existing image if not replaced.
 | **API** | `GET /api/my-events` |
 
 **Must:** list owned/membership events — title, date, members, city, **status pill**; empty state + Create CTA; tap → detail; **View ticket** action per row (§2.4a).
+
+---
+
+### 2.7a Favorites `/favorites` *(required)*
+
+| | |
+|--|--|
+| **Route** | `events.favorites` (web) |
+| **Blade** | `events/favorites.blade.php` + `x-events.favorite-bookmark` |
+| **API** | `GET /api/favorites` · `POST /api/events/{id}/favorite` (Bearer, `can_participate`) |
+| **Authz** | Active participant; event must be viewable |
+
+Bookmark UI (web CSS `.ui-bookmark`) on Discover / dashboard / home cards and event detail. Amber when favorited.
+
+**List / detail payload:** when authenticated, event resources include `is_favorited` (bool).
+
+**Toggle response:**
+
+```json
+{
+  "message": "Added to favorites.",
+  "is_favorited": true,
+  "event_id": 12
+}
+```
+
+**Flutter must:**
+
+1. Screen `/favorites` — same rich cards as Discover; empty → Discover CTA.
+2. Bookmark control on event cards + detail (optimistic toggle OK; sync with `POST .../favorite`).
+3. Sidebar / drawer item **Favorites** directly under **My Events**.
+4. EN/AR via l10n (`events.favorites`, `events.favorite`, `events.unfavorite`, …).
 
 ---
 
@@ -452,7 +550,7 @@ Store `reset_token` + email for the next screen. Do **not** treat this as a logi
 | **Blade** | `identity/create.blade.php` (dashboard shell) |
 | **API** | `GET /api/identity` · `POST /api/identity` · `GET /api/identity/documents/{id}` |
 | **Auth** | Bearer + **email verified** first |
-| **Web UX** | Site logo/name, status chip, optional existing thumbs, 3 uploads with live preview, cinematic submit (orbit → 1–100 → celebrate) |
+| **Web UX** | Site logo/name, status chip, optional existing thumbs via **folder attachment** card, 3 uploads with folder picker (click to open → choose file), cinematic submit (orbit → 1–100 → celebrate) |
 
 **Must implement (Flutter = same states as Blade):**
 
@@ -504,6 +602,8 @@ Success returns same shape as `GET` + `message` (account activated).
 **Document images:** `GET /api/identity/documents/{id}` with Bearer — display in Image with auth headers / downloaded bytes (not a public URL).
 
 Gate create/join/chat while `needs_identity_documents`. Routing order: email verify → identity → home.
+
+**Attachments UI (web + Flutter):** any file pick / existing attachment list uses the animated **folder card** (`x-ui.attachment-folder`): **click the folder** (or Choose file) → native picker opens; after pick, show **filename + size status**, **image thumbnail preview**, and open folder cards with count badge. Same pattern on identity, event cover, profile photo, site logo, admin identity review. Flutter: folder-open metaphor with clear selected-media preview — not a plain system file dialog only.
 
 ---
 
@@ -935,7 +1035,12 @@ From `App\Enums\EventJoinAction` — drive buttons on cards + event detail:
 |-------|-----|
 | `request_to_join` | Orange **Request to join** |
 | `request_pending` | Muted “Request pending” (no primary join) |
-| `joined` | Emerald “Joined” + **View ticket** + Chat + Members (+ Leave if not owner) |
+| `joined` | Emerald “Joined” + **View ticket** + Chat + Members (+ **Leave** via cancel/stop button if not owner) |
+| `…` | Owner **Cancel event** also uses the same cancel/stop control (web `x-ui.cancel-btn`: idle label → focus/press shows **Stop**) |
+
+**Cancel / close pattern (web + Flutter):** destructive dismiss actions — leave event, cancel event, reject join request, modal Cancel/Close — use the **Cancel → Stop** control (`x-ui.cancel-btn`: idle label → focus/press shows **Stop**). Web uses a compact dark/orange button (readable inside overflow cards). Flutter: same two-state control for leave, cancel, close sheet, reject.
+
+**Confirm dialogs (web + Flutter):** any “Are you sure…?” (leave, cancel event, reject, delete, identity resubmit) uses the branded confirm modal with the **tapping hand** animation (`x-ui.confirm-dialog` / `x-ui.tapping-hand`) — never the native browser `confirm()`. Flutter: modal/sheet with the same hand animation + message + Cancel/Stop + confirm CTA.
 | `request_rejected` | Amber rejected + allow request again |
 | `event_full` | Muted “Event full” |
 | `not_available` | Hide join / guest → login |
@@ -1019,6 +1124,7 @@ Use web admin at `https://fun.idigital-cs.com/admin`.
 | `/events/:id/requests` | `/events/{id}/requests` |
 | `/events/:id/members` | `/events/{id}/members` |
 | `/my-events` | `/my-events` |
+| `/favorites` | `/favorites` |
 | `/identity` | `/identity` |
 | `/settings/profile` | `/settings/profile` |
 | `/settings/location` | `/settings/location` |
@@ -1053,13 +1159,14 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
 4. **Event detail** — creator card, ratings, report/block, full owner matrix, **View ticket**  
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
-6. **Cards** — rich vs compact per surface  
-7. **Create/edit** — all fields + image  
-8. **Members** — promote / demote / transfer + report/block links  
-9. **Chat** — list/post; poll until websockets  
-10. **Home** — participations + category counts + nearby  
+6. **Favorites** — bookmark toggle + `/favorites` list (§2.7a)  
+7. **Cards** — rich vs compact per surface  
+8. **Create/edit** — all fields + image  
+9. **Members** — promote / demote / transfer + report/block links  
+10. **Chat** — list/post; poll until websockets  
+11. **Home** — participations + weather (city) + category counts + nearby  
 
-**Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`).
+**Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages.
 
 ---
 
@@ -1079,6 +1186,7 @@ Base: `https://fun.idigital-cs.com`
 | Reset password | `/reset-password` |
 | Create | `/events/create` |
 | My events | `/my-events` |
+| Favorites | `/favorites` |
 | Event ticket | `/events/{id}/ticket` |
 | Profile | `/settings/profile` |
 | Location | `/settings/location` |
@@ -1092,4 +1200,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — Event tickets (§2.4a) + web→Flutter parity rule; login/identity samples (§2B); app version (§2C).*
+*Last updated: 2026-09-23 — Confirm tapping-hand dialog; Cancel/Stop; folder attachments; live search; favorites; weather; tickets; parity; app version.*

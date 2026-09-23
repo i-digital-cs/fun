@@ -79,12 +79,30 @@
                 @endforeach
             </select>
 
-            <input type="search"
-                   name="q"
-                   value="{{ request('q') }}"
-                   placeholder="{{ __('dashboard.hero_activity_ph') }}"
-                   aria-label="{{ __('dashboard.hero_activity_ph') }}"
-                   class="min-w-0 rounded-[10px] border-0 bg-[#f7f9fc] px-3 py-3 text-xs text-slate-700 outline-none placeholder:text-slate-400 sm:col-span-1">
+            <div
+                class="live-search relative min-w-0 sm:col-span-1"
+                data-live-search
+                data-live-search-type="events"
+                data-live-search-url="{{ route('search.suggest') }}"
+                data-live-search-empty="{{ __('ui.search_empty') }}"
+                data-live-search-see-all="{{ __('ui.search_see_all') }}"
+                data-live-search-error="{{ __('ui.search_failed') }}"
+            >
+                <input type="search"
+                       name="q"
+                       value="{{ request('q') }}"
+                       placeholder="{{ __('dashboard.hero_activity_ph') }}"
+                       aria-label="{{ __('dashboard.hero_activity_ph') }}"
+                       autocomplete="off"
+                       data-live-search-input
+                       class="min-w-0 w-full rounded-[10px] border-0 bg-[#f7f9fc] px-3 py-3 text-xs text-slate-700 outline-none placeholder:text-slate-400">
+                <div class="live-search__panel" data-live-search-panel hidden>
+                    <div class="live-search__searching" data-live-search-searching hidden>
+                        <x-ui.searching size="sm" />
+                    </div>
+                    <div class="live-search__results" data-live-search-results></div>
+                </div>
+            </div>
 
             <button type="submit"
                     class="inline-flex items-center justify-center gap-1.5 rounded-[10px] bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition hover:bg-indigo-700">
@@ -186,6 +204,7 @@
                         <x-dashboard.event-card
                             :event="$event"
                             :join-action="$joinActionsById[$event->id] ?? null"
+                            :favorited="isset($favoritedIds[$event->id])"
                         />
                     @endforeach
                 </div>
@@ -193,6 +212,16 @@
         </div>
 
         <aside class="mt-4 grid gap-4 sm:grid-cols-2 xl:mt-0 xl:grid-cols-1">
+            <div class="flex justify-center xl:justify-start">
+                <x-dashboard.weather-card :weather="$weather" />
+            </div>
+
+            <x-dashboard.now-playing
+                :running="$nowPlaying['running'] ?? null"
+                :next="$nowPlaying['next'] ?? []"
+                :previous="$nowPlaying['previous'] ?? []"
+            />
+
             {{-- Starting soon --}}
             <div class="rounded-[17px] border border-[#e7ebf3] bg-white p-4">
                 <h3 class="mb-3 text-sm font-extrabold text-slate-900">{{ __('dashboard.starting_soon') }}</h3>

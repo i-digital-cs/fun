@@ -14,6 +14,7 @@ use App\Services\Events\CreateEventService;
 use App\Services\Events\CreatorRatingSummaryService;
 use App\Services\Events\DiscoverNearbyEventsService;
 use App\Services\Events\ResolveEventJoinActionService;
+use App\Services\Events\ToggleEventFavoriteService;
 use App\Services\Events\TransitionEventStatusService;
 use App\Services\Events\UpdateEventService;
 use Illuminate\Http\JsonResponse;
@@ -26,13 +27,18 @@ class EventController extends Controller
         DiscoverEventsRequest $request,
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
+        ToggleEventFavoriteService $favorites,
     ): AnonymousResourceCollection {
         $user = $request->user('sanctum');
         $events = $discover->discover($user, $request->filters());
         $actions = $joinActions->resolveMany($user, $events->getCollection());
+        $favorited = $user
+            ? $favorites->favoritedIdsFor($user, $events->getCollection())
+            : [];
 
-        $events->getCollection()->transform(function (Event $event) use ($actions) {
+        $events->getCollection()->transform(function (Event $event) use ($actions, $favorited) {
             $event->setAttribute('join_action', $actions[$event->id]->value ?? null);
+            $event->setAttribute('is_favorited', isset($favorited[$event->id]));
 
             return $event;
         });
@@ -73,6 +79,7 @@ class EventController extends Controller
         Event $event,
         ResolveEventJoinActionService $joinActionService,
         CreatorRatingSummaryService $ratingSummary,
+        ToggleEventFavoriteService $favorites,
     ): JsonResponse {
         $this->authorize('view', $event);
 
@@ -86,6 +93,7 @@ class EventController extends Controller
                 ->where('event_id', $event->id)
                 ->where('rater_id', $user->id)
                 ->first();
+            $event->setAttribute('is_favorited', $favorites->isFavorited($user, $event));
         }
 
         $creatorSummary = $event->creator
@@ -104,6 +112,7 @@ class EventController extends Controller
                 : null,
             'creator_rating' => $creatorSummary,
             'creator' => $resource['creator'] ?? null,
+            'is_favorited' => (bool) ($event->is_favorited ?? false),
         ]);
     }
 

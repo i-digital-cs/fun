@@ -142,7 +142,7 @@ class DiscoverNearbyEventsService
         $cacheKey = sprintf('nearby_cities:v%d:%.5f:%.5f:%d', $version, $latitude, $longitude, $maxKm);
 
         return cache()->remember($cacheKey, now()->addMinutes(10), function () use ($latitude, $longitude, $maxKm) {
-            return City::query()
+            $ids = City::query()
                 ->active()
                 ->get(['id', 'latitude', 'longitude'])
                 ->filter(fn (City $city) => GeoDistance::isWithinKm(
@@ -154,6 +154,19 @@ class DiscoverNearbyEventsService
                 ))
                 ->pluck('id')
                 ->values();
+
+            // Always keep the origin city itself (0 km), even if coords were missing/cached oddly.
+            $originId = City::query()
+                ->active()
+                ->where('latitude', $latitude)
+                ->where('longitude', $longitude)
+                ->value('id');
+
+            if ($originId !== null && ! $ids->contains($originId)) {
+                $ids->prepend((int) $originId);
+            }
+
+            return $ids->unique()->values();
         });
     }
 

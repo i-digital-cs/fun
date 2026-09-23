@@ -34,7 +34,7 @@
                             <div class="flex flex-wrap gap-2">
                                 <a href="{{ route('admin.categories.edit', $category) }}" class="font-medium text-primary">{{ __('catalog.edit_category') }}</a>
                                 @if ($category->is_active)
-                                    <form method="POST" action="{{ route('admin.categories.deactivate', $category) }}">
+                                    <form method="POST" action="{{ route('admin.categories.deactivate', $category) }}" data-confirm="{{ __('ui.confirm_deactivate') }}">
                                         @csrf
                                         <button class="font-medium text-danger">{{ __('admin.deactivate') }}</button>
                                     </form>
@@ -47,7 +47,7 @@
                                 @can('delete', $category)
                                     @if ($category->events_count === 0)
                                         <form method="POST" action="{{ route('admin.categories.destroy', $category) }}"
-                                              onsubmit="return confirm(@json(__('catalog.confirm_delete_category')))">
+                                              data-confirm="{{ __('catalog.confirm_delete_category') }}">
                                             @csrf
                                             @method('DELETE')
                                             <button class="font-medium text-danger">{{ __('catalog.remove_category') }}</button>

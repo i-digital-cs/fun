@@ -18,10 +18,12 @@ use App\Services\Events\CreateEventService;
 use App\Services\Events\CreatorRatingSummaryService;
 use App\Services\Events\DiscoverNearbyEventsService;
 use App\Services\Events\ResolveEventJoinActionService;
+use App\Services\Events\ToggleEventFavoriteService;
 use App\Services\Events\TransitionEventStatusService;
 use App\Services\Events\UpdateEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class EventController extends Controller
@@ -30,16 +32,20 @@ class EventController extends Controller
         DiscoverEventsRequest $request,
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
-    ): View {
+        ToggleEventFavoriteService $favorites,
+    ): View|Response {
         $filters = $request->filters();
         $events = $discover->discover($request->user(), $filters);
 
-        $hasNearbyOrigin = array_key_exists('city_id', $filters)
+        $explicitCityFilter = array_key_exists('city_id', $filters);
+        $hasNearbyOrigin = $explicitCityFilter
             ? $filters['city_id'] !== null
             : $request->user()?->city_id !== null;
 
+        // Soft nationwide fallback only when using the member's saved city — never when
+        // they explicitly picked a city (or All cities) on Discover.
         $nationwideFallback = false;
-        if ($hasNearbyOrigin && $events->total() === 0) {
+        if ($hasNearbyOrigin && ! $explicitCityFilter && $events->total() === 0) {
             $fallback = $discover->discover($request->user(), array_merge($filters, ['city_id' => null]));
             if ($fallback->total() > 0) {
                 $events = $fallback;
@@ -49,10 +55,24 @@ class EventController extends Controller
         }
 
         $joinActionsById = $joinActions->resolveMany($request->user(), $events->getCollection());
+        $favoritedIds = $request->user()
+            ? $favorites->favoritedIdsFor($request->user(), $events->getCollection())
+            : [];
 
-        return view('events.index', [
+        $filterCityId = array_key_exists('city_id', $filters)
+            ? $filters['city_id']
+            : ($nationwideFallback ? null : $request->user()?->city_id);
+        $filterDistance = $filters['distance_km']
+            ?? $request->user()?->distance_km
+            ?? config('location.default_distance_km');
+        $filterCity = $filterCityId
+            ? City::query()->find($filterCityId)
+            : null;
+
+        $payload = [
             'events' => $events,
             'joinActionsById' => $joinActionsById,
+            'favoritedIds' => $favoritedIds,
             'categories' => Category::query()
                 ->active()
                 ->orderBy('sort_order')
@@ -67,17 +87,21 @@ class EventController extends Controller
             'distances' => config('location.distances_km'),
             'filters' => [
                 'category_id' => $filters['category_id'] ?? null,
-                'city_id' => array_key_exists('city_id', $filters)
-                    ? $filters['city_id']
-                    : ($nationwideFallback ? null : $request->user()?->city_id),
-                'distance_km' => $filters['distance_km']
-                    ?? $request->user()?->distance_km
-                    ?? config('location.default_distance_km'),
+                'city_id' => $filterCityId,
+                'distance_km' => $filterDistance,
                 'q' => $filters['q'] ?? null,
             ],
+            'filterCity' => $filterCity,
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
-        ]);
+            'explicitCityFilter' => $explicitCityFilter,
+        ];
+
+        if ($request->boolean('fragment') || $request->header('X-Fragment') === 'results') {
+            return response()->view('events.partials.results', $payload);
+        }
+
+        return view('events.index', $payload);
     }
 
     public function mine(Request $request): View
@@ -145,6 +169,7 @@ class EventController extends Controller
         Event $event,
         ResolveEventJoinActionService $joinActionService,
         CreatorRatingSummaryService $ratingSummary,
+        ToggleEventFavoriteService $favorites,
     ): View {
         $this->authorize('view', $event);
 
@@ -152,12 +177,14 @@ class EventController extends Controller
 
         $user = auth()->user();
         $userRating = null;
+        $isFavorited = false;
 
         if ($user !== null) {
             $userRating = EventRating::query()
                 ->where('event_id', $event->id)
                 ->where('rater_id', $user->id)
                 ->first();
+            $isFavorited = $favorites->isFavorited($user, $event);
         }
 
         $ratings = $event->isReadyForRatings()
@@ -180,6 +207,7 @@ class EventController extends Controller
             'userRating' => $userRating,
             'ratings' => $ratings,
             'creatorSummary' => $creatorSummary,
+            'isFavorited' => $isFavorited,
             'categories' => Category::query()
                 ->active()
                 ->orderBy('sort_order')

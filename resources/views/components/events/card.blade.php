@@ -1,6 +1,7 @@
 @props([
     'event',
     'joinAction' => null,
+    'favorited' => false,
 ])
 
 @php
@@ -73,6 +74,10 @@
             @endif
             <span class="{{ $urgencyClass }}">{{ __('design.' . $urgencyKey) }}</span>
         </span>
+        <div class="absolute end-3 bottom-3 z-10 drop-shadow-md">
+            <x-events.favorite-bookmark :event="$event" :favorited="$favorited" id-suffix="rich" />
+        </div>
+
     </div>
 
     <div class="flex flex-1 flex-col gap-3 p-5">

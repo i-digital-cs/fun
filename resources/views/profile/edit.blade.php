@@ -22,15 +22,17 @@
 
             <section class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
                 <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('profile.photo_section') }}</h2>
-                <div class="mt-4 flex flex-wrap items-center gap-4">
-                    @if ($photo)
-                        <img src="{{ $photo }}" alt="" class="h-20 w-20 rounded-2xl object-cover ring-2 ring-indigo-100">
-                    @else
-                        <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-100 text-xl font-extrabold text-indigo-700">{{ $initials }}</span>
-                    @endif
-                    <div class="min-w-0 flex-1 space-y-2">
-                        <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp"
-                               class="block w-full text-sm text-slate-600 file:me-3 file:rounded-xl file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-indigo-700">
+                <div class="mt-4 flex flex-wrap items-start gap-6">
+                    <x-ui.attachment-folder
+                        name="photo"
+                        accept="image/png,image/jpeg,image/webp"
+                        :existing-url="$photo"
+                        :existing-name="$photo ? 'profile.jpg' : null"
+                        existing-tag="IMG"
+                        data-add-label="{{ __('ui.attachment_add') }}"
+                        data-drop-label="{{ __('ui.attachment_drop') }}"
+                    />
+                    <div class="min-w-0 flex-1 space-y-2 pt-2">
                         <p class="text-xs text-slate-400">{{ __('profile.photo_help') }}</p>
                         @if ($photo)
                             <label class="inline-flex items-center gap-2 text-sm text-slate-600">
@@ -38,6 +40,9 @@
                                 {{ __('profile.remove_photo') }}
                             </label>
                         @endif
+                        @error('photo')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
             </section>

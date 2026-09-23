@@ -11,7 +11,7 @@
         </div>
         @if ($user->isActive() && $user->hasRequiredIdentityDocuments())
             <form method="POST" action="{{ route('admin.identity.request-resubmit', $user) }}"
-                  onsubmit="return confirm(@json(__('identity.admin_resubmit_confirm')))">
+                  data-confirm="{{ __('identity.admin_resubmit_confirm') }}">
                 @csrf
                 <button type="submit" class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">
                     {{ __('identity.admin_request_resubmit') }}
@@ -32,19 +32,27 @@
         <p class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{{ session('status') }}</p>
     @endif
 
-    <div class="space-y-3">
-        @forelse ($documents as $document)
-            <div class="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4">
-                <div>
-                    <p class="font-medium">{{ $document->type->value }}</p>
-                    <p class="text-sm text-muted">{{ $document->mime_type }} · {{ number_format($document->size / 1024, 1) }} KB</p>
-                </div>
-                <a href="{{ route('admin.identity.download', $document) }}" class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white" target="_blank" rel="noopener">
-                    {{ __('admin.view_document') }}
-                </a>
-            </div>
-        @empty
+    <div class="mt-2 flex flex-wrap gap-10">
+        @if ($documents->isEmpty())
             <p class="text-muted">{{ __('admin.no_documents') }}</p>
-        @endforelse
+        @else
+            @php
+                $adminFiles = $documents->map(function ($document) {
+                    $ext = strtoupper(pathinfo((string) $document->path, PATHINFO_EXTENSION) ?: 'IMG');
+                    $kb = $document->size ? number_format($document->size / 1024, 1).' KB' : null;
+
+                    return [
+                        'name' => $document->type->value,
+                        'url' => route('admin.identity.download', $document),
+                        'tag' => collect([$ext, $kb])->filter()->implode(' · '),
+                    ];
+                })->values()->all();
+            @endphp
+            <x-ui.attachment-folder
+                mode="view"
+                :label="__('admin.documents')"
+                :files="$adminFiles"
+            />
+        @endif
     </div>
 @endsection

@@ -44,6 +44,9 @@
 
     <x-admin.mobile-nav />
 
+    <x-ui.cancel-filters />
+    <x-ui.confirm-dialog />
+
     @stack('scripts')
 </body>
 </html>
