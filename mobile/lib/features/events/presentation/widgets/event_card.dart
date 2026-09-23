@@ -163,37 +163,39 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ),
 
-                // .event-3d__glass — inset 8, top 96, border-start-end-radius 100%
+                // .event-3d__glass — MUST ClipRRect so swoosh cuts into the photo like Blade
                 Positioned(
                   left: 8,
                   right: 8,
                   top: 96,
                   bottom: 8,
                   child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(isRtl ? 999 : 38),
-                          topRight: Radius.circular(isRtl ? 38 : 999),
-                          bottomLeft: const Radius.circular(38),
-                          bottomRight: const Radius.circular(38),
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.42),
-                            Colors.white.withValues(alpha: 0.88),
-                          ],
-                        ),
-                        border: Border(
-                          left: isRtl
-                              ? BorderSide.none
-                              : const BorderSide(color: Colors.white),
-                          right: isRtl
-                              ? const BorderSide(color: Colors.white)
-                              : BorderSide.none,
-                          bottom: const BorderSide(color: Colors.white),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(isRtl ? 999 : 38),
+                        topRight: Radius.circular(isRtl ? 38 : 999),
+                        bottomLeft: const Radius.circular(38),
+                        bottomRight: const Radius.circular(38),
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.42),
+                              Colors.white.withValues(alpha: 0.88),
+                            ],
+                          ),
+                          border: Border(
+                            left: isRtl
+                                ? BorderSide.none
+                                : const BorderSide(color: Colors.white),
+                            right: isRtl
+                                ? const BorderSide(color: Colors.white)
+                                : BorderSide.none,
+                            bottom: const BorderSide(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
@@ -502,7 +504,11 @@ class _LogoStack extends StatelessWidget {
                 transformAlignment: Alignment.center,
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.001)
-                  ..translate(0.0, 0.0, pressed ? zHover[i] : zRest[i]),
+                  ..translate(
+                    0.0,
+                    pressed ? -4.0 - i * 3.5 : -i * 4.0,
+                    pressed ? zHover[i] : zRest[i],
+                  ),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: i == 4

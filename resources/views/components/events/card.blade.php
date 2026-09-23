@@ -14,7 +14,9 @@
     $isFree = blank($event->cost_per_person) || (float) $event->cost_per_person <= 0;
     $priceLabel = $isFree
         ? __('events.free')
-        : __('events.cost_per_person_amount', ['amount' => $event->cost_per_person]);
+        : __('events.cost_per_person_amount', [
+            'amount' => number_format((float) $event->cost_per_person, 2, '.', ''),
+        ]);
     $action = $joinAction?->value;
     $cover = $event->coverUrl();
     $schedule = $event->starts_at?->timezone(config('app.timezone'))->translatedFormat('D · M j · g:i A');
