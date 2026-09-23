@@ -30,12 +30,14 @@ use App\Http\Controllers\Api\Profile\PublicProfileController as ApiPublicProfile
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
 use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
 use App\Http\Controllers\Api\SiteBrandingController;
+use App\Http\Controllers\Api\SearchSuggestController;
 use App\Http\Controllers\Api\WeatherController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/site', SiteBrandingController::class);
 Route::get('/cities', CityListController::class);
 Route::get('/categories', CategoryListController::class);
+Route::get('/search/suggest', SearchSuggestController::class)->middleware('throttle:60,1');
 Route::get('/events', [ApiEventController::class, 'index']);
 Route::get('/events/now-playing', ApiEventNowPlayingController::class);
 Route::get('/events/{event}', [ApiEventController::class, 'show'])->whereNumber('event');

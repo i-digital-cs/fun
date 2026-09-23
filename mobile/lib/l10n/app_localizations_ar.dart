@@ -381,6 +381,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmCancelJoin => 'هل أنت متأكد أنك تريد إلغاء طلب الانضمام؟';
 
   @override
+  String get confirmRejectRequest => 'هل أنت متأكد أنك تريد رفض طلب الانضمام؟';
+
+  @override
+  String get stop => 'إيقاف';
+
+  @override
+  String get confirmTitle => 'لحظة للتأكيد';
+
+  @override
+  String get confirmYes => 'نعم، متابعة';
+
+  @override
   String get eventFull => 'الفعالية ممتلئة';
 
   @override
@@ -485,10 +497,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get thankYouRating => 'شكراً على تقييمك!';
 
   @override
-  String get confirmLeave => 'مغادرة هذه الفعالية؟';
+  String get confirmLeave => 'هل أنت متأكد أنك تريد مغادرة هذه الفعالية؟';
 
   @override
-  String get confirmCancel => 'إلغاء هذه الفعالية؟ سيتم إخطار الأعضاء.';
+  String get confirmCancel => 'هل أنت متأكد أنك تريد إلغاء هذه الفعالية؟';
 
   @override
   String get statusDraft => 'مسودة';
@@ -569,6 +581,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get identityUploaded => 'تم رفع المستندات بنجاح';
+
+  @override
+  String get identityTheaterEnterTitle => 'رفع آمن';
+
+  @override
+  String get identityTheaterEnterSub => 'جارٍ تشفير وإرسال مستندات الهوية.';
+
+  @override
+  String get identityTheaterVerifyingTitle => 'جارٍ التحقق...';
+
+  @override
+  String get identityTheaterVerifyingSub => 'نتحقق من مستنداتك بأمان.';
+
+  @override
+  String get identityTheaterGrantedTitle => 'تم استلام المستندات';
+
+  @override
+  String get identityTheaterGrantedSub => 'حسابك نشط. جارٍ التحويل للرئيسية...';
+
+  @override
+  String get searchSuggestions => 'اقتراحات';
+
+  @override
+  String get seeAllResults => 'عرض كل النتائج';
 
   @override
   String get selected => 'تم الاختيار';

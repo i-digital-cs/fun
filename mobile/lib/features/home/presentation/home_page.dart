@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/espiral_glow.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -12,12 +16,17 @@ import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/now_playing_card.dart';
+import 'package:fun_mobile/features/home/data/search_suggest_remote_source.dart';
 import 'package:fun_mobile/features/home/presentation/home_nearby_controller.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/participations_section.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/weather_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+final searchSuggestRemoteSourceProvider = Provider(
+  (ref) => SearchSuggestRemoteSource(ref.watch(apiClientProvider)),
+);
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -913,7 +922,7 @@ class _CreateBanner extends StatelessWidget {
   }
 }
 
-class _HeroBanner extends StatelessWidget {
+class _HeroBanner extends ConsumerStatefulWidget {
   const _HeroBanner({
     required this.searchController,
     required this.onFind,
@@ -923,8 +932,57 @@ class _HeroBanner extends StatelessWidget {
   final VoidCallback onFind;
 
   @override
+  ConsumerState<_HeroBanner> createState() => _HeroBannerState();
+}
+
+class _HeroBannerState extends ConsumerState<_HeroBanner> {
+  Timer? _debounce;
+  List<SearchSuggestItem> _suggestions = const [];
+  bool _suggesting = false;
+  String _lastQ = '';
+
+  @override
+  void initState() {
+    super.initState();
+    widget.searchController.addListener(_onQueryChanged);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    widget.searchController.removeListener(_onQueryChanged);
+    super.dispose();
+  }
+
+  void _onQueryChanged() {
+    final q = widget.searchController.text.trim();
+    _debounce?.cancel();
+    if (q.length < 2) {
+      setState(() {
+        _suggestions = const [];
+        _suggesting = false;
+        _lastQ = q;
+      });
+      return;
+    }
+    setState(() => _suggesting = true);
+    _debounce = Timer(const Duration(milliseconds: 280), () async {
+      final result =
+          await ref.read(searchSuggestRemoteSourceProvider).suggest(q);
+      if (!mounted || widget.searchController.text.trim() != q) return;
+      setState(() {
+        _lastQ = q;
+        _suggesting = false;
+        _suggestions = result.data;
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final searchController = widget.searchController;
+    final onFind = widget.onFind;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(23),
@@ -943,17 +1001,9 @@ class _HeroBanner extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Positioned(
-              right: -20,
-              top: -20,
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.25),
-                ),
-              ),
+            const EspiralAnchorEnd(
+              tone: EspiralTone.amber,
+              size: EspiralSize.lg,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -1015,61 +1065,119 @@ class _HeroBanner extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: searchController,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: (_) => onFind(),
-                            decoration: InputDecoration(
-                              hintText: l10n.heroActivityPh,
-                              filled: true,
-                              fillColor: const Color(0xFFF7F9FC),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: searchController,
+                                textInputAction: TextInputAction.search,
+                                onSubmitted: (_) => onFind(),
+                                decoration: InputDecoration(
+                                  hintText: l10n.heroActivityPh,
+                                  filled: true,
+                                  fillColor: const Color(0xFFF7F9FC),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  suffixIcon: _suggesting
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Material(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
-                            onTap: onFind,
-                            borderRadius: BorderRadius.circular(10),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 14,
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.search,
-                                    size: 16,
-                                    color: Colors.white,
+                            const SizedBox(width: 8),
+                            Material(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(10),
+                              child: InkWell(
+                                onTap: onFind,
+                                borderRadius: BorderRadius.circular(10),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 14,
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    l10n.findEvents,
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.search,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        l10n.findEvents,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_suggestions.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          ..._suggestions.take(5).map(
+                                (s) => ListTile(
+                                  dense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  title: Text(
+                                    s.title,
                                     style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
+                                      fontSize: 13,
                                     ),
                                   ),
-                                ],
+                                  subtitle: s.subtitle == null
+                                      ? null
+                                      : Text(
+                                          s.subtitle!,
+                                          style: const TextStyle(fontSize: 11),
+                                        ),
+                                  trailing: s.meta == null
+                                      ? null
+                                      : Text(
+                                          s.meta!,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: AppColors.muted,
+                                          ),
+                                        ),
+                                  onTap: () =>
+                                      context.push('/events/${s.id}'),
+                                ),
                               ),
+                          TextButton(
+                            onPressed: onFind,
+                            child: Text(
+                              '${l10n.seeAllResults}${_lastQ.isEmpty ? '' : ' · $_lastQ'}',
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

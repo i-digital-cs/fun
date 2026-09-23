@@ -383,6 +383,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to cancel your join request?';
 
   @override
+  String get confirmRejectRequest =>
+      'Are you sure you want to reject this join request?';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get confirmTitle => 'Just checking';
+
+  @override
+  String get confirmYes => 'Yes, continue';
+
+  @override
   String get eventFull => 'Event full';
 
   @override
@@ -488,10 +501,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get thankYouRating => 'Thanks for your rating!';
 
   @override
-  String get confirmLeave => 'Leave this event?';
+  String get confirmLeave => 'Are you sure you want to leave this event?';
 
   @override
-  String get confirmCancel => 'Cancel this event? Members will be notified.';
+  String get confirmCancel => 'Are you sure you want to cancel this event?';
 
   @override
   String get statusDraft => 'Draft';
@@ -572,6 +585,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get identityUploaded => 'Documents uploaded successfully';
+
+  @override
+  String get identityTheaterEnterTitle => 'Secure upload';
+
+  @override
+  String get identityTheaterEnterSub =>
+      'Encrypting and sending your identity documents.';
+
+  @override
+  String get identityTheaterVerifyingTitle => 'Verifying...';
+
+  @override
+  String get identityTheaterVerifyingSub => 'Checking your documents securely.';
+
+  @override
+  String get identityTheaterGrantedTitle => 'Documents received';
+
+  @override
+  String get identityTheaterGrantedSub =>
+      'Your account is active. Taking you home…';
+
+  @override
+  String get searchSuggestions => 'Suggestions';
+
+  @override
+  String get seeAllResults => 'See all results';
 
   @override
   String get selected => 'Selected';

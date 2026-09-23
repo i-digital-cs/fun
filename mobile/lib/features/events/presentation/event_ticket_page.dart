@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/espiral_glow.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -244,6 +245,17 @@ class _TicketStage extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
+          const Positioned.fill(
+            child: Opacity(
+              opacity: 0.4,
+              child: EspiralGlow(
+                tone: EspiralTone.indigo,
+                size: EspiralSize.lg,
+                arms: 3,
+                dots: 14,
+              ),
+            ),
+          ),
           Positioned(
             top: 40,
             left: 40,

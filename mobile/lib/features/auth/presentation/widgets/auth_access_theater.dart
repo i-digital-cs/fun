@@ -18,6 +18,10 @@ class AuthAccessTheater extends StatefulWidget {
     required this.onCancel,
     this.title,
     this.subtitle,
+    this.verifyingTitle,
+    this.verifyingSubtitle,
+    this.grantedTitle,
+    this.grantedSubtitle,
   });
 
   /// Exactly 4 character slots (empty string for blank tiles).
@@ -28,6 +32,10 @@ class AuthAccessTheater extends StatefulWidget {
   final void Function(String? error) onCancel;
   final String? title;
   final String? subtitle;
+  final String? verifyingTitle;
+  final String? verifyingSubtitle;
+  final String? grantedTitle;
+  final String? grantedSubtitle;
 
   static List<String> digitsFrom({
     required AuthDigitSource source,
@@ -159,8 +167,8 @@ class _AuthAccessTheaterState extends State<AuthAccessTheater>
 
     setState(() {
       _stage = _Stage.verify;
-      _title = l10n.accessVerifyingTitle;
-      _subtitle = l10n.accessVerifyingSub;
+      _title = widget.verifyingTitle ?? l10n.accessVerifyingTitle;
+      _subtitle = widget.verifyingSubtitle ?? l10n.accessVerifyingSub;
       _count = 0;
     });
     _ringSpin.repeat();
@@ -183,8 +191,8 @@ class _AuthAccessTheaterState extends State<AuthAccessTheater>
 
     setState(() {
       _stage = _Stage.success;
-      _title = l10n.accessGrantedTitle;
-      _subtitle = l10n.accessGrantedSub;
+      _title = widget.grantedTitle ?? l10n.accessGrantedTitle;
+      _subtitle = widget.grantedSubtitle ?? l10n.accessGrantedSub;
     });
     _spawnConfetti();
     _pop.forward(from: 0);

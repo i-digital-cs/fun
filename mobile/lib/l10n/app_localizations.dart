@@ -812,6 +812,30 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to cancel your join request?'**
   String get confirmCancelJoin;
 
+  /// No description provided for @confirmRejectRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reject this join request?'**
+  String get confirmRejectRequest;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stop;
+
+  /// No description provided for @confirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Just checking'**
+  String get confirmTitle;
+
+  /// No description provided for @confirmYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, continue'**
+  String get confirmYes;
+
   /// No description provided for @eventFull.
   ///
   /// In en, this message translates to:
@@ -1013,13 +1037,13 @@ abstract class AppLocalizations {
   /// No description provided for @confirmLeave.
   ///
   /// In en, this message translates to:
-  /// **'Leave this event?'**
+  /// **'Are you sure you want to leave this event?'**
   String get confirmLeave;
 
   /// No description provided for @confirmCancel.
   ///
   /// In en, this message translates to:
-  /// **'Cancel this event? Members will be notified.'**
+  /// **'Are you sure you want to cancel this event?'**
   String get confirmCancel;
 
   /// No description provided for @statusDraft.
@@ -1171,6 +1195,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Documents uploaded successfully'**
   String get identityUploaded;
+
+  /// No description provided for @identityTheaterEnterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure upload'**
+  String get identityTheaterEnterTitle;
+
+  /// No description provided for @identityTheaterEnterSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypting and sending your identity documents.'**
+  String get identityTheaterEnterSub;
+
+  /// No description provided for @identityTheaterVerifyingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying...'**
+  String get identityTheaterVerifyingTitle;
+
+  /// No description provided for @identityTheaterVerifyingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your documents securely.'**
+  String get identityTheaterVerifyingSub;
+
+  /// No description provided for @identityTheaterGrantedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents received'**
+  String get identityTheaterGrantedTitle;
+
+  /// No description provided for @identityTheaterGrantedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is active. Taking you home…'**
+  String get identityTheaterGrantedSub;
+
+  /// No description provided for @searchSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get searchSuggestions;
+
+  /// No description provided for @seeAllResults.
+  ///
+  /// In en, this message translates to:
+  /// **'See all results'**
+  String get seeAllResults;
 
   /// No description provided for @selected.
   ///

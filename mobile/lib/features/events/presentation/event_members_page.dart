@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
@@ -97,22 +98,9 @@ class _EventMembersPageState extends ConsumerState<EventMembersPage> {
 
   Future<void> _transfer(EventMember member) async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.transferOwnership),
-        content: Text(l10n.confirmTransfer(member.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.transferOwnership),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmTransfer(member.name),
     );
     if (confirm != true || !mounted) return;
     await _runAction(
@@ -124,22 +112,9 @@ class _EventMembersPageState extends ConsumerState<EventMembersPage> {
 
   Future<void> _block(EventMember member) async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.blockUser),
-        content: Text(l10n.confirmBlock(member.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.blockUser),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmBlock(member.name),
     );
     if (confirm != true || !mounted) return;
     setState(() => _acting = true);

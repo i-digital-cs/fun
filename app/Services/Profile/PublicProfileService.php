@@ -53,6 +53,7 @@ class PublicProfileService
             : __('profile.role_member');
 
         return [
+            'id' => $user->id,
             'public_id' => $user->public_id,
             'name' => $user->name,
             'initials' => user_initials($user->name),

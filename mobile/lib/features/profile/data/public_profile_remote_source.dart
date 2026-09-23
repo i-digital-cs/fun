@@ -38,6 +38,7 @@ class PublicProfileRemoteSource {
       return (
         failure: null,
         data: PublicProfile(
+          id: data['id'] as int?,
           publicId: data['public_id'] as String? ?? publicId,
           name: data['name'] as String? ?? '',
           initials: data['initials'] as String? ?? '?',

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -62,6 +64,13 @@ class _JoinRequestsPageState extends ConsumerState<JoinRequestsPage> {
   }
 
   Future<void> _reject(JoinRequestItem request) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmRejectRequest,
+    );
+    if (confirm != true || !mounted) return;
+
     setState(() => _processingId = request.id);
     final result = await ref
         .read(eventsRepositoryProvider)
@@ -188,20 +197,10 @@ class JoinRequestTile extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: OutlinedButton(
+                child: CancelStopButton(
+                  label: l10n.reject,
+                  size: CancelStopSize.sm,
                   onPressed: processing ? null : onReject,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    side: const BorderSide(color: AppColors.danger),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.reject,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
                 ),
               ),
             ],

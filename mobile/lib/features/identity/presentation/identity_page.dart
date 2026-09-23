@@ -7,6 +7,7 @@ import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/identity/domain/identity_status.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
   String? _error;
   bool _loading = true;
   bool _uploading = false;
+  bool _theater = false;
 
   String? _idFrontPath;
   String? _idBackPath;
@@ -92,7 +94,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
     });
   }
 
-  Future<void> _upload() async {
+  void _startTheater() {
     final l10n = AppLocalizations.of(context);
     if (_idFrontPath == null || _idBackPath == null || _selfiePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,36 +102,36 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
       );
       return;
     }
-    setState(() => _uploading = true);
+    setState(() {
+      _theater = true;
+      _uploading = true;
+    });
+  }
+
+  Future<String?> _authenticateUpload() async {
     final result = await ref.read(identityRemoteSourceProvider).upload(
           idFrontPath: _idFrontPath!,
           idBackPath: _idBackPath!,
           selfiePath: _selfiePath!,
         );
-    if (!mounted) return;
-    if (result.failure != null) {
-      setState(() => _uploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
+    if (result.failure != null) return result.failure!.message;
     await ref.read(authControllerProvider.notifier).refreshMe();
-    if (!mounted) return;
+    if (result.data != null) {
+      _status = result.data;
+    }
+    return null;
+  }
+
+  void _onTheaterSuccess() {
     setState(() {
+      _theater = false;
       _uploading = false;
       _idFrontPath = null;
       _idBackPath = null;
       _selfiePath = null;
       _thumbBytes.clear();
-      _status = result.data;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.identityUploaded)),
-    );
-    if (result.data != null) {
-      await _loadThumbs(result.data!);
-    }
+    if (mounted) context.go('/home');
   }
 
   String _chipLabel(AppLocalizations l10n, String chip) {
@@ -184,7 +186,33 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
                   color: AppColors.border.withValues(alpha: 0.7),
                 ),
               ),
-              child: Column(
+              child: _theater
+                  ? AuthAccessTheater(
+                      digits: AuthAccessTheater.digitsFrom(
+                        source: AuthDigitSource.none,
+                      ),
+                      title: l10n.identityTheaterEnterTitle,
+                      subtitle: l10n.identityTheaterEnterSub,
+                      verifyingTitle: l10n.identityTheaterVerifyingTitle,
+                      verifyingSubtitle: l10n.identityTheaterVerifyingSub,
+                      grantedTitle: l10n.identityTheaterGrantedTitle,
+                      grantedSubtitle: l10n.identityTheaterGrantedSub,
+                      authenticate: _authenticateUpload,
+                      onSuccess: _onTheaterSuccess,
+                      onCancel: (error) {
+                        if (!mounted) return;
+                        setState(() {
+                          _theater = false;
+                          _uploading = false;
+                        });
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    )
+                  : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
@@ -289,14 +317,14 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
                 ],
               ),
             ),
-            if (canUpload) ...[
+            if (!_theater && canUpload) ...[
               const SizedBox(height: 24),
               GradientButton(
                 label: l10n.uploadDocuments,
                 isLoading: _uploading,
-                onPressed: _upload,
+                onPressed: _startTheater,
               ),
-            ] else if (hasDocs) ...[
+            ] else if (!_theater && hasDocs) ...[
               const SizedBox(height: 24),
               GradientButton.indigo(
                 label: l10n.navHome,

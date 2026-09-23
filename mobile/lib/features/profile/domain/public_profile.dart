@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class PublicProfile extends Equatable {
   const PublicProfile({
+    this.id,
     required this.publicId,
     required this.name,
     required this.initials,
@@ -15,6 +16,7 @@ class PublicProfile extends Equatable {
     this.hostedEvents = const [],
   });
 
+  final int? id;
   final String publicId;
   final String name;
   final String initials;
@@ -29,6 +31,7 @@ class PublicProfile extends Equatable {
 
   @override
   List<Object?> get props => [
+        id,
         publicId,
         name,
         initials,

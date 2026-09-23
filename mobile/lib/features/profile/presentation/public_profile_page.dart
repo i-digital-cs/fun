@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
+import 'package:fun_mobile/core/widgets/gradient_button.dart';
+import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/profile/data/public_profile_remote_source.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile.dart';
+import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +30,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
   PublicProfile? _profile;
   String? _error;
   bool _loading = true;
+  bool _blocking = false;
 
   @override
   void initState() {
@@ -52,24 +57,128 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     });
   }
 
+  Future<void> _block(PublicProfile profile) async {
+    final id = profile.id;
+    if (id == null) return;
+    final l10n = AppLocalizations.of(context);
+    final ok = await showFunConfirm(
+      context,
+      message: l10n.confirmBlock(profile.name),
+    );
+    if (ok != true || !mounted) return;
+    setState(() => _blocking = true);
+    final result = await ref.read(safetyRemoteSourceProvider).block(id);
+    if (!mounted) return;
+    setState(() => _blocking = false);
+    if (result.failure != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.failure!.message)),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.userBlocked)),
+    );
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/discover');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final auth = ref.watch(authControllerProvider);
+    final me = auth is Authenticated ? auth.user : null;
+    final profile = _profile;
+    final isSelf = me != null &&
+        profile != null &&
+        ((profile.id != null && profile.id == me.id) ||
+            (me.publicId != null && me.publicId == profile.publicId));
+    final canAct = me != null && me.canParticipate && !isSelf;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: AppBar(title: Text(l10n.publicProfile)),
+      appBar: AppBar(
+        title: Text(l10n.publicProfile),
+        actions: [
+          if (isSelf)
+            TextButton(
+              onPressed: () => context.push('/settings/profile'),
+              child: Text(l10n.editProfile),
+            ),
+        ],
+      ),
       body: _loading
           ? const Center(child: FunLoader())
           : _error != null
               ? Center(child: Text(_error!))
-              : _profile == null
+              : profile == null
                   ? Center(child: Text(l10n.profileNotFound))
                   : ListView(
                       padding: const EdgeInsets.all(20),
                       children: [
-                        PublicProfileCard(profile: _profile!),
-                        if (_profile!.hostedEvents.isNotEmpty) ...[
+                        PublicProfileCard(profile: profile),
+                        const SizedBox(height: 16),
+                        if (me == null)
+                          GradientButton.indigo(
+                            label: l10n.login,
+                            onPressed: () => context.go('/login'),
+                          )
+                        else if (isSelf)
+                          GradientButton.indigo(
+                            label: l10n.editProfile,
+                            onPressed: () => context.push('/settings/profile'),
+                          )
+                        else if (canAct && profile.id != null) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _blocking
+                                      ? null
+                                      : () => showReportSheet(
+                                            context,
+                                            reportableType: 'user',
+                                            reportableId: profile.id!,
+                                          ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(l10n.report),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _blocking
+                                      ? null
+                                      : () => _block(profile),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.danger,
+                                    side: const BorderSide(
+                                      color: AppColors.danger,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(l10n.blockUser),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (profile.hostedEvents.isNotEmpty) ...[
                           const SizedBox(height: 24),
                           Text(
                             l10n.hostedEvents,
@@ -79,7 +188,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          ..._profile!.hostedEvents.map((event) {
+                          ...profile.hostedEvents.map((event) {
                             final locale =
                                 Localizations.localeOf(context).toString();
                             final when = event.startsAt != null
@@ -220,7 +329,6 @@ class PublicProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Full-width stats — never share the avatar's 96px height.
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(

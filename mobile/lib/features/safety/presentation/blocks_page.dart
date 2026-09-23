@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/safety/data/safety_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -68,22 +69,9 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
 
   Future<void> _unblock(BlockedUser user) async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.unblock),
-        content: Text(l10n.confirmUnblock(user.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.unblock),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmUnblock(user.name),
     );
     if (confirm != true || !mounted) return;
 

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
-import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
+import 'package:fun_mobile/core/widgets/espiral_glow.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
@@ -154,22 +157,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
 
   Future<void> _leave() async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.leaveEvent),
-        content: Text(l10n.confirmLeave),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.leave),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmLeave,
     );
     if (confirm != true || !mounted) return;
 
@@ -189,22 +179,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
 
   Future<void> _cancelJoinRequest() async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.cancelJoin),
-        content: Text(l10n.confirmCancelJoin),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.cancelJoin),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmCancelJoin,
     );
     if (confirm != true || !mounted) return;
 
@@ -243,22 +220,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
 
   Future<void> _cancelEvent() async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.cancelEvent),
-        content: Text(l10n.confirmCancel),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.back),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.cancelEvent),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmCancel,
     );
     if (confirm != true || !mounted) return;
 
@@ -311,22 +275,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
     final creatorId = _detail?.event.createdBy;
     if (creatorId == null) return;
     final l10n = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.blockCreator),
-        content: Text(l10n.confirmBlock(l10n.blockCreator)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.blockUser),
-          ),
-        ],
-      ),
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmBlock(l10n.blockCreator),
     );
     if (confirm != true || !mounted) return;
     final result =
@@ -482,8 +433,11 @@ class EventDetailHero extends StatelessWidget {
       child: SizedBox(
         height: 200,
         width: double.infinity,
-        child: event.imageUrl != null && event.imageUrl!.isNotEmpty
-            ? LayoutBuilder(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (event.imageUrl != null && event.imageUrl!.isNotEmpty)
+              LayoutBuilder(
                 builder: (context, constraints) {
                   return AppNetworkImage(
                     url: event.imageUrl!,
@@ -502,11 +456,21 @@ class EventDetailHero extends StatelessWidget {
                   );
                 },
               )
-            : const ColoredBox(
+            else
+              const ColoredBox(
                 color: AppColors.primarySoft,
-                child: Icon(Icons.image_outlined,
-                    color: AppColors.primary, size: 48),
+                child: Icon(
+                  Icons.image_outlined,
+                  color: AppColors.primary,
+                  size: 48,
+                ),
               ),
+            const EspiralAnchorCover(
+              tone: EspiralTone.indigo,
+              size: EspiralSize.md,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -815,10 +779,11 @@ class EventJoinActions extends StatelessWidget {
               label: l10n.joinPending,
               color: AppColors.muted,
             ),
-            const SizedBox(height: 8),
-            TextButton(
+            const SizedBox(height: 10),
+            CancelStopButton(
+              label: l10n.cancelJoin,
+              size: CancelStopSize.block,
               onPressed: acting ? null : onCancelJoin,
-              child: Text(l10n.cancelJoin),
             ),
           ],
         ),
@@ -856,10 +821,11 @@ class EventJoinActions extends StatelessWidget {
                 child: Text(l10n.viewMembers),
               ),
             ],
-            const SizedBox(height: 8),
-            TextButton(
+            const SizedBox(height: 10),
+            CancelStopButton(
+              label: l10n.leaveEvent,
+              size: CancelStopSize.block,
               onPressed: acting ? null : onLeave,
-              child: Text(l10n.leave),
             ),
           ],
         ),
@@ -867,9 +833,20 @@ class EventJoinActions extends StatelessWidget {
           label: l10n.eventFull,
           color: AppColors.accent,
         ),
-      'request_rejected' => JoinStatusBanner(
-          label: l10n.requestRejected,
-          color: AppColors.danger,
+      'request_rejected' => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            JoinStatusBanner(
+              label: l10n.requestRejected,
+              color: const Color(0xFFB45309),
+            ),
+            const SizedBox(height: 12),
+            GradientButton(
+              label: l10n.requestToJoin,
+              isLoading: acting,
+              onPressed: onJoin,
+            ),
+          ],
         ),
       _ => JoinStatusBanner(
           label: l10n.notAvailable,
@@ -991,10 +968,10 @@ class EventOwnerActions extends StatelessWidget {
             child: Text(l10n.completeEvent),
           ),
           const SizedBox(height: 8),
-          TextButton(
+          CancelStopButton(
+            label: l10n.cancelEvent,
+            size: CancelStopSize.block,
             onPressed: acting ? null : onCancel,
-            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-            child: Text(l10n.cancelEvent),
           ),
         ],
         if (event.status == 'completed') ...[
