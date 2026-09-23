@@ -556,19 +556,20 @@ class _StartingSoonCard extends StatelessWidget {
               ),
             )
           else
-            ...items.map((event) {
-              final isLast = event.id == items.last.id;
-              return InkWell(
-                onTap: () => onTap(event.id),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    border: isLast
-                        ? null
-                        : const Border(
-                            bottom: BorderSide(color: Color(0xFFF1F5F9)),
-                          ),
-                  ),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const Divider(
+                height: 1,
+                color: Color(0xFFF1F5F9),
+              ),
+              itemBuilder: (context, index) {
+                final event = items[index];
+                return InkWell(
+                  onTap: () => onTap(event.id),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
                       Container(
@@ -613,7 +614,8 @@ class _StartingSoonCard extends StatelessWidget {
                   ),
                 ),
               );
-            }),
+              },
+            ),
         ],
       ),
     );

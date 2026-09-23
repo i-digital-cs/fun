@@ -23,7 +23,7 @@ Workflow per task: PLAN → ASK (if ambiguous) → IMPLEMENT → ANALYZE/TEST �
 
 ## Current focus
 
-**Phase 5 — Perf / flavors / release / tests.**
+**Phase 5 complete — mobile V1 roadmap finished.** Next: store release / product polish outside this file.
 
 ---
 
@@ -39,7 +39,7 @@ Workflow per task: PLAN → ASK (if ambiguous) → IMPLEMENT → ANALYZE/TEST �
 | **P2** | **Event show full Blade parity** | `done` |
 | **P3** | **Safety & account screens** | `done` |
 | **P4** | **Auth polish & optional realtime** | `done` |
-| **P5** | **Perf / flavors / release / tests** | `todo` |
+| **P5** | **Perf / flavors / release / tests** | `done` |
 
 ---
 
@@ -191,20 +191,24 @@ Blade reference: `safety/guidelines.blade.php`, `safety/report.blade.php`, `safe
 ## Phase 5 — Perf / flavors / release / tests
 
 ### Task P5.1 — Image / list performance
-- **Status:** `todo`
-- **Notes:** `cached_network_image` memCache bounds; `ListView.builder`; avoid rebuild storms
+- **Status:** `done`
+- **Completed:** 2026-09-23
+- **Notes:** `AppNetworkImage` with DPR-bounded `memCacheWidth`/`Height` on cards + detail; Starting Soon uses `ListView.separated`
 
 ### Task P5.2 — Flavors / dart-define
-- **Status:** `todo`
-- **Notes:** Document `API_BASE_URL` + `FLAVOR`; never ship store build to localhost
+- **Status:** `done`
+- **Completed:** 2026-09-23
+- **Notes:** `Env` documents `API_BASE_URL` + `FLAVOR`; `assertSafeForRelease()` blocks localhost in release; README updated
 
 ### Task P5.3 — Tests
-- **Status:** `todo`
-- **Notes:** Unit for repositories/mappers; widget for join CTA states & discover filters; auth bootstrap
+- **Status:** `done`
+- **Completed:** 2026-09-23
+- **Notes:** DiscoverFilters, parseEvent coercion, User helpers, auth bootstrap, logout clears storage, join CTA widgets, filter panel smoke, Env defaults
 
 ### Task P5.4 — Release checklist
-- **Status:** `todo`
-- **Notes:** Obfuscation build, analyze clean, EN/AR RTL pass, logout clears secure storage
+- **Status:** `done`
+- **Completed:** 2026-09-23
+- **Notes:** [`docs/RELEASE.md`](docs/RELEASE.md) — obfuscation, analyze/test, EN/AR RTL, logout storage
 
 ---
 

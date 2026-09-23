@@ -6,11 +6,14 @@ typedef OnUnauthorized = void Function();
 
 class ApiClient {
   ApiClient({
-    required this._tokenStorage,
-    this._onUnauthorized,
+    required TokenStorage tokenStorage,
+    OnUnauthorized? onUnauthorized,
     String? locale,
     String? baseUrl,
-  }) {
+  })  : // ignore: prefer_initializing_formals — public named args for call sites
+        _tokenStorage = tokenStorage,
+        // ignore: prefer_initializing_formals
+        _onUnauthorized = onUnauthorized {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl ?? Env.apiBaseUrl,

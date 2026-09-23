@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -374,16 +374,24 @@ class EventDetailHero extends StatelessWidget {
         height: 200,
         width: double.infinity,
         child: event.imageUrl != null && event.imageUrl!.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: event.imageUrl!,
-                fit: BoxFit.cover,
-                memCacheWidth: 800,
-                placeholder: (_, _) =>
-                    const ColoredBox(color: AppColors.primarySoft),
-                errorWidget: (_, _, _) => const ColoredBox(
-                  color: AppColors.primarySoft,
-                  child: Icon(Icons.image_outlined, color: AppColors.primary),
-                ),
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  return AppNetworkImage(
+                    url: event.imageUrl!,
+                    logicalWidth: constraints.maxWidth,
+                    logicalHeight: 200,
+                    maxCacheWidth: 1200,
+                    maxCacheHeight: 800,
+                    error: const ColoredBox(
+                      color: AppColors.primarySoft,
+                      child: Icon(
+                        Icons.image_outlined,
+                        color: AppColors.primary,
+                        size: 48,
+                      ),
+                    ),
+                  );
+                },
               )
             : const ColoredBox(
                 color: AppColors.primarySoft,

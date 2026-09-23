@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -75,16 +75,16 @@ class EventCard extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 if (event.imageUrl != null && event.imageUrl!.isNotEmpty)
-                  CachedNetworkImage(
-                    imageUrl: event.imageUrl!,
-                    fit: BoxFit.cover,
-                    memCacheWidth: 800,
-                    placeholder: (_, _) =>
-                        const ColoredBox(color: AppColors.primarySoft),
-                    errorWidget: (_, _, _) => const ColoredBox(
-                      color: AppColors.primarySoft,
-                      child: Icon(Icons.image_outlined, color: AppColors.primary),
-                    ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return AppNetworkImage(
+                        url: event.imageUrl!,
+                        logicalWidth: constraints.maxWidth,
+                        logicalHeight: 176,
+                        maxCacheWidth: 900,
+                        maxCacheHeight: 600,
+                      );
+                    },
                   )
                 else
                   const ColoredBox(

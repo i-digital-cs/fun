@@ -10,6 +10,7 @@ Flutter client for the Fun community activity platform.
 | [`docs/FLUTTER_PRINCIPLES.md`](docs/FLUTTER_PRINCIPLES.md) | App principles & stack rules |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Visual system (same as Blade) |
 | [`docs/FLUTTER_BEST_PRACTICES.md`](docs/FLUTTER_BEST_PRACTICES.md) | Deep Flutter standards |
+| [`docs/RELEASE.md`](docs/RELEASE.md) | Store / release checklist |
 | [`docs/postman/`](docs/postman/) | API collection |
 
 ## Stack
@@ -30,10 +31,29 @@ flutter pub get
 flutter run
 ```
 
-Optional explicit define (same URL):
+### Flavors / dart-define
+
+| Define | Default | Notes |
+|--------|---------|--------|
+| `API_BASE_URL` | `https://fun.idigital-cs.com/api` | Never leave localhost on release builds |
+| `FLAVOR` | `prod` | Use `dev` for local/staging |
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://fun.idigital-cs.com/api
+# Production (same as defaults)
+flutter run --dart-define=FLAVOR=prod
+
+# Local API (Android emulator → host machine)
+flutter run --dart-define=FLAVOR=dev \
+  --dart-define=API_BASE_URL=http://10.0.2.2/Funity/fun/public/api
+```
+
+Release builds refuse local API URLs (see `Env.assertSafeForRelease`).
+
+### Tests
+
+```bash
+flutter test
+flutter analyze
 ```
 
 ## Structure
@@ -48,8 +68,9 @@ lib/
 
 ## Screens (online API)
 
-- Auth: Login / Register
+- Auth: Login / Register / Google (needs OAuth client setup)
+- Guest: Discover + event show
 - Home + Discover + Event detail (join / leave / owner actions / rate / report)
 - Create / Edit / Publish events
-- My Events, Chat, Join requests
-- Profile: Location, Identity upload, Blocks
+- My Events, Chat (polling), Join requests, Members
+- Profile: Location, Identity upload, Blocks, Safety guidelines
