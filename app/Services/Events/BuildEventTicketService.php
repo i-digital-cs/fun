@@ -47,9 +47,13 @@ class BuildEventTicketService
                 : $startsAt->format('F j').$startsAt->format('S').' '.$startsAt->format('Y'));
 
         $venueParts = array_values(array_filter([
-            filled($event->venue) ? (string) $event->venue : null,
+            $event->hasMeaningfulVenue() ? (string) $event->venue : null,
             $event->city?->localizedName(),
         ]));
+
+        if ($venueParts === [] && $event->hasPlacePin()) {
+            $venueParts[] = $event->locationLabel();
+        }
 
         $role = $membership->role->value;
 

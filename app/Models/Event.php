@@ -201,6 +201,86 @@ class Event extends Model
         return $this->latitude !== null && $this->longitude !== null;
     }
 
+    /**
+     * Human-facing place line: venue · city (skips placeholder venue text).
+     */
+    public function locationLabel(): string
+    {
+        $city = $this->relationLoaded('city') ? $this->city : $this->city()->first();
+        $cityName = $city?->localizedName() ?? '';
+
+        if ($this->hasMeaningfulVenue()) {
+            $venue = trim((string) $this->venue);
+            // Reverse-geocode / user strings that already include an area stay as-is.
+            if (str_contains($venue, '·') || str_contains($venue, ',')) {
+                return $venue;
+            }
+            if ($cityName !== '' && ! str_contains(mb_strtolower($venue), mb_strtolower($cityName))) {
+                return $venue.' · '.$cityName;
+            }
+
+            return $venue;
+        }
+
+        if ($cityName !== '') {
+            return $cityName;
+        }
+
+        if ($this->hasPlacePin()) {
+            return sprintf('%.5f, %.5f', (float) $this->latitude, (float) $this->longitude);
+        }
+
+        return '';
+    }
+
+    public function hasMeaningfulVenue(): bool
+    {
+        $venue = trim((string) ($this->venue ?? ''));
+        if ($venue === '') {
+            return false;
+        }
+
+        $normalized = mb_strtolower($venue);
+        $placeholders = [
+            'venue',
+            'location',
+            'place',
+            'المكان',
+            'موقع',
+            'title',
+            'العنوان',
+        ];
+
+        return ! in_array($normalized, $placeholders, true);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function locationPayload(): array
+    {
+        $city = $this->relationLoaded('city') ? $this->city : null;
+
+        return [
+            'label' => $this->locationLabel() ?: null,
+            'venue' => $this->hasMeaningfulVenue() ? trim((string) $this->venue) : null,
+            'venue_raw' => $this->venue,
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
+            'maps_url' => $this->maps_url,
+            'maps_open_url' => $this->mapsOpenUrl(),
+            'has_place_pin' => $this->hasPlacePin(),
+            'city' => $city ? [
+                'id' => $city->id,
+                'name' => $city->localizedName(),
+                'name_en' => $city->name_en,
+                'name_ar' => $city->name_ar,
+                'latitude' => $city->latitude !== null ? (float) $city->latitude : null,
+                'longitude' => $city->longitude !== null ? (float) $city->longitude : null,
+            ] : null,
+        ];
+    }
+
     public function mapsOpenUrl(): ?string
     {
         if (filled($this->maps_url)) {

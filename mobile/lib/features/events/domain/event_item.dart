@@ -63,6 +63,7 @@ class EventItem extends Equatable {
     this.mapsUrl,
     this.mapsOpenUrl,
     this.hasPlacePin = false,
+    this.locationLabel,
   });
 
   final int id;
@@ -92,6 +93,20 @@ class EventItem extends Equatable {
   final String? mapsUrl;
   final String? mapsOpenUrl;
   final bool hasPlacePin;
+  final String? locationLabel;
+
+  String get placeLine {
+    final label = locationLabel?.trim();
+    if (label != null && label.isNotEmpty) return label;
+    if (venue.trim().isNotEmpty) {
+      final cityName = city?.name;
+      if (cityName != null && cityName.isNotEmpty && !venue.contains(cityName)) {
+        return '$venue · $cityName';
+      }
+      return venue.trim();
+    }
+    return city?.name ?? '';
+  }
 
   bool get isFree => costPerPerson == null || costPerPerson! <= 0;
 
@@ -142,6 +157,7 @@ class EventItem extends Equatable {
       mapsUrl: mapsUrl,
       mapsOpenUrl: mapsOpenUrl,
       hasPlacePin: hasPlacePin,
+      locationLabel: locationLabel,
     );
   }
 
@@ -174,6 +190,7 @@ class EventItem extends Equatable {
         mapsUrl,
         mapsOpenUrl,
         hasPlacePin,
+        locationLabel,
       ];
 }
 

@@ -60,7 +60,7 @@ class _EventCardState extends State<EventCard> {
         : '';
     final priceChip = _amountLabel(l10n, event);
     final currencyPill = event.isFree ? '✓' : l10n.currencyShort;
-    final venueLine = event.venue.trim();
+    final venueLine = event.placeLine;
     final tilt = _pressed ? 0.28 : 0.0;
 
     return GestureDetector(

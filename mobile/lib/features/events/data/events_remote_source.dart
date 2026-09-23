@@ -604,10 +604,29 @@ class EventsRemoteSource {
       requirements: json['requirements'] as String?,
       expectedCost: json['expected_cost']?.toString(),
       venue: json['venue'] as String? ?? '',
-      latitude: _asNum(json['latitude'])?.toDouble(),
-      longitude: _asNum(json['longitude'])?.toDouble(),
-      mapsUrl: json['maps_url'] as String?,
-      mapsOpenUrl: json['maps_open_url'] as String?,
+      locationLabel: json['location_label'] as String? ??
+          (json['location'] is Map
+              ? (Map<String, dynamic>.from(json['location'] as Map)['label'] as String?)
+              : null),
+      latitude: _asNum(json['latitude'])?.toDouble() ??
+          (json['location'] is Map
+              ? _asNum(Map<String, dynamic>.from(json['location'] as Map)['latitude'])
+                  ?.toDouble()
+              : null),
+      longitude: _asNum(json['longitude'])?.toDouble() ??
+          (json['location'] is Map
+              ? _asNum(Map<String, dynamic>.from(json['location'] as Map)['longitude'])
+                  ?.toDouble()
+              : null),
+      mapsUrl: json['maps_url'] as String? ??
+          (json['location'] is Map
+              ? Map<String, dynamic>.from(json['location'] as Map)['maps_url'] as String?
+              : null),
+      mapsOpenUrl: json['maps_open_url'] as String? ??
+          (json['location'] is Map
+              ? Map<String, dynamic>.from(json['location'] as Map)['maps_open_url']
+                  as String?
+              : null),
       hasPlacePin: _asBool(json['has_place_pin']) ||
           (_asNum(json['latitude']) != null &&
               _asNum(json['longitude']) != null),

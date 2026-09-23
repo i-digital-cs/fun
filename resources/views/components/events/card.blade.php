@@ -54,7 +54,7 @@
             @if ($schedule)
                 <span class="event-3d__meta">{{ $schedule }}</span>
             @endif
-            <span class="event-3d__text">{{ $event->venue }}</span>
+            <span class="event-3d__text">{{ $event->locationLabel() }}</span>
 
             <div class="event-3d__members">
                 <div class="event-3d__members-row">

@@ -77,12 +77,13 @@
                         @endif
                     </span>
                 @endif
-                @if (filled($event->venue))
+                @php($placeLabel = $event->locationLabel())
+                @if ($placeLabel !== '')
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
-                        <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
                         </svg>
-                        {{ $event->venue }}
+                        <span>{{ $placeLabel }}</span>
                     </span>
                 @endif
                 @if ($event->mapsOpenUrl())

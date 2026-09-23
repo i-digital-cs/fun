@@ -336,7 +336,34 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 | cost_per_person | no |
 | image (jpeg/png/webp) | no |
 
-**Place on map (free):** Web create/edit uses **Leaflet + OpenStreetMap tiles** (CDN, no credentials). Tap map to drop/drag pin, or paste a Maps share link. Short Google links are resolved via `POST /api/maps/resolve` (follows redirects, no Google API key). Flutter create/edit accepts the same `maps_url` (+ optional lat/lng); detail exposes `maps_open_url` / **Open in maps** via `url_launcher`. API returns `latitude`, `longitude`, `maps_url`, `maps_open_url`, `has_place_pin`.
+**Place on map (free):** Web create/edit uses **Leaflet + OpenStreetMap tiles** (CDN, no credentials). Tap map to drop/drag pin, or paste a Maps share link. Short Google links are resolved via `POST /api/maps/resolve` (follows redirects, no Google API key). Placeholder venue text (`Venue` / `المكان`) is replaced with a free Nominatim reverse-geocode label (or city name). Flutter create/edit accepts the same `maps_url` (+ optional lat/lng); detail exposes `maps_open_url` / **Open in maps** via `url_launcher`.
+
+**API location fields (every event):**
+
+```json
+{
+  "venue": "Corniche · Cairo",
+  "location_label": "Corniche · Cairo",
+  "location": {
+    "label": "Corniche · Cairo",
+    "venue": "Corniche · Cairo",
+    "venue_raw": "Venue",
+    "latitude": 30.0266,
+    "longitude": 31.2234,
+    "maps_url": "https://www.openstreetmap.org/…",
+    "maps_open_url": "https://www.openstreetmap.org/…",
+    "has_place_pin": true,
+    "city": { "id": 1, "name": "Cairo", "latitude": 30.04, "longitude": 31.23 }
+  },
+  "latitude": 30.0266,
+  "longitude": 31.2234,
+  "maps_url": "…",
+  "maps_open_url": "…",
+  "has_place_pin": true
+}
+```
+
+UI chips/cards use `location_label` (venue · city), never a bare form label like “Venue”.
 
 CTA: orange create/save. After create → show or edit draft + publish.
 
@@ -742,7 +769,7 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 
 Use `GET /api/site` for logo/name **and** app version / force-update on splash (same as admin Site settings). See **§2B** (login/identity samples) and **§2C** (version check).
 
-Site branding for auth UI: admin **display name** + **logo**.
+Site branding for auth UI: admin **display name** + **logo**. Official Funity mark (Brand Identity System) ships at `public/branding/funity-mark.svg` and is attached into site settings storage so `GET /api/site` → `logo_url` is always available for Flutter. Admin can replace via **Site settings** attachment.
 
 ---
 
@@ -1231,4 +1258,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — Event place pin (Leaflet/OSM + Maps URL parse, no Google key); home weather + Live glass; 3D cards; EGP.*
+*Last updated: 2026-09-23 — Official Funity logo via site settings; event `location_label` + nested `location` on API; free place pin.*

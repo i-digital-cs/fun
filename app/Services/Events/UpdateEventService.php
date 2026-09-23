@@ -78,6 +78,10 @@ class UpdateEventService
                 'cost_per_person',
             ])->all());
 
+            if (array_key_exists('venue', $place)) {
+                $event->venue = $place['venue'];
+            }
+
             $event->forceFill([
                 'latitude' => $place['latitude'],
                 'longitude' => $place['longitude'],

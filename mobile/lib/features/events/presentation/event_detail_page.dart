@@ -576,7 +576,7 @@ class EventDetailInfoCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  event.venue.isEmpty ? l10n.venueTba : event.venue,
+                  event.placeLine.isEmpty ? l10n.venueTba : event.placeLine,
                   style: const TextStyle(color: AppColors.muted),
                 ),
               ),

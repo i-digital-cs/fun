@@ -55,10 +55,8 @@
             @if ($logo)
                 <img src="{{ $logo }}" alt="{{ $brand }}" class="mb-3 h-12 max-w-[9rem] object-contain">
             @else
-                <span class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                    </svg>
+                <span class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-lg shadow-indigo-600/20">
+                    <x-brand.mark :size="36" />
                 </span>
             @endif
             <p class="text-xs font-bold uppercase tracking-widest text-indigo-500">{{ $brand }}</p>

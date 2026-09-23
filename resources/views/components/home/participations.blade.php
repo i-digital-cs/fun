@@ -62,7 +62,7 @@
                             <h3 class="text-base font-semibold text-text">
                                 <a href="{{ route('events.show', $event) }}" class="hover:text-primary">{{ $event->title }}</a>
                             </h3>
-                            <p class="mt-1 text-sm text-muted">{{ $event->venue }}@if($event->city) · {{ $event->city->localizedName() }}@endif</p>
+                            <p class="mt-1 text-sm text-muted">{{ $event->locationLabel() }}</p>
                         </div>
                         <div class="flex items-center justify-between gap-2 rounded-lg bg-background px-3 py-2 text-xs">
                             <span class="inline-flex items-center gap-1 font-semibold text-success">{{ __('home.step_requested') }}</span>
@@ -113,7 +113,7 @@
                             <h3 class="text-base font-semibold text-text">
                                 <a href="{{ route('events.show', $event) }}" class="hover:text-primary">{{ $event->title }}</a>
                             </h3>
-                            <p class="mt-1 text-sm text-muted">{{ $event->venue }}@if($event->city) · {{ $event->city->localizedName() }}@endif</p>
+                            <p class="mt-1 text-sm text-muted">{{ $event->locationLabel() }}</p>
                         </div>
                         <div class="rounded-lg bg-background px-3 py-2 text-sm text-muted">
                             {{ __('home.pending_review_notice') }}
