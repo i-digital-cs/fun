@@ -1,0 +1,693 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Arabic (`ar`).
+class AppLocalizationsAr extends AppLocalizations {
+  AppLocalizationsAr([String locale = 'ar']) : super(locale);
+
+  @override
+  String get appName => 'فن';
+
+  @override
+  String get login => 'تسجيل الدخول';
+
+  @override
+  String get register => 'إنشاء حساب';
+
+  @override
+  String get logout => 'تسجيل الخروج';
+
+  @override
+  String get email => 'البريد الإلكتروني';
+
+  @override
+  String get password => 'كلمة المرور';
+
+  @override
+  String get passwordConfirmation => 'تأكيد كلمة المرور';
+
+  @override
+  String get name => 'الاسم';
+
+  @override
+  String get remember => 'تذكرني';
+
+  @override
+  String get language => 'اللغة';
+
+  @override
+  String get noAccount => 'ليس لديك حساب؟';
+
+  @override
+  String get haveAccount => 'لديك حساب بالفعل؟';
+
+  @override
+  String get navHome => 'الرئيسية';
+
+  @override
+  String get navDiscover => 'اكتشف';
+
+  @override
+  String get navCreate => 'إنشاء';
+
+  @override
+  String get navMyEvents => 'فعالياتي';
+
+  @override
+  String get navProfile => 'الملف';
+
+  @override
+  String greetingMorning(String name) {
+    return 'صباح الخير، $name';
+  }
+
+  @override
+  String greetingAfternoon(String name) {
+    return 'مساء الخير، $name';
+  }
+
+  @override
+  String greetingEvening(String name) {
+    return 'مساء الخير، $name';
+  }
+
+  @override
+  String get greetingSub => 'جاهز تجد شيئاً ممتعاً اليوم؟';
+
+  @override
+  String get heroEyebrow => 'أنشطة حولك الآن';
+
+  @override
+  String get heroTitle1 => 'اعثر على أشخاص.';
+
+  @override
+  String get heroTitle2 => 'افعل ما تحب.';
+
+  @override
+  String get heroBody =>
+      'اكتشف أنشطة قريبة، وانضم لمن يشاركك الاهتمامات، وحوّل أمسيتك إلى ذكرى رائعة.';
+
+  @override
+  String get heroActivityPh => 'كرة قدم، بلاي ستيشن، جري...';
+
+  @override
+  String get findEvents => 'ابحث عن فعاليات';
+
+  @override
+  String get trustIdentity => 'مجتمع مبني على الهوية';
+
+  @override
+  String get trustPeople => 'أشخاص حقيقيون بالقرب منك';
+
+  @override
+  String get trustReport => 'إبلاغ سهل';
+
+  @override
+  String get nearbyTitle => 'يحدث بالقرب منك';
+
+  @override
+  String get nearbySubGeneric => 'فعاليات بالقرب منك';
+
+  @override
+  String nearbySub(String city, int km) {
+    return 'فعاليات في $city · ضمن $km كم';
+  }
+
+  @override
+  String get seeAll => 'عرض الكل';
+
+  @override
+  String get createEvent => 'إنشاء فعالية';
+
+  @override
+  String get viewEvent => 'عرض الفعالية';
+
+  @override
+  String get members => 'أعضاء';
+
+  @override
+  String get free => 'مجاني';
+
+  @override
+  String get almostFull => 'شبه ممتلئ';
+
+  @override
+  String get fillingFast => 'يمتلئ بسرعة';
+
+  @override
+  String get newBadge => 'جديد';
+
+  @override
+  String get popular => 'شائع';
+
+  @override
+  String get emptyNearby => 'لا توجد فعاليات قريبة بعد. كن أول من ينشئ واحدة.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get loading => 'جارٍ التحميل…';
+
+  @override
+  String get comingSoon => 'قريباً';
+
+  @override
+  String get search => 'بحث';
+
+  @override
+  String get allCities => 'كل المدن';
+
+  @override
+  String get allCategories => 'كل التصنيفات';
+
+  @override
+  String get applyFilters => 'تطبيق';
+
+  @override
+  String get clearFilters => 'مسح';
+
+  @override
+  String get nationwideNotice =>
+      'عرض الفعاليات على مستوى البلاد. اختر مدينة لاكتشاف القريب منك.';
+
+  @override
+  String get emptyDiscover => 'لا توجد فعاليات تطابق عوامل التصفية.';
+
+  @override
+  String get showAllEvents => 'عرض كل الفعاليات';
+
+  @override
+  String get changeLocation => 'تغيير الموقع';
+
+  @override
+  String get discoveryDistance => 'المسافة';
+
+  @override
+  String get discoverTitle => 'اكتشف';
+
+  @override
+  String get discoverSub => 'تصفّح اللقاءات القريبة أو على مستوى البلاد';
+
+  @override
+  String get errorGeneric => 'حدث خطأ. حاول مرة أخرى.';
+
+  @override
+  String get errorOffline => 'أنت غير متصل. تحقق من الاتصال.';
+
+  @override
+  String get errorUnauthorized => 'سجّل الدخول للمتابعة.';
+
+  @override
+  String get validationRequired => 'هذا الحقل مطلوب';
+
+  @override
+  String get validationEmail => 'أدخل بريداً إلكترونياً صالحاً';
+
+  @override
+  String get join => 'انضم';
+
+  @override
+  String get leave => 'مغادرة';
+
+  @override
+  String get publish => 'نشر';
+
+  @override
+  String get chat => 'محادثة';
+
+  @override
+  String get location => 'الموقع';
+
+  @override
+  String get identity => 'الهوية';
+
+  @override
+  String get blocks => 'المستخدمون المحظورون';
+
+  @override
+  String get report => 'إبلاغ';
+
+  @override
+  String get rateEvent => 'قيّم الفعالية';
+
+  @override
+  String get save => 'حفظ';
+
+  @override
+  String get send => 'إرسال';
+
+  @override
+  String get editEvent => 'تعديل الفعالية';
+
+  @override
+  String get eventTitle => 'العنوان';
+
+  @override
+  String get description => 'الوصف';
+
+  @override
+  String get category => 'التصنيف';
+
+  @override
+  String get city => 'المدينة';
+
+  @override
+  String get venue => 'المكان';
+
+  @override
+  String get startsAt => 'يبدأ';
+
+  @override
+  String get endsAt => 'ينتهي';
+
+  @override
+  String get maxParticipants => 'الحد الأقصى للمشاركين';
+
+  @override
+  String get requirements => 'المتطلبات';
+
+  @override
+  String get expectedCost => 'التكلفة المتوقعة';
+
+  @override
+  String get costPerPerson => 'التكلفة للفرد';
+
+  @override
+  String get pickImage => 'اختر صورة';
+
+  @override
+  String get imageSelected => 'تم اختيار الصورة';
+
+  @override
+  String get createDraft => 'حفظ كمسودة';
+
+  @override
+  String get publishEvent => 'نشر الفعالية';
+
+  @override
+  String get cancelEvent => 'إلغاء الفعالية';
+
+  @override
+  String get completeEvent => 'تحديد كمكتملة';
+
+  @override
+  String get viewRequests => 'طلبات الانضمام';
+
+  @override
+  String get viewMembers => 'الأعضاء';
+
+  @override
+  String get joinPending => 'الطلب قيد المراجعة';
+
+  @override
+  String get eventFull => 'الفعالية ممتلئة';
+
+  @override
+  String get requestRejected => 'تم رفض الطلب';
+
+  @override
+  String get joined => 'أنت منضم!';
+
+  @override
+  String get notAvailable => 'غير متاح';
+
+  @override
+  String get verifyIdentity => 'تحقق من هويتك للمشاركة';
+
+  @override
+  String get uploadDocuments => 'رفع المستندات';
+
+  @override
+  String get idFront => 'وجه الهوية';
+
+  @override
+  String get idBack => 'ظهر الهوية';
+
+  @override
+  String get selfie => 'صورة شخصية';
+
+  @override
+  String get unblock => 'إلغاء الحظر';
+
+  @override
+  String get reportReason => 'السبب';
+
+  @override
+  String get reportDetails => 'التفاصيل (اختياري)';
+
+  @override
+  String get submitReport => 'إرسال البلاغ';
+
+  @override
+  String get reportSubmitted => 'تم إرسال البلاغ. شكراً لك.';
+
+  @override
+  String get safetyGuidelines => 'إرشادات السلامة';
+
+  @override
+  String get safetyGuidelinesBody =>
+      'التقِ في أماكن عامة، وثق بحدسك، وأبلغ عن أي سلوك مشبوه. الحظر يخفي المستخدمين من خلاصتك ومحادثاتك.';
+
+  @override
+  String get distanceKm => 'نطاق البحث';
+
+  @override
+  String get selectCity => 'اختر المدينة';
+
+  @override
+  String get locationSub => 'اختر مدينتك ومدى استعدادك للسفر للفعاليات.';
+
+  @override
+  String get locationSaved => 'تم حفظ الموقع';
+
+  @override
+  String withinKm(int km) {
+    return 'ضمن $km كم';
+  }
+
+  @override
+  String showingWithin(int km) {
+    return 'عرض الفعاليات ضمن $km كم';
+  }
+
+  @override
+  String get tapToChangeLocation => 'اضغط لتغيير المدينة والمسافة';
+
+  @override
+  String get setYourLocation => 'حدد موقعك';
+
+  @override
+  String get messageHint => 'اكتب رسالة…';
+
+  @override
+  String get noMessages => 'لا رسائل بعد';
+
+  @override
+  String get noRequests => 'لا طلبات معلقة';
+
+  @override
+  String get noBlocks => 'لم تحظر أحداً';
+
+  @override
+  String get emptyMyEvents => 'لم تنشئ أو تنضم لأي فعاليات بعد.';
+
+  @override
+  String get comment => 'تعليق';
+
+  @override
+  String get thankYouRating => 'شكراً على تقييمك!';
+
+  @override
+  String get confirmLeave => 'مغادرة هذه الفعالية؟';
+
+  @override
+  String get confirmCancel => 'إلغاء هذه الفعالية؟ سيتم إخطار الأعضاء.';
+
+  @override
+  String get statusDraft => 'مسودة';
+
+  @override
+  String get statusPublished => 'منشورة';
+
+  @override
+  String get statusCancelled => 'ملغاة';
+
+  @override
+  String get statusCompleted => 'مكتملة';
+
+  @override
+  String get notActiveAccount => 'تحقق من هويتك قبل إنشاء الفعاليات.';
+
+  @override
+  String get accept => 'قبول';
+
+  @override
+  String get reject => 'رفض';
+
+  @override
+  String get reportSpam => 'بريد مزعج';
+
+  @override
+  String get reportHarassment => 'تحرش';
+
+  @override
+  String get reportInappropriate => 'محتوى غير لائق';
+
+  @override
+  String get reportScam => 'احتيال';
+
+  @override
+  String get reportOther => 'أخرى';
+
+  @override
+  String get leaveEvent => 'مغادرة الفعالية';
+
+  @override
+  String organizerRating(String average, int count) {
+    return '$average ★ ($count تقييم)';
+  }
+
+  @override
+  String get eventSaved => 'تم حفظ الفعالية';
+
+  @override
+  String get eventPublished => 'تم نشر الفعالية';
+
+  @override
+  String get optional => 'اختياري';
+
+  @override
+  String get pickDateTime => 'اختر التاريخ والوقت';
+
+  @override
+  String publishOfferBody(String title) {
+    return 'نشر \"$title\" الآن ليتمكن الآخرون من اكتشافها؟';
+  }
+
+  @override
+  String get later => 'لاحقاً';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get back => 'رجوع';
+
+  @override
+  String get identitySub =>
+      'ارفع صوراً واضحة لهويتك (الوجه والظهر) وصورة شخصية للتحقق.';
+
+  @override
+  String get identityMissing => 'يرجى اختيار الصور الثلاث';
+
+  @override
+  String get identityUploaded => 'تم رفع المستندات بنجاح';
+
+  @override
+  String get selected => 'تم الاختيار';
+
+  @override
+  String get intoTitle => 'إيه اللي يهمك؟';
+
+  @override
+  String get intoSub => 'اختَر نشاطاً واكتشف ناس حواليك.';
+
+  @override
+  String get viewAllCategories => 'عرض كل التصنيفات ←';
+
+  @override
+  String get startingSoon => 'تبدأ قريباً';
+
+  @override
+  String get safetyTitle => 'سلامتك مهمة.';
+
+  @override
+  String get safetyBody =>
+      'مستندات الهوية وأدوات الإبلاغ والإشراف وضوابط الحساب جزء من تجربة المجتمع.';
+
+  @override
+  String get safetyCta => 'تعرّف على السلامة';
+
+  @override
+  String howTitle(String brand) {
+    return 'كيف يعمل $brand';
+  }
+
+  @override
+  String get howSub => 'من \"عايز ألعب\" لحد ما تلعب فعلاً.';
+
+  @override
+  String get how1Title => 'لاقي حاجة';
+
+  @override
+  String get how1Body =>
+      'اختَر نشاطاً وشوف فعاليات حول مدينتك والمسافة المفضلة.';
+
+  @override
+  String get how2Title => 'اطلب الانضمام';
+
+  @override
+  String get how2Body => 'ابعت طلب انضمام. صاحب الفعالية بيراجع ويقبل الأعضاء.';
+
+  @override
+  String get how3Title => 'قابل واستمتع';
+
+  @override
+  String get how3Body =>
+      'استخدم محادثة الفعالية للتنسيق، وبعدين تقابلوا في المكان.';
+
+  @override
+  String get ctaTitle => 'مش لاقي نشاطك؟';
+
+  @override
+  String get ctaBody => 'أنشئ فعالية وخلي الناس حواليك تنضم للخطة.';
+
+  @override
+  String get ctaButton => 'أنشئ فعاليتك';
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get tomorrow => 'غداً';
+
+  @override
+  String get promote => 'ترقية إلى مشرف';
+
+  @override
+  String get demote => 'تخفيض إلى عضو';
+
+  @override
+  String get transferOwnership => 'نقل الملكية';
+
+  @override
+  String confirmTransfer(String name) {
+    return 'نقل الملكية إلى $name؟';
+  }
+
+  @override
+  String get blockUser => 'حظر المستخدم';
+
+  @override
+  String confirmBlock(String name) {
+    return 'حظر $name؟ سيتم إخفاؤه من خلاصتك ومحادثاتك.';
+  }
+
+  @override
+  String get userBlocked => 'تم حظر المستخدم';
+
+  @override
+  String get roleOwner => 'المالك';
+
+  @override
+  String get roleAdmin => 'مشرف';
+
+  @override
+  String get roleMember => 'عضو';
+
+  @override
+  String get emptyMembers => 'لا يوجد أعضاء بعد';
+
+  @override
+  String yourRating(int stars) {
+    return 'تقييمك: $stars/5';
+  }
+
+  @override
+  String get recentRatings => 'أحدث التقييمات';
+
+  @override
+  String get noRatingsYet => 'لا توجد تقييمات بعد';
+
+  @override
+  String get reportMessage => 'الإبلاغ عن الرسالة';
+
+  @override
+  String get blockCreator => 'حظر المنظم';
+
+  @override
+  String get guidelinesIntro =>
+      'كيف نحافظ على فعاليات المجتمع أوضح وأكثر أماناً للانضمام.';
+
+  @override
+  String get guidelineIdentityTitle => 'مستندات الهوية';
+
+  @override
+  String get guidelineIdentityBody =>
+      'مستندات الهوية مطلوبة للمساعدة في الحفاظ على مجتمع أكثر أمانًا.';
+
+  @override
+  String get guidelineReportTitle => 'أبلغ عندما يحدث خطأ';
+
+  @override
+  String get guidelineReportBody =>
+      'يمكنك الإبلاغ عن مستخدمين أو فعاليات أو رسائل. يراجع المشرفون البلاغات ويمكنهم اتخاذ إجراء.';
+
+  @override
+  String get guidelineBlockTitle => 'حظر المستخدمين';
+
+  @override
+  String get guidelineBlockBody =>
+      'الحظر يخفي فعاليات ذلك الشخص من اكتشافك ويوقف تفاعلات الانضمام/المحادثة بينكما.';
+
+  @override
+  String get guidelinesDisclaimer =>
+      'هذه الأدوات تساعد في الحفاظ على مجتمع أكثر أماناً. وهي لا تضمن أن كل تفاعل خالٍ من المخاطر.';
+
+  @override
+  String get blockedUsers => 'المستخدمون المحظورون';
+
+  @override
+  String confirmUnblock(String name) {
+    return 'إلغاء حظر $name؟';
+  }
+
+  @override
+  String get userUnblocked => 'تم إلغاء الحظر';
+
+  @override
+  String get accountDeactivatedTitle => 'تم إيقاف الحساب';
+
+  @override
+  String get accountDeactivatedBody =>
+      'تم إيقاف حسابك بواسطة المسؤول. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.';
+
+  @override
+  String get reportTitle => 'إرسال بلاغ';
+
+  @override
+  String get reportType => 'ماذا تبلّغ عنه؟';
+
+  @override
+  String get reportTypeUser => 'مستخدم';
+
+  @override
+  String get reportTypeEvent => 'فعالية';
+
+  @override
+  String get reportTypeMessage => 'رسالة';
+
+  @override
+  String get reportableId => 'المعرّف';
+
+  @override
+  String get browseAsGuest => 'تصفّح الفعاليات';
+
+  @override
+  String get continueWithGoogle => 'المتابعة باستخدام Google';
+
+  @override
+  String get loginRequired => 'يرجى تسجيل الدخول للمتابعة';
+
+  @override
+  String get googleSignInFailed =>
+      'فشل تسجيل الدخول عبر Google. تأكد من إعداد Google لهذا التطبيق.';
+
+  @override
+  String get loadMore => 'تحميل المزيد';
+}

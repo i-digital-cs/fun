@@ -1,0 +1,507 @@
+import 'package:dio/dio.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/domain/events_repository.dart';
+
+class EventsRemoteSource {
+  EventsRemoteSource(this._client);
+
+  final ApiClient _client;
+
+  Future<({Failure? failure, PaginatedEvents? data})> discover(
+    DiscoverFilters filters,
+  ) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events',
+        queryParameters: filters.toQuery(),
+      );
+      final body = response.data;
+      if (body == null) {
+        return (
+          failure: const ServerFailure('Empty response from server'),
+          data: null,
+        );
+      }
+      return (failure: null, data: _parsePage(body));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: ServerFailure(e.toString()), data: null);
+    }
+  }
+
+  Future<({Failure? failure, PaginatedEvents? data})> mine({int page = 1}) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/my-events',
+        queryParameters: {'page': page},
+      );
+      return (failure: null, data: _parsePage(response.data!));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventDetail? data})> show(int id) async {
+    try {
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/events/$id');
+      final body = response.data!;
+      final data = body['data'] as Map<String, dynamic>? ?? body;
+      final event = parseEvent(data);
+      final myRatingJson = body['my_rating'];
+      final creatorJson = body['creator_rating'];
+      return (
+        failure: null,
+        data: EventDetail(
+          event: event.copyWith(
+            joinAction: body['join_action'] as String? ?? event.joinAction,
+            readyForRatings: body['ready_for_ratings'] as bool? ?? false,
+          ),
+          joinAction: body['join_action'] as String? ?? event.joinAction ?? 'not_available',
+          readyForRatings: body['ready_for_ratings'] as bool? ?? false,
+          canRate: body['can_rate'] as bool? ?? false,
+          myRating: myRatingJson is Map<String, dynamic>
+              ? _parseRating(myRatingJson)
+              : null,
+          creatorRating: creatorJson is Map<String, dynamic>
+              ? CreatorRating(
+                  average: (creatorJson['average'] as num?)?.toDouble(),
+                  count: creatorJson['count'] as int? ?? 0,
+                )
+              : null,
+        ),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventItem? data})> create(EventDraft draft) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events',
+        data: await _formData(draft),
+      );
+      final body = response.data!;
+      final data = body['data'] as Map<String, dynamic>? ?? body;
+      return (failure: null, data: parseEvent(data));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventItem? data})> update(
+    int id,
+    EventDraft draft,
+  ) async {
+    try {
+      final response = await _client.dio.put<dynamic>(
+        '/events/$id',
+        data: await _formData(draft),
+      );
+      final body = response.data;
+      if (body is Map) {
+        final map = Map<String, dynamic>.from(body);
+        final data = map['data'] is Map
+            ? Map<String, dynamic>.from(map['data'] as Map)
+            : map;
+        return (failure: null, data: parseEvent(data));
+      }
+      return (failure: const ServerFailure('Unexpected response'), data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventItem? data})> _transition(
+    String path,
+  ) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(path);
+      final body = response.data!;
+      final data = body['data'] as Map<String, dynamic>? ?? body;
+      return (failure: null, data: parseEvent(data));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventItem? data})> publish(int id) =>
+      _transition('/events/$id/publish');
+
+  Future<({Failure? failure, EventItem? data})> cancel(int id) =>
+      _transition('/events/$id/cancel');
+
+  Future<({Failure? failure, EventItem? data})> complete(int id) =>
+      _transition('/events/$id/complete');
+
+  Future<({Failure? failure, String? data})> join(
+    int id, {
+    String? message,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events/$id/join',
+        data: {if (message != null && message.isNotEmpty) 'message': message},
+      );
+      return (
+        failure: null,
+        data: response.data?['join_action'] as String? ?? 'request_pending',
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> leave(int id) async {
+    try {
+      await _client.dio.post<void>('/events/$id/leave');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<JoinRequestItem>? data})> joinRequests(
+    int id,
+  ) async {
+    try {
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/events/$id/requests');
+      final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
+        final m = e as Map<String, dynamic>;
+        final user = m['user'] as Map<String, dynamic>? ?? {};
+        return JoinRequestItem(
+          id: m['id'] as int,
+          status: m['status'] as String? ?? 'pending',
+          userId: user['id'] as int? ?? m['user_id'] as int? ?? 0,
+          userName: user['name'] as String? ?? '',
+        );
+      }).toList();
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> acceptRequest(
+    int eventId,
+    int requestId,
+  ) async {
+    try {
+      await _client.dio
+          .post<void>('/events/$eventId/requests/$requestId/accept');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> rejectRequest(
+    int eventId,
+    int requestId,
+  ) async {
+    try {
+      await _client.dio
+          .post<void>('/events/$eventId/requests/$requestId/reject');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<EventMember>? data})> members(int id) async {
+    try {
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/events/$id/members');
+      final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
+        final m = e as Map<String, dynamic>;
+        return EventMember(
+          userId: m['user_id'] as int? ?? m['id'] as int? ?? 0,
+          name: m['name'] as String? ??
+              (m['user'] is Map ? (m['user'] as Map)['name'] as String? : null) ??
+              '',
+          role: m['role'] as String? ?? 'member',
+        );
+      }).toList();
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> promoteMember(
+    int eventId,
+    int userId,
+  ) async {
+    try {
+      await _client.dio.post<void>('/events/$eventId/members/$userId/promote');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> demoteMember(
+    int eventId,
+    int userId,
+  ) async {
+    try {
+      await _client.dio.post<void>('/events/$eventId/members/$userId/demote');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> transferOwnership(
+    int eventId,
+    int userId,
+  ) async {
+    try {
+      await _client.dio.post<void>(
+        '/events/$eventId/transfer',
+        data: {'user_id': userId},
+      );
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<ChatMessage>? data})> messages(int id) async {
+    try {
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/events/$id/messages');
+      final raw = response.data!['data'] as List<dynamic>? ?? [];
+      final list = raw.map((e) => _parseMessage(e as Map<String, dynamic>)).toList();
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, ChatMessage? data})> postMessage(
+    int id,
+    String body,
+  ) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events/$id/messages',
+        data: {'body': body},
+      );
+      final data = response.data!['data'] as Map<String, dynamic>? ??
+          response.data!;
+      return (failure: null, data: _parseMessage(data));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<EventRating>? data})> ratings(int id) async {
+    try {
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/events/$id/ratings');
+      final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
+        return _parseRating(e as Map<String, dynamic>);
+      }).toList();
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventRating? data})> myRating(int id) async {
+    try {
+      final response = await _client.dio
+          .get<Map<String, dynamic>>('/events/$id/ratings/me');
+      final data = response.data!['data'];
+      if (data == null) return (failure: null, data: null);
+      return (
+        failure: null,
+        data: _parseRating(data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventRating? data})> rate(
+    int id, {
+    required int stars,
+    String? comment,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events/$id/ratings',
+        data: {
+          'stars': stars,
+          if (comment != null && comment.isNotEmpty) 'comment': comment,
+        },
+      );
+      final data = response.data!['data'] as Map<String, dynamic>? ??
+          response.data!;
+      return (failure: null, data: _parseRating(data));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  PaginatedEvents _parsePage(Map<String, dynamic> body) {
+    final rawList = body['data'];
+    final list = <EventItem>[];
+    if (rawList is List) {
+      for (final e in rawList) {
+        if (e is Map) {
+          list.add(parseEvent(Map<String, dynamic>.from(e)));
+        }
+      }
+    }
+    final meta = _asStringKeyedMap(body['meta']);
+    final currentPage = _asInt(meta['current_page']) ??
+        _asInt(body['current_page']) ??
+        1;
+    final lastPage =
+        _asInt(meta['last_page']) ?? _asInt(body['last_page']) ?? currentPage;
+    return PaginatedEvents(
+      items: list,
+      currentPage: currentPage,
+      lastPage: lastPage,
+    );
+  }
+
+  static Map<String, dynamic> _asStringKeyedMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return {};
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim());
+    return null;
+  }
+
+  static num? _asNum(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value;
+    if (value is String) return num.tryParse(value.trim());
+    return null;
+  }
+
+  static EventItem parseEvent(Map<String, dynamic> json) {
+    final categoryRaw = json['category'];
+    final cityRaw = json['city'];
+    final category = categoryRaw is Map
+        ? Map<String, dynamic>.from(categoryRaw)
+        : null;
+    final city =
+        cityRaw is Map ? Map<String, dynamic>.from(cityRaw) : null;
+
+    return EventItem(
+      id: _asInt(json['id']) ?? 0,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      requirements: json['requirements'] as String?,
+      expectedCost: json['expected_cost']?.toString(),
+      venue: json['venue'] as String? ?? '',
+      startsAt: json['starts_at'] is String
+          ? DateTime.tryParse(json['starts_at'] as String)
+          : null,
+      endsAt: json['ends_at'] is String
+          ? DateTime.tryParse(json['ends_at'] as String)
+          : null,
+      maxParticipants: _asInt(json['max_participants']) ?? 0,
+      membersCount: _asInt(json['members_count']) ?? 0,
+      costPerPerson: _asNum(json['cost_per_person']),
+      imageUrl: json['image_url'] as String?,
+      status: json['status'] as String?,
+      distanceKm: _asNum(json['distance_km'])?.toDouble(),
+      joinAction: json['join_action'] as String?,
+      createdBy: _asInt(json['created_by']),
+      readyForRatings: json['ready_for_ratings'] as bool? ?? false,
+      categoryId: _asInt(json['category_id']) ?? _asInt(category?['id']),
+      cityId: _asInt(json['city_id']) ?? _asInt(city?['id']),
+      category: category != null
+          ? EventCategory(
+              id: _asInt(category['id']) ?? 0,
+              name: category['name'] as String? ?? '',
+              nameEn: category['name_en'] as String?,
+              nameAr: category['name_ar'] as String?,
+            )
+          : null,
+      city: city != null
+          ? EventCity(
+              id: _asInt(city['id']) ?? 0,
+              name: city['name'] as String? ?? '',
+              nameEn: city['name_en'] as String?,
+              nameAr: city['name_ar'] as String?,
+            )
+          : null,
+    );
+  }
+
+  EventRating _parseRating(Map<String, dynamic> json) {
+    final rater = json['rater'];
+    return EventRating(
+      id: json['id'] as int,
+      stars: json['stars'] as int? ?? 0,
+      comment: json['comment'] as String?,
+      raterName: rater is Map ? rater['name'] as String? : null,
+    );
+  }
+
+  ChatMessage _parseMessage(Map<String, dynamic> json) {
+    final user = json['user'];
+    return ChatMessage(
+      id: json['id'] as int,
+      eventId: json['event_id'] as int? ?? 0,
+      body: json['body'] as String? ?? '',
+      isSystem: json['is_system'] as bool? ?? false,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String)
+          : null,
+      userId: user is Map ? user['id'] as int? : null,
+      userName: user is Map ? user['name'] as String? : null,
+    );
+  }
+
+  Future<FormData> _formData(
+    EventDraft draft, {
+    String? methodOverride,
+  }) async {
+    final map = <String, dynamic>{
+      'title': draft.title,
+      'category_id': draft.categoryId,
+      'city_id': draft.cityId,
+      'starts_at': draft.startsAt.toIso8601String(),
+      'max_participants': draft.maxParticipants,
+      'description': ?draft.description,
+      'venue': ?draft.venue,
+      if (draft.endsAt != null) 'ends_at': draft.endsAt!.toIso8601String(),
+      'requirements': ?draft.requirements,
+      'expected_cost': ?draft.expectedCost,
+      if (draft.costPerPerson != null) 'cost_per_person': draft.costPerPerson,
+      '_method': ?methodOverride,
+    };
+
+    final form = FormData.fromMap(map);
+    if (draft.imagePath != null && draft.imagePath!.isNotEmpty) {
+      form.files.add(
+        MapEntry(
+          'image',
+          await MultipartFile.fromFile(
+            draft.imagePath!,
+            filename: draft.imagePath!.split(RegExp(r'[\\/]')).last,
+          ),
+        ),
+      );
+    }
+    return form;
+  }
+}

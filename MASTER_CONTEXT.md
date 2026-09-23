@@ -59,6 +59,19 @@ The platform facilitates:
 * Tailwind CSS
 * Responsive frontend
 
+## Mobile
+
+* Flutter client in `mobile/`
+* Consumes the Laravel Sanctum API (production default: `https://fun.idigital-cs.com/api`)
+* UI must mirror member Blade screens + `DESIGN.md` / `mobile/docs/DESIGN.md`
+* Flutter documentation (source of truth for the mobile app):
+  * `mobile/ROADMAP.md` — Flutter phases & tasks (session continuity for mobile)
+  * `mobile/docs/FLUTTER_PRINCIPLES.md` — Flutter principles, stack rules, Blade-parity rules
+  * `mobile/docs/FLUTTER_BEST_PRACTICES.md` — deep Flutter/Dart production standards
+  * `mobile/docs/DESIGN.md` — design tokens copied for the mobile tree
+  * `mobile/docs/postman/` — API collection used by the client
+  * `mobile/README.md` — how to run the app
+
 ## API
 
 * Laravel API
@@ -103,7 +116,7 @@ Business logic must not be duplicated between:
 
 * Blade
 * API
-* future mobile applications
+* Flutter mobile (`mobile/`)
 * Admin
 
 Preferred flow:
@@ -796,10 +809,26 @@ The project documentation hierarchy is:
 
 1. MASTER_CONTEXT.md — product/business source of truth
 2. AGENT.md — engineering/AI execution rules
-3. DESIGN.md — UI/UX/design source of truth
-4. ROADMAP.md — implementation task roadmap and session continuity
+3. DESIGN.md — UI/UX/design source of truth (Blade + Flutter)
+4. ROADMAP.md — **Laravel / backend / Blade** implementation task roadmap and session continuity
 5. Actual tested implementation
+
+### Flutter mobile documentation
+
+When the task is Flutter / `mobile/` work, the mobile docs are authoritative for client scope:
+
+1. `mobile/ROADMAP.md` — Flutter phases, Blade-parity tasks, session continuity for mobile
+2. `mobile/docs/FLUTTER_PRINCIPLES.md` — Flutter principles & locked stack for this app
+3. `mobile/docs/FLUTTER_BEST_PRACTICES.md` — detailed Flutter/Dart standards
+4. `mobile/docs/DESIGN.md` — design system copy used by the Flutter tree (same tokens as root `DESIGN.md`)
+5. `mobile/docs/postman/` — HTTP API contracts for the client
+6. `mobile/README.md` — run instructions
+
+Do not invent Flutter architecture or screens outside `mobile/ROADMAP.md` and `mobile/docs/FLUTTER_PRINCIPLES.md`.
 
 If documentation conflicts with implementation, stop and resolve the conflict instead of silently choosing one.
 
-Any new AI/agent session must read ROADMAP.md and continue from the first incomplete task.
+Any new AI/agent session must:
+
+* For **Laravel / Blade / API** work: read root `ROADMAP.md` and continue from the first incomplete task.
+* For **Flutter / `mobile/`** work: read `mobile/ROADMAP.md` and `mobile/docs/FLUTTER_PRINCIPLES.md`, then continue from the first incomplete mobile task.

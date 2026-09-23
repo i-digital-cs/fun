@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Admin\ReportModerationController as ApiReportModera
 use App\Http\Controllers\Api\Admin\SiteSettingsController as ApiSiteSettingsController;
 use App\Http\Controllers\Api\Admin\UserModerationController as ApiUserModerationController;
 use App\Http\Controllers\Api\Auth\EmailVerificationController;
+use App\Http\Controllers\Api\Auth\GoogleLoginController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\MeController;
 use App\Http\Controllers\Api\Auth\PasswordResetController;
@@ -36,6 +37,7 @@ Route::get('/events/{event}/ratings', [ApiEventRatingController::class, 'index']
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [RegisterController::class, 'store']);
     Route::post('/login', [LoginController::class, 'store']);
+    Route::post('/auth/google', [GoogleLoginController::class, 'store']);
 });
 
 Route::middleware('throttle:auth-codes')->group(function () {

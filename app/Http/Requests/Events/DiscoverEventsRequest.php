@@ -45,7 +45,11 @@ class DiscoverEventsRequest extends FormRequest
             $filters['category_id'] = $this->integer('category_id');
         }
 
-        if ($this->has('city_id')) {
+        // Explicit `city_id` key (even empty) = user chose All cities / nationwide.
+        // Prefer the query bag so empty `city_id=` survives ConvertEmptyStringsToNull.
+        if (array_key_exists('city_id', $this->query())) {
+            $filters['city_id'] = $this->filled('city_id') ? $this->integer('city_id') : null;
+        } elseif ($this->exists('city_id')) {
             $filters['city_id'] = $this->filled('city_id') ? $this->integer('city_id') : null;
         }
 

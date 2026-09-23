@@ -7,15 +7,20 @@
 Before changing code:
 
 1. Read `MASTER_CONTEXT.md`.
-2. Read `ROADMAP.md` and continue from the first incomplete task (update statuses when a task finishes).
-3. Read `DESIGN.md` when UI/frontend is involved.
-4. Inspect the existing implementation.
-5. Inspect migrations and database schema.
-6. Inspect routes.
-7. Inspect models.
-8. Inspect services.
-9. Inspect policies/authorization.
-10. Inspect existing tests.
+2. Choose the correct roadmap:
+   * **Laravel / Blade / API:** read root `ROADMAP.md` and continue from the first incomplete task (update statuses when a task finishes).
+   * **Flutter / `mobile/`:** read `mobile/ROADMAP.md` and `mobile/docs/FLUTTER_PRINCIPLES.md`, then continue from the first incomplete mobile task (update statuses in `mobile/ROADMAP.md` when a task finishes).
+3. Read design docs when UI is involved:
+   * Blade: root `DESIGN.md`
+   * Flutter: `mobile/docs/DESIGN.md` + `mobile/docs/FLUTTER_PRINCIPLES.md` (Blade remains the visual source of truth; Flutter mirrors member Blade screens)
+4. For Flutter work, also skim `mobile/docs/FLUTTER_BEST_PRACTICES.md` and `mobile/docs/postman/` when touching architecture or API integration.
+5. Inspect the existing implementation.
+6. Inspect migrations and database schema (backend tasks).
+7. Inspect routes (web/api or `mobile` go_router as relevant).
+8. Inspect models / domain entities.
+9. Inspect services / repositories.
+10. Inspect policies/authorization (backend) or account gates (Flutter).
+11. Inspect existing tests.
 
 Do not assume the repository is empty or that a requested feature does not already exist.
 
@@ -89,7 +94,10 @@ Report:
 * security checks
 * known limitations
 
-Then update `ROADMAP.md` task status before ending the session.
+Then update the correct roadmap task status before ending the session:
+
+* Laravel / Blade / API → root `ROADMAP.md`
+* Flutter → `mobile/ROADMAP.md`
 
 ---
 
@@ -377,13 +385,28 @@ Test:
 
 # 17. UI
 
-UI must follow `DESIGN.md`.
+## Blade
+
+UI must follow root `DESIGN.md`.
 
 Do not create isolated styles that conflict with the design system.
 
 Responsive behavior is required.
 
 RTL/LTR behavior is required. English is LTR; Arabic is RTL. Layouts, icons, and spacing must flip correctly with locale.
+
+## Flutter (`mobile/`)
+
+Flutter UI and client work must follow:
+
+* `mobile/docs/FLUTTER_PRINCIPLES.md` — principles, stack, Blade-parity rules
+* `mobile/docs/DESIGN.md` — same design tokens as Blade
+* `mobile/ROADMAP.md` — what to implement next
+* Member Blade screens as the visual/UX source (adapt to bottom nav; do not invent a second design system)
+
+Deep standards live in `mobile/docs/FLUTTER_BEST_PRACTICES.md`.
+
+API integration must match `mobile/docs/postman/` and the Laravel API — do not invent endpoints or field names.
 
 ---
 

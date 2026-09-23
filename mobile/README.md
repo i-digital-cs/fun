@@ -1,0 +1,55 @@
+# Fun Mobile
+
+Flutter client for the Fun community activity platform.
+
+## Docs (start here)
+
+| Doc | Purpose |
+|-----|---------|
+| [`ROADMAP.md`](ROADMAP.md) | Phases & tasks (Blade parity plan) |
+| [`docs/FLUTTER_PRINCIPLES.md`](docs/FLUTTER_PRINCIPLES.md) | App principles & stack rules |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | Visual system (same as Blade) |
+| [`docs/FLUTTER_BEST_PRACTICES.md`](docs/FLUTTER_BEST_PRACTICES.md) | Deep Flutter standards |
+| [`docs/postman/`](docs/postman/) | API collection |
+
+## Stack
+
+- Clean Architecture (`features/*/data|domain|presentation`)
+- Riverpod, Dio, go_router
+- Design tokens from `docs/DESIGN.md` / Blade UI
+- EN + AR (RTL)
+- Sanctum Bearer auth → `API_BASE_URL`
+
+## Run
+
+Uses the **online** API by default (`https://fun.idigital-cs.com/api`).
+
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
+
+Optional explicit define (same URL):
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://fun.idigital-cs.com/api
+```
+
+## Structure
+
+```
+lib/
+  app/          # theme, router, FunApp
+  core/         # network, storage, errors, shared widgets
+  features/     # auth, home, discover, events, catalog, profile, identity, safety
+  l10n/         # ARB strings (EN + AR)
+```
+
+## Screens (online API)
+
+- Auth: Login / Register
+- Home + Discover + Event detail (join / leave / owner actions / rate / report)
+- Create / Edit / Publish events
+- My Events, Chat, Join requests
+- Profile: Location, Identity upload, Blocks
