@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
@@ -209,9 +210,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                       const SliverFillRemaining(
                         hasScrollBody: false,
                         child: Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
+                          child: FunLoader(),
                         ),
                       )
                     else if (state.error != null && state.items.isEmpty)
@@ -265,8 +264,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               return const Padding(
                                 padding: EdgeInsets.all(16),
                                 child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.primary,
+                                  child: FunLoader(
+                                    size: FunLoaderSize.sm,
+                                    showLabel: false,
                                   ),
                                 ),
                               );

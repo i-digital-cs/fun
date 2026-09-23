@@ -122,4 +122,6 @@ abstract class EventsRepository {
   Future<Result<List<EventRating>>> ratings(int id);
   Future<Result<EventRating?>> myRating(int id);
   Future<Result<EventRating>> rate(int id, {required int stars, String? comment});
+
+  Future<Result<NowPlayingFeed>> nowPlaying({int? cityId});
 }

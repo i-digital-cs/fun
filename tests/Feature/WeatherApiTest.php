@@ -94,7 +94,7 @@ class WeatherApiTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('weather-card', false)
+            ->assertSee('weather-panel', false)
             ->assertSee('Obour', false)
             ->assertSee('30°', false);
     }
@@ -127,7 +127,7 @@ class WeatherApiTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('weather-card', false)
+            ->assertSee('weather-panel', false)
             ->assertSee(__('weather.section_title'), false)
             ->assertSee('34°', false);
     }

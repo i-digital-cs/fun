@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 
 class GradientButton extends StatelessWidget {
   const GradientButton({
@@ -65,13 +66,9 @@ class GradientButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Center(
               child: isLoading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
+                  ? const FunLoader(
+                      size: FunLoaderSize.sm,
+                      showLabel: false,
                     )
                   : Row(
                       mainAxisSize: MainAxisSize.min,

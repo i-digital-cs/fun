@@ -44,6 +44,7 @@
 
     <x-ui.cancel-filters />
     <x-ui.confirm-dialog />
+    <x-ui.page-loader />
     @auth
         <x-ui.chat-toast-host />
     @endauth

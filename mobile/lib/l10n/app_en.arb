@@ -73,6 +73,28 @@
   "viewEvent": "View Event",
   "members": "members",
   "free": "Free",
+  "currencyShort": "EGP",
+  "costPerPersonAmount": "{amount} EGP / person",
+  "@costPerPersonAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingTitle": "Live on {brand}",
+  "@nowPlayingTitle": {
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingLive": "Happening now",
+  "nowPlayingIdle": "Nothing live right now — up next below.",
+  "nowPlayingUpNext": "Up next",
+  "nowPlayingPrevious": "Just wrapped",
+  "eventsLabel": "Events",
   "almostFull": "Almost full",
   "fillingFast": "Filling fast",
   "newBadge": "New",

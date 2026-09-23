@@ -4,6 +4,7 @@ import 'package:fun_mobile/features/auth/presentation/account_deactivated_page.d
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/login_page.dart';
 import 'package:fun_mobile/features/auth/presentation/register_page.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/features/events/presentation/create_event_page.dart';
 import 'package:fun_mobile/features/events/presentation/event_chat_page.dart';
@@ -254,7 +255,7 @@ class _SplashPageState extends ConsumerState<_SplashPage> {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: FunLoader(size: FunLoaderSize.lg),
       ),
     );
   }

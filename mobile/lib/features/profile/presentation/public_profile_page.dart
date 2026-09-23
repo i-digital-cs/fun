@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/profile/data/public_profile_remote_source.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -59,7 +60,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
       backgroundColor: AppColors.canvas,
       appBar: AppBar(title: Text(l10n.publicProfile)),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: FunLoader())
           : _error != null
               ? Center(child: Text(_error!))
                   : _profile == null

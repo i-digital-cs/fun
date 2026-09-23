@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/safety/data/safety_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 
@@ -135,10 +136,9 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
                 return TextButton(
                   onPressed: _loadingMore ? null : () => _load(append: true),
                   child: _loadingMore
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                      ? const FunLoader(
+                          size: FunLoaderSize.sm,
+                          showLabel: false,
                         )
                       : Text(l10n.loadMore),
                 );

@@ -46,6 +46,7 @@
 
     <x-ui.cancel-filters />
     <x-ui.confirm-dialog />
+    <x-ui.page-loader />
 
     @stack('scripts')
 </body>

@@ -394,6 +394,49 @@ class EventsRemoteSource {
     return {};
   }
 
+  Future<({Failure? failure, NowPlayingFeed? data})> nowPlaying({
+    int? cityId,
+  }) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/now-playing',
+        queryParameters: {
+          if (cityId != null) 'city_id': cityId,
+        },
+      );
+      final body = response.data ?? const <String, dynamic>{};
+      final data = body['data'] is Map<String, dynamic>
+          ? body['data'] as Map<String, dynamic>
+          : body;
+
+      EventItem? parseOne(dynamic raw) {
+        if (raw is! Map) return null;
+        return parseEvent(Map<String, dynamic>.from(raw));
+      }
+
+      List<EventItem> parseMany(dynamic raw) {
+        if (raw is! List) return const [];
+        return raw
+            .whereType<Map>()
+            .map((e) => parseEvent(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+
+      return (
+        failure: null,
+        data: NowPlayingFeed(
+          running: parseOne(data['running']),
+          next: parseMany(data['next']),
+          previous: parseMany(data['previous']),
+        ),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: ServerFailure(e.toString()), data: null);
+    }
+  }
+
   static int? _asInt(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();

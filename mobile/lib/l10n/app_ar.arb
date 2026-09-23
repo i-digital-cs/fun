@@ -52,6 +52,28 @@
   "viewEvent": "عرض الفعالية",
   "members": "أعضاء",
   "free": "مجاني",
+  "currencyShort": "ج.م",
+  "costPerPersonAmount": "{amount} ج.م / فرد",
+  "@costPerPersonAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingTitle": "مباشر على {brand}",
+  "@nowPlayingTitle": {
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingLive": "جارية الآن",
+  "nowPlayingIdle": "لا يوجد شيء مباشر الآن — التالي بالأسفل.",
+  "nowPlayingUpNext": "التالي",
+  "nowPlayingPrevious": "انتهت للتو",
+  "eventsLabel": "فعاليات",
   "almostFull": "شبه ممتلئ",
   "fillingFast": "يمتلئ بسرعة",
   "newBadge": "جديد",

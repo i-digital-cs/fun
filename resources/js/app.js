@@ -3,6 +3,7 @@ import { initLiveSearch } from './live-search';
 import { initAttachmentFolders } from './attachment-folder';
 import { initConfirmDialog } from './confirm-dialog';
 import { initChatToasts } from './chat-toast';
+import { initPageLoader } from './page-loader';
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -35,3 +36,6 @@ document.documentElement.dataset.confirmDialogReady = '1';
 
 initChatToasts();
 document.documentElement.dataset.chatToastReady = '1';
+
+initPageLoader();
+document.documentElement.dataset.pageLoaderReady = '1';

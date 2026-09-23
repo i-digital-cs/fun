@@ -175,6 +175,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get free => 'مجاني';
 
   @override
+  String get currencyShort => 'ج.م';
+
+  @override
+  String costPerPersonAmount(String amount) => '$amount ج.م / فرد';
+
+  @override
+  String nowPlayingTitle(String brand) => 'مباشر على $brand';
+
+  @override
+  String get nowPlayingLive => 'جارية الآن';
+
+  @override
+  String get nowPlayingIdle => 'لا يوجد شيء مباشر الآن — التالي بالأسفل.';
+
+  @override
+  String get nowPlayingUpNext => 'التالي';
+
+  @override
+  String get nowPlayingPrevious => 'انتهت للتو';
+
+  @override
+  String get eventsLabel => 'فعاليات';
+
+  @override
   String get almostFull => 'شبه ممتلئ';
 
   @override

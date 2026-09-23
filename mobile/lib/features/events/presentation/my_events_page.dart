@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -115,8 +116,9 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
                         return const Padding(
                           padding: EdgeInsets.all(16),
                           child: Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primary,
+                            child: FunLoader(
+                              size: FunLoaderSize.sm,
+                              showLabel: false,
                             ),
                           ),
                         );

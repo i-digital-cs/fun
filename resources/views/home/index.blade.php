@@ -13,7 +13,7 @@
         :stats="$stats"
     />
 
-    <section class="mx-auto max-w-6xl px-4 sm:px-6">
+    <section class="mt-8 overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white/80 p-5 shadow-sm shadow-slate-900/5 backdrop-blur sm:p-6">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
                 <h2 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">{{ __('weather.section_title') }}</h2>
@@ -25,15 +25,18 @@
                 <a href="{{ route('login') }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-800">{{ __('weather.sign_in_for_local') }}</a>
             @endauth
         </div>
-        <div class="mt-4 flex justify-center sm:justify-start">
-            <x-dashboard.weather-card :weather="$weather" />
-        </div>
-        <div class="mt-5 max-w-md">
-            <x-dashboard.now-playing
-                :running="$nowPlaying['running'] ?? null"
-                :next="$nowPlaying['next'] ?? []"
-                :previous="$nowPlaying['previous'] ?? []"
-            />
+        <div class="mt-5 grid items-stretch gap-4 lg:grid-cols-2">
+            <div class="min-w-0">
+                <x-dashboard.weather-card class="h-full" :weather="$weather" />
+            </div>
+            <div class="min-w-0">
+                <x-dashboard.now-playing
+                    class="h-full"
+                    :running="$nowPlaying['running'] ?? null"
+                    :next="$nowPlaying['next'] ?? []"
+                    :previous="$nowPlaying['previous'] ?? []"
+                />
+            </div>
         </div>
     </section>
 

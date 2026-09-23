@@ -176,6 +176,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get free => 'Free';
 
   @override
+  String get currencyShort => 'EGP';
+
+  @override
+  String costPerPersonAmount(String amount) => '$amount EGP / person';
+
+  @override
+  String nowPlayingTitle(String brand) => 'Live on $brand';
+
+  @override
+  String get nowPlayingLive => 'Happening now';
+
+  @override
+  String get nowPlayingIdle => 'Nothing live right now — up next below.';
+
+  @override
+  String get nowPlayingUpNext => 'Up next';
+
+  @override
+  String get nowPlayingPrevious => 'Just wrapped';
+
+  @override
+  String get eventsLabel => 'Events';
+
+  @override
   String get almostFull => 'Almost full';
 
   @override

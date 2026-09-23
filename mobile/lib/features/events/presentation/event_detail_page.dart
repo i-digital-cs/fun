@@ -532,7 +532,7 @@ class EventDetailInfoCard extends StatelessWidget {
           if (!event.isFree) ...[
             const SizedBox(height: 12),
             Text(
-              '${l10n.costPerPerson}: ${event.costPerPerson}',
+              l10n.costPerPersonAmount('${event.costPerPerson}'),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],

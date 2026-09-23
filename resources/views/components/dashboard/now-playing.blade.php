@@ -32,68 +32,88 @@
 @if ($hasAny)
     <div {{ $attributes->class(['now-playing']) }}>
         <div class="now-playing__header">
-            @if ($logoUrl)
-                <img src="{{ $logoUrl }}" alt="" class="now-playing__brand-mark">
-            @else
-                <span class="now-playing__brand-fallback" aria-hidden="true">{{ mb_substr($brand, 0, 1) }}</span>
-            @endif
-            <p class="now-playing__heading">{{ __('dashboard.now_playing_title', ['brand' => $brand]) }}</p>
-        </div>
-
-        @if ($running)
-            <a href="{{ route('events.show', $running) }}" class="now-playing__row now-playing__row--live">
-                <div class="now-playing__meta">
-                    <p class="now-playing__name">{{ $running->title }}</p>
-                    <p class="now-playing__artist">
-                        {{ $running->category?->localizedName() ?? __('events.events') }}
-                        @if ($running->city) · {{ $running->city->localizedName() }} @endif
+            <div class="now-playing__brand">
+                @if ($logoUrl)
+                    <img src="{{ $logoUrl }}" alt="" class="now-playing__brand-mark">
+                @else
+                    <span class="now-playing__brand-fallback" aria-hidden="true">{{ mb_substr($brand, 0, 1) }}</span>
+                @endif
+                <div>
+                    <p class="now-playing__title">{{ __('dashboard.now_playing_title', ['brand' => $brand]) }}</p>
+                    <p class="now-playing__subtitle">
+                        @if ($running)
+                            <span class="now-playing__live-dot" aria-hidden="true"></span>
+                            {{ __('dashboard.now_playing_live') }}
+                        @else
+                            {{ __('dashboard.now_playing_idle') }}
+                        @endif
                     </p>
                 </div>
-                <img
-                    src="{{ event_cover_url($running->imageUrl(), $running->id) }}"
-                    alt=""
-                    class="now-playing__cover"
-                >
-                <div class="now-playing__eq" aria-hidden="true">
-                    <span class="now-playing__bar"></span>
-                    <span class="now-playing__bar"></span>
-                    <span class="now-playing__bar"></span>
-                    <span class="now-playing__bar"></span>
-                </div>
-            </a>
-            <p class="now-playing__live-label">{{ __('dashboard.now_playing_live') }}</p>
-        @else
-            <p class="now-playing__idle">{{ __('dashboard.now_playing_idle') }}</p>
-        @endif
+            </div>
+            <a href="{{ route('events.index') }}" class="now-playing__browse">{{ __('events.discover') }}</a>
+        </div>
 
-        @foreach ($next as $event)
-            <a href="{{ route('events.show', $event) }}" class="now-playing__row">
-                <div class="now-playing__meta">
-                    <p class="now-playing__name">{{ $event->title }}</p>
-                    <p class="now-playing__artist">{{ __('dashboard.now_playing_up_next') }} · {{ $timeLabel($event) }}</p>
-                </div>
-                <img
-                    src="{{ event_cover_url($event->imageUrl(), $event->id) }}"
-                    alt=""
-                    class="now-playing__cover"
-                >
-                <span class="now-playing__play" aria-hidden="true"></span>
-            </a>
-        @endforeach
+        <div class="now-playing__list">
+            @if ($running)
+                <a href="{{ route('events.show', $running) }}" class="now-playing__row now-playing__row--live">
+                    <img
+                        src="{{ event_cover_url($running->imageUrl(), $running->id) }}"
+                        alt=""
+                        class="now-playing__cover"
+                    >
+                    <span class="now-playing__meta">
+                        <span class="now-playing__name">{{ $running->title }}</span>
+                        <span class="now-playing__desc">
+                            {{ $running->category?->localizedName() ?? __('events.events') }}
+                            @if ($running->city) · {{ $running->city->localizedName() }} @endif
+                        </span>
+                    </span>
+                    <span class="now-playing__eq" aria-hidden="true">
+                        <span class="now-playing__bar"></span>
+                        <span class="now-playing__bar"></span>
+                        <span class="now-playing__bar"></span>
+                        <span class="now-playing__bar"></span>
+                    </span>
+                </a>
+            @endif
 
-        @foreach ($previous as $event)
-            <a href="{{ route('events.show', $event) }}" class="now-playing__row now-playing__row--past">
-                <div class="now-playing__meta">
-                    <p class="now-playing__name">{{ $event->title }}</p>
-                    <p class="now-playing__artist">{{ __('dashboard.now_playing_previous') }} · {{ $timeLabel($event) }}</p>
-                </div>
-                <img
-                    src="{{ event_cover_url($event->imageUrl(), $event->id) }}"
-                    alt=""
-                    class="now-playing__cover"
-                >
-                <span class="now-playing__play" aria-hidden="true"></span>
-            </a>
-        @endforeach
+            @foreach ($next as $event)
+                <a href="{{ route('events.show', $event) }}" class="now-playing__row">
+                    <img
+                        src="{{ event_cover_url($event->imageUrl(), $event->id) }}"
+                        alt=""
+                        class="now-playing__cover"
+                    >
+                    <span class="now-playing__meta">
+                        <span class="now-playing__name">{{ $event->title }}</span>
+                        <span class="now-playing__desc">{{ __('dashboard.now_playing_up_next') }} · {{ $timeLabel($event) }}</span>
+                    </span>
+                    <span class="now-playing__chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="rtl:rotate-180">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </span>
+                </a>
+            @endforeach
+
+            @foreach ($previous as $event)
+                <a href="{{ route('events.show', $event) }}" class="now-playing__row now-playing__row--past">
+                    <img
+                        src="{{ event_cover_url($event->imageUrl(), $event->id) }}"
+                        alt=""
+                        class="now-playing__cover"
+                    >
+                    <span class="now-playing__meta">
+                        <span class="now-playing__name">{{ $event->title }}</span>
+                        <span class="now-playing__desc">{{ __('dashboard.now_playing_previous') }} · {{ $timeLabel($event) }}</span>
+                    </span>
+                    <span class="now-playing__chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="rtl:rotate-180">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </span>
+                </a>
+            @endforeach
+        </div>
     </div>
 @endif

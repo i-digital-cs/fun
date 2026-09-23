@@ -303,3 +303,18 @@ class EventDraft {
   final num? costPerPerson;
   final String? imagePath;
 }
+
+class NowPlayingFeed {
+  const NowPlayingFeed({
+    this.running,
+    this.next = const [],
+    this.previous = const [],
+  });
+
+  final EventItem? running;
+  final List<EventItem> next;
+  final List<EventItem> previous;
+
+  bool get hasAny =>
+      running != null || next.isNotEmpty || previous.isNotEmpty;
+}

@@ -60,6 +60,7 @@ return [
     'no_account' => 'ليس لديك حساب؟',
     'have_account' => 'لديك حساب بالفعل؟',
     'searching' => 'جاري البحث',
+    'loading' => 'جارٍ التحميل...',
     'search_empty' => 'لا توجد نتائج بعد',
     'search_see_all' => 'عرض كل النتائج',
     'search_failed' => 'فشل البحث. حاول مرة أخرى.',

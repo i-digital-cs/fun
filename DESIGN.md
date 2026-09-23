@@ -153,18 +153,18 @@ One primary orange CTA per view when possible.
 
 Reuse `x-events.card` / discover card pattern everywhere events are listed.
 
+**Visual:** Uiverse 3D glass (Smit-Prajapati) with brand indigo surfaces — **not** green. Hover tilt + stacked logo circles.
+
 Must show:
 
-* Cover image (real or `public/images/activities/*.png` fallback via `event_cover_url`)
-* Category emoji + name chip
-* Price or Free chip
-* Urgency chip when useful (Almost full / Filling fast / New / Popular)
-* Schedule line (indigo)
-* Title, venue
-* Attendance progress + host initials
-* Full-width orange **View Event** CTA
+* **Event cover image** as a clear top media band (also thumb in logo circle)
+* Category chip + Free/price chip
+* Title, schedule, venue
+* **Members `count / max`** with progress bar
+* Bottom pills + orange **View Event**
+* Favorite + join-state badges when relevant
 
-No flat border-only cards without media treatment on member surfaces.
+Dashboard nearby uses the same component.
 
 ---
 
@@ -200,6 +200,7 @@ Backend remains authority for state.
 
 * Gradient indigo hero with glass search, date chips, stats, tonight highlight
 * Category rail (`fancy-scroll`)
+* Local weather + Live on Funity — equal glass panels (indigo/orange weather themes; light indigo live queue — not dark Uiverse shells)
 * Participation stepper cards
 * Discover grid + orange “Gather neighbors” host CTA card
 * Emerald trust strip

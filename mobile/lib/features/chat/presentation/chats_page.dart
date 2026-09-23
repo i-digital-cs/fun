@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chats_remote_source.dart';
 import 'package:fun_mobile/features/chat/domain/chat_thread.dart';
@@ -35,7 +36,7 @@ class ChatsPage extends ConsumerWidget {
       backgroundColor: AppColors.canvas,
       appBar: AppBar(title: Text(l10n.chatsTitle)),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: FunLoader()),
         error: (error, _) => Center(child: Text(error.toString())),
         data: (payload) {
           if (payload.data.isEmpty) {

@@ -45,6 +45,10 @@
             --err-muted: #64748b;
             --err-indigo: #4f46e5;
             --err-orange: #f97316;
+            --err-cube: #c7d2fe;
+            --err-cube-side: #e0e7ff;
+            --err-cube-top: #eef2ff;
+            --err-cube-hot: #f97316;
         }
         * { box-sizing: border-box; }
         body {
@@ -132,19 +136,102 @@
             color: #334155;
             border: 1px solid #e2e8f0;
         }
-        .error-runner-wrap {
+        .error-visual-wrap {
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            margin: 0.5rem 0 1.25rem;
-            min-height: 160px;
+            gap: 0.25rem;
+            margin: 0.25rem 0 1.5rem;
+            min-height: 220px;
         }
-        /* From Uiverse.io by AatreyuShau — scoped */
+
+        /* From Uiverse.io by csemszepp — scoped */
+        @keyframes error-cubes-hue {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        .error-cubes {
+            position: relative;
+            top: -24px;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: skewY(-20deg);
+            animation: error-cubes-hue 5s linear infinite;
+        }
+        .error-cubes__cube {
+            position: relative;
+            z-index: 2;
+        }
+        .error-cubes__cube:nth-child(2) {
+            z-index: 1;
+            translate: -48px -48px;
+        }
+        .error-cubes__cube:nth-child(3) {
+            z-index: 3;
+            translate: 48px 48px;
+        }
+        .error-cubes__cube > div {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            translate: calc(-56px * var(--x)) calc(-48px * var(--y));
+        }
+        .error-cubes__cube span {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: var(--err-cube);
+            z-index: calc(1 * var(--i));
+            transition: 1.5s;
+        }
+        .error-cubes__cube span:hover {
+            transition: 0s;
+            background: var(--err-cube-hot);
+            filter: drop-shadow(0 0 24px var(--err-cube-hot));
+        }
+        .error-cubes__cube span:hover::before,
+        .error-cubes__cube span:hover::after {
+            transition: 0s;
+            background: var(--err-cube-hot);
+        }
+        .error-cubes__cube span::before {
+            content: "";
+            position: absolute;
+            left: -32px;
+            width: 32px;
+            height: 100%;
+            background: var(--err-cube-side);
+            transform-origin: right;
+            transform: skewY(45deg);
+            transition: 1.5s;
+        }
+        .error-cubes__cube span::after {
+            content: "";
+            position: absolute;
+            top: -32px;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            background: var(--err-cube-top);
+            transform-origin: bottom;
+            transform: skewX(45deg);
+            transition: 1.5s;
+        }
+
+        /* From Uiverse.io by AatreyuShau — runner (secondary) */
         .error-runner {
-            scale: 0.75;
+            scale: 0.45;
             position: relative;
             width: 200px;
-            height: 200px;
-            translate: 10px -20px;
+            height: 120px;
+            translate: 6px -10px;
+            opacity: 0.85;
         }
         .error-runner svg { position: absolute; top: 0; left: 0; }
         .error-runner .head {
@@ -203,18 +290,27 @@
             to { transform: translateY(-50px) translate(-100px); opacity: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
+            .error-cubes { animation: none; }
             .error-runner .head,
             .error-runner .bod,
             .error-runner .legr,
             .error-runner .legl,
             .error-runner #gnd { animation: none; }
         }
+        @media (max-width: 420px) {
+            .error-cubes {
+                scale: 0.85;
+                top: -12px;
+            }
+            .error-visual-wrap { min-height: 190px; }
+        }
     </style>
 </head>
 <body>
     <div class="error-shell">
         <p class="error-brand">{{ $brand }}</p>
-        <div class="error-runner-wrap" aria-hidden="true">
+        <div class="error-visual-wrap" aria-hidden="true">
+            @include('errors.partials.cubes')
             @include('errors.partials.runner')
         </div>
         <span class="error-code">{{ __('errors.code_label', ['code' => $code]) }}</span>

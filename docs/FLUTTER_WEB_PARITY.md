@@ -118,11 +118,10 @@ For each screen:
 **Sections (order):**
 
 1. Hero (`x-community.hero`) — brand, CTA into discover/create  
-2. **Weather** (`x-dashboard.weather-card`) — user city when set, else first active city; guests see sample city + sign-in link  
-3. **Now playing** (`x-dashboard.now-playing`) — live / up next / just wrapped events (`GET /api/events/now-playing`)  
-4. Participations (`x-community.participations`) — **auth + canParticipate only**  
-5. Discover strip (`x-community.discover`) — rich event cards  
-6. Trust (`x-community.trust`)
+2. **Weather + now playing** — equal `lg:grid-cols-2` inside a home glass panel. Weather: indigo/orange/slate theme glass (`weather-panel`). Now playing: light indigo glass list (`x-dashboard.now-playing`). Weather: user city when set, else first active city; guests see sample city + sign-in link. Now playing: live / up next / just wrapped (`GET /api/events/now-playing`)  
+3. Participations (`x-community.participations`) — **auth + canParticipate only**  
+4. Discover strip (`x-community.discover`) — rich event cards  
+5. Trust (`x-community.trust`)
 
 **Flutter note:** Phone apps often skip a separate marketing home and open **Login** or **Member Home (`/dashboard`)**. If you keep a guest home, mirror these four sections. Prefer matching **dashboard** for logged-in users (next screen).
 
@@ -157,7 +156,7 @@ For each screen:
 
 | | |
 |--|--|
-| **Web** | `x-dashboard.weather-card` on `/` (marketing home) and `/dashboard` (nearby sidebar) |
+| **Web** | `x-dashboard.weather-card` → `.weather-panel` on `/` (marketing home) and `/dashboard` (nearby sidebar) — brand glass gradients (indigo / orange sunny / slate cloudy) |
 | **API** | `GET /api/weather?city_id=` (optional; defaults to `user.city_id`) · Bearer |
 | **Source** | [Open-Meteo](https://open-meteo.com/) (no API key) using city `latitude` / `longitude` |
 | **Cache** | ~30 minutes per city + locale |
@@ -192,9 +191,10 @@ For each screen:
 
 | | |
 |--|--|
-| **Web** | `x-dashboard.now-playing` on `/` and `/dashboard` |
+| **Web** | `x-dashboard.now-playing` on `/` and `/dashboard` — light indigo/white glass panel (brand mark, live orange pulse, cover rows + EQ / chevron) |
 | **API** | `GET /api/events/now-playing?city_id=` (optional; prefers user/city, falls back nationwide) |
-| **Brand** | Site logo + indigo/orange equalizer (not Spotify green) |
+| **Brand** | Site logo + indigo/orange accents (DESIGN.md tokens — not dark offer-card, not Spotify green) |
+| **Flutter** | `NowPlayingCard` + `EventsRepository.nowPlaying()` — same light glass; wire into home/dashboard beside weather |
 
 **Payload:** `{ running: Event|null, next: Event[], previous: Event[] }`
 
@@ -202,7 +202,7 @@ For each screen:
 - **next** — upcoming published (up to 2)  
 - **previous** — recently finished (up to 2)  
 
-**Flutter UI:** playlist-style rows — live row with animated bars; next/previous with play chevron; tap → event detail. Use cover `image_url`, title, category + city as subtitle.
+**Flutter UI:** light glass rows — live row with animated EQ bars; next/previous with chevron; tap → event detail. Use cover `image_url`, title, category + city / Up next · time as subtitle.
 
 ---
 
@@ -224,9 +224,11 @@ For each screen:
 - Empty / nationwide-fallback messaging when applicable  
 - Orange Create when allowed  
 
-**Rich card must show:** cover, category chip, Free/price chip, urgency chip, schedule, title, venue, members progress, join-state banner, full-width orange **View event**.
+**Rich card must show:** cover, category chip, Free/`EGP`|`ج.م` price chip (Egyptian pound — not Riyal), urgency chip, schedule, title, venue, members progress, join-state banner, full-width orange **View event**. Same `x-events.card` on marketing home discover and dashboard nearby.
 
 **Live search (typed → API wait):** when the user types in search (topbar, home, Discover `q`, admin users), show the wifi **Searching** indicator **only** while the debounced request is in flight — never as a page/spinner loader for navigation.
+
+**System loader:** page/content loading uses Uiverse circle loader — web `x-ui.loader` / full-page `x-ui.page-loader` (link + form navigation); Flutter `FunLoader` via `AsyncBody` and screens.
 
 | | |
 |--|--|
@@ -1084,8 +1086,8 @@ API: `POST .../publish|cancel|complete`.
 
 | Web component | Flutter equivalent |
 |---------------|-------------------|
-| `x-events.card` | Rich discover/list card |
-| `x-dashboard.event-card` | Compact home nearby card |
+| `x-events.card` | 3D glass card + cover image + members `X / Y` |
+| `x-dashboard.event-card` | Same as `x-events.card` |
 | `x-community.ambient` | AmbientBackground |
 | `x-ui.espiral` | Soft spiral/particle glow on **dashboard hero**, **event cover**, **ticket stage** only (not global; respect reduced motion) |
 | `x-dashboard.mobile-nav` | 5-tab bottom bar |
@@ -1183,11 +1185,11 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 4. **Event detail** — creator card, ratings, report/block, full owner matrix, **View ticket**  
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
 6. **Favorites** — bookmark toggle + `/favorites` list (§2.7a)  
-7. **Cards** — rich vs compact per surface  
+7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
 8. **Create/edit** — all fields + image  
 9. **Members** — promote / demote / transfer + report/block links  
 10. **Chat** — inbox `/chats` + thread list/post; web toast via Reverb; Flutter poll until websockets
-11. **Home** — participations + weather (city) + category counts + nearby  
+11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages.
 
@@ -1223,4 +1225,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — Confirm tapping-hand dialog; Cancel/Stop; folder attachments; live search; favorites; weather; tickets; parity; app version.*
+*Last updated: 2026-09-23 — Home weather + Live on Funity glass identity; 3D event circles; EGP; app version.*

@@ -93,4 +93,8 @@ class EventsRepositoryImpl implements EventsRepository {
     String? comment,
   }) =>
       _remote.rate(id, stars: stars, comment: comment);
+
+  @override
+  Future<Result<NowPlayingFeed>> nowPlaying({int? cityId}) =>
+      _remote.nowPlaying(cityId: cityId);
 }

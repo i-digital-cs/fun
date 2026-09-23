@@ -410,6 +410,36 @@ abstract class AppLocalizations {
   /// **'Free'**
   String get free;
 
+  /// Short currency label for paid event chips (Egyptian pound).
+  ///
+  /// In en, this message translates to:
+  /// **'EGP'**
+  String get currencyShort;
+
+  /// Full cost label with amount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} EGP / person'**
+  String costPerPersonAmount(String amount);
+
+  /// Live on {brand}
+  String nowPlayingTitle(String brand);
+
+  /// Happening now
+  String get nowPlayingLive;
+
+  /// Nothing live right now — up next below.
+  String get nowPlayingIdle;
+
+  /// Up next
+  String get nowPlayingUpNext;
+
+  /// Just wrapped
+  String get nowPlayingPrevious;
+
+  /// Events
+  String get eventsLabel;
+
   /// No description provided for @almostFull.
   ///
   /// In en, this message translates to:

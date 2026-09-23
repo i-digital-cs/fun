@@ -60,6 +60,7 @@ return [
     'no_account' => "Don't have an account?",
     'have_account' => 'Already have an account?',
     'searching' => 'Searching',
+    'loading' => 'Loading...',
     'search_empty' => 'No matches yet',
     'search_see_all' => 'See all results',
     'search_failed' => 'Search failed. Try again.',

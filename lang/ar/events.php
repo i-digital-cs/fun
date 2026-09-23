@@ -60,6 +60,7 @@ return [
     'tomorrow' => 'غدًا',
     'free' => 'مجاني',
     'distance_away' => 'على بعد :km كم',
+    'currency_short' => 'ج.م',
     'cost_per_person_amount' => ':amount ج.م / فرد',
     'request_to_join' => 'طلب الانضمام',
     'request_pending' => 'الطلب قيد الانتظار',

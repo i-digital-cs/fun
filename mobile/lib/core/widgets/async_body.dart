@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 
 class AsyncBody extends StatelessWidget {
@@ -28,7 +29,7 @@ class AsyncBody extends StatelessWidget {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32),
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: FunLoader(size: FunLoaderSize.md),
         ),
       );
     }
