@@ -34,7 +34,7 @@
             {{ $roleLabel }}
             <span class="event-ticket__bold">{{ $ticket['code'] }}</span>
         </div>
-        <div class="event-ticket__barcode" aria-hidden="true"></div>
+        <div class="event-ticket__barcode" aria-hidden="true" style="box-shadow: {{ $ticket['barcode_shadow'] }}"></div>
     </div>
 
     <div class="event-ticket__bg event-ticket__bg--holographic"></div>

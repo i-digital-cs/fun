@@ -331,6 +331,40 @@
     }
 }
 
+/* Event membership ticket stage (page shell) */
+.event-ticket-stage {
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99, 102, 241, 0.35), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 80% 100%, rgba(249, 115, 22, 0.2), transparent 50%),
+        linear-gradient(165deg, #0b1224 0%, #151b33 45%, #1a1030 100%);
+    box-shadow:
+        0 24px 60px -20px rgba(15, 23, 42, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.event-ticket-stage__glow {
+    pointer-events: none;
+    position: absolute;
+    inset: 20% 25% auto;
+    height: 40%;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255, 107, 254, 0.25), transparent 70%);
+    filter: blur(40px);
+}
+
+.event-ticket-stage__noise {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    mix-blend-mode: soft-light;
+}
+
+.event-ticket.event-ticket--stage {
+    --width: 200px;
+    --height: 360px;
+}
+
 /* Event membership ticket (Uiverse-inspired holographic pass) */
 .event-ticket {
     --width: 180px;
@@ -533,30 +567,7 @@
     justify-self: center;
     width: 0;
     height: 32px;
-    box-shadow:
-        0px 0 0 1px #000,
-        5px 0 0 1px #000,
-        7px 0 0 1px #000,
-        11px 0 0 1px #000,
-        15px 0 0 1px #000,
-        16px 0 0 1px #000,
-        22px 0 0 1px #000,
-        27px 0 0 1px #000,
-        30px 0 0 1px #000,
-        35px 0 0 1px #000,
-        36px 0 0 1px #000,
-        39px 0 0 1px #000,
-        43px 0 0 1px #000,
-        47px 0 0 1px #000,
-        50px 0 0 1px #000,
-        55px 0 0 1px #000,
-        59px 0 0 1px #000,
-        60px 0 0 1px #000,
-        64px 0 0 1px #000,
-        69px 0 0 1px #000,
-        70px 0 0 1px #000,
-        74px 0 0 1px #000;
-    transform: translateX(37px);
+    transform: translateX(4px);
 }
 
 .event-ticket__symbol {

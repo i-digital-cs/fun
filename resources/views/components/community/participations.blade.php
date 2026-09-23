@@ -1,11 +1,12 @@
 @props([
     'memberships',
     'pendingRequests',
+    'allowDemo' => true,
 ])
 
 @php
     $scheduledCount = $memberships->count() + $pendingRequests->count();
-    $showDemo = $scheduledCount === 0;
+    $showDemo = $allowDemo && $scheduledCount === 0;
 @endphp
 
 <section class="mt-10">
@@ -34,7 +35,14 @@
     </div>
 
     <div class="grid gap-5 lg:grid-cols-2">
-        @if ($showDemo)
+        @if ($scheduledCount === 0 && ! $showDemo)
+            <div class="col-span-full rounded-3xl border border-dashed border-slate-200 bg-white px-5 py-10 text-center">
+                <p class="text-sm font-medium text-slate-600">{{ __('home.participations_empty') }}</p>
+                <a href="{{ route('events.index') }}" class="mt-4 inline-flex rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30">
+                    {{ __('events.discover') }}
+                </a>
+            </div>
+        @elseif ($showDemo)
             {{-- Demo confirmed card --}}
             <article class="group relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-600/10">
                 <span class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-violet-500 to-orange-400"></span>
@@ -239,11 +247,8 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <a href="{{ route('events.show', $event) }}" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700">
-                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path stroke-linecap="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                                </svg>
-                                {{ __('design.map') }}
+                            <a href="{{ route('events.ticket', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-md shadow-orange-500/25 transition hover:brightness-105">
+                                {{ __('events.view_ticket') }}
                             </a>
                             <a href="{{ route('events.chat', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/25 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-600/35 active:translate-y-0">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

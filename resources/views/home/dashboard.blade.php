@@ -123,6 +123,17 @@
     </div>
 </section>
 
+{{-- Your participations: joined + pending --}}
+@if ($user?->canParticipate())
+    <div class="mt-8">
+        <x-community.participations
+            :memberships="$memberships"
+            :pending-requests="$pendingRequests"
+            :allow-demo="false"
+        />
+    </div>
+@endif
+
 {{-- Categories --}}
 <section class="mt-8">
     <div class="mb-3.5 flex flex-wrap items-end justify-between gap-3">

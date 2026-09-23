@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
 use App\Services\Events\DiscoverNearbyEventsService;
+use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,6 +19,7 @@ class DashboardController extends Controller
         Request $request,
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
+        ListUserHomeParticipationsService $participations,
     ): View {
         $user = $request->user();
         $user->loadMissing('city');
@@ -85,6 +87,8 @@ class DashboardController extends Controller
             ->limit(4)
             ->get();
 
+        $homeParticipations = $participations->forUser($user);
+
         return view('home.dashboard', [
             'appName' => site_display_name(),
             'categories' => $categories,
@@ -98,6 +102,8 @@ class DashboardController extends Controller
             'distanceKm' => $selectedDistance,
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
+            'memberships' => $homeParticipations['memberships'],
+            'pendingRequests' => $homeParticipations['pendingRequests'],
         ]);
     }
 }

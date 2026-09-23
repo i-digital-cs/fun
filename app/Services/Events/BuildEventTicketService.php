@@ -18,6 +18,7 @@ class BuildEventTicketService
      *     date_label: string,
      *     date_iso: string|null,
      *     venue_line: string,
+     *     barcode_shadow: string,
      *     member: array{id: int, name: string},
      *     event: array{id: int, title: string, status: string}
      * }
@@ -33,6 +34,7 @@ class BuildEventTicketService
             ->where('user_id', $user->id)
             ->firstOrFail();
 
+        $code = $membership->ensureTicketCode();
         $event->loadMissing(['city']);
 
         $startsAt = $event->starts_at?->timezone(config('app.timezone'));
@@ -52,7 +54,7 @@ class BuildEventTicketService
         $role = $membership->role->value;
 
         return [
-            'code' => $this->codeFor($event->id, $user->id),
+            'code' => $code,
             'role' => $role,
             'pass_label' => __('events.ticket_pass_label'),
             'title' => filled($event->title) ? (string) $event->title : __('events.view_event'),
@@ -61,6 +63,7 @@ class BuildEventTicketService
             'venue_line' => $venueParts !== []
                 ? implode(', ', $venueParts)
                 : __('events.ticket_venue_tba'),
+            'barcode_shadow' => $this->barcodeShadowFor($code),
             'member' => [
                 'id' => $user->id,
                 'name' => (string) $user->name,
@@ -73,10 +76,30 @@ class BuildEventTicketService
         ];
     }
 
-    public function codeFor(int $eventId, int $userId): string
+    /**
+     * Deterministic barcode pattern unique to this ticket code.
+     */
+    public function barcodeShadowFor(string $code): string
     {
-        $hash = hash_hmac('sha256', $eventId.':'.$userId, (string) config('app.key'));
+        $bits = '';
+        foreach (str_split(strtoupper($code)) as $char) {
+            $bits .= str_pad(decbin(ord($char) % 64), 6, '0', STR_PAD_LEFT);
+        }
 
-        return strtoupper(substr($hash, 0, 8));
+        $shadows = ['0px 0 0 1px #000'];
+        $x = 0;
+        $len = strlen($bits);
+
+        for ($i = 0; $i < $len && $x < 78; $i++) {
+            $x += 2;
+            if ($bits[$i] === '1') {
+                $shadows[] = "{$x}px 0 0 1px #000";
+                $x += 1;
+            } else {
+                $x += 2;
+            }
+        }
+
+        return implode(', ', $shadows);
     }
 }

@@ -105,4 +105,6 @@ return [
     'ticket_role_admin' => 'مشرف',
     'ticket_role_member' => 'تصريح',
     'ticket_aria' => 'تذكرة فعالية :title',
+    'pending_requests_section' => 'في انتظار القبول',
+    'joined_events_section' => 'الفعاليات التي انضممت إليها',
 ];

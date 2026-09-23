@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Events;
 
 use App\Enums\EventStatus;
+use App\Enums\JoinRequestStatus;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Events\DiscoverEventsRequest;
@@ -11,6 +12,7 @@ use App\Http\Requests\Events\UpdateEventRequest;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
+use App\Models\EventJoinRequest;
 use App\Models\EventRating;
 use App\Services\Events\CreateEventService;
 use App\Services\Events\CreatorRatingSummaryService;
@@ -87,8 +89,17 @@ class EventController extends Controller
             ->latest('starts_at')
             ->paginate(12);
 
+        $pendingRequests = EventJoinRequest::query()
+            ->where('user_id', $request->user()->id)
+            ->where('status', JoinRequestStatus::Pending)
+            ->whereHas('event', fn ($q) => $q->where('status', EventStatus::Published))
+            ->with(['event.category', 'event.city'])
+            ->latest()
+            ->get();
+
         return view('events.mine', [
             'events' => $events,
+            'pendingRequests' => $pendingRequests,
             'categories' => Category::query()
                 ->active()
                 ->orderBy('sort_order')

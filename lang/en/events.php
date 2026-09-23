@@ -105,4 +105,6 @@ return [
     'ticket_role_admin' => 'Admin',
     'ticket_role_member' => 'Pass',
     'ticket_aria' => 'Event ticket for :title',
+    'pending_requests_section' => 'Waiting for acceptance',
+    'joined_events_section' => 'Events you joined',
 ];

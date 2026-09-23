@@ -139,12 +139,15 @@ For each screen:
 
 1. **Greeting** — “Good morning/afternoon/evening, {firstName} 👋” + subtitle + orange **Create event**  
 2. **Hero** — dark photo/gradient block, titles “Find people. / Do what you love.”, **Find events** (indigo) → Discover, trust chips  
-3. **What are you into?** — category grid (emoji + name + count) → Discover filtered by category  
-4. **Happening near you** — compact cards (`x-dashboard.event-card`) + safety card (indigo gradient)  
-5. **How {brand} works** — 3 steps  
-6. **CTA banner** — “Can’t find your activity?” + orange create  
+3. **Your participations** — `GET /api/home/participations`: **confirmed memberships** + **pending join requests** (no demo cards); empty → Discover CTA; confirmed rows link to ticket + chat  
+4. **What are you into?** — category grid (emoji + name + count) → Discover filtered by category  
+5. **Happening near you** — compact cards (`x-dashboard.event-card`) + safety card (indigo gradient)  
+6. **How {brand} works** — 3 steps  
+7. **CTA banner** — “Can’t find your activity?” + orange create  
 
 **Card style here:** compact dashboard card (indigo soft “View event”), **not** the full Discover rich card.
+
+**My events `/my-events`:** two blocks — **Waiting for acceptance** (pending) then **Events you joined** (memberships + View ticket).
 
 ---
 
@@ -210,20 +213,21 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 ```json
 {
   "data": {
-    "code": "A1B2C3D4",
+    "code": "K7M2P9QX4R",
     "role": "member",
     "pass_label": "Event pass",
     "title": "Sunset Meetup",
     "date_label": "May 14th 2026",
     "date_iso": "2026-05-14T18:00:00+03:00",
     "venue_line": "Riverside Park, Cairo",
+    "barcode_shadow": "0px 0 0 1px #000, 3px 0 0 1px #000, …",
     "member": { "id": 12, "name": "Alex" },
     "event": { "id": 5, "title": "Sunset Meetup", "status": "published" }
   }
 }
 ```
 
-`code` is a stable HMAC-derived 8-char pass id for this user+event (not a seat number — platform has no seats).
+`code` is a **globally unique** 10-character pass id stored on `event_members.ticket_code` (issued when the member joins; never reused). The decorative barcode pattern is derived from that code so each ticket looks different.
 
 **Flutter must:**
 
