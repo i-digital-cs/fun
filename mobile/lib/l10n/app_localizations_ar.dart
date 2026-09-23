@@ -330,6 +330,48 @@ class AppLocalizationsAr extends AppLocalizations {
   String get venue => 'المكان';
 
   @override
+  String get venueTba => 'المكان غير محدد';
+
+  @override
+  String get placeOnMap => 'الموقع على الخريطة';
+
+  @override
+  String get placeOnMapHelp =>
+      'الصق رابط مشاركة من خرائط جوجل أو OpenStreetMap. بدون مفتاح Google — نقرأ الإحداثيات من الرابط.';
+
+  @override
+  String get mapsUrl => 'رابط الخرائط';
+
+  @override
+  String get mapsUrlHint => 'https://maps.app.goo.gl/…';
+
+  @override
+  String get applyMapsLink => 'تطبيق الرابط';
+
+  @override
+  String get placeClear => 'مسح الدبوس';
+
+  @override
+  String get placePinned =>
+      'تم حفظ الدبوس — يمكن للضيوف فتح الموقع في الخرائط.';
+
+  @override
+  String get placeFromLink => 'تم قراءة الموقع من رابط الخرائط.';
+
+  @override
+  String get placeCleared => 'تم مسح دبوس الخريطة.';
+
+  @override
+  String get placeResolving => 'جاري قراءة الموقع من الرابط…';
+
+  @override
+  String get mapsUrlUnresolved =>
+      'تعذر قراءة موقع من هذا الرابط. الصق رابط خرائط جوجل أو OpenStreetMap كاملاً.';
+
+  @override
+  String get openInMaps => 'فتح في الخرائط';
+
+  @override
   String get startsAt => 'يبدأ';
 
   @override

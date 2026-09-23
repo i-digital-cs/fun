@@ -252,16 +252,17 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 **Layout hierarchy (same as web):**
 
 1. Cover + category chip + city + title + **status badge** + **favorite bookmark** + ambient espiral on cover (`x-ui.espiral`, indigo, corner-anchored)  
-2. Date/time chip + venue chip  
-3. Description  
-4. Requirements box  
-5. Cost / free + members count chips  
-6. **Primary actions** (join state — see §3); when `joined` include **View ticket**  
-7. Owner tools (edit / publish / cancel / complete / requests / members)  
-8. Report event + block host  
-9. Organizer rating summary  
-10. Rate form (when `can_rate`)  
-11. Ratings list  
+2. Date/time chip + venue chip + **Open in maps** when `maps_open_url` present  
+3. OSM map preview when `has_place_pin` (web Leaflet viewer; Flutter opens external maps)  
+4. Description  
+5. Requirements box  
+6. Cost / free + members count chips  
+7. **Primary actions** (join state — see §3); when `joined` include **View ticket**  
+8. Owner tools (edit / publish / cancel / complete / requests / members)  
+9. Report event + block host  
+10. Organizer rating summary  
+11. Rate form (when `can_rate`)  
+12. Ratings list  
 
 ---
 
@@ -325,6 +326,8 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 | category_id | yes |
 | city_id | yes |
 | venue | no |
+| latitude / longitude | no (map pin) |
+| maps_url | no (Google Maps / OSM share link — **no Google API key**; server + clients parse coords from the URL) |
 | starts_at | yes |
 | ends_at | no |
 | max_participants | yes |
@@ -332,6 +335,35 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 | expected_cost | no |
 | cost_per_person | no |
 | image (jpeg/png/webp) | no |
+
+**Place on map (free):** Web create/edit uses **Leaflet + OpenStreetMap tiles** (CDN, no credentials). Tap map to drop/drag pin, or paste a Maps share link. Short Google links are resolved via `POST /api/maps/resolve` (follows redirects, no Google API key). Placeholder venue text (`Venue` / `المكان`) is replaced with a free Nominatim reverse-geocode label (or city name). Flutter create/edit accepts the same `maps_url` (+ optional lat/lng); detail exposes `maps_open_url` / **Open in maps** via `url_launcher`.
+
+**API location fields (every event):**
+
+```json
+{
+  "venue": "Corniche · Cairo",
+  "location_label": "Corniche · Cairo",
+  "location": {
+    "label": "Corniche · Cairo",
+    "venue": "Corniche · Cairo",
+    "venue_raw": "Venue",
+    "latitude": 30.0266,
+    "longitude": 31.2234,
+    "maps_url": "https://www.openstreetmap.org/…",
+    "maps_open_url": "https://www.openstreetmap.org/…",
+    "has_place_pin": true,
+    "city": { "id": 1, "name": "Cairo", "latitude": 30.04, "longitude": 31.23 }
+  },
+  "latitude": 30.0266,
+  "longitude": 31.2234,
+  "maps_url": "…",
+  "maps_open_url": "…",
+  "has_place_pin": true
+}
+```
+
+UI chips/cards use `location_label` (venue · city), never a bare form label like “Venue”.
 
 CTA: orange create/save. After create → show or edit draft + publish.
 
@@ -737,7 +769,7 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 
 Use `GET /api/site` for logo/name **and** app version / force-update on splash (same as admin Site settings). See **§2B** (login/identity samples) and **§2C** (version check).
 
-Site branding for auth UI: admin **display name** + **logo**.
+Site branding for auth UI: admin **display name** + **logo**. Official Funity mark (Brand Identity System) ships at `public/branding/funity-mark.svg` and is attached into site settings storage so `GET /api/site` → `logo_url` is always available for Flutter. Admin can replace via **Site settings** attachment.
 
 ---
 
@@ -1186,10 +1218,11 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
 6. **Favorites** — bookmark toggle + `/favorites` list (§2.7a)  
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
-8. **Create/edit** — all fields + image  
+8. **Create/edit** — all fields + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web)  
 9. **Members** — promote / demote / transfer + report/block links  
 10. **Chat** — inbox `/chats` + thread list/post; web toast via Reverb; Flutter poll until websockets
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
+12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages.
 
@@ -1225,4 +1258,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — Home weather + Live on Funity glass identity; 3D event circles; EGP; app version.*
+*Last updated: 2026-09-23 — Official Funity logo via site settings; event `location_label` + nested `location` on API; free place pin.*

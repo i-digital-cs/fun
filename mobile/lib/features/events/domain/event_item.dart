@@ -58,6 +58,12 @@ class EventItem extends Equatable {
     this.createdBy,
     this.readyForRatings = false,
     this.isFavorited = false,
+    this.latitude,
+    this.longitude,
+    this.mapsUrl,
+    this.mapsOpenUrl,
+    this.hasPlacePin = false,
+    this.locationLabel,
   });
 
   final int id;
@@ -82,6 +88,25 @@ class EventItem extends Equatable {
   final int? createdBy;
   final bool readyForRatings;
   final bool isFavorited;
+  final double? latitude;
+  final double? longitude;
+  final String? mapsUrl;
+  final String? mapsOpenUrl;
+  final bool hasPlacePin;
+  final String? locationLabel;
+
+  String get placeLine {
+    final label = locationLabel?.trim();
+    if (label != null && label.isNotEmpty) return label;
+    if (venue.trim().isNotEmpty) {
+      final cityName = city?.name;
+      if (cityName != null && cityName.isNotEmpty && !venue.contains(cityName)) {
+        return '$venue · $cityName';
+      }
+      return venue.trim();
+    }
+    return city?.name ?? '';
+  }
 
   bool get isFree => costPerPerson == null || costPerPerson! <= 0;
 
@@ -127,6 +152,12 @@ class EventItem extends Equatable {
       createdBy: createdBy,
       readyForRatings: readyForRatings ?? this.readyForRatings,
       isFavorited: isFavorited ?? this.isFavorited,
+      latitude: latitude,
+      longitude: longitude,
+      mapsUrl: mapsUrl,
+      mapsOpenUrl: mapsOpenUrl,
+      hasPlacePin: hasPlacePin,
+      locationLabel: locationLabel,
     );
   }
 
@@ -154,6 +185,12 @@ class EventItem extends Equatable {
         createdBy,
         readyForRatings,
         isFavorited,
+        latitude,
+        longitude,
+        mapsUrl,
+        mapsOpenUrl,
+        hasPlacePin,
+        locationLabel,
       ];
 }
 
@@ -293,6 +330,9 @@ class EventDraft {
     this.expectedCost,
     this.costPerPerson,
     this.imagePath,
+    this.latitude,
+    this.longitude,
+    this.mapsUrl,
   });
 
   final String title;
@@ -307,6 +347,9 @@ class EventDraft {
   final String? expectedCost;
   final num? costPerPerson;
   final String? imagePath;
+  final double? latitude;
+  final double? longitude;
+  final String? mapsUrl;
 }
 
 class NowPlayingFeed {

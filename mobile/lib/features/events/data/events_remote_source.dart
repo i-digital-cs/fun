@@ -551,6 +551,43 @@ class EventsRemoteSource {
     return null;
   }
 
+  Future<({Failure? failure, ({double lat, double lng, String mapsUrl})? data})>
+      resolveMapsUrl(String url) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/maps/resolve',
+        data: {'url': url},
+      );
+      final body = response.data;
+      final data = body?['data'];
+      if (data is! Map) {
+        return (
+          failure: const ServerFailure('Could not resolve maps link'),
+          data: null,
+        );
+      }
+      final map = Map<String, dynamic>.from(data);
+      final lat = _asNum(map['latitude'])?.toDouble();
+      final lng = _asNum(map['longitude'])?.toDouble();
+      if (lat == null || lng == null) {
+        return (
+          failure: const ServerFailure('Could not resolve maps link'),
+          data: null,
+        );
+      }
+      return (
+        failure: null,
+        data: (
+          lat: lat,
+          lng: lng,
+          mapsUrl: map['maps_url'] as String? ?? url,
+        ),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
   static EventItem parseEvent(Map<String, dynamic> json) {
     final categoryRaw = json['category'];
     final cityRaw = json['city'];
@@ -567,6 +604,32 @@ class EventsRemoteSource {
       requirements: json['requirements'] as String?,
       expectedCost: json['expected_cost']?.toString(),
       venue: json['venue'] as String? ?? '',
+      locationLabel: json['location_label'] as String? ??
+          (json['location'] is Map
+              ? (Map<String, dynamic>.from(json['location'] as Map)['label'] as String?)
+              : null),
+      latitude: _asNum(json['latitude'])?.toDouble() ??
+          (json['location'] is Map
+              ? _asNum(Map<String, dynamic>.from(json['location'] as Map)['latitude'])
+                  ?.toDouble()
+              : null),
+      longitude: _asNum(json['longitude'])?.toDouble() ??
+          (json['location'] is Map
+              ? _asNum(Map<String, dynamic>.from(json['location'] as Map)['longitude'])
+                  ?.toDouble()
+              : null),
+      mapsUrl: json['maps_url'] as String? ??
+          (json['location'] is Map
+              ? Map<String, dynamic>.from(json['location'] as Map)['maps_url'] as String?
+              : null),
+      mapsOpenUrl: json['maps_open_url'] as String? ??
+          (json['location'] is Map
+              ? Map<String, dynamic>.from(json['location'] as Map)['maps_open_url']
+                  as String?
+              : null),
+      hasPlacePin: _asBool(json['has_place_pin']) ||
+          (_asNum(json['latitude']) != null &&
+              _asNum(json['longitude']) != null),
       startsAt: json['starts_at'] is String
           ? DateTime.tryParse(json['starts_at'] as String)
           : null,
@@ -641,6 +704,9 @@ class EventsRemoteSource {
       'max_participants': draft.maxParticipants,
       'description': ?draft.description,
       'venue': ?draft.venue,
+      if (draft.latitude != null) 'latitude': draft.latitude,
+      if (draft.longitude != null) 'longitude': draft.longitude,
+      'maps_url': ?draft.mapsUrl,
       if (draft.endsAt != null) 'ends_at': draft.endsAt!.toIso8601String(),
       'requirements': ?draft.requirements,
       'expected_cost': ?draft.expectedCost,

@@ -16,6 +16,7 @@ class UpdateEventService
 {
     public function __construct(
         private readonly PublicMediaUploader $uploader,
+        private readonly ResolveEventLocationService $locations,
     ) {}
 
     /**
@@ -54,6 +55,15 @@ class UpdateEventService
         }
 
         return DB::transaction(function () use ($event, $data, $image) {
+            $place = $this->locations->resolve(
+                array_merge([
+                    'latitude' => $event->latitude,
+                    'longitude' => $event->longitude,
+                    'maps_url' => $event->maps_url,
+                ], $data),
+                isset($data['city_id']) ? (int) $data['city_id'] : $event->city_id
+            );
+
             $event->fill(collect($data)->only([
                 'category_id',
                 'city_id',
@@ -66,7 +76,17 @@ class UpdateEventService
                 'requirements',
                 'expected_cost',
                 'cost_per_person',
-            ])->all())->save();
+            ])->all());
+
+            if (array_key_exists('venue', $place)) {
+                $event->venue = $place['venue'];
+            }
+
+            $event->forceFill([
+                'latitude' => $place['latitude'],
+                'longitude' => $place['longitude'],
+                'maps_url' => $place['maps_url'],
+            ])->save();
 
             if ($image !== null) {
                 if ($event->image_path) {

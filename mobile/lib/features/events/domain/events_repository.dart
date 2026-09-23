@@ -127,4 +127,7 @@ abstract class EventsRepository {
   Future<Result<PaginatedEvents>> favorites({int page = 1});
   Future<Result<bool>> toggleFavorite(int id);
   Future<Result<EventTicket>> ticket(int id);
+  Future<Result<({double lat, double lng, String mapsUrl})>> resolveMapsUrl(
+    String url,
+  );
 }

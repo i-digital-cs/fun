@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funity - Brand Identity System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Brand Colors (from DESIGN.md) */
+      --color-primary: #4F46E5;      /* Indigo 600 */
+      --color-accent: #F97316;      /* Orange 500 */
+      --color-success: #10B981;      /* Emerald 500 */
+      
+      /* Light Mode UI */
+      --bg-main: #F8FAFC;           /* Slate 50 */
+      --bg-card: #FFFFFF;           /* White */
+      --bg-subtle: #F1F5F9;         /* Slate 100 */
+      --text-primary: #0F172A;      /* Slate 900 */
+      --text-secondary: #64748B;    /* Slate 500 */
+      --border-color: #E2E8F0;      /* Slate 200 */
+      --border-dashed: #CBD5E1;     /* Slate 300 */
+    }
+
+    [data-theme="dark"] {
+      --bg-main: #0F172A;           /* Slate 900 */
+      --bg-card: #1E293B;           /* Slate 800 */
+      --bg-subtle: #334155;         /* Slate 700 */
+      --text-primary: #F8FAFC;      /* Slate 50 */
+      --text-secondary: #94A3B8;     /* Slate 400 */
+      --border-color: #334155;      /* Slate 700 */
+      --border-dashed: #475569;      /* Slate 600 */
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    
+    /* Header */
+    header {
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .header-flex { display: flex; justify-content: space-between; align-items: center; }
+    
+    .brand-logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.5rem; }
+    .brand-logo span { color: var(--color-primary); }
+    
+    .btn-toggle {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+    /* Sections */
+    section { margin-bottom: 80px; }
+    h1 { font-size: 3rem; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.02em; }
+    h2 { font-size: 1.75rem; font-weight: 600; margin-bottom: 30px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+    p.lead { color: var(--text-secondary); font-size: 1.1rem; max-width: 800px; margin-bottom: 40px; }
+
+    /* Grid & Cards */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 32px;
+      transition: box-shadow 0.3s ease;
+    }
+    
+    /* Asset Display Areas */
+    .asset-display {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 60px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 250px;
+      margin-bottom: 16px;
+    }
+    .asset-display.dark { background: #0F172A; border-color: #334155; }
+    
+    /* Copy Button */
+    .copy-btn {
+      width: 100%;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .copied { background: var(--color-success) !important; color: white !important; border-color: var(--color-success) !important; }
+
+    /* Clear Space Visualizer */
+    .clear-space-box {
+      position: relative;
+      border: 2px dashed var(--border-dashed);
+      display: inline-block;
+      padding: 40px; /* X space */
+    }
+    .clear-space-box .inner { display: flex; align-items: center; gap: 12px; }
+    .x-marker { position: absolute; color: var(--color-accent); font-weight: 700; font-size: 12px; }
+
+    /* Colors */
+    .color-card { overflow: hidden; border: 1px solid var(--border-color); border-radius: 12px; }
+    .color-swatch { height: 120px; display: flex; align-items: flex-end; padding: 12px; color: white; font-weight: 600; }
+    .color-details { padding: 16px; background: var(--bg-card); }
+    .color-details h4 { margin-bottom: 4px; font-size: 1rem; }
+    .color-details span { font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; display: block; }
+
+    /* Typography */
+    .type-card { padding: 24px; }
+    .type-large { font-size: 2.5rem; margin-bottom: 8px; }
+    .type-label { color: var(--color-primary); font-family: monospace; font-size: 0.85rem; margin-bottom: 16px; }
+
+    code { background: var(--bg-subtle); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container header-flex">
+      <div class="brand-logo">
+        <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+          <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+          <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+          <circle cx="50" cy="44" r="3.5" fill="#FFFFFF" />
+        </svg>
+        Funity
+      </div>
+      <button class="btn-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Intro -->
+    <section>
+      <h1>Brand Identity System</h1>
+      <p class="lead">Funity connects communities through real-world events. The identity system relies on interlocking shapes to represent a user joining an event, anchored by locality and success.</p>
+    </section>
+
+    <!-- Primary Logo -->
+    <section>
+      <h2>Primary Logo (Horizontal)</h2>
+      <p>Used in the main navbar, authentication screens, and email headers. Contains the symbol and the wordmark.</p>
+      
+      <div class="grid-2">
+        <div>
+          <div class="asset-display">
+            <svg width="180" height="40" viewBox="0 0 450 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Icon -->
+              <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+              <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+              <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+              <circle cx="50" cy="44" r="3.5" fill="#F8FAFC" />
+              <!-- Text -->
+              <text x="95" y="68" font-family="IBM Plex Sans, sans-serif" font-size="48" font-weight="700" fill="currentColor">Funity</text>
+            </svg>
+          </div>
+          <button class="copy-btn" onclick="copyCode('logo-horizontal')">Copy SVG Code</button>
+        </div>
+        
+        <div>
+          <div class="asset-display dark">
+            <svg width="180" height="40" viewBox="0 0 450 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+              <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+              <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+              <circle cx="50" cy="44" r="3.5" fill="#0F172A" />
+              <text x="95" y="68" font-family="IBM Plex Sans, sans-serif" font-size="48" font-weight="700" fill="#FFFFFF">Funity</text>
+            </svg>
+          </div>
+          <button class="copy-btn" onclick="copyCode('logo-horizontal-dark')">Copy SVG Code (Dark)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Logo Variations -->
+    <section>
+      <h2>Logo Variations</h2>
+      <p>Use the stacked logo for square formats (e.g., profile pictures, loading screens). Use the icon alone for favicons and mobile app icons.</p>
+      
+      <div class="grid-3">
+        <!-- Stacked -->
+        <div class="card">
+          <div class="asset-display" style="flex-direction: column; gap: 10px;">
+            <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+              <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+              <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+              <circle cx="50" cy="44" r="3.5" fill="#FFFFFF" />
+            </svg>
+            <h3 style="font-weight: 700; font-size: 1.5rem;">Funity</h3>
+            <span style="color: var(--text-secondary); font-size: 0.85rem; text-transform: lowercase; letter-spacing: 0.05em;">join the community</span>
+          </div>
+          <p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Stacked (Square)</p>
+        </div>
+
+        <!-- Icon Only -->
+        <div class="card">
+          <div class="asset-display">
+            <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+              <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+              <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+              <circle cx="50" cy="44" r="3.5" fill="#FFFFFF" />
+            </svg>
+          </div>
+          <p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">App Icon / Favicon</p>
+        </div>
+
+        <!-- App Icon Mockup -->
+        <div class="card">
+          <div class="asset-display dark" style="border-radius: 24px; padding: 20px;">
+             <div style="background: #4F46E5; padding: 20px; border-radius: 24px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="38" cy="50" r="22" stroke="#FFFFFF" stroke-width="10" fill="none"/>
+                  <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+                  <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+                  <circle cx="50" cy="44" r="3.5" fill="#4F46E5" />
+                </svg>
+             </div>
+          </div>
+          <p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px;">Mobile App Icon Variant</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clear Space & Minimum Size -->
+    <section>
+      <h2>Clear Space & Minimum Size</h2>
+      <p>To ensure the logo maintains its impact, maintain clear space around it equal to the radius of the Emerald pin (marked as <strong style="color: var(--color-accent);">X</strong>). The minimum digital size for the icon is 24x24px.</p>
+      
+      <div class="card" style="display: flex; justify-content: center; align-items: center; padding: 40px;">
+        <div class="clear-space-box">
+          <span class="x-marker" style="top: 10px; left: 50%; transform: translateX(-50%);">↓ X</span>
+          <span class="x-marker" style="bottom: 10px; left: 50%; transform: translateX(-50%);">↑ X</span>
+          <span class="x-marker" style="left: 10px; top: 50%; transform: translateY(-50%);">→ X</span>
+          <span class="x-marker" style="right: 10px; top: 50%; transform: translateY(-50%);">X ←</span>
+          
+          <div class="inner">
+            <svg width="120" height="40" viewBox="0 0 450 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+              <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+              <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+              <circle cx="50" cy="44" r="3.5" fill="#FFFFFF" />
+              <text x="95" y="68" font-family="IBM Plex Sans, sans-serif" font-size="48" font-weight="700" fill="currentColor">Funity</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Color Palette -->
+    <section>
+      <h2>Semantic Color Palette</h2>
+      <p>Colors map directly to product actions. Indigo builds trust, Orange drives action, and Emerald confirms success.</p>
+      
+      <div class="grid-3">
+        <div class="color-card">
+          <div class="color-swatch" style="background: var(--color-primary);">Primary / Trust</div>
+          <div class="color-details">
+            <h4>Indigo 600</h4>
+            <span onclick="copyText('#4F46E5', this)">#4F46E5</span>
+          </div>
+        </div>
+        <div class="color-card">
+          <div class="color-swatch" style="background: var(--color-accent);">Accent / Action</div>
+          <div class="color-details">
+            <h4>Orange 500</h4>
+            <span onclick="copyText('#F97316', this)">#F97316</span>
+          </div>
+        </div>
+        <div class="color-card">
+          <div class="color-swatch" style="background: var(--color-success);">Success / Approved</div>
+          <div class="color-details">
+            <h4>Emerald 500</h4>
+            <span onclick="copyText('#10B981', this)">#10B981</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section>
+      <h2>Typography System</h2>
+      <p>Funity uses <strong>IBM Plex Sans</strong> for all UI elements, ensuring high readability in both English (LTR) and Arabic (RTL) layouts. It supports weights from 300 (Light) to 700 (Bold).</p>
+      
+      <div class="grid-2">
+        <div class="card type-card">
+          <div class="type-large" style="font-weight: 700;">Aa Bb 01</div>
+          <div class="type-label">IBM Plex Sans / Bold 700</div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Used for Logo wordmark, H1, H2, and primary button text.</p>
+        </div>
+        <div class="card type-card">
+          <div class="type-large" style="font-weight: 500;">Aa Bb 01</div>
+          <div class="type-label">IBM Plex Sans / Medium 500</div>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Used for body text, event card titles, form labels, and chat messages.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Hidden SVG Code Blocks for Copy Functionality -->
+  <div style="display: none;">
+    <div id="logo-horizontal">
+      <svg width="180" height="40" viewBox="0 0 450 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+        <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+        <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+        <circle cx="50" cy="44" r="3.5" fill="#F8FAFC" />
+        <text x="95" y="68" font-family="IBM Plex Sans, sans-serif" font-size="48" font-weight="700" fill="currentColor">Funity</text>
+      </svg>
+    </div>
+    <div id="logo-horizontal-dark">
+      <svg width="180" height="40" viewBox="0 0 450 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
+        <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
+        <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
+        <circle cx="50" cy="44" r="3.5" fill="#0F172A" />
+        <text x="95" y="68" font-family="IBM Plex Sans, sans-serif" font-size="48" font-weight="700" fill="#FFFFFF">Funity</text>
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      if (current === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    }
+
+    function copyCode(elementId) {
+      const code = document.getElementById(elementId).innerHTML.trim();
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.innerText = "Copied!";
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    }
+
+    function copyText(text, element) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = element.innerText;
+        element.innerText = "Copied!";
+        element.style.color = "var(--color-success)";
+        setTimeout(() => {
+          element.innerText = originalText;
+          element.style.color = "";
+        }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

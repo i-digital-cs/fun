@@ -107,4 +107,10 @@ class EventsRepositoryImpl implements EventsRepository {
 
   @override
   Future<Result<EventTicket>> ticket(int id) => _remote.ticket(id);
+
+  @override
+  Future<Result<({double lat, double lng, String mapsUrl})>> resolveMapsUrl(
+    String url,
+  ) =>
+      _remote.resolveMapsUrl(url);
 }

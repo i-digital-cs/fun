@@ -22,10 +22,8 @@
         @if ($siteLogoUrl ?? site_logo_url())
             <img src="{{ $siteLogoUrl ?? site_logo_url() }}" alt="{{ $brand }}" class="h-10 w-auto max-w-[2.75rem] rounded-[13px] object-contain shadow-lg shadow-indigo-600/20">
         @else
-            <span class="flex h-10 w-10 items-center justify-center rounded-[13px] bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/25">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-                </svg>
+            <span class="flex h-10 w-10 items-center justify-center rounded-[13px] bg-white shadow-lg shadow-indigo-600/20">
+                <x-brand.mark :size="28" />
             </span>
         @endif
         <span class="min-w-0">

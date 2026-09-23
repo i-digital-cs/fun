@@ -14,6 +14,7 @@ import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EventDetailPage extends ConsumerStatefulWidget {
   const EventDetailPage({super.key, required this.eventId});
@@ -538,11 +539,28 @@ class EventDetailInfoCard extends StatelessWidget {
               const Icon(Icons.location_on, size: 16, color: AppColors.muted),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(event.venue,
-                    style: const TextStyle(color: AppColors.muted)),
+                child: Text(
+                  event.placeLine.isEmpty ? l10n.venueTba : event.placeLine,
+                  style: const TextStyle(color: AppColors.muted),
+                ),
               ),
             ],
           ),
+          if (event.mapsOpenUrl != null && event.mapsOpenUrl!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final uri = Uri.tryParse(event.mapsOpenUrl!);
+                  if (uri == null) return;
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: Text(l10n.openInMaps),
+              ),
+            ),
+          ],
           if (event.city != null) ...[
             const SizedBox(height: 4),
             Text(

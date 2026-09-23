@@ -55,16 +55,49 @@ class SiteSettingsService
         return Cache::remember(self::LOGO_CACHE_KEY, now()->addMinutes(10), function () {
             $settings = $this->current();
 
-            if (! filled($settings->logo_path) || ! filled($settings->logo_disk)) {
-                return null;
+            if (filled($settings->logo_path) && filled($settings->logo_disk)) {
+                try {
+                    return Storage::disk($settings->logo_disk)->url($settings->logo_path);
+                } catch (\Throwable) {
+                    // Fall through to bundled official mark.
+                }
             }
 
-            try {
-                return Storage::disk($settings->logo_disk)->url($settings->logo_path);
-            } catch (\Throwable) {
-                return null;
-            }
+            return asset('branding/funity-mark.svg');
         });
+    }
+
+    /**
+     * Attach the official Funity mark into site settings storage (admin + GET /api/site).
+     */
+    public function attachOfficialLogo(bool $force = false): SiteSetting
+    {
+        $settings = $this->current();
+        if (! $force && filled($settings->logo_path) && filled($settings->logo_disk)) {
+            return $settings;
+        }
+
+        $source = public_path('branding/funity-mark.svg');
+        if (! is_file($source)) {
+            return $settings;
+        }
+
+        $disk = MediaDisk::public();
+        $path = 'branding/funity-mark.svg';
+        Storage::disk($disk)->put($path, (string) file_get_contents($source), 'public');
+
+        if ($force) {
+            $this->deleteLogoFiles($settings);
+        }
+
+        $settings->forceFill([
+            'logo_path' => $path,
+            'logo_disk' => $disk,
+        ])->save();
+
+        Cache::forget(self::LOGO_CACHE_KEY);
+
+        return $settings->refresh();
     }
 
     /**

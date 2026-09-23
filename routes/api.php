@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
 use App\Http\Controllers\Api\SiteBrandingController;
 use App\Http\Controllers\Api\SearchSuggestController;
 use App\Http\Controllers\Api\WeatherController;
+use App\Http\Controllers\Api\ResolveMapsUrlController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/site', SiteBrandingController::class);
@@ -61,6 +62,7 @@ Route::middleware('throttle:auth-codes')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [MeController::class, 'show']);
     Route::get('/weather', WeatherController::class)->middleware('throttle:60,1');
+    Route::post('/maps/resolve', ResolveMapsUrlController::class)->middleware('throttle:30,1');
     Route::post('/logout', [LoginController::class, 'destroy']);
 
     Route::post('/email/verify', [EmailVerificationController::class, 'verify'])

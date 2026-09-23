@@ -77,15 +77,40 @@
                         @endif
                     </span>
                 @endif
-                @if (filled($event->venue))
+                @php($placeLabel = $event->locationLabel())
+                @if ($placeLabel !== '')
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
-                        <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
                         </svg>
-                        {{ $event->venue }}
+                        <span>{{ $placeLabel }}</span>
                     </span>
                 @endif
+                @if ($event->mapsOpenUrl())
+                    <a
+                        href="{{ $event->mapsOpenUrl() }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 font-medium text-indigo-700 transition hover:bg-indigo-100"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                        </svg>
+                        {{ __('events.open_in_maps') }}
+                    </a>
+                @endif
             </div>
+
+            @if ($event->hasPlacePin())
+                <div
+                    class="overflow-hidden rounded-2xl border border-slate-200/80"
+                    data-event-place-viewer
+                    data-lat="{{ $event->latitude }}"
+                    data-lng="{{ $event->longitude }}"
+                >
+                    <div data-place-map class="h-52 bg-slate-100 sm:h-64"></div>
+                </div>
+            @endif
 
             @if (filled($event->description))
                 <p class="whitespace-pre-line text-sm leading-relaxed text-slate-600 sm:text-[15px]">{{ $event->description }}</p>
