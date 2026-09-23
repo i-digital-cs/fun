@@ -85,7 +85,31 @@
                         {{ $event->venue }}
                     </span>
                 @endif
+                @if ($event->mapsOpenUrl())
+                    <a
+                        href="{{ $event->mapsOpenUrl() }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 font-medium text-indigo-700 transition hover:bg-indigo-100"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                        </svg>
+                        {{ __('events.open_in_maps') }}
+                    </a>
+                @endif
             </div>
+
+            @if ($event->hasPlacePin())
+                <div
+                    class="overflow-hidden rounded-2xl border border-slate-200/80"
+                    data-event-place-viewer
+                    data-lat="{{ $event->latitude }}"
+                    data-lng="{{ $event->longitude }}"
+                >
+                    <div data-place-map class="h-52 bg-slate-100 sm:h-64"></div>
+                </div>
+            @endif
 
             @if (filled($event->description))
                 <p class="whitespace-pre-line text-sm leading-relaxed text-slate-600 sm:text-[15px]">{{ $event->description }}</p>

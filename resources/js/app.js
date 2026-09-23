@@ -25,6 +25,8 @@ window.Echo = enabled
       })
     : null;
 
+import { initEventPlaceMaps } from './event-place-map';
+
 initLiveSearch();
 document.documentElement.dataset.liveSearchReady = '1';
 
@@ -39,3 +41,6 @@ document.documentElement.dataset.chatToastReady = '1';
 
 initPageLoader();
 document.documentElement.dataset.pageLoaderReady = '1';
+
+initEventPlaceMaps();
+document.documentElement.dataset.eventPlaceMapReady = '1';

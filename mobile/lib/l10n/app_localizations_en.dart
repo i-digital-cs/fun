@@ -331,6 +331,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get venue => 'Venue';
 
   @override
+  String get venueTba => 'Venue TBA';
+
+  @override
+  String get placeOnMap => 'Place on map';
+
+  @override
+  String get placeOnMapHelp =>
+      'Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.';
+
+  @override
+  String get mapsUrl => 'Maps link';
+
+  @override
+  String get mapsUrlHint => 'https://maps.app.goo.gl/…';
+
+  @override
+  String get applyMapsLink => 'Apply link';
+
+  @override
+  String get placeClear => 'Clear pin';
+
+  @override
+  String get placePinned =>
+      'Pin saved — guests can open this place in maps.';
+
+  @override
+  String get placeFromLink => 'Location read from your maps link.';
+
+  @override
+  String get placeCleared => 'Map pin cleared.';
+
+  @override
+  String get placeResolving => 'Reading location from link…';
+
+  @override
+  String get mapsUrlUnresolved =>
+      'Could not read a location from that link. Paste a full Google Maps or OpenStreetMap URL.';
+
+  @override
+  String get openInMaps => 'Open in maps';
+
+  @override
   String get startsAt => 'Starts';
 
   @override

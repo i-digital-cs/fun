@@ -21,13 +21,64 @@
     <label class="{{ $labelClass }}" for="city_id">{{ __('events.city') }}</label>
     <select id="city_id" name="city_id" required class="{{ $inputClass }}">
         @foreach ($cities as $city)
-            <option value="{{ $city->id }}" @selected(old('city_id', $event?->city_id) == $city->id)>{{ $city->localizedName() }}</option>
+            <option
+                value="{{ $city->id }}"
+                @selected(old('city_id', $event?->city_id) == $city->id)
+                @if ($city->latitude !== null && $city->longitude !== null)
+                    data-lat="{{ $city->latitude }}"
+                    data-lng="{{ $city->longitude }}"
+                @endif
+            >{{ $city->localizedName() }}</option>
         @endforeach
     </select>
 </div>
 <div>
     <label class="{{ $labelClass }}" for="venue">{{ __('events.venue') }}</label>
-    <input id="venue" name="venue" value="{{ old('venue', $event?->venue) }}" class="{{ $inputClass }}">
+    <input id="venue" name="venue" value="{{ old('venue', $event?->venue) }}" class="{{ $inputClass }}" placeholder="{{ __('events.venue_placeholder') }}">
+</div>
+@php($placeLat = old('latitude', $event?->latitude))
+@php($placeLng = old('longitude', $event?->longitude))
+@php($selectedCity = $cities->firstWhere('id', (int) old('city_id', $event?->city_id)))
+@php($defaultLat = ($placeLat !== null && $placeLat !== '') ? $placeLat : ($selectedCity?->latitude ?? 30.0444))
+@php($defaultLng = ($placeLng !== null && $placeLng !== '') ? $placeLng : ($selectedCity?->longitude ?? 31.2357))
+<div
+    class="space-y-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4"
+    data-event-place-picker
+    data-default-lat="{{ $defaultLat }}"
+    data-default-lng="{{ $defaultLng }}"
+    data-status-pinned="{{ __('events.place_pinned') }}"
+    data-status-from-link="{{ __('events.place_from_link') }}"
+    data-status-cleared="{{ __('events.place_cleared') }}"
+    data-status-resolving="{{ __('events.place_resolving') }}"
+    data-status-unresolved="{{ __('events.maps_url_unresolved') }}"
+>
+    <div class="flex flex-wrap items-start justify-between gap-2">
+        <div>
+            <p class="text-sm font-semibold text-slate-800">{{ __('events.place_on_map') }}</p>
+            <p class="mt-0.5 text-xs text-slate-500">{{ __('events.place_on_map_help') }}</p>
+        </div>
+        <button type="button" data-place-clear class="text-xs font-medium text-slate-500 underline-offset-2 hover:text-indigo-600 hover:underline">
+            {{ __('events.place_clear') }}
+        </button>
+    </div>
+    <div>
+        <label class="{{ $labelClass }}" for="maps_url">{{ __('events.maps_url') }}</label>
+        <input
+            id="maps_url"
+            name="maps_url"
+            type="url"
+            value="{{ old('maps_url', $event?->maps_url) }}"
+            class="{{ $inputClass }}"
+            placeholder="{{ __('events.maps_url_placeholder') }}"
+            data-place-url
+            autocomplete="off"
+        >
+        <p class="mt-1 text-xs text-slate-500">{{ __('events.maps_url_help') }}</p>
+    </div>
+    <div data-place-map class="h-56 overflow-hidden rounded-xl border border-slate-200/80 bg-white sm:h-64"></div>
+    <p class="text-xs font-medium text-indigo-600" data-place-status></p>
+    <input type="hidden" name="latitude" value="{{ $placeLat }}" data-place-lat>
+    <input type="hidden" name="longitude" value="{{ $placeLng }}" data-place-lng>
 </div>
 <div class="grid gap-4 sm:grid-cols-2">
     <div>

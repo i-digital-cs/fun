@@ -7,6 +7,7 @@ import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,6 +27,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   final _title = TextEditingController();
   final _description = TextEditingController();
   final _venue = TextEditingController();
+  final _mapsUrl = TextEditingController();
   final _maxParticipants = TextEditingController(text: '10');
   final _requirements = TextEditingController();
   final _expectedCost = TextEditingController();
@@ -43,6 +45,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   bool _loadingCatalog = true;
   bool _loadingEvent = false;
   bool _submitting = false;
+  double? _latitude;
+  double? _longitude;
+  String? _placeStatus;
 
   bool get _isEdit => widget.eventId != null;
 
@@ -104,6 +109,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     _title.text = event.title;
     _description.text = event.description ?? '';
     _venue.text = event.venue;
+    _mapsUrl.text = event.mapsUrl ?? '';
     _maxParticipants.text = event.maxParticipants.toString();
     _requirements.text = event.requirements ?? '';
     _expectedCost.text = event.expectedCost ?? '';
@@ -113,6 +119,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       _cityId = event.cityId ?? event.city?.id;
       _startsAt = event.startsAt;
       _endsAt = event.endsAt;
+      _latitude = event.latitude;
+      _longitude = event.longitude;
+      _placeStatus = event.hasPlacePin ? AppLocalizations.of(context).placePinned : null;
     });
   }
 
@@ -121,6 +130,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     _title.dispose();
     _description.dispose();
     _venue.dispose();
+    _mapsUrl.dispose();
     _maxParticipants.dispose();
     _requirements.dispose();
     _expectedCost.dispose();
@@ -162,10 +172,49 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     if (file != null) setState(() => _imagePath = file.path);
   }
 
+  Future<void> _applyMapsUrl() async {
+    final raw = _mapsUrl.text.trim();
+    final l10n = AppLocalizations.of(context);
+    final parsed = MapsUrlParser.parse(raw);
+    if (parsed != null) {
+      setState(() {
+        _latitude = parsed.lat;
+        _longitude = parsed.lng;
+        _placeStatus = l10n.placeFromLink;
+      });
+      return;
+    }
+    if (raw.isEmpty) return;
+    setState(() => _placeStatus = l10n.placeResolving);
+    final result =
+        await ref.read(eventsRepositoryProvider).resolveMapsUrl(raw);
+    if (!mounted) return;
+    if (result.failure != null || result.data == null) {
+      setState(() => _placeStatus = l10n.mapsUrlUnresolved);
+      return;
+    }
+    setState(() {
+      _latitude = result.data!.lat;
+      _longitude = result.data!.lng;
+      _mapsUrl.text = result.data!.mapsUrl;
+      _placeStatus = l10n.placeFromLink;
+    });
+  }
+
+  void _clearPlace() {
+    setState(() {
+      _latitude = null;
+      _longitude = null;
+      _mapsUrl.clear();
+      _placeStatus = AppLocalizations.of(context).placeCleared;
+    });
+  }
+
   EventDraft? _buildDraft() {
     if (_startsAt == null || _categoryId == null || _cityId == null) return null;
     final maxP = int.tryParse(_maxParticipants.text.trim());
     if (maxP == null) return null;
+    final mapsUrl = _mapsUrl.text.trim();
     return EventDraft(
       title: _title.text.trim(),
       description: _description.text.trim().isEmpty
@@ -185,6 +234,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
           : _expectedCost.text.trim(),
       costPerPerson: num.tryParse(_costPerPerson.text.trim()),
       imagePath: _imagePath,
+      latitude: _latitude,
+      longitude: _longitude,
+      mapsUrl: mapsUrl.isEmpty ? null : mapsUrl,
     );
   }
 
@@ -268,6 +320,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 titleController: _title,
                 descriptionController: _description,
                 venueController: _venue,
+                mapsUrlController: _mapsUrl,
                 maxParticipantsController: _maxParticipants,
                 requirementsController: _requirements,
                 expectedCostController: _expectedCost,
@@ -280,11 +333,16 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 endsAt: _endsAt,
                 imagePath: _imagePath,
                 locale: locale,
+                latitude: _latitude,
+                longitude: _longitude,
+                placeStatus: _placeStatus,
                 onCategoryChanged: (v) => setState(() => _categoryId = v),
                 onCityChanged: (v) => setState(() => _cityId = v),
                 onPickStart: () => _pickDateTime(isStart: true),
                 onPickEnd: () => _pickDateTime(isStart: false),
                 onPickImage: _pickImage,
+                onMapsUrlChanged: _applyMapsUrl,
+                onClearPlace: _clearPlace,
               ),
               const SizedBox(height: 24),
               GradientButton(
@@ -306,6 +364,7 @@ class CreateEventFormCard extends StatelessWidget {
     required this.titleController,
     required this.descriptionController,
     required this.venueController,
+    required this.mapsUrlController,
     required this.maxParticipantsController,
     required this.requirementsController,
     required this.expectedCostController,
@@ -323,11 +382,17 @@ class CreateEventFormCard extends StatelessWidget {
     required this.onPickStart,
     required this.onPickEnd,
     required this.onPickImage,
+    required this.onMapsUrlChanged,
+    required this.onClearPlace,
+    this.latitude,
+    this.longitude,
+    this.placeStatus,
   });
 
   final TextEditingController titleController;
   final TextEditingController descriptionController;
   final TextEditingController venueController;
+  final TextEditingController mapsUrlController;
   final TextEditingController maxParticipantsController;
   final TextEditingController requirementsController;
   final TextEditingController expectedCostController;
@@ -345,6 +410,11 @@ class CreateEventFormCard extends StatelessWidget {
   final VoidCallback onPickStart;
   final VoidCallback onPickEnd;
   final VoidCallback onPickImage;
+  final VoidCallback onMapsUrlChanged;
+  final VoidCallback onClearPlace;
+  final double? latitude;
+  final double? longitude;
+  final String? placeStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -399,6 +469,55 @@ class CreateEventFormCard extends StatelessWidget {
           TextFormField(
             controller: venueController,
             decoration: InputDecoration(labelText: l10n.venue),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.placeOnMap,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.placeOnMapHelp,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: mapsUrlController,
+            decoration: InputDecoration(
+              labelText: l10n.mapsUrl,
+              hintText: l10n.mapsUrlHint,
+              suffixIcon: IconButton(
+                tooltip: l10n.applyMapsLink,
+                onPressed: onMapsUrlChanged,
+                icon: const Icon(Icons.link),
+              ),
+            ),
+            onEditingComplete: onMapsUrlChanged,
+          ),
+          if (latitude != null && longitude != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ],
+          if (placeStatus != null && placeStatus!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              placeStatus!,
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+          ],
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              onPressed: onClearPlace,
+              child: Text(l10n.placeClear),
+            ),
           ),
           const SizedBox(height: 12),
           DateTimePickerField(

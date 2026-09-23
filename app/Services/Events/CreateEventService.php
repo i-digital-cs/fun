@@ -18,6 +18,7 @@ class CreateEventService
 {
     public function __construct(
         private readonly PublicMediaUploader $uploader,
+        private readonly ResolveEventLocationService $locations,
     ) {}
 
     /**
@@ -34,6 +35,9 @@ class CreateEventService
         $this->assertSchedule($data);
         $this->assertCapacity((int) $data['max_participants']);
 
+        $place = $this->locations->resolve($data, (int) $data['city_id']);
+        $data = array_merge($data, $place);
+
         return DB::transaction(function () use ($creator, $data, $image) {
             $event = new Event([
                 'category_id' => $data['category_id'],
@@ -41,6 +45,9 @@ class CreateEventService
                 'title' => $data['title'],
                 'description' => $data['description'] ?? null,
                 'venue' => $data['venue'] ?? null,
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'maps_url' => $data['maps_url'] ?? null,
                 'starts_at' => $data['starts_at'],
                 'ends_at' => $data['ends_at'] ?? null,
                 'max_participants' => (int) $data['max_participants'],

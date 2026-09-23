@@ -28,6 +28,25 @@ void main() {
       expect(event.isFree, isFalse);
     });
 
+    test('parses place pin fields', () {
+      final event = EventsRemoteSource.parseEvent({
+        'id': 2,
+        'title': 'Pinned meetup',
+        'venue': 'Park',
+        'max_participants': 5,
+        'members_count': 1,
+        'latitude': '30.04',
+        'longitude': '31.23',
+        'maps_url': 'https://www.google.com/maps?q=30.04,31.23',
+        'maps_open_url': 'https://www.google.com/maps?q=30.04,31.23',
+        'has_place_pin': true,
+      });
+      expect(event.hasPlacePin, isTrue);
+      expect(event.latitude, closeTo(30.04, 0.001));
+      expect(event.longitude, closeTo(31.23, 0.001));
+      expect(event.mapsOpenUrl, isNotNull);
+    });
+
     test('treats null cost as free', () {
       final event = EventsRemoteSource.parseEvent({
         'id': 1,

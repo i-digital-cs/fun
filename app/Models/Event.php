@@ -26,6 +26,9 @@ class Event extends Model
         'title',
         'description',
         'venue',
+        'latitude',
+        'longitude',
+        'maps_url',
         'starts_at',
         'ends_at',
         'max_participants',
@@ -46,6 +49,8 @@ class Event extends Model
             'ends_at' => 'datetime',
             'max_participants' => 'integer',
             'cost_per_person' => 'decimal:2',
+            'latitude' => 'float',
+            'longitude' => 'float',
             'status' => EventStatus::class,
         ];
     }
@@ -189,5 +194,24 @@ class Event extends Model
             $category?->slug,
             trim($this->title.' '.($category?->name_en ?? '').' '.($category?->name_ar ?? ''))
         );
+    }
+
+    public function hasPlacePin(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    public function mapsOpenUrl(): ?string
+    {
+        if (filled($this->maps_url)) {
+            return $this->maps_url;
+        }
+
+        if (! $this->hasPlacePin()) {
+            return null;
+        }
+
+        return app(\App\Support\MapsUrlParser::class)
+            ->openStreetMapUrl((float) $this->latitude, (float) $this->longitude);
     }
 }

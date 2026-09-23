@@ -710,6 +710,84 @@ abstract class AppLocalizations {
   /// **'Venue'**
   String get venue;
 
+  /// No description provided for @venueTba.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue TBA'**
+  String get venueTba;
+
+  /// No description provided for @placeOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Place on map'**
+  String get placeOnMap;
+
+  /// No description provided for @placeOnMapHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.'**
+  String get placeOnMapHelp;
+
+  /// No description provided for @mapsUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Maps link'**
+  String get mapsUrl;
+
+  /// No description provided for @mapsUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://maps.app.goo.gl/…'**
+  String get mapsUrlHint;
+
+  /// No description provided for @applyMapsLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply link'**
+  String get applyMapsLink;
+
+  /// No description provided for @placeClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear pin'**
+  String get placeClear;
+
+  /// No description provided for @placePinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin saved — guests can open this place in maps.'**
+  String get placePinned;
+
+  /// No description provided for @placeFromLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Location read from your maps link.'**
+  String get placeFromLink;
+
+  /// No description provided for @placeCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Map pin cleared.'**
+  String get placeCleared;
+
+  /// No description provided for @placeResolving.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading location from link…'**
+  String get placeResolving;
+
+  /// No description provided for @mapsUrlUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read a location from that link. Paste a full Google Maps or OpenStreetMap URL.'**
+  String get mapsUrlUnresolved;
+
+  /// No description provided for @openInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in maps'**
+  String get openInMaps;
+
   /// No description provided for @startsAt.
   ///
   /// In en, this message translates to:
