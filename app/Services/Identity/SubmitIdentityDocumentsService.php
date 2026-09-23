@@ -26,12 +26,15 @@ class SubmitIdentityDocumentsService
             throw new DomainException(__('identity.deactivated'));
         }
 
-        if (! $user->status->canUploadIdentityDocuments() && ! $user->isActive()) {
-            throw new DomainException(__('identity.not_allowed'));
-        }
+        $canUpload = $user->status->canUploadIdentityDocuments()
+            || ($user->isActive() && ! $user->hasRequiredIdentityDocuments());
 
-        if ($user->isActive() && $user->hasRequiredIdentityDocuments()) {
-            throw new DomainException(__('identity.already_submitted'));
+        if (! $canUpload) {
+            if ($user->isActive() && $user->hasRequiredIdentityDocuments()) {
+                throw new DomainException(__('identity.already_submitted'));
+            }
+
+            throw new DomainException(__('identity.not_allowed'));
         }
 
         return DB::transaction(function () use ($user, $files) {

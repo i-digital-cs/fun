@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/event-chat.js',
+                'resources/js/auth-access.js',
             ],
             refresh: true,
         }),

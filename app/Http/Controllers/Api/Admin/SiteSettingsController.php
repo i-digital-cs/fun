@@ -19,6 +19,7 @@ class SiteSettingsController extends Controller
         return response()->json([
             'data' => [
                 'display_name' => $settings->display_name,
+                'logo_url' => $service->logoUrl(),
                 'updated_at' => $settings->updated_at?->toIso8601String(),
             ],
         ]);
@@ -29,10 +30,7 @@ class SiteSettingsController extends Controller
         SiteSettingsService $service,
     ): JsonResponse {
         try {
-            $settings = $service->updateDisplayName(
-                $request->user(),
-                $request->validated('display_name')
-            );
+            $settings = $service->update($request->user(), $request->validated());
         } catch (DomainException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
@@ -41,6 +39,7 @@ class SiteSettingsController extends Controller
             'message' => __('admin.settings_saved'),
             'data' => [
                 'display_name' => $settings->display_name,
+                'logo_url' => $service->logoUrl(),
                 'updated_at' => $settings->updated_at?->toIso8601String(),
             ],
         ]);

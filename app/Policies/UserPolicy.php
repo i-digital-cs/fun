@@ -35,6 +35,16 @@ class UserPolicy
         return $actor->platform_role instanceof PlatformRole;
     }
 
+    public function requestIdentityResubmit(User $actor, User $target): bool
+    {
+        return $this->canModerate($actor, $target);
+    }
+
+    public function viewOwnIdentityDocument(User $actor, User $owner): bool
+    {
+        return $actor->id === $owner->id;
+    }
+
     private function canModerate(User $actor, User $target): bool
     {
         if (! $actor->platform_role instanceof PlatformRole) {

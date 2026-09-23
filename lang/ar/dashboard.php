@@ -46,6 +46,7 @@ return [
     'nav_create' => 'إنشاء فعالية',
     'nav_profile' => 'الملف',
     'nav_location' => 'الموقع',
+    'nav_identity' => 'الهوية',
     'nav_blocked' => 'المحظورون',
     'view_event' => 'عرض الفعالية',
     'empty_nearby' => 'مفيش فعاليات قريبة لسه. كن أول من ينشئ واحدة.',

@@ -12,7 +12,9 @@ use App\Http\Controllers\Web\Admin\ReportModerationController;
 use App\Http\Controllers\Web\Admin\SiteSettingsController;
 use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Web\Auth\EmailVerificationController;
 use App\Http\Controllers\Web\Auth\GoogleAuthController;
+use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\Events\EventChatController;
@@ -23,6 +25,7 @@ use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Identity\IdentityDocumentController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
+use App\Http\Controllers\Web\Profile\ProfileController;
 use App\Http\Controllers\Web\Safety\BlockController;
 use App\Http\Controllers\Web\Safety\ReportController;
 use App\Http\Controllers\Web\Safety\SafetyGuidelinesController;
@@ -48,6 +51,22 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:auth');
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+
+    Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'store'])
+        ->middleware('throttle:auth-codes')
+        ->name('password.email');
+    Route::get('/forgot-password/verify', [PasswordResetController::class, 'showVerify'])->name('password.verify');
+    Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify'])
+        ->middleware('throttle:auth-codes')
+        ->name('password.verify.store');
+    Route::post('/forgot-password/resend', [PasswordResetController::class, 'resend'])
+        ->middleware('throttle:auth-codes')
+        ->name('password.resend');
+    Route::get('/reset-password', [PasswordResetController::class, 'showReset'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+        ->middleware('throttle:auth')
+        ->name('password.update');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -55,16 +74,32 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::post('/email/verify', [EmailVerificationController::class, 'verify'])
+        ->middleware('throttle:auth-codes')
+        ->name('verification.verify');
+    Route::post('/email/verify/resend', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:auth-codes')
+        ->name('verification.send');
 
-    Route::get('/account/deactivated', [AccountStatusController::class, 'deactivated'])->name('account.deactivated');
+    Route::middleware('verified.email')->group(function () {
+        Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-    Route::get('/identity', [IdentityDocumentController::class, 'create'])->name('identity.create');
-    Route::post('/identity', [IdentityDocumentController::class, 'store'])
-        ->middleware('throttle:uploads')
-        ->name('identity.store');
+        Route::get('/account/deactivated', [AccountStatusController::class, 'deactivated'])->name('account.deactivated');
 
-    Route::middleware('account.active')->group(function () {
+        Route::get('/identity', [IdentityDocumentController::class, 'create'])->name('identity.create');
+        Route::post('/identity', [IdentityDocumentController::class, 'store'])
+            ->middleware('throttle:uploads')
+            ->name('identity.store');
+        Route::get('/identity/documents/{document}', [IdentityDocumentController::class, 'showDocument'])
+            ->whereNumber('document')
+            ->name('identity.documents.show');
+
+        Route::middleware('account.active')->group(function () {
+        Route::get('/settings/profile', [ProfileController::class, 'edit'])->name('settings.profile.edit');
+        Route::put('/settings/profile', [ProfileController::class, 'update'])
+            ->middleware('throttle:uploads')
+            ->name('settings.profile.update');
         Route::get('/settings/location', [LocationPreferenceController::class, 'edit'])->name('settings.location.edit');
         Route::put('/settings/location', [LocationPreferenceController::class, 'update'])->name('settings.location.update');
 
@@ -162,6 +197,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/identity', [IdentityDocumentModerationController::class, 'index'])->name('identity.index');
         Route::get('/identity/users/{user}', [IdentityDocumentModerationController::class, 'show'])->name('identity.show');
+        Route::post('/identity/users/{user}/request-resubmit', [IdentityDocumentModerationController::class, 'requestResubmit'])
+            ->whereNumber('user')
+            ->name('identity.request-resubmit');
         Route::get('/identity/documents/{document}', [IdentityDocumentModerationController::class, 'download'])
             ->whereNumber('document')
             ->name('identity.download');
@@ -216,5 +254,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/categories/{category}/deactivate', [AdminCategoryController::class, 'deactivate'])->name('categories.deactivate');
         Route::post('/categories/{category}/activate', [AdminCategoryController::class, 'activate'])->name('categories.activate');
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+    });
     });
 });

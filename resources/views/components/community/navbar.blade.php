@@ -14,12 +14,16 @@
 <header class="sticky top-0 z-50 border-b border-white/60 bg-white/70 shadow-[0_8px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
     <nav class="mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 py-3 sm:px-6" aria-label="{{ __('ui.primary_nav') }}">
         <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-2.5 no-underline" aria-label="{{ $brand }}">
-            <span class="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                </svg>
-                <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-orange-400 ring-2 ring-white"></span>
-            </span>
+            @if ($siteLogoUrl ?? site_logo_url())
+                <img src="{{ $siteLogoUrl ?? site_logo_url() }}" alt="{{ $brand }}" class="h-10 w-auto max-w-[2.75rem] rounded-2xl object-contain shadow-lg shadow-indigo-600/20 transition-transform duration-300 group-hover:scale-105">
+            @else
+                <span class="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    <span class="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-orange-400 ring-2 ring-white"></span>
+                </span>
+            @endif
             <span class="hidden flex-col leading-none sm:flex">
                 <span class="text-[15px] font-extrabold tracking-tight text-slate-900">{{ $brand }}</span>
                 <span class="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-indigo-500">

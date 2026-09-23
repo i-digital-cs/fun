@@ -36,6 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [MeController::class, 'show']);
     Route::post('/logout', [LoginController::class, 'destroy']);
 
+    Route::get('/identity', [ApiIdentityDocumentController::class, 'show']);
+    Route::get('/identity/documents/{document}', [ApiIdentityDocumentController::class, 'showDocument'])
+        ->whereNumber('document');
     Route::post('/identity', [ApiIdentityDocumentController::class, 'store'])
         ->middleware('throttle:uploads');
 

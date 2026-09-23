@@ -59,10 +59,19 @@
                 <a href="{{ route('home') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
                     {{ __('ui.home') }}
                 </a>
+                <a href="{{ route('settings.profile.edit') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
+                    {{ __('dashboard.nav_profile') }}
+                </a>
                 <a href="{{ route('settings.location.edit') }}"
                    data-location-modal-open
                    class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
                     {{ __('dashboard.nav_location') }}
+                </a>
+                <a href="{{ route('identity.create') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
+                    {{ __('dashboard.nav_identity') }}
+                    @if ($user?->needsIdentityDocuments())
+                        <span class="ms-1 inline-block h-1.5 w-1.5 rounded-full bg-orange-500 align-middle"></span>
+                    @endif
                 </a>
                 <a href="{{ route('blocks.index') }}" class="block whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-700 no-underline hover:bg-slate-50">
                     {{ __('dashboard.nav_blocked') }}
@@ -76,15 +85,14 @@
             </div>
         </details>
 
-        <button type="button"
-                data-location-modal-open
+        <a href="{{ route('settings.profile.edit') }}"
                 class="flex items-center gap-2 md:hidden"
-                aria-label="{{ __('dashboard.nav_location') }}">
+                aria-label="{{ __('dashboard.nav_profile') }}">
             @if ($profilePhoto)
                 <img src="{{ $profilePhoto }}" alt="" class="h-9 w-9 rounded-full object-cover bg-slate-200">
             @else
                 <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">{{ $initials }}</span>
             @endif
-        </button>
+        </a>
     </div>
 </header>

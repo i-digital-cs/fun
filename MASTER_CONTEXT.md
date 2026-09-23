@@ -194,13 +194,18 @@ The initial product flow requires:
 * ID back
 * selfie
 
-The initial product requirement is immediate acceptance without waiting for manual administrator approval.
+The initial product requirement is **immediate acceptance** without waiting for manual administrator approval on first upload.
 
-Administrators can later deactivate a user.
+Members can open the identity screen and **view their own submitted images** (private, owner-only stream). Images are never public.
 
-Identity documents are private sensitive media and must be stored in Cloudflare R2.
+Administrators with appropriate permissions can:
 
-Administrators with appropriate permissions can access identity documents.
+* view and download identity documents
+* **request documents again** — sets the user back to `pending_documents` so they must re-upload all three files before participating again (previous files remain until replaced)
+
+Administrators can also deactivate a user.
+
+Identity documents are private sensitive media and must be stored in Cloudflare R2 (V1 may use the configured private disk).
 
 Identity documents must never be publicly accessible.
 
@@ -216,11 +221,13 @@ The architecture must allow future automated KYC verification.
 
 Account status values:
 
-* `pending_documents` — registered, identity documents not yet uploaded
+* `pending_documents` — registered without documents, **or** admin requested a resubmit; identity upload required
 * `active` — identity documents uploaded; immediate acceptance; full participation allowed
 * `deactivated` — administratively deactivated
 
 Identity-document upload transitions the user from `pending_documents` to `active` without waiting for manual administrator approval.
+
+When an administrator requests documents again, the user returns to `pending_documents` until a full new upload succeeds.
 
 Administrators with `SUPER_ADMIN` or `MODERATOR` permissions can deactivate a user.
 

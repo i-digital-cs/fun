@@ -46,6 +46,7 @@ return [
     'nav_create' => 'Create Event',
     'nav_profile' => 'Profile',
     'nav_location' => 'Location',
+    'nav_identity' => 'Identity',
     'nav_blocked' => 'Blocked users',
     'view_event' => 'View event',
     'empty_nearby' => 'No nearby events yet. Be the first to create one.',

@@ -151,3 +151,182 @@
 .location-modal::backdrop {
     background: rgb(2 6 23 / 0.5);
 }
+
+/* Login access cinematic sequence */
+.login-access__digit {
+    display: inline-flex;
+    height: 3.25rem;
+    width: 3.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.9rem;
+    border: 1.5px solid #c7d2fe;
+    background: #fff;
+    color: #1e1b4b;
+    font-size: 1.35rem;
+    font-weight: 700;
+    box-shadow: 0 8px 20px -12px rgba(79, 70, 229, 0.45);
+    transition:
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.35s ease,
+        border-color 0.25s ease;
+}
+
+.login-access__digit.is-empty {
+    border-color: #e2e8f0;
+    box-shadow: none;
+}
+
+.login-access__digit-input {
+    appearance: none;
+    caret-color: #4f46e5;
+}
+
+.login-access__digits.is-orbiting {
+    gap: 0;
+}
+
+.login-access__digits.is-orbiting .login-access__digit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: -1.625rem 0 0 -1.625rem;
+    animation: login-orbit 1.35s linear infinite;
+}
+
+.login-access__digits.is-orbiting .login-access__digit:nth-child(1) {
+    --orbit-start: 0deg;
+    --tumble: 12deg;
+}
+.login-access__digits.is-orbiting .login-access__digit:nth-child(2) {
+    --orbit-start: 90deg;
+    --tumble: -28deg;
+}
+.login-access__digits.is-orbiting .login-access__digit:nth-child(3) {
+    --orbit-start: 180deg;
+    --tumble: 48deg;
+}
+.login-access__digits.is-orbiting .login-access__digit:nth-child(4) {
+    --orbit-start: 270deg;
+    --tumble: -18deg;
+}
+
+.login-access__digits.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.login-access__verify,
+.login-access__success {
+    opacity: 0;
+    transform: scale(0.92);
+    transition:
+        opacity 0.4s ease,
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.login-access__verify.is-visible,
+.login-access__success.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.login-access__ring-track {
+    stroke: #e0e7ff;
+}
+
+.login-access__ring-progress {
+    stroke: #818cf8;
+    filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.75));
+    transform: rotate(-90deg);
+    transform-origin: 60px 60px;
+    transition: stroke-dashoffset 0.05s linear;
+}
+
+.login-access__ring.is-spinning .login-access__ring-svg {
+    animation: login-spin 1.1s linear infinite;
+}
+
+.login-access__check {
+    animation: login-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.login-access__piece {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    opacity: 0;
+    animation: login-confetti var(--d, 0.7s) ease-out forwards;
+}
+
+.login-access.is-shake .login-access__card {
+    animation: login-shake 0.42s ease;
+}
+
+@keyframes login-orbit {
+    from {
+        transform: rotate(var(--orbit-start, 0deg)) translateX(4.4rem) rotate(calc(-1 * var(--orbit-start, 0deg) + var(--tumble, 0deg)));
+    }
+    to {
+        transform: rotate(calc(var(--orbit-start, 0deg) + 360deg)) translateX(4.4rem)
+            rotate(calc(-1 * (var(--orbit-start, 0deg) + 360deg) + var(--tumble, 0deg)));
+    }
+}
+
+@keyframes login-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes login-pop {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes login-confetti {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1) rotate(var(--r));
+    }
+}
+
+@keyframes login-shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-8px);
+    }
+    75% {
+        transform: translateX(8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-access__digits.is-orbiting .login-access__digit,
+    .login-access__ring.is-spinning .login-access__ring-svg,
+    .login-access__check,
+    .login-access__piece,
+    .login-access.is-shake .login-access__card {
+        animation: none;
+    }
+}

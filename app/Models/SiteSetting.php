@@ -12,6 +12,8 @@ class SiteSetting extends Model
      */
     protected $fillable = [
         'display_name',
+        'logo_path',
+        'logo_disk',
         'updated_by',
     ];
 

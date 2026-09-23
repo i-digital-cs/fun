@@ -29,10 +29,15 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('*', function ($view): void {
             $view->with('siteName', site_display_name());
+            $view->with('siteLogoUrl', site_logo_url());
         });
 
         RateLimiter::for('auth', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('auth-codes', function (Request $request) {
+            return Limit::perMinute(5)->by((string) ($request->user()?->id ?: $request->ip()));
         });
 
         RateLimiter::for('uploads', function (Request $request) {

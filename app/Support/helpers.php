@@ -13,6 +13,17 @@ if (! function_exists('site_display_name')) {
     }
 }
 
+if (! function_exists('site_logo_url')) {
+    function site_logo_url(): ?string
+    {
+        try {
+            return app(SiteSettingsService::class)->logoUrl();
+        } catch (Throwable) {
+            return null;
+        }
+    }
+}
+
 if (! function_exists('category_emoji')) {
     function category_emoji(?string $name): string
     {

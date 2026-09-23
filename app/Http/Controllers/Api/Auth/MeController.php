@@ -22,6 +22,9 @@ class MeController extends Controller
             'city_id' => $user->city_id,
             'distance_km' => $user->distance_km,
             'profile_image_path' => $user->profile_image_path,
+            'needs_identity_documents' => $user->needsIdentityDocuments(),
+            'has_identity_documents' => $user->hasRequiredIdentityDocuments(),
+            'identity_resubmit_required' => $user->identityResubmitRequired(),
             'city' => $user->city ? [
                 'id' => $user->city->id,
                 'name' => $user->city->localizedName(),

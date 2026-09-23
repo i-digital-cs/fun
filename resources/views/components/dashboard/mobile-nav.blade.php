@@ -5,8 +5,8 @@
     $isHome = request()->routeIs('dashboard');
     $isDiscover = request()->routeIs('events.index');
     $isMine = request()->routeIs('events.mine');
-    $isCreate = request()->routeIs('events.create', 'identity.create');
-    $isProfile = request()->routeIs('settings.location.edit');
+    $isCreate = request()->routeIs('events.create');
+    $isProfile = request()->routeIs('settings.profile.*', 'settings.location.edit', 'identity.create', 'blocks.index');
 @endphp
 
 <nav class="fixed inset-x-0 bottom-0 z-40 flex h-[65px] items-center justify-around border-t border-[#e7ebf3] bg-white px-2 pt-1.5 max-lg:flex lg:hidden"
@@ -65,8 +65,7 @@
         {{ __('dashboard.nav_my_events') }}
     </a>
 
-    <a href="{{ route('settings.location.edit') }}"
-       data-location-modal-open
+    <a href="{{ route('settings.profile.edit') }}"
        @class([
            'flex flex-col items-center gap-0.5 text-[9px] font-semibold no-underline',
            'font-extrabold text-indigo-600' => $isProfile,

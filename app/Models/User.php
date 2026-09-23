@@ -106,6 +106,20 @@ class User extends Authenticatable
         return $this->status === AccountStatus::PendingDocuments;
     }
 
+    public function canUploadIdentityDocuments(): bool
+    {
+        return $this->status->canUploadIdentityDocuments()
+            || ($this->isActive() && ! $this->hasRequiredIdentityDocuments());
+    }
+
+    /**
+     * Pending again after admin asked for new documents (previous files may still exist).
+     */
+    public function identityResubmitRequired(): bool
+    {
+        return $this->needsIdentityDocuments() && $this->identityDocuments()->exists();
+    }
+
     public function canParticipate(): bool
     {
         return $this->status->canParticipate();

@@ -17,6 +17,7 @@ class SiteSettingsController extends Controller
 
         return view('admin.settings.edit', [
             'settings' => $service->current(),
+            'logoUrl' => $service->logoUrl(),
         ]);
     }
 
@@ -27,10 +28,7 @@ class SiteSettingsController extends Controller
         abort_unless($request->user()?->isSuperAdmin(), 403, __('admin.super_admin_only'));
 
         try {
-            $service->updateDisplayName(
-                $request->user(),
-                $request->validated('display_name')
-            );
+            $service->update($request->user(), $request->validated());
         } catch (DomainException $exception) {
             return back()->withInput()->withErrors(['display_name' => $exception->getMessage()]);
         }

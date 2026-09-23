@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\LogApiRequests;
 use App\Http\Middleware\RedirectPublicPrefix;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -25,11 +27,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(prepend: [
             SetLocale::class,
+            LogApiRequests::class,
         ]);
 
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
             'platform.admin' => EnsurePlatformAdmin::class,
+            'verified.email' => EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

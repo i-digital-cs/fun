@@ -13,17 +13,23 @@
     $isHome = request()->routeIs('dashboard');
     $isDiscover = request()->routeIs('events.index');
     $isMine = request()->routeIs('events.mine');
-    $isCreate = request()->routeIs('events.create', 'identity.create');
+    $isCreate = request()->routeIs('events.create');
+    $isIdentity = request()->routeIs('identity.create');
     $isBlocked = request()->routeIs('blocks.index');
+    $needsIdentity = $user?->needsIdentityDocuments() === true;
 @endphp
 
 <aside class="dash-sidebar relative min-h-screen pb-28">
     <a href="{{ route('dashboard') }}" class="mb-6 flex items-center gap-2.5 px-2.5 pb-1 no-underline">
-        <span class="flex h-10 w-10 items-center justify-center rounded-[13px] bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/25">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-            </svg>
-        </span>
+        @if ($siteLogoUrl ?? site_logo_url())
+            <img src="{{ $siteLogoUrl ?? site_logo_url() }}" alt="{{ $brand }}" class="h-10 w-auto max-w-[2.75rem] rounded-[13px] object-contain shadow-lg shadow-indigo-600/20">
+        @else
+            <span class="flex h-10 w-10 items-center justify-center rounded-[13px] bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/25">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+            </span>
+        @endif
         <span class="text-xl font-extrabold tracking-tight text-slate-900">{{ $brand }}</span>
     </a>
 
@@ -80,6 +86,23 @@
                 <path stroke-linecap="round" d="M16 2v4M8 2v4M12 11v6M9 14h6"/>
             </svg>
             {{ __('dashboard.nav_create') }}
+        </a>
+
+        <a href="{{ route('identity.create') }}"
+           @class([
+               'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
+               'bg-indigo-50 text-indigo-600' => $isIdentity,
+               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isIdentity,
+           ])
+           @if ($isIdentity) aria-current="page" @endif>
+            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path stroke-linecap="round" d="M9 12l2 2 4-4"/>
+            </svg>
+            <span class="min-w-0 flex-1 truncate">{{ __('dashboard.nav_identity') }}</span>
+            @if ($needsIdentity)
+                <span class="h-2 w-2 shrink-0 rounded-full bg-orange-500" aria-hidden="true"></span>
+            @endif
         </a>
 
         <a href="{{ route('blocks.index') }}"
