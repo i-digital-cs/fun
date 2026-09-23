@@ -393,6 +393,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageHint => 'Type a message…';
 
   @override
+  String get attachSoon => 'Attachments coming soon.';
+
+  @override
+  String get chatChip => 'Chat';
+
+  @override
   String get noMessages => 'No messages yet';
 
   @override

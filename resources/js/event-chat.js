@@ -7,7 +7,13 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
-function appendMessage(container, message, emptyEl) {
+function autosize(textarea) {
+    textarea.style.height = 'auto';
+    const next = Math.min(Math.max(textarea.scrollHeight, 52), 200);
+    textarea.style.height = `${next}px`;
+}
+
+function appendMessage(container, message, emptyEl, currentUserId) {
     if (container.querySelector(`[data-message-id="${message.id}"]`)) {
         return;
     }
@@ -17,16 +23,20 @@ function appendMessage(container, message, emptyEl) {
     const time = message.created_at
         ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
+    const mine = Number(message.user?.id) === Number(currentUserId);
 
     const el = document.createElement('div');
-    el.className = 'chat-message rounded-xl bg-background px-3 py-2';
+    el.className = `chat-message ${mine ? 'chat-message--mine' : 'chat-message--theirs'}`;
     el.dataset.messageId = String(message.id);
+    el.dataset.mine = mine ? '1' : '0';
     el.innerHTML = `
-        <div class="flex items-baseline justify-between gap-2">
-            <p class="text-sm font-semibold">${escapeHtml(message.user?.name ?? '')}</p>
-            <time class="text-xs text-muted">${escapeHtml(time)}</time>
+        <div class="chat-message__meta">
+            <p class="chat-message__author">${escapeHtml(message.user?.name ?? '')}</p>
+            <div class="chat-message__meta-end">
+                <time class="chat-message__time">${escapeHtml(time)}</time>
+            </div>
         </div>
-        <p class="mt-1 whitespace-pre-wrap break-words text-sm">${escapeHtml(message.body ?? '')}</p>
+        <p class="chat-message__body">${escapeHtml(message.body ?? '')}</p>
     `;
     container.appendChild(el);
     container.scrollTop = container.scrollHeight;
@@ -43,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const bodyInput = document.getElementById('chat-body');
     const statusEl = document.getElementById('chat-status');
     const emptyEl = document.getElementById('chat-empty');
+    const sendBtn = form?.querySelector('[data-chat-send]');
+    const attachBtn = form?.querySelector('[data-chat-attach]');
     const channelName = root.dataset.channel;
     const postUrl = root.dataset.postUrl;
     const csrf = root.dataset.csrf;
@@ -50,12 +62,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
+    if (bodyInput) {
+        autosize(bodyInput);
+        bodyInput.addEventListener('input', () => autosize(bodyInput));
+        bodyInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                form?.requestSubmit();
+            }
+        });
+    }
+
+    attachBtn?.addEventListener('click', () => {
+        if (statusEl) {
+            statusEl.textContent = attachBtn.title || 'Attachments coming soon.';
+            statusEl.classList.remove('hidden');
+        }
+    });
+
     if (window.Echo && channelName) {
         window.Echo.private(channelName).listen('.message.posted', (payload) => {
             if (Number(payload.user?.id) === currentUserId) {
                 return;
             }
-            appendMessage(messagesEl, payload, emptyEl);
+            appendMessage(messagesEl, payload, emptyEl, currentUserId);
         });
     } else if (statusEl) {
         statusEl.textContent = statusEl.dataset.fallback || 'Live updates unavailable.';
@@ -69,8 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
+        if (sendBtn) {
+            sendBtn.disabled = true;
+        }
 
         try {
             const response = await window.axios.post(
@@ -84,8 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             );
 
-            appendMessage(messagesEl, response.data.data, emptyEl);
+            appendMessage(messagesEl, response.data.data, emptyEl, currentUserId);
             bodyInput.value = '';
+            autosize(bodyInput);
+            if (statusEl && !statusEl.dataset.fallbackActive) {
+                statusEl.classList.add('hidden');
+            }
         } catch (error) {
             const message =
                 error?.response?.data?.message
@@ -96,7 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusEl.classList.remove('hidden');
             }
         } finally {
-            submitBtn.disabled = false;
+            if (sendBtn) {
+                sendBtn.disabled = false;
+            }
             bodyInput.focus();
         }
     });

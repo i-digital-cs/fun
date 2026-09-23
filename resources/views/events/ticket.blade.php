@@ -6,6 +6,7 @@
     <div class="event-ticket-stage relative mx-auto max-w-3xl overflow-hidden rounded-[2rem] border border-white/10 px-4 py-10 sm:px-8 sm:py-14">
         <div class="event-ticket-stage__glow" aria-hidden="true"></div>
         <div class="event-ticket-stage__noise bg-noise" aria-hidden="true"></div>
+        <x-ui.espiral tone="indigo" size="lg" :arms="3" :dots="14" class="espiral--anchor-end opacity-40" />
 
         <div class="relative z-10 flex flex-wrap items-center justify-between gap-3">
             <div>

@@ -391,6 +391,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messageHint => 'اكتب رسالة…';
 
   @override
+  String get attachSoon => 'المرفقات قريبًا.';
+
+  @override
+  String get chatChip => 'محادثة';
+
+  @override
   String get noMessages => 'لا رسائل بعد';
 
   @override

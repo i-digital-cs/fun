@@ -2225,3 +2225,321 @@
     margin-inline-end: 80px;
     transform: scaleX(-1);
 }
+
+/* Ambient spiral vibe — Uiverse.io by 20essentials (contained, non-blocking) */
+.espiral {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    flex-wrap: wrap;
+    place-content: center;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0.55;
+}
+
+.espiral--sm {
+    opacity: 0.4;
+    transform: scale(0.42);
+    transform-origin: center center;
+}
+
+.espiral--md {
+    opacity: 0.5;
+    transform: scale(0.55);
+    transform-origin: center center;
+}
+
+.espiral--lg {
+    opacity: 0.45;
+    transform: scale(0.72);
+    transform-origin: center center;
+}
+
+.espiral--indigo {
+    --espiral-color: #818cf8;
+}
+
+.espiral--amber {
+    --espiral-color: #fb923c;
+}
+
+.espiral--emerald {
+    --espiral-color: #34d399;
+}
+
+.espiral__loader {
+    position: relative;
+    width: 0;
+    height: 0;
+    transform: rotate(calc(var(--r) * 45deg));
+}
+
+.espiral__dot {
+    --color: var(--espiral-color);
+    top: 0;
+    width: 200px;
+    height: 2px;
+    left: -200px;
+    position: absolute;
+    transform-origin: right;
+    transform: rotate(calc(var(--i) * 18deg));
+}
+
+.espiral__dot::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    width: 12px;
+    height: 12px;
+    background-color: var(--color);
+    border-radius: 50%;
+    box-shadow:
+        0 0 8px var(--color),
+        0 0 16px var(--color),
+        0 0 28px var(--color),
+        0 0 40px var(--color);
+    animation: espiral-animate 5s linear infinite;
+    animation-delay: calc(var(--i) * -0.5s);
+}
+
+@keyframes espiral-animate {
+    0% {
+        transform: translateX(200px) scale(1);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(0) scale(0);
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .espiral {
+        display: none;
+    }
+}
+
+/* Anchor variants: park spiral on the end/right of a hero, not dead center over copy */
+.espiral--anchor-end {
+    inset: auto;
+    inset-block: -10%;
+    inset-inline-end: -8%;
+    width: min(28rem, 70%);
+    height: 120%;
+}
+
+.espiral--anchor-cover {
+    inset: auto;
+    inset-block-start: -15%;
+    inset-inline-end: -5%;
+    width: min(22rem, 55%);
+    height: 130%;
+    opacity: 0.35;
+}
+
+/* Event chat — Uiverse composer (dorian_8749) + bubbles */
+.event-chat__composer {
+    padding: 1rem 1.25rem 1.25rem;
+    background: rgb(248 250 252 / 0.9);
+    border-top: 1px solid rgb(226 232 240 / 0.8);
+}
+
+.event-chat__status {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: rgb(100 116 139);
+}
+
+.chat-composer {
+    width: 100%;
+}
+
+.chat-composer__shell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: rgb(15 23 42 / 0.04);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.chat-composer__input {
+    width: 100%;
+    min-height: 52px;
+    max-height: 200px;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: 0.75rem 0.75rem 0 0;
+    background: #0b0b0f;
+    color: #fff;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    resize: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.chat-composer__input::placeholder {
+    color: rgb(255 255 255 / 0.7);
+}
+
+.chat-composer__input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.chat-composer__toolbar {
+    position: relative;
+    height: 3rem;
+    background: #0b0b0f;
+    border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.chat-composer__tools {
+    position: absolute;
+    inset-inline-start: 0.75rem;
+    bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-composer__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background: rgb(255 255 255 / 0.05);
+    color: rgb(255 255 255 / 0.4);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.chat-composer__icon-btn:hover {
+    background: rgb(255 255 255 / 0.1);
+    color: #fff;
+}
+
+.chat-composer__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 2rem;
+    padding-inline: 0.55rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid rgb(129 140 248);
+    background: rgb(99 102 241 / 0.15);
+    color: rgb(165 180 252);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.chat-composer__chip svg {
+    color: rgb(129 140 248);
+    flex-shrink: 0;
+}
+
+.chat-composer__send {
+    position: absolute;
+    inset-inline-end: 0.75rem;
+    bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background: rgb(255 255 255 / 0.05);
+    color: rgb(255 255 255 / 0.4);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.chat-composer__send:hover:not(:disabled) {
+    background: rgb(249 115 22 / 0.2);
+    color: rgb(253 186 116);
+}
+
+.chat-composer__send:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.chat-message {
+    max-width: min(100%, 28rem);
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+.chat-message--theirs {
+    margin-inline-end: auto;
+    border: 1px solid rgb(241 245 249);
+    background: rgb(248 250 252 / 0.9);
+}
+
+.chat-message--mine {
+    margin-inline-start: auto;
+    background: linear-gradient(135deg, rgb(79 70 229 / 0.12), rgb(249 115 22 / 0.1));
+    border: 1px solid rgb(199 210 254);
+}
+
+.chat-message__meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.chat-message__author {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: rgb(15 23 42);
+}
+
+.chat-message--mine .chat-message__author {
+    color: rgb(67 56 202);
+}
+
+.chat-message__meta-end {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chat-message__time {
+    font-size: 0.6875rem;
+    color: rgb(148 163 184);
+}
+
+.chat-message__report {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: rgb(220 38 38);
+    text-decoration: none;
+}
+
+.chat-message__report:hover {
+    color: rgb(153 27 27);
+}
+
+.chat-message__body {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: rgb(51 65 85);
+    white-space: pre-wrap;
+    word-break: break-word;
+}

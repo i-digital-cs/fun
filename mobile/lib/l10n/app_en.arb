@@ -153,6 +153,8 @@
   "tapToChangeLocation": "Tap to change city & distance",
   "setYourLocation": "Set your location",
   "messageHint": "Type a message…",
+  "attachSoon": "Attachments coming soon.",
+  "chatChip": "Chat",
   "noMessages": "No messages yet",
   "noRequests": "No pending requests",
   "noBlocks": "You haven't blocked anyone",

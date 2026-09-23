@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
-import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
@@ -332,51 +331,146 @@ class ChatComposer extends StatelessWidget {
   final bool sending;
   final VoidCallback onSend;
 
+  static const _ink = Color(0xFF0B0B0F);
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final bottom = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        MediaQuery.of(context).padding.bottom + 12,
-      ),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, bottom + 12),
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: Color(0xFFF8FAFC),
         border: Border(top: BorderSide(color: AppColors.borderSoft)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0x0A0F172A),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
               controller: controller,
+              minLines: 1,
+              maxLines: 6,
+              style: const TextStyle(color: Colors.white, height: 1.35),
+              cursorColor: AppColors.accent,
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => onSend(),
               decoration: InputDecoration(
                 hintText: l10n.messageHint,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                filled: true,
+                fillColor: _ink,
+                contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderSide: BorderSide.none,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.borderSoft),
+                enabledBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 56,
-            child: GradientButton(
-              label: l10n.send,
-              isLoading: sending,
-              onPressed: onSend,
+            Container(
+              height: 48,
+              decoration: const BoxDecoration(
+                color: _ink,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  _ComposerIconButton(
+                    icon: Icons.attach_file_rounded,
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.attachSoon)),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0xFF818CF8)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.chat_bubble_outline,
+                          size: 14,
+                          color: Color(0xFF818CF8),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.chatChip,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFA5B4FC),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  _ComposerIconButton(
+                    icon: Icons.send_rounded,
+                    highlight: true,
+                    onPressed: sending ? null : onSend,
+                  ),
+                ],
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ComposerIconButton extends StatelessWidget {
+  const _ComposerIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.highlight = false,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            icon,
+            size: 16,
+            color: highlight
+                ? const Color(0xFFFDBA74)
+                : Colors.white.withValues(alpha: 0.45),
           ),
-        ],
+        ),
       ),
     );
   }

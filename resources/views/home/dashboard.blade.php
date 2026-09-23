@@ -40,6 +40,7 @@
 
 {{-- Hero --}}
 <section class="dash-hero relative flex min-h-[315px] items-center overflow-hidden rounded-[23px] px-6 py-8 text-white sm:px-10 sm:py-10">
+    <x-ui.espiral tone="amber" size="lg" :arms="3" :dots="14" class="espiral--anchor-end" />
     <div class="relative z-10 max-w-[650px]">
         <span class="mb-4 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1.5 text-[11px] font-bold">
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

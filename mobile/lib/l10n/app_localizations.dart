@@ -830,6 +830,18 @@ abstract class AppLocalizations {
   /// **'Type a message…'**
   String get messageHint;
 
+  /// No description provided for @attachSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments coming soon.'**
+  String get attachSoon;
+
+  /// No description provided for @chatChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get chatChip;
+
   /// No description provided for @noMessages.
   ///
   /// In en, this message translates to:

@@ -16,52 +16,93 @@
 
         <div
             id="event-chat"
-            class="flex min-h-[28rem] flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm"
+            class="event-chat flex min-h-[28rem] flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm"
             data-event-id="{{ $event->id }}"
             data-post-url="{{ route('events.chat.store', $event) }}"
             data-channel="events.{{ $event->id }}.chat"
             data-user-id="{{ auth()->id() }}"
             data-csrf="{{ csrf_token() }}"
         >
-            <div id="chat-messages" class="flex-1 space-y-3 overflow-y-auto p-5" role="log" aria-live="polite">
+            <div id="chat-messages" class="event-chat__messages fancy-scroll flex-1 space-y-3 overflow-y-auto p-5" role="log" aria-live="polite">
                 @forelse ($messages as $message)
-                    <div class="chat-message rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3" data-message-id="{{ $message->id }}">
-                        <div class="flex items-baseline justify-between gap-2">
-                            <p class="text-sm font-semibold text-slate-900">{{ $message->user?->name }}</p>
-                            <div class="flex items-center gap-2">
-                                @if ($message->user_id !== auth()->id())
-                                    <a href="{{ route('reports.create', ['reportable_type' => 'message', 'reportable_id' => $message->id]) }}" class="text-xs font-medium text-red-600 hover:text-red-800">{{ __('safety.report') }}</a>
+                    @php($mine = (int) $message->user_id === (int) auth()->id())
+                    <div
+                        class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}"
+                        data-message-id="{{ $message->id }}"
+                        data-mine="{{ $mine ? '1' : '0' }}"
+                    >
+                        <div class="chat-message__meta">
+                            <p class="chat-message__author">{{ $message->user?->name }}</p>
+                            <div class="chat-message__meta-end">
+                                @if (! $mine)
+                                    <a href="{{ route('reports.create', ['reportable_type' => 'message', 'reportable_id' => $message->id]) }}" class="chat-message__report">{{ __('safety.report') }}</a>
                                 @endif
-                                <time class="text-xs text-slate-400" datetime="{{ $message->created_at?->toIso8601String() }}">
+                                <time class="chat-message__time" datetime="{{ $message->created_at?->toIso8601String() }}">
                                     {{ $message->created_at?->timezone(config('app.timezone'))->format('H:i') }}
                                 </time>
                             </div>
                         </div>
-                        <p class="mt-1 whitespace-pre-wrap break-words text-sm text-slate-600">{{ $message->body }}</p>
+                        <p class="chat-message__body">{{ $message->body }}</p>
                     </div>
                 @empty
-                    <p id="chat-empty" class="text-sm text-slate-500">{{ __('chat.empty_thread') }}</p>
+                    <p id="chat-empty" class="text-center text-sm text-slate-500">{{ __('chat.empty_thread') }}</p>
                 @endforelse
             </div>
 
-            <form id="chat-form" method="POST" action="{{ route('events.chat.store', $event) }}" class="border-t border-slate-200/70 bg-slate-50/50 p-5">
+            {{-- Uiverse.io by dorian_8749 — chat composer --}}
+            <form id="chat-form" method="POST" action="{{ route('events.chat.store', $event) }}" class="event-chat__composer">
                 @csrf
-                <label for="chat-body" class="sr-only">{{ __('chat.placeholder') }}</label>
-                <div class="flex gap-2">
-                    <textarea
-                        id="chat-body"
-                        name="body"
-                        rows="2"
-                        maxlength="1000"
-                        required
-                        placeholder="{{ __('chat.placeholder') }}"
-                        class="min-h-[2.75rem] flex-1 resize-y rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100"
-                    ></textarea>
-                    <button type="submit" class="self-end rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">
-                        {{ __('chat.send') }}
-                    </button>
+                <div class="chat-composer">
+                    <div class="chat-composer__shell">
+                        <label for="chat-body" class="sr-only">{{ __('chat.placeholder') }}</label>
+                        <textarea
+                            id="chat-body"
+                            name="body"
+                            rows="1"
+                            maxlength="1000"
+                            required
+                            placeholder="{{ __('chat.placeholder') }}"
+                            class="chat-composer__input"
+                            data-chat-input
+                        ></textarea>
+
+                        <div class="chat-composer__toolbar">
+                            <div class="chat-composer__tools">
+                                <button
+                                    type="button"
+                                    class="chat-composer__icon-btn"
+                                    data-chat-attach
+                                    aria-label="{{ __('chat.attach') }}"
+                                    title="{{ __('chat.attach_soon') }}"
+                                >
+                                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="16" width="16" aria-hidden="true">
+                                        <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                    </svg>
+                                </button>
+
+                                <span class="chat-composer__chip" aria-hidden="true">
+                                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="16" width="16">
+                                        <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                                    </svg>
+                                    <span>{{ __('chat.chip') }}</span>
+                                </span>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="chat-composer__send"
+                                aria-label="{{ __('chat.send') }}"
+                                data-chat-send
+                            >
+                                <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="currentColor" fill="none" viewBox="0 0 24 24" height="16" width="16" aria-hidden="true">
+                                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                                    <path d="M22 2 11 13"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <p id="chat-status" class="mt-2 hidden text-xs text-slate-500" data-fallback="{{ __('chat.realtime_unavailable') }}"></p>
+                <p id="chat-status" class="event-chat__status hidden" data-fallback="{{ __('chat.realtime_unavailable') }}"></p>
             </form>
         </div>
     </div>

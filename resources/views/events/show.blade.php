@@ -36,6 +36,7 @@
                  alt=""
                  class="h-full w-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent"></div>
+            <x-ui.espiral tone="indigo" size="md" :arms="3" :dots="12" class="espiral--anchor-cover" />
 
             <div class="absolute end-4 top-4 z-10 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur">
                 <x-events.favorite-bookmark :event="$event" :favorited="$isFavorited" id-suffix="show" />

@@ -140,7 +140,7 @@ For each screen:
 **Sections (order) — implement all:**
 
 1. **Greeting** — “Good morning/afternoon/evening, {firstName} 👋” + subtitle + orange **Create event**  
-2. **Hero** — dark photo/gradient block, titles “Find people. / Do what you love.”, **Find events** (indigo) → Discover, trust chips  
+2. **Hero** — dark photo/gradient block, titles “Find people. / Do what you love.”, **Find events** (indigo) → Discover, trust chips; ambient **espiral** glow anchored end-side (`x-ui.espiral`, amber) — decorative only, not a loader  
 3. **Your participations** — `GET /api/home/participations`: **confirmed memberships** + **pending join requests** (no demo cards); empty → Discover CTA; confirmed rows link to ticket + chat  
 4. **What are you into?** — category grid (emoji + name + count) → Discover filtered by category  
 5. **Happening near you** — compact cards + weather + **now-playing** (live/next/previous) + starting soon + safety  
@@ -249,7 +249,7 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 
 **Layout hierarchy (same as web):**
 
-1. Cover + category chip + city + title + **status badge** + **favorite bookmark**  
+1. Cover + category chip + city + title + **status badge** + **favorite bookmark** + ambient espiral on cover (`x-ui.espiral`, indigo, corner-anchored)  
 2. Date/time chip + venue chip  
 3. Description  
 4. Requirements box  
@@ -272,7 +272,7 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 | **API** | `GET /api/events/{id}/ticket` (Bearer, member only) |
 | **Authz** | `EventPolicy::viewTicket` — user must be an `EventMember` |
 
-Holographic perforated pass (web CSS class `event-ticket`). Show when `join_action === joined` from event detail and from My events.
+Holographic perforated pass (web CSS class `event-ticket`). Show when `join_action === joined` from event detail and from My events. Ticket stage may include ambient espiral behind the pass (decorative).
 
 **API response:**
 
@@ -421,8 +421,8 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 | **API** | `GET /api/events/{id}/messages`, `POST .../messages` |
 | **Access** | Joined members only |
 
-**Must:** message list (author, time, body), composer, report message link, link back to event.  
-Web uses realtime; Flutter may poll until websockets are wired — document polling interval in app.
+**Must:** message list (author, time, body), dark Uiverse-style composer (textarea + attach affordance + Chat chip + send plane), report message link, link back to event.  
+Web uses realtime; Flutter may poll until websockets are wired — document polling interval in app. Composer visual matches web (`ChatComposer` dark bar).
 
 ---
 
@@ -1068,6 +1068,7 @@ API: `POST .../publish|cancel|complete`.
 | `x-events.card` | Rich discover/list card |
 | `x-dashboard.event-card` | Compact home nearby card |
 | `x-community.ambient` | AmbientBackground |
+| `x-ui.espiral` | Soft spiral/particle glow on **dashboard hero**, **event cover**, **ticket stage** only (not global; respect reduced motion) |
 | `x-dashboard.mobile-nav` | 5-tab bottom bar |
 | `x-dashboard.sidebar` | Wide-layout drawer/sidebar |
 | Orange gradient CTA | Primary conversion button |
