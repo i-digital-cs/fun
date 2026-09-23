@@ -12,33 +12,65 @@ class GoogleAuthService
 {
     public function findOrCreateFromGoogle(SocialiteUser $googleUser, ?string $locale = null): User
     {
-        return DB::transaction(function () use ($googleUser, $locale) {
-            $email = strtolower((string) $googleUser->getEmail());
+        return $this->findOrCreate([
+            'sub' => (string) $googleUser->getId(),
+            'email' => strtolower((string) $googleUser->getEmail()),
+            'name' => $googleUser->getName(),
+            'picture' => $googleUser->getAvatar(),
+        ], $locale);
+    }
+
+    /**
+     * @param  array{sub: string, email: string, name?: ?string, picture?: ?string}  $profile
+     */
+    public function findOrCreateFromIdTokenPayload(array $profile, ?string $locale = null): User
+    {
+        return $this->findOrCreate($profile, $locale);
+    }
+
+    /**
+     * @param  array{sub: string, email: string, name?: ?string, picture?: ?string}  $profile
+     */
+    private function findOrCreate(array $profile, ?string $locale = null): User
+    {
+        return DB::transaction(function () use ($profile, $locale) {
+            $email = strtolower((string) $profile['email']);
+            $googleId = (string) $profile['sub'];
 
             $user = User::query()
-                ->where('google_id', $googleUser->getId())
+                ->where('google_id', $googleId)
                 ->orWhere('email', $email)
                 ->first();
 
             if ($user) {
+                $updates = [];
+
                 if ($user->google_id === null) {
-                    $user->forceFill(['google_id' => $googleUser->getId()])->save();
+                    $updates['google_id'] = $googleId;
                 }
 
                 if ($user->email_verified_at === null) {
-                    $user->forceFill(['email_verified_at' => now()])->save();
+                    $updates['email_verified_at'] = now();
+                }
+
+                if (! filled($user->profile_image_path) && filled($profile['picture'] ?? null)) {
+                    $updates['profile_image_path'] = $profile['picture'];
+                }
+
+                if ($updates !== []) {
+                    $user->forceFill($updates)->save();
                 }
 
                 return $user->refresh();
             }
 
             $user = new User([
-                'name' => $googleUser->getName() ?: $email,
+                'name' => filled($profile['name'] ?? null) ? (string) $profile['name'] : $email,
                 'email' => $email,
                 'password' => null,
-                'google_id' => $googleUser->getId(),
+                'google_id' => $googleId,
                 'locale' => $locale ?? app()->getLocale(),
-                'profile_image_path' => $googleUser->getAvatar(),
+                'profile_image_path' => $profile['picture'] ?? null,
             ]);
             $user->forceFill([
                 'email_verified_at' => now(),

@@ -19,6 +19,7 @@
 | Site branding | `GET /site` |
 | Register | `POST /register` (sends email verify code) |
 | Login | `POST /login` (`needs_email_verification` flag) |
+| Google Sign-In (ID token) | `POST /auth/google` `{ "id_token" }` — see [`GOOGLE_OAUTH_SETUP.md`](../GOOGLE_OAUTH_SETUP.md) |
 | Resend email verify code | `POST /email/verify/resend` |
 | Verify email code | `POST /email/verify` `{ "code": "1234" }` |
 | Forgot password | `POST /forgot-password` |
@@ -35,7 +36,7 @@ See: [`FLUTTER_WEB_PARITY.md`](../FLUTTER_WEB_PARITY.md) §0.1–0.2 (full-proje
 | Variable | Meaning |
 |----------|---------|
 | `baseUrl` | `https://fun.idigital-cs.com/api` |
-| `token` | Sanctum Bearer token (auto from Login/Register/Reset) |
+| `token` | Sanctum Bearer token (auto from Login/Register/Reset/Google) |
 | `resetToken` | One-time password-reset token (auto from Verify reset code) |
 | `locale` | `en` or `ar` (`Accept-Language`) |
 | `eventId` / `cityId` / `categoryId` / `userId` | Path IDs |

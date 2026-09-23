@@ -2,7 +2,7 @@
 
 **Purpose:** Keep **zero intentional gap** between the Laravel Blade web app and the Flutter client — every member/public screen, gate, CTA, and data field.
 
-**Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
+**Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
 
 **Rule:** Pixel-perfect desktop layout is not required. **Same information hierarchy, same actions, same join states, same brand tokens, same account gates** are required. If web can do it, Flutter must be able to do it via API (or an explicit “web-only” note — admin only).
 
@@ -45,7 +45,7 @@ For each screen:
 | Area | Endpoints |
 |------|-----------|
 | Branding | `GET /api/site` |
-| Auth | `POST /register` · `/login` · `/logout` · `/email/verify` · `/email/verify/resend` · `/forgot-password` · `/forgot-password/verify` · `/reset-password` |
+| Auth | `POST /register` · `/login` · `/auth/google` · `/logout` · `/email/verify` · `/email/verify/resend` · `/forgot-password` · `/forgot-password/verify` · `/reset-password` |
 | Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `can_participate`, `has_password`, city…) |
 | Profile | `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) |
@@ -287,9 +287,9 @@ Web uses realtime; Flutter may poll until websockets are wired — document poll
 | | |
 |--|--|
 | **Blade** | `auth/login.blade.php` (`x-auth.access-shell`) |
-| **API** | `POST /api/login` → token |
+| **API** | `POST /api/login` · `POST /api/auth/google` → token |
 
-Glass card with **site name + logo** (from admin settings). Email + password, remember, **indigo→violet** CTA, Google (web), links to register + forgot password.
+Glass card with **site name + logo** (from admin settings). Email + password, remember, **indigo→violet** CTA, **Continue with Google**, links to register + forgot password.
 
 **After submit (web cinematic):** digits orbit → verify ring 1–100 → celebrate → redirect.  
 **Flutter:** optional matching animation; always handle API flags:
@@ -546,6 +546,7 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 | Site branding | `GET` | `/site` | — | — → `{ display_name, logo_url }` |
 | Register | `POST` | `/register` | — | name, email, password, password_confirmation, locale? |
 | Login | `POST` | `/login` | — | email, password |
+| Google Sign-In | `POST` | `/auth/google` | — | `id_token`, locale? → Sanctum token (email already verified) |
 | Logout | `POST` | `/logout` | Bearer | — |
 | Me | `GET` | `/user` | Bearer | — |
 | Resend verify code | `POST` | `/email/verify/resend` | Bearer | — |
@@ -564,6 +565,8 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 1. `needs_email_verification` → Verify email  
 2. else `needs_identity_documents` → Identity  
 3. else → Home (`/dashboard`)
+
+**Google Sign-In (Flutter):** use `google_sign_in` with `serverClientId` = **Web** `GOOGLE_CLIENT_ID`, send `idToken` to `POST /api/auth/google`. New users skip email verify (`email_verified: true`) and usually land on Identity. Setup (Console clients + Android SHA-1): [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md).
 
 Use `GET /api/site` for logo/name on auth + splash (same as admin Site settings).
 
@@ -701,7 +704,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 8. **Chat** — list/post; poll until websockets  
 9. **Home** — participations + category counts + nearby  
 
-**Explicitly web-only (OK to skip in member app):** `/admin/*`, Google OAuth (until `POST /api/auth/google` exists).
+**Explicitly web-only (OK to skip in member app):** `/admin/*` only.
 
 ---
 
@@ -733,4 +736,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — full-project parity contract; member pages on dashboard shell; API site/participations/creator/sanctum join_action/category counts.*
+*Last updated: 2026-09-23 — full-project parity; Google Sign-In via `POST /api/auth/google`; member pages on dashboard shell; API site/participations/creator/sanctum join_action/category counts.*

@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "23fd213f-7876-4766-a0e7-4265240cb367",
-    "name": "Fun API \u2014 fun.idigital-cs.com",
-    "description": "Laravel Sanctum API for the Fun community events platform.\n\n1. Set `baseUrl` (default https://fun.idigital-cs.com/api).\n2. Run **Auth \u2192 Login** (token is saved automatically).\n3. Use Bearer `{{token}}` on protected routes.\n\nSeeded admin (if present): admin@example.com / password",
+    "name": "Fun API — fun.idigital-cs.com",
+    "description": "Laravel Sanctum API for the Fun community events platform.\n\n1. Set `baseUrl` (default https://fun.idigital-cs.com/api).\n2. Run **Auth → Login** (token is saved automatically).\n3. Use Bearer `{{token}}` on protected routes.\n\nSeeded admin (if present): admin@example.com / password",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -373,6 +373,62 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "  if (json.user && json.user.id) { pm.collectionVariables.set('userId', String(json.user.id)); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Google Sign-In (ID token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
+            },
+            "description": "Exchange a Google ID token (from Flutter google_sign_in with serverClientId = Web client ID) for a Sanctum token. Saves {{token}}. Requires GOOGLE_* client IDs on the server. See docs/GOOGLE_OAUTH_SETUP.md.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"PASTE_GOOGLE_ID_TOKEN_HERE\",\n  \"locale\": \"en\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2325,7 +2381,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"\u0627\u0644\u0631\u064a\u0627\u0636\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"is_active\": true\n}",
+              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"الرياض\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"is_active\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2371,7 +2427,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"\u0627\u0644\u0631\u064a\u0627\u0636\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753\n}",
+              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"الرياض\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2528,7 +2584,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"\u0631\u064a\u0627\u0636\u0629\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}",
+              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"رياضة\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2574,7 +2630,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"\u0631\u064a\u0627\u0636\u0629\",\n  \"sort_order\": 1\n}",
+              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"رياضة\",\n  \"sort_order\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"

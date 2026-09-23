@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "doctrine/dbal": "^4.4",
+        "google/apiclient": "^2.15",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.11",
         "laravel/sanctum": "^4.0",
