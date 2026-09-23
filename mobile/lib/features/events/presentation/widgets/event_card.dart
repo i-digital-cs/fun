@@ -155,42 +155,42 @@ class _EventCardState extends State<EventCard> {
                 ),
               ),
 
-              // .event-3d__glass — deep top-end radius like CSS 100%
-              Positioned(
-                left: 8,
-                right: 8,
-                top: 96,
-                bottom: 8,
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(isRtl ? 180 : 38),
-                        topRight: Radius.circular(isRtl ? 38 : 180),
-                        bottomLeft: const Radius.circular(38),
-                        bottomRight: const Radius.circular(38),
-                      ),
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.42),
-                          Colors.white.withValues(alpha: 0.88),
-                        ],
-                      ),
-                      border: Border(
-                        left: isRtl
-                            ? BorderSide.none
-                            : const BorderSide(color: Colors.white),
-                        right: isRtl
-                            ? const BorderSide(color: Colors.white)
-                            : BorderSide.none,
-                        bottom: const BorderSide(color: Colors.white),
+                // .event-3d__glass — inset 8, top 96, border-start-end-radius 100%
+                Positioned(
+                  left: 8,
+                  right: 8,
+                  top: 96,
+                  bottom: 8,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(isRtl ? 999 : 38),
+                          topRight: Radius.circular(isRtl ? 38 : 999),
+                          bottomLeft: const Radius.circular(38),
+                          bottomRight: const Radius.circular(38),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.42),
+                            Colors.white.withValues(alpha: 0.88),
+                          ],
+                        ),
+                        border: Border(
+                          left: isRtl
+                              ? BorderSide.none
+                              : const BorderSide(color: Colors.white),
+                          right: isRtl
+                              ? const BorderSide(color: Colors.white)
+                              : BorderSide.none,
+                          bottom: const BorderSide(color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
               // .event-3d__logo — above glass so rings stay visible
               Positioned(
@@ -512,115 +512,40 @@ class _LogoStack extends StatelessWidget {
                 transformAlignment: Alignment.center,
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.001)
-                  ..translateByDouble(
-                    0,
-                    0,
-                    pressed ? zHover[i] : zRest[i],
-                    1,
-                  ),
+                  ..translate(0.0, 0.0, pressed ? zHover[i] : zRest[i]),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: i == 4
+                      ? const Color(0xFF4F46E5).withValues(alpha: 0.55)
+                      : Colors.white.withValues(alpha: 0.22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF64646F).withValues(alpha: 0.22),
+                      blurRadius: 20,
+                      offset: Offset(isRtl ? 10 : -10, 10),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
                 child: i == 4
-                    ? _CenterThumb(
-                        imageUrl: imageUrl,
-                        emoji: emoji,
-                        isRtl: isRtl,
-                      )
-                    : _GlassRing(
-                        blurSigma: blurSigmas[i],
-                        isRtl: isRtl,
-                      ),
+                    ? (imageUrl != null
+                        ? AppNetworkImage(
+                            url: imageUrl!,
+                            logicalWidth: 50,
+                            logicalHeight: 50,
+                            maxCacheWidth: 100,
+                            maxCacheHeight: 100,
+                          )
+                        : Center(
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ))
+                    : null,
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _GlassRing extends StatelessWidget {
-  const _GlassRing({
-    required this.blurSigma,
-    required this.isRtl,
-  });
-
-  final double blurSigma;
-  final bool isRtl;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF64646F).withValues(alpha: 0.22),
-            blurRadius: 20,
-            offset: Offset(isRtl ? 10 : -10, 10),
-          ),
-        ],
-      ),
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.28),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.55),
-                width: 1.2,
-              ),
-            ),
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CenterThumb extends StatelessWidget {
-  const _CenterThumb({
-    required this.emoji,
-    required this.isRtl,
-    this.imageUrl,
-  });
-
-  final String emoji;
-  final bool isRtl;
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFF4F46E5).withValues(alpha: 0.55),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF64646F).withValues(alpha: 0.28),
-            blurRadius: 18,
-            offset: Offset(isRtl ? 8 : -8, 12),
-          ),
-          BoxShadow(
-            color: const Color(0xFF312E81).withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-            spreadRadius: -6,
-          ),
-        ],
-      ),
-      child: ClipOval(
-        child: imageUrl != null
-            ? AppNetworkImage(
-                url: imageUrl!,
-                logicalWidth: 50,
-                logicalHeight: 50,
-                maxCacheWidth: 100,
-                maxCacheHeight: 100,
-              )
-            : Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 18)),
-              ),
       ),
     );
   }

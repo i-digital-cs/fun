@@ -3355,12 +3355,14 @@ html[data-page-loading='1'] {
     border-radius: 50%;
     top: 0;
     inset-inline-end: 0;
-    box-shadow: rgb(100 100 111 / 0.22) -10px 10px 20px 0px;
+    box-shadow: rgb(100 100 111 / 0.28) -10px 14px 22px 0px;
     -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
-    background: rgb(255 255 255 / 0.22);
+    background: rgb(255 255 255 / 0.28);
     transition: transform 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
     transform-style: preserve-3d;
+    /* Slight Y offset so rings read stacked on touch devices without hover */
+    will-change: transform;
 }
 
 .event-3d__circle--1 {
@@ -3372,33 +3374,36 @@ html[data-page-loading='1'] {
 
 .event-3d__circle--2 {
     width: 140px;
-    transform: translate3d(0, 0, 40px);
+    transform: translate3d(0, -4px, 40px);
     top: 10px;
     inset-inline-end: 10px;
     -webkit-backdrop-filter: blur(1px);
     backdrop-filter: blur(1px);
     transition-delay: 0.4s;
+    background: rgb(255 255 255 / 0.22);
 }
 
 .event-3d__circle--3 {
     width: 110px;
-    transform: translate3d(0, 0, 60px);
+    transform: translate3d(0, -8px, 60px);
     top: 17px;
     inset-inline-end: 17px;
     transition-delay: 0.8s;
+    background: rgb(255 255 255 / 0.2);
 }
 
 .event-3d__circle--4 {
     width: 80px;
-    transform: translate3d(0, 0, 80px);
+    transform: translate3d(0, -12px, 80px);
     top: 23px;
     inset-inline-end: 23px;
     transition-delay: 1.2s;
+    background: rgb(255 255 255 / 0.18);
 }
 
 .event-3d__circle--5 {
     width: 50px;
-    transform: translate3d(0, 0, 100px);
+    transform: translate3d(0, -16px, 100px);
     top: 30px;
     inset-inline-end: 30px;
     display: grid;
@@ -3409,8 +3414,8 @@ html[data-page-loading='1'] {
     background: rgb(79 70 229 / 0.55);
     overflow: hidden;
     box-shadow:
-        rgb(100 100 111 / 0.28) -8px 12px 18px 0px,
-        rgb(49 46 129 / 0.35) 0 8px 16px -6px;
+        rgb(100 100 111 / 0.35) -8px 16px 22px 0px,
+        rgb(49 46 129 / 0.4) 0 8px 16px -6px;
 }
 
 .event-3d__circle--5 img {
@@ -3493,22 +3498,22 @@ html[data-page-loading='1'] {
 
 .event-3d:hover .event-3d__circle--2,
 .event-3d:focus-within .event-3d__circle--2 {
-    transform: translate3d(0, 0, 60px);
+    transform: translate3d(0, -6px, 60px);
     box-shadow: rgb(100 100 111 / 0.28) -12px 14px 24px 0px;
 }
 .event-3d:hover .event-3d__circle--3,
 .event-3d:focus-within .event-3d__circle--3 {
-    transform: translate3d(0, 0, 80px);
+    transform: translate3d(0, -10px, 80px);
     box-shadow: rgb(100 100 111 / 0.3) -12px 16px 26px 0px;
 }
 .event-3d:hover .event-3d__circle--4,
 .event-3d:focus-within .event-3d__circle--4 {
-    transform: translate3d(0, 0, 100px);
+    transform: translate3d(0, -14px, 100px);
     box-shadow: rgb(100 100 111 / 0.32) -12px 18px 28px 0px;
 }
 .event-3d:hover .event-3d__circle--5,
 .event-3d:focus-within .event-3d__circle--5 {
-    transform: translate3d(0, 0, 120px);
+    transform: translate3d(0, -18px, 120px);
     box-shadow:
         rgb(100 100 111 / 0.35) -10px 20px 28px 0px,
         rgb(49 46 129 / 0.4) 0 12px 20px -6px;
