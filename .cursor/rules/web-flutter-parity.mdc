@@ -1,0 +1,29 @@
+---
+description: Web features must ship with Flutter docs + roadmap updates.
+alwaysApply: true
+---
+
+# Web → Flutter parity (mandatory)
+
+Any **member-facing** change you add or change for the **web** app must also be reflected for Flutter in the same task. Do not leave Flutter as a follow-up.
+
+## Required in the same PR / task
+
+1. **Implement or specify** the Flutter equivalent (API contract, screens, gates, UI states).
+2. Update **`docs/FLUTTER_WEB_PARITY.md`**: screen section, API map, route map, and join/lifecycle notes as needed.
+3. Update the **roadmap / gap list** in that doc (§10 or equivalent) so the feature is tracked as web+Flutter, not web-only.
+4. If you add/change a public or Sanctum API used by members, document request/response and Flutter routing flags there.
+
+## Scope
+
+Applies to: Blade/member UX, member APIs under `/api/*`, auth/identity/events/chat/profile/settings, branding, app versioning, tickets, and similar product surfaces.
+
+Does **not** require a Flutter port of **web-only admin** (`/admin/*`) unless the change also affects member APIs or shared branding.
+
+## Do not
+
+- Ship a web-only member feature and skip the Flutter doc/roadmap update
+- Invent a Flutter-only API shape that diverges from web without documenting both
+- Mark Flutter as “later” for member parity work
+
+When unsure, add a § in `FLUTTER_WEB_PARITY.md` and a checklist item under §10 before closing the task.

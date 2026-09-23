@@ -121,6 +121,7 @@
                         <span class="inline-flex items-center rounded-xl border border-slate-200/70 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-500">{{ __('events.request_pending') }}</span>
                     @elseif ($joinAction->value === 'joined')
                         <span class="inline-flex items-center rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">{{ __('events.joined') }}</span>
+                        <a href="{{ route('events.ticket', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.view_ticket') }}</a>
                         <a href="{{ route('events.chat', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition hover:brightness-105">{{ __('chat.open_chat') }}</a>
                         <a href="{{ route('events.members', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.members') }}</a>
                         @unless($event->isOwnedBy(auth()->user()))

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatControlle
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
 use App\Http\Controllers\Api\Events\EventRatingController as ApiEventRatingController;
+use App\Http\Controllers\Api\Events\EventTicketController as ApiEventTicketController;
 use App\Http\Controllers\Api\HomeParticipationsController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
@@ -99,6 +100,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/events/{event}/messages', [ApiEventChatController::class, 'index']);
         Route::post('/events/{event}/messages', [ApiEventChatController::class, 'store'])
             ->middleware('throttle:messages');
+
+        Route::get('/events/{event}/ticket', [ApiEventTicketController::class, 'show'])
+            ->whereNumber('event');
 
         Route::get('/events/{event}/ratings/me', [ApiEventRatingController::class, 'mine']);
         Route::post('/events/{event}/ratings', [ApiEventRatingController::class, 'store'])

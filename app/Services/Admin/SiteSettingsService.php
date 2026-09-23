@@ -19,6 +19,8 @@ class SiteSettingsService
 
     public const LOGO_CACHE_KEY = 'site.logo_url';
 
+    public const APP_CACHE_KEY = 'site.app_version';
+
     public function __construct(private readonly AdminAuditLogger $audit)
     {
     }
@@ -30,6 +32,11 @@ class SiteSettingsService
         if ($settings === null) {
             $settings = SiteSetting::query()->create([
                 'display_name' => (string) config('app.name', 'Community Platform'),
+                'android_latest_version' => '1.0.0',
+                'android_min_version' => '1.0.0',
+                'ios_latest_version' => '1.0.0',
+                'ios_min_version' => '1.0.0',
+                'force_update' => false,
             ]);
         }
 
@@ -61,7 +68,47 @@ class SiteSettingsService
     }
 
     /**
-     * @param  array{display_name: string, logo?: UploadedFile|null, remove_logo?: bool}  $data
+     * Public payload for Flutter / clients (version + force update).
+     *
+     * @return array<string, mixed>
+     */
+    public function appUpdatePayload(?string $locale = null): array
+    {
+        $payload = Cache::remember(self::APP_CACHE_KEY, now()->addMinutes(5), function () {
+            $s = $this->current();
+
+            return [
+                'force_update' => (bool) $s->force_update,
+                'message_en' => $s->update_message_en,
+                'message_ar' => $s->update_message_ar,
+                'android' => [
+                    'latest' => $s->android_latest_version ?: '1.0.0',
+                    'min' => $s->android_min_version ?: '1.0.0',
+                    'store_url' => $s->android_store_url,
+                ],
+                'ios' => [
+                    'latest' => $s->ios_latest_version ?: '1.0.0',
+                    'min' => $s->ios_min_version ?: '1.0.0',
+                    'store_url' => $s->ios_store_url,
+                ],
+            ];
+        });
+
+        $locale = $locale ?: app()->getLocale();
+        $message = $locale === 'ar'
+            ? ($payload['message_ar'] ?: $payload['message_en'])
+            : ($payload['message_en'] ?: $payload['message_ar']);
+
+        return [
+            'force_update' => $payload['force_update'],
+            'message' => $message,
+            'android' => $payload['android'],
+            'ios' => $payload['ios'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
      */
     public function update(User $actor, array $data): SiteSetting
     {
@@ -69,22 +116,51 @@ class SiteSettingsService
             throw new DomainException(__('admin.super_admin_only'));
         }
 
-        $clean = ChatMessageSanitizer::clean($data['display_name']);
+        $clean = ChatMessageSanitizer::clean((string) ($data['display_name'] ?? ''));
 
         if ($clean === '' || mb_strlen($clean) > 80) {
             throw new DomainException(__('admin.invalid_display_name'));
         }
 
         $settings = $this->current();
-        $previous = [
-            'display_name' => $settings->display_name,
-            'logo_path' => $settings->logo_path,
-        ];
+        $previous = $settings->only([
+            'display_name',
+            'logo_path',
+            'android_latest_version',
+            'android_min_version',
+            'ios_latest_version',
+            'ios_min_version',
+            'force_update',
+        ]);
 
-        $settings->forceFill([
+        $fill = [
             'display_name' => $clean,
             'updated_by' => $actor->id,
-        ]);
+        ];
+
+        foreach (['android_latest_version', 'android_min_version', 'ios_latest_version', 'ios_min_version'] as $versionKey) {
+            if (array_key_exists($versionKey, $data)) {
+                $fill[$versionKey] = $this->normalizeVersion($data[$versionKey] ?? $settings->{$versionKey} ?: '1.0.0');
+            }
+        }
+
+        if (array_key_exists('force_update', $data)) {
+            $fill['force_update'] = (bool) $data['force_update'];
+        }
+
+        foreach (['android_store_url', 'ios_store_url'] as $urlKey) {
+            if (array_key_exists($urlKey, $data)) {
+                $fill[$urlKey] = $this->nullableUrl($data[$urlKey]);
+            }
+        }
+
+        foreach (['update_message_en', 'update_message_ar'] as $msgKey) {
+            if (array_key_exists($msgKey, $data)) {
+                $fill[$msgKey] = $this->nullableText($data[$msgKey]);
+            }
+        }
+
+        $settings->forceFill($fill);
 
         if (! empty($data['remove_logo'])) {
             $this->deleteLogoFiles($settings);
@@ -103,10 +179,12 @@ class SiteSettingsService
 
         Cache::forget(self::CACHE_KEY);
         Cache::forget(self::LOGO_CACHE_KEY);
+        Cache::forget(self::APP_CACHE_KEY);
 
         $this->audit->log($actor, 'site_settings.updated', SiteSetting::class, $settings->id, [
             'previous' => $previous,
             'display_name' => $clean,
+            'force_update' => (bool) $settings->force_update,
             'logo_updated' => ($data['logo'] ?? null) instanceof UploadedFile || ! empty($data['remove_logo']),
         ]);
 
@@ -119,6 +197,30 @@ class SiteSettingsService
     public function updateDisplayName(User $actor, string $displayName): SiteSetting
     {
         return $this->update($actor, ['display_name' => $displayName]);
+    }
+
+    private function normalizeVersion(mixed $value): string
+    {
+        $v = trim((string) $value);
+        if ($v === '' || ! preg_match('/^\d+(\.\d+){0,3}$/', $v)) {
+            throw new DomainException(__('admin.invalid_app_version'));
+        }
+
+        return $v;
+    }
+
+    private function nullableUrl(mixed $value): ?string
+    {
+        $v = trim((string) $value);
+
+        return $v === '' ? null : $v;
+    }
+
+    private function nullableText(mixed $value): ?string
+    {
+        $v = trim(ChatMessageSanitizer::clean((string) $value));
+
+        return $v === '' ? null : mb_substr($v, 0, 500);
     }
 
     /**

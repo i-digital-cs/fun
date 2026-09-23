@@ -79,6 +79,11 @@ class EventPolicy
             && in_array($event->status, [EventStatus::Published, EventStatus::Completed], true);
     }
 
+    public function viewTicket(User $user, Event $event): bool
+    {
+        return $event->isMember($user);
+    }
+
     public function rate(User $user, Event $event): bool
     {
         return $user->canParticipate()

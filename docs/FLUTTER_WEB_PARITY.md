@@ -28,6 +28,7 @@ For each screen:
 | **Shell (logged in)** | `layouts/dashboard` — sidebar + topbar + mobile 5-tab | Same IA: Home · Discover · Create · My Events · Profile |
 | **Shell (guest auth)** | `layouts/app` + ambient + glass | Ambient + glass cards; brand from API |
 | **Branding** | Admin display name + logo | `GET /api/site` → name + logo on auth/identity/home |
+| **App version** | Admin min / latest / force update | `GET /api/site` → `app` payload; splash force/soft update |
 | **Auth** | Login/register + cinema + email code + forgot/reset | Same flows via Auth API (§2A) |
 | **Gates** | email verified → identity → active | Same order using `/api/user` flags |
 | **Discover / events** | Filters, rich cards, join states | Same filters + `join_action` (send **Bearer** on event GETs) |
@@ -50,7 +51,7 @@ For each screen:
 | Profile | `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
-| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · publish/cancel/complete |
+| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · publish/cancel/complete · `GET /api/events/{id}/ticket` |
 | Join | `POST .../join|leave` · requests accept/reject · members promote/demote/transfer |
 | Chat | `GET/POST /api/events/{id}/messages` |
 | Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
@@ -184,12 +185,53 @@ For each screen:
 3. Description  
 4. Requirements box  
 5. Cost / free + members count chips  
-6. **Primary actions** (join state — see §3)  
+6. **Primary actions** (join state — see §3); when `joined` include **View ticket**  
 7. Owner tools (edit / publish / cancel / complete / requests / members)  
 8. Report event + block host  
 9. Organizer rating summary  
 10. Rate form (when `can_rate`)  
 11. Ratings list  
+
+---
+
+### 2.4a Event ticket `/events/{id}/ticket` *(required)*
+
+| | |
+|--|--|
+| **Route** | `events.ticket` (web) |
+| **Blade** | `events/ticket.blade.php` + `x-events.ticket` |
+| **API** | `GET /api/events/{id}/ticket` (Bearer, member only) |
+| **Authz** | `EventPolicy::viewTicket` — user must be an `EventMember` |
+
+Holographic perforated pass (web CSS class `event-ticket`). Show when `join_action === joined` from event detail and from My events.
+
+**API response:**
+
+```json
+{
+  "data": {
+    "code": "A1B2C3D4",
+    "role": "member",
+    "pass_label": "Event pass",
+    "title": "Sunset Meetup",
+    "date_label": "May 14th 2026",
+    "date_iso": "2026-05-14T18:00:00+03:00",
+    "venue_line": "Riverside Park, Cairo",
+    "member": { "id": 12, "name": "Alex" },
+    "event": { "id": 5, "title": "Sunset Meetup", "status": "published" }
+  }
+}
+```
+
+`code` is a stable HMAC-derived 8-char pass id for this user+event (not a seat number — platform has no seats).
+
+**Flutter must:**
+
+1. Screen `/events/:id/ticket` (full-screen centered ticket).
+2. Fetch `GET /api/events/{id}/ticket` when opening; 403 → pop back.
+3. Visual parity with web: perforated card, holographic feel (CustomPainter / assets OK), header “TICKET”, pass label, title, date, venue, role + code, decorative barcode.
+4. Entry points: Event detail when joined; My events row action **View ticket**.
+5. EN/AR via l10n (`events.view_ticket`, etc.).
 
 ---
 
@@ -242,7 +284,7 @@ Same fields as create. Keep existing image if not replaced.
 | **Blade** | `events/mine.blade.php` |
 | **API** | `GET /api/my-events` |
 
-**Must:** list owned/membership events — title, date, members, city, **status pill**; empty state + Create CTA; tap → detail.
+**Must:** list owned/membership events — title, date, members, city, **status pill**; empty state + Create CTA; tap → detail; **View ticket** action per row (§2.4a).
 
 ---
 
@@ -543,7 +585,7 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 
 | Flow | Method | Path | Auth | Body |
 |------|--------|------|------|------|
-| Site branding | `GET` | `/site` | — | — → `{ display_name, logo_url }` |
+| Site branding | `GET` | `/site` | — | — → `{ display_name, logo_url, app }` (see §2C) |
 | Register | `POST` | `/register` | — | name, email, password, password_confirmation, locale? |
 | Login | `POST` | `/login` | — | email, password |
 | Google Sign-In | `POST` | `/auth/google` | — | `id_token`, locale? → Sanctum token (email already verified) |
@@ -568,9 +610,316 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 
 **Google Sign-In (Flutter):** use `google_sign_in` with `serverClientId` = **Web** `GOOGLE_CLIENT_ID`, send `idToken` to `POST /api/auth/google`. New users skip email verify (`email_verified: true`) and usually land on Identity. Setup (Console clients + Android SHA-1): [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md).
 
-Use `GET /api/site` for logo/name on auth + splash (same as admin Site settings).
+Use `GET /api/site` for logo/name **and** app version / force-update on splash (same as admin Site settings). See **§2B** (login/identity samples) and **§2C** (version check).
 
 Site branding for auth UI: admin **display name** + **logo**.
+
+---
+
+## 2B. Flutter code samples (login + identity)
+
+Copy-paste oriented samples for a Dio + Riverpod app. Adapt package names to your project. Persist the Sanctum token (secure storage preferred) and attach `Authorization: Bearer …` on authenticated calls.
+
+### Packages
+
+```yaml
+dependencies:
+  dio: ^5.7.0
+  flutter_riverpod: ^2.6.1
+  package_info_plus: ^8.0.0   # for §2C version check
+  url_launcher: ^6.3.0        # open store URLs
+  image_picker: ^1.1.0        # identity uploads
+```
+
+### Dio client (sketch)
+
+```dart
+final dioProvider = Provider<Dio>((ref) {
+  final dio = Dio(BaseOptions(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'https://fun.idigital-cs.com/api',
+    ),
+    headers: {'Accept': 'application/json'},
+  ));
+  dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) async {
+      final token = await ref.read(tokenStoreProvider).read();
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+      handler.next(options);
+    },
+  ));
+  return dio;
+});
+```
+
+### Post-auth routing helper
+
+```dart
+String routeAfterAuth(Map<String, dynamic> user) {
+  if (user['needs_email_verification'] == true ||
+      user['email_verified'] == false) {
+    return '/email/verify';
+  }
+  if (user['needs_identity_documents'] == true) {
+    return '/identity';
+  }
+  return '/home';
+}
+```
+
+### Login (Dio + Riverpod)
+
+```dart
+final authRepositoryProvider = Provider(AuthRepository.new);
+
+class AuthRepository {
+  AuthRepository(this.ref);
+  final Ref ref;
+
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final res = await ref.read(dioProvider).post('/login', data: {
+      'email': email,
+      'password': password,
+    });
+    final data = res.data as Map<String, dynamic>;
+    final token = data['token'] as String?;
+    if (token != null) {
+      await ref.read(tokenStoreProvider).write(token);
+    }
+    return data;
+  }
+}
+
+final loginControllerProvider =
+    AsyncNotifierProvider<LoginController, void>(LoginController.new);
+
+class LoginController extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<String> submit(String email, String password) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final data = await ref.read(authRepositoryProvider).login(
+            email: email,
+            password: password,
+          );
+      final user = Map<String, dynamic>.from(data['user'] as Map);
+      return routeAfterAuth(user);
+    });
+    return state.valueOrNull ?? '/login';
+  }
+}
+```
+
+**UI:** glass card, site name/logo from `GET /api/site`, email + password, indigo→violet CTA, then `context.go(await controller.submit(...))`.
+
+### Identity status + upload
+
+```dart
+final identityRepositoryProvider = Provider(IdentityRepository.new);
+
+class IdentityRepository {
+  IdentityRepository(this.ref);
+  final Ref ref;
+
+  Future<Map<String, dynamic>> fetch() async {
+    final res = await ref.read(dioProvider).get('/identity');
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  Future<Map<String, dynamic>> upload({
+    required String idFrontPath,
+    required String idBackPath,
+    required String selfiePath,
+  }) async {
+    final form = FormData.fromMap({
+      'id_front': await MultipartFile.fromFile(idFrontPath, filename: 'id_front.jpg'),
+      'id_back': await MultipartFile.fromFile(idBackPath, filename: 'id_back.jpg'),
+      'selfie': await MultipartFile.fromFile(selfiePath, filename: 'selfie.jpg'),
+    });
+    final res = await ref.read(dioProvider).post('/identity', data: form);
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  /// Document image bytes (not a public URL).
+  Future<Uint8List> documentBytes(int documentId) async {
+    final res = await ref.read(dioProvider).get<List<int>>(
+      '/identity/documents/$documentId',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return Uint8List.fromList(res.data ?? const []);
+  }
+}
+```
+
+**UI gates from `GET /api/identity`:**
+
+| Flag | UI |
+|------|-----|
+| `can_upload` / `needs_upload` | Show 3 pickers + Submit |
+| `resubmit_required` | Amber banner + previous thumbs + replace form |
+| submitted / active, `!can_upload` | Thumbs + success / wait copy, no form |
+
+Load each doc with `documentBytes(id)` when `documents[].uploaded == true`.
+
+---
+
+## 2C. App version / force update (admin → Flutter)
+
+### Admin (web)
+
+Super admin → **Site settings** (`/admin/settings`):
+
+| Field | Meaning |
+|-------|---------|
+| Android / iOS **latest** | Current store version |
+| Android / iOS **minimum** | Anything older is always blocked |
+| **Force update** | When on, anything older than **latest** is also blocked (cannot dismiss) |
+| Store URLs | Play Store / App Store links |
+| Update message EN/AR | Shown on the update dialog |
+
+Saving clears server cache; clients see new values on the next `GET /api/site`.
+
+### Public API
+
+`GET /api/site` (optional `?locale=ar` or `Accept-Language`):
+
+```json
+{
+  "display_name": "Fun",
+  "logo_url": "https://…/logo.png",
+  "app": {
+    "force_update": false,
+    "message": "A new version is available.",
+    "android": {
+      "latest": "1.2.0",
+      "min": "1.0.0",
+      "store_url": "https://play.google.com/store/apps/details?id=…"
+    },
+    "ios": {
+      "latest": "1.2.0",
+      "min": "1.0.0",
+      "store_url": "https://apps.apple.com/app/…"
+    }
+  }
+}
+```
+
+### Client rules (implement exactly)
+
+On **cold start** (before login UI):
+
+1. `PackageInfo.fromPlatform()` → `version` (e.g. `1.0.3`).
+2. `GET /api/site`.
+3. Pick `app.android` or `app.ios` from `Platform.isIOS`.
+4. Semver compare (numeric segments):
+
+```
+if current < min          → FORCE (block app)
+else if force_update && current < latest → FORCE
+else if current < latest  → SOFT (optional “Update” / “Later”)
+else                      → OK
+```
+
+5. FORCE: non-dismissible dialog → only **Update** → `launchUrl(store_url)`.
+6. SOFT: dismissible dialog with Update + Later.
+7. If `/api/site` fails: **do not** block the app (fail open); retry later.
+
+Bump `version:` in `pubspec.yaml` (and store listings) whenever you ship; admin sets **latest** to match.
+
+### Flutter implementation sample
+
+```dart
+import 'dart:io';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+enum UpdateKind { none, soft, force }
+
+class AppUpdateInfo {
+  const AppUpdateInfo({
+    required this.kind,
+    this.message,
+    this.storeUrl,
+  });
+  final UpdateKind kind;
+  final String? message;
+  final String? storeUrl;
+}
+
+int compareSemver(String a, String b) {
+  List<int> parts(String v) =>
+      v.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+  final pa = parts(a);
+  final pb = parts(b);
+  final n = pa.length > pb.length ? pa.length : pb.length;
+  for (var i = 0; i < n; i++) {
+    final x = i < pa.length ? pa[i] : 0;
+    final y = i < pb.length ? pb[i] : 0;
+    if (x != y) return x.compareTo(y);
+  }
+  return 0;
+}
+
+Future<AppUpdateInfo> checkForUpdate(Dio dio) async {
+  try {
+    final locale = PlatformDispatcher.instance.locale.languageCode;
+    final res = await dio.get('/site', queryParameters: {'locale': locale});
+    final app = Map<String, dynamic>.from(res.data['app'] as Map);
+    final platform = Platform.isIOS ? app['ios'] : app['android'];
+    final latest = '${platform['latest']}';
+    final min = '${platform['min']}';
+    final storeUrl = platform['store_url'] as String?;
+    final forceFlag = app['force_update'] == true;
+    final message = app['message'] as String?;
+
+    final info = await PackageInfo.fromPlatform();
+    final current = info.version;
+
+    if (compareSemver(current, min) < 0) {
+      return AppUpdateInfo(kind: UpdateKind.force, message: message, storeUrl: storeUrl);
+    }
+    if (forceFlag && compareSemver(current, latest) < 0) {
+      return AppUpdateInfo(kind: UpdateKind.force, message: message, storeUrl: storeUrl);
+    }
+    if (compareSemver(current, latest) < 0) {
+      return AppUpdateInfo(kind: UpdateKind.soft, message: message, storeUrl: storeUrl);
+    }
+  } catch (_) {
+    // fail open
+  }
+  return const AppUpdateInfo(kind: UpdateKind.none);
+}
+
+Future<void> openStore(String? url) async {
+  if (url == null || url.isEmpty) return;
+  final uri = Uri.parse(url);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+}
+```
+
+Wire in `main` / splash:
+
+```dart
+final update = await checkForUpdate(ref.read(dioProvider));
+if (update.kind == UpdateKind.force) {
+  // show blocking dialog; barrierDismissible: false
+} else if (update.kind == UpdateKind.soft) {
+  // optional dialog
+}
+// then continue to auth / home
+```
+
+**Admin API (optional):** `GET/PUT /api/admin/settings` (super admin) includes the same version fields as the web form.
 
 ---
 
@@ -582,7 +931,7 @@ From `App\Enums\EventJoinAction` — drive buttons on cards + event detail:
 |-------|-----|
 | `request_to_join` | Orange **Request to join** |
 | `request_pending` | Muted “Request pending” (no primary join) |
-| `joined` | Emerald “Joined” + Chat + Members (+ Leave if not owner) |
+| `joined` | Emerald “Joined” + **View ticket** + Chat + Members (+ Leave if not owner) |
 | `request_rejected` | Amber rejected + allow request again |
 | `event_full` | Muted “Event full” |
 | `not_available` | Hide join / guest → login |
@@ -660,6 +1009,7 @@ Use web admin at `https://fun.idigital-cs.com/admin`.
 | `/discover` | `/events` |
 | `/events/create` | `/events/create` |
 | `/events/:id` | `/events/{id}` |
+| `/events/:id/ticket` | `/events/{id}/ticket` |
 | `/events/:id/edit` | `/events/{id}/edit` |
 | `/events/:id/chat` | `/events/{id}/chat` |
 | `/events/:id/requests` | `/events/{id}/requests` |
@@ -694,17 +1044,18 @@ Copy this into PRs:
 
 Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
-1. **Auth + identity + profile** — full stack with `GET /api/site` branding  
+1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C)  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
-4. **Event detail** — creator card, ratings, report/block, full owner matrix  
-5. **Cards** — rich vs compact per surface  
-6. **Create/edit** — all fields + image  
-7. **Members** — promote / demote / transfer + report/block links  
-8. **Chat** — list/post; poll until websockets  
-9. **Home** — participations + category counts + nearby  
+4. **Event detail** — creator card, ratings, report/block, full owner matrix, **View ticket**  
+5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
+6. **Cards** — rich vs compact per surface  
+7. **Create/edit** — all fields + image  
+8. **Members** — promote / demote / transfer + report/block links  
+9. **Chat** — list/post; poll until websockets  
+10. **Home** — participations + category counts + nearby  
 
-**Explicitly web-only (OK to skip in member app):** `/admin/*` only.
+**Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`).
 
 ---
 
@@ -724,6 +1075,7 @@ Base: `https://fun.idigital-cs.com`
 | Reset password | `/reset-password` |
 | Create | `/events/create` |
 | My events | `/my-events` |
+| Event ticket | `/events/{id}/ticket` |
 | Profile | `/settings/profile` |
 | Location | `/settings/location` |
 | Identity | `/identity` |
@@ -736,4 +1088,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — full-project parity; Google Sign-In via `POST /api/auth/google`; member pages on dashboard shell; API site/participations/creator/sanctum join_action/category counts.*
+*Last updated: 2026-09-23 — Event tickets (§2.4a) + web→Flutter parity rule; login/identity samples (§2B); app version (§2C).*
