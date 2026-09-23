@@ -224,7 +224,7 @@ For each screen:
 - Empty / nationwide-fallback messaging when applicable  
 - Orange Create when allowed  
 
-**Rich card must show:** cover (uploaded or **category-matched** stock: football, basketball, padel/tennis, running, cycling/outdoor, chess/board-games, cinema, social, gaming/playstation — never random by id), category chip, Free/`EGP`|`ج.م` price chip (full amount on orange chip), urgency chip, schedule, title, venue, members progress, bottom pills `members` + currency + `%`, full-width orange **View event**. Same `x-events.card` on marketing home discover and dashboard nearby. API `image_url` uses `Event::coverUrl()`. Flutter `EventCard` mirrors this layout (3 pills, full price chip, bookmark below media).
+**Rich card (web + Flutter):** cover (category-matched stock or upload), category chip, orange price chip (`50.00 EGP / person`), schedule, title, venue, members box + bar, pills `X/Y` · currency · `%`, **View Event**. Blade `.event-3d`; Flutter `EventCard` uses the same geometry (media 148px, glass from top 96 with end-corner swoosh, indigo `#312E81` title). Hot-restart Flutter after pull.
 
 **Live search (typed → API wait):** when the user types in search (topbar, home, Discover `q`, admin users), show the wifi **Searching** indicator **only** while the debounced request is in flight — never as a page/spinner loader for navigation.
 

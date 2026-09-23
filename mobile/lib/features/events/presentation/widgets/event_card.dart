@@ -6,10 +6,7 @@ import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
-/// Uiverse 3D glass card (Smit-Prajapati) adapted like Blade `.event-3d`.
-///
-/// Structure mirrors the CSS: `parent` → `card` → `logo` circles + `glass` +
-/// `content` + `bottom` (pills + view-more). Press ≈ CSS `:hover`.
+/// Mirrors Blade `x-events.card` / `.event-3d` (Smit-Prajapati glass).
 class EventCard extends StatefulWidget {
   const EventCard({
     super.key,
@@ -27,11 +24,18 @@ class EventCard extends StatefulWidget {
 }
 
 class _EventCardState extends State<EventCard> {
-  bool _hover = false;
+  bool _pressed = false;
 
-  void _setHover(bool v) {
-    if (_hover == v) return;
-    setState(() => _hover = v);
+  void _setPressed(bool v) {
+    if (_pressed == v) return;
+    setState(() => _pressed = v);
+  }
+
+  String _amountLabel(AppLocalizations l10n, EventItem event) {
+    if (event.isFree) return l10n.free;
+    final n = event.costPerPerson;
+    final amount = n == null ? '0' : n.toStringAsFixed(2);
+    return l10n.costPerPersonAmount(amount);
   }
 
   @override
@@ -49,10 +53,7 @@ class _EventCardState extends State<EventCard> {
             .format(event.startsAt!.toLocal())
             .toUpperCase()
         : '';
-    // Match Blade: free label or full "25.00 EGP / person"
-    final priceChip = event.isFree
-        ? l10n.free
-        : l10n.costPerPersonAmount('${event.costPerPerson}');
+    final priceChip = _amountLabel(l10n, event);
     final currencyPill = event.isFree ? '✓' : l10n.currencyShort;
     final cityName = event.city?.name.trim() ?? '';
     final venue = event.venue.trim();
@@ -63,69 +64,72 @@ class _EventCardState extends State<EventCard> {
         cityName,
     ].where((s) => s.isNotEmpty).join(' · ');
 
-    // CSS: .parent:hover .card { transform: rotate3d(1, 1, 0, 30deg); }
-    final tilt = _hover ? 0.35 : 0.0; // ~20° feel on mobile (30° is harsh)
+    // Web: rotate3d(1, 1, 0, 22deg) on hover
+    final tilt = _pressed ? 0.28 : 0.0;
 
     return GestureDetector(
-      onTapDown: (_) => _setHover(true),
+      onTapDown: (_) => _setPressed(true),
       onTapUp: (_) {
-        _setHover(false);
+        _setPressed(false);
         widget.onView();
       },
-      onTapCancel: () => _setHover(false),
+      onTapCancel: () => _setPressed(false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 480),
         curve: Curves.easeInOut,
         transformAlignment: Alignment.center,
-        // Bound height on the outer widget so ListView gets a finite child.
         height: 360,
         transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.0012)
+          ..setEntry(3, 2, 0.001)
           ..rotateX(tilt)
           ..rotateY(isRtl ? -tilt : tilt),
         child: Container(
           height: 360,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
+            // .event-3d__card — 2.75rem ≈ 44
+            borderRadius: BorderRadius.circular(44),
             gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment(-0.8, -1),
+              end: Alignment(0.8, 1),
               colors: [
-                Color(0xFFF4F7FF),
                 Color(0xFFEEF2FF),
-                Color(0xFFE8ECFF),
+                Color(0xFFE0E7FF),
+                Color(0xFFC7D2FE),
               ],
+              stops: [0.0, 0.4, 1.0],
             ),
             boxShadow: [
               BoxShadow(
-                color: Color(0xFF312E81).withValues(alpha: _hover ? 0.28 : 0.0),
-                blurRadius: 40,
-                offset: const Offset(24, 36),
-                spreadRadius: -28,
+                color: const Color(0xFF312E81)
+                    .withValues(alpha: _pressed ? 0.32 : 0.0),
+                blurRadius: 36,
+                offset: const Offset(28, 48),
+                spreadRadius: -36,
               ),
               BoxShadow(
-                color: Color(0xFF312E81).withValues(alpha: _hover ? 0.14 : 0.2),
-                blurRadius: _hover ? 28 : 22,
-                offset: Offset(0, _hover ? 22 : 18),
-                spreadRadius: _hover ? 0 : -4,
+                color: const Color(0xFF312E81)
+                    .withValues(alpha: _pressed ? 0.14 : 0.18),
+                blurRadius: _pressed ? 28 : 24,
+                offset: Offset(0, _pressed ? 22 : 18),
+                spreadRadius: -6,
               ),
             ],
           ),
-          child: SizedBox(
-            height: 360,
-            width: double.infinity,
-            child: Stack(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(44),
             clipBehavior: Clip.none,
-            children: [
-                // Cover media (Fun adaptation)
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // .event-3d__media — 148px
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: 140,
+                  height: 148,
                   child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(50),
+                      top: Radius.circular(44),
                     ),
                     child: Stack(
                       fit: StackFit.expand,
@@ -134,22 +138,23 @@ class _EventCardState extends State<EventCard> {
                           AppNetworkImage(
                             url: event.imageUrl!,
                             logicalWidth: 420,
-                            logicalHeight: 140,
+                            logicalHeight: 148,
                             maxCacheWidth: 900,
                             maxCacheHeight: 400,
                           )
                         else
                           const ColoredBox(color: AppColors.primarySoft),
-                        DecoratedBox(
+                        // .event-3d__media-fade
+                        const DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                               colors: [
-                                const Color(0xFFEEF2FF).withValues(alpha: 0.95),
+                                Color(0xF2EEF2FF),
                                 Colors.transparent,
                               ],
-                              stops: const [0.0, 0.5],
+                              stops: [0.0, 0.45],
                             ),
                           ),
                         ),
@@ -158,68 +163,86 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ),
 
-                // CSS .glass — inset 8px, top-right radius 100%
+                // .event-3d__glass — inset 8, top 96, border-start-end-radius 100%
                 Positioned(
                   left: 8,
                   right: 8,
-                  top: 8,
+                  top: 96,
                   bottom: 8,
                   child: IgnorePointer(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(55),
-                        topRight: Radius.circular(999),
-                        bottomLeft: Radius.circular(55),
-                        bottomRight: Radius.circular(55),
-                      ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.35),
-                              Colors.white.withValues(alpha: 0.82),
-                            ],
-                          ),
-                          border: const Border(
-                            left: BorderSide(color: Colors.white, width: 1.2),
-                            bottom: BorderSide(color: Colors.white, width: 1.2),
-                          ),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(isRtl ? 999 : 38),
+                          topRight: Radius.circular(isRtl ? 38 : 999),
+                          bottomLeft: const Radius.circular(38),
+                          bottomRight: const Radius.circular(38),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.42),
+                            Colors.white.withValues(alpha: 0.88),
+                          ],
+                        ),
+                        border: Border(
+                          left: isRtl
+                              ? BorderSide.none
+                              : const BorderSide(color: Colors.white),
+                          right: isRtl
+                              ? const BorderSide(color: Colors.white)
+                              : BorderSide.none,
+                          bottom: const BorderSide(color: Colors.white),
                         ),
                       ),
                     ),
                   ),
                 ),
 
-                // CSS .logo — five concentric circles
+                // .event-3d__logo circles
                 Positioned(
                   top: 0,
                   right: isRtl ? null : 0,
                   left: isRtl ? 0 : null,
-                  child: _UiverseLogoStack(
+                  child: _LogoStack(
                     imageUrl: hasImage ? event.imageUrl : null,
                     emoji: emoji,
-                    hover: _hover,
+                    pressed: _pressed,
                     isRtl: isRtl,
                   ),
                 ),
 
-                // Category + price (over glass, start side)
+                // .event-3d__chip + .event-3d__price (start)
                 PositionedDirectional(
-                  top: 16,
-                  start: 16,
+                  top: 14,
+                  start: 14,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (categoryName.isNotEmpty)
-                        _Chip(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
                           child: Text(
                             '$emoji $categoryName'.trim(),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF1E1B4B),
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -249,15 +272,15 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ),
 
-                // Bookmark — match Blade: below media on end side (not on logo)
+                // .event-3d__favorite — ~7.6rem from top on end
                 if (widget.onFavorite != null)
                   PositionedDirectional(
-                    top: 118,
+                    top: 122,
                     end: 14,
                     child: Material(
                       color: Colors.white.withValues(alpha: 0.95),
                       shape: const CircleBorder(),
-                      elevation: 3,
+                      elevation: 2,
                       child: InkWell(
                         customBorder: const CircleBorder(),
                         onTap: widget.onFavorite,
@@ -277,17 +300,17 @@ class _EventCardState extends State<EventCard> {
                     ),
                   ),
 
-                // CSS .content
+                // .event-3d__body
                 Positioned(
                   left: 0,
                   right: 0,
-                  top: 118,
-                  bottom: 56,
+                  top: 148,
+                  bottom: 52,
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
-                      28,
-                      8,
-                      isRtl ? 28 : 56,
+                      20,
+                      10,
+                      isRtl ? 20 : 72,
                       0,
                     ),
                     child: Column(
@@ -298,21 +321,23 @@ class _EventCardState extends State<EventCard> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Color(0xFF2E3A59),
+                            color: Color(0xFF312E81),
                             fontWeight: FontWeight.w900,
-                            fontSize: 18,
-                            height: 1.25,
+                            fontSize: 17,
+                            height: 1.3,
+                            letterSpacing: -0.3,
                           ),
                         ),
                         if (schedule.isNotEmpty) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 7),
                           Text(
                             schedule,
-                            style: const TextStyle(
-                              color: Color(0xFF7D8CC4),
+                            style: TextStyle(
+                              color: const Color(0xFF4F46E5)
+                                  .withValues(alpha: 0.85),
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.4,
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ],
@@ -322,30 +347,27 @@ class _EventCardState extends State<EventCard> {
                             venueLine,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF7D8CC4),
+                            style: TextStyle(
+                              color: const Color(0xFF4338CA)
+                                  .withValues(alpha: 0.75),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+                        // .event-3d__members
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
+                            horizontal: 10,
+                            vertical: 9,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF312E81)
-                                    .withValues(alpha: 0.10),
-                                blurRadius: 14,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
+                            color: Colors.white.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
                           ),
                           child: Column(
                             children: [
@@ -355,7 +377,7 @@ class _EventCardState extends State<EventCard> {
                                     l10n.members,
                                     style: const TextStyle(
                                       fontSize: 12,
-                                      color: Color(0xFF7D8CC4),
+                                      color: Color(0xFF64748B),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -365,22 +387,22 @@ class _EventCardState extends State<EventCard> {
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w900,
-                                      color: Color(0xFF2E3A59),
+                                      color: Color(0xFF0F172A),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(999),
                                 child: LinearProgressIndicator(
                                   value: event.fillPercent / 100,
-                                  minHeight: 7,
-                                  backgroundColor: const Color(0xFFE8ECF4),
+                                  minHeight: 6,
+                                  backgroundColor: const Color(0xFFE2E8F0),
                                   valueColor: AlwaysStoppedAnimation(
                                     event.isUrgent
                                         ? AppColors.accent
-                                        : const Color(0xFF5C5CFF),
+                                        : const Color(0xFF6366F1),
                                   ),
                                 ),
                               ),
@@ -392,91 +414,72 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ),
 
-                // CSS .bottom — pills match Blade: members + currency + %
+                // .event-3d__bottom
                 Positioned(
-                  left: 20,
-                  right: 20,
-                  bottom: 18,
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
                   child: Row(
                     children: [
-                      _SocialPill(
+                      _Pill(
                         label:
                             '${event.membersCount}/${event.maxParticipants}',
                         wide: true,
-                        hover: _hover,
+                        pressed: _pressed,
                       ),
-                      const SizedBox(width: 10),
-                      _SocialPill(
-                        label: currencyPill,
-                        hover: _hover,
-                      ),
-                      const SizedBox(width: 10),
-                      _SocialPill(
-                        label: '$pct%',
-                        hover: _hover,
-                      ),
+                      const SizedBox(width: 8),
+                      _Pill(label: currencyPill, pressed: _pressed),
+                      const SizedBox(width: 8),
+                      _Pill(label: '$pct%', pressed: _pressed),
                       const Spacer(),
-                      // CSS .view-more
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        transform: Matrix4.translationValues(
-                          0,
-                          0,
-                          _hover ? 10 : 0,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              l10n.viewEvent,
-                              style: const TextStyle(
-                                color: AppColors.accent,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12,
-                              ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.viewEvent,
+                            style: const TextStyle(
+                              color: Color(0xFFEA580C),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
                             ),
-                            Icon(
-                              isRtl
-                                  ? Icons.chevron_left
-                                  : Icons.chevron_right,
-                              size: 16,
-                              color: AppColors.accent,
-                            ),
-                          ],
-                        ),
+                          ),
+                          Icon(
+                            isRtl ? Icons.chevron_left : Icons.chevron_right,
+                            size: 16,
+                            color: const Color(0xFFEA580C),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// CSS `.logo` + `.circle1`…`.circle5` with translateZ depths.
-class _UiverseLogoStack extends StatelessWidget {
-  const _UiverseLogoStack({
+class _LogoStack extends StatelessWidget {
+  const _LogoStack({
     required this.emoji,
-    required this.hover,
+    required this.pressed,
     required this.isRtl,
     this.imageUrl,
   });
 
   final String emoji;
-  final bool hover;
+  final bool pressed;
   final bool isRtl;
   final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
-    // Rest Z: 20,40,60,80,100 — hover: circle2→60, 3→80, 4→100, 5→120
     final sizes = <double>[170, 140, 110, 80, 50];
     final tops = <double>[8, 10, 17, 23, 30];
-    final rights = <double>[8, 10, 17, 23, 30];
+    final ends = <double>[8, 10, 17, 23, 30];
     final zRest = <double>[20, 40, 60, 80, 100];
     final zHover = <double>[20, 60, 80, 100, 120];
 
@@ -489,26 +492,21 @@ class _UiverseLogoStack extends StatelessWidget {
           for (var i = 0; i < 5; i++)
             Positioned(
               top: tops[i],
-              right: isRtl ? null : rights[i],
-              left: isRtl ? rights[i] : null,
+              right: isRtl ? null : ends[i],
+              left: isRtl ? ends[i] : null,
               child: AnimatedContainer(
-                duration: Duration(milliseconds: 500 + i * 200),
+                duration: Duration(milliseconds: 500 + (i * 200)),
                 curve: Curves.easeInOut,
                 width: sizes[i],
                 height: sizes[i],
                 transformAlignment: Alignment.center,
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.001)
-                  ..translateByDouble(
-                    0,
-                    0,
-                    hover ? zHover[i] : zRest[i],
-                    1,
-                  ),
+                  ..translate(0.0, 0.0, pressed ? zHover[i] : zRest[i]),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: i == 4
-                      ? AppColors.primary.withValues(alpha: 0.55)
+                      ? const Color(0xFF4F46E5).withValues(alpha: 0.55)
                       : Colors.white.withValues(alpha: 0.22),
                   boxShadow: [
                     BoxShadow(
@@ -543,72 +541,45 @@ class _UiverseLogoStack extends StatelessWidget {
   }
 }
 
-/// CSS `.social-button` — white circle that lifts on hover.
-class _SocialPill extends StatelessWidget {
-  const _SocialPill({
+class _Pill extends StatelessWidget {
+  const _Pill({
     required this.label,
-    required this.hover,
+    required this.pressed,
     this.wide = false,
   });
 
   final String label;
-  final bool hover;
+  final bool pressed;
   final bool wide;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      // Stagger feel via delay on rebuild is weak; use shared hover lift.
-      transform: Matrix4.translationValues(0, hover ? -4 : 0, hover ? 20 : 0),
-      width: wide ? 48 : 36,
-      height: 36,
+      transform: Matrix4.translationValues(0, 0, pressed ? 50 : 0),
+      constraints: BoxConstraints(minWidth: wide ? 42 : 30, minHeight: 30),
+      padding: EdgeInsets.symmetric(horizontal: wide ? 9 : 6),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Colors.white,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(999),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF312E81).withValues(alpha: hover ? 0.22 : 0.18),
-            blurRadius: hover ? 12 : 10,
-            offset: Offset(hover ? -4 : 0, hover ? 12 : 4),
+            color: const Color(0xFF312E81)
+                .withValues(alpha: pressed ? 0.22 : 0.3),
+            blurRadius: pressed ? 12 : 8,
+            offset: Offset(pressed ? -5 : 0, pressed ? 14 : 5),
           ),
         ],
       ),
       child: Text(
         label,
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w800,
-          color: Color(0xFF5C5CFF),
+          color: Color(0xFF4338CA),
         ),
       ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 }
