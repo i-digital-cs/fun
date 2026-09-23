@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\Admin\EventModerationController as ApiEventModerati
 use App\Http\Controllers\Api\Admin\ReportModerationController as ApiReportModerationController;
 use App\Http\Controllers\Api\Admin\SiteSettingsController as ApiSiteSettingsController;
 use App\Http\Controllers\Api\Admin\UserModerationController as ApiUserModerationController;
+use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\MeController;
+use App\Http\Controllers\Api\Auth\PasswordResetController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\CategoryListController;
 use App\Http\Controllers\Api\CityListController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembers
 use App\Http\Controllers\Api\Events\EventRatingController as ApiEventRatingController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
+use App\Http\Controllers\Api\Profile\ProfileController as ApiProfileController;
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
 use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
 use Illuminate\Support\Facades\Route;
@@ -32,14 +35,28 @@ Route::middleware('throttle:auth')->group(function () {
     Route::post('/login', [LoginController::class, 'store']);
 });
 
+Route::middleware('throttle:auth-codes')->group(function () {
+    Route::post('/forgot-password', [PasswordResetController::class, 'request']);
+    Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify']);
+    Route::post('/reset-password', [PasswordResetController::class, 'reset']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [MeController::class, 'show']);
     Route::post('/logout', [LoginController::class, 'destroy']);
+
+    Route::post('/email/verify', [EmailVerificationController::class, 'verify'])
+        ->middleware('throttle:auth-codes');
+    Route::post('/email/verify/resend', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:auth-codes');
 
     Route::get('/identity', [ApiIdentityDocumentController::class, 'show']);
     Route::get('/identity/documents/{document}', [ApiIdentityDocumentController::class, 'showDocument'])
         ->whereNumber('document');
     Route::post('/identity', [ApiIdentityDocumentController::class, 'store'])
+        ->middleware('throttle:uploads');
+
+    Route::put('/settings/profile', [ApiProfileController::class, 'update'])
         ->middleware('throttle:uploads');
 
     Route::middleware('account.active')->group(function () {

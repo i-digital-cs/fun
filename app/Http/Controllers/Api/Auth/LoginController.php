@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Enums\EmailAuthPurpose;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\Auth\EmailAuthCodeService;
 use App\Services\Auth\LoginUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LoginController extends Controller
 {
-    public function store(LoginRequest $request, LoginUserService $loginUserService): JsonResponse
-    {
+    public function store(
+        LoginRequest $request,
+        LoginUserService $loginUserService,
+        EmailAuthCodeService $codes,
+    ): JsonResponse {
         try {
             $user = $loginUserService->authenticate($request->validated());
         } catch (DomainException $exception) {
@@ -20,10 +25,17 @@ class LoginController extends Controller
         }
 
         $token = $loginUserService->issueApiToken($user);
+        $emailVerified = $user->email_verified_at !== null;
+
+        if (! $emailVerified) {
+            $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+        }
 
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
+            'email_verified' => $emailVerified,
+            'needs_email_verification' => ! $emailVerified,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -31,6 +43,9 @@ class LoginController extends Controller
                 'status' => $user->status->value,
                 'locale' => $user->locale,
                 'platform_role' => $user->platform_role?->value,
+                'email_verified' => $emailVerified,
+                'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+                'needs_identity_documents' => $user->needsIdentityDocuments(),
             ],
         ]);
     }
