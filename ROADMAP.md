@@ -20,7 +20,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Flutter mobile client — production build phases in progress / largely complete.** Continue polish and device QA.
+**Flutter mobile client (`mobile/`) — F2 + F3 shipped.** Continue with F4 (perf, flavors, release, tests).
 
 ---
 
@@ -29,20 +29,20 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 ### Task F1 — Flutter scaffold + auth + discover
 - **Status:** `done`
 - **Completed:** 2026-09-22
+- **Notes:** `mobile/` Clean Architecture, Riverpod/Dio/go_router, DESIGN.md tokens from Blade, Sanctum auth, home hero + discover + event card + detail, EN/AR l10n, secure token storage.
 
 ### Task F2 — Create event + location settings + chat
 - **Status:** `done`
 - **Completed:** 2026-09-22
-- **Notes:** Clean Architecture folders, secure tokens, l10n, location, create/edit/publish, membership, chat, lifecycle.
+- **Notes:** Create/edit/publish UI, my-events list, event detail join/owner actions, chat, join requests, location settings page, catalog distances_km.
 
 ### Task F3 — Identity upload + blocks/reports + ratings
 - **Status:** `done`
 - **Completed:** 2026-09-22
-- **Notes:** Account gates, identity upload, blocks, reports, safety guidelines, ratings.
+- **Notes:** Identity upload (3 photos), blocks list/unblock, report sheet, rate event sheet, profile links + safety guidelines, account gate on create.
 
 ### Task F4 — Perf / flavors / release / tests
-- **Status:** `done`
-- **Completed:** 2026-09-22
+- **Status:** `todo`
 - **Notes:** Image memCache bounds, catalog TTL cache, dart-define flavors, widget+unit tests, obfuscation build command documented.
 
 ---
