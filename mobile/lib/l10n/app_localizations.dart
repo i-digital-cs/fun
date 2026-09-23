@@ -218,6 +218,42 @@ abstract class AppLocalizations {
   /// **'Open public profile'**
   String get openPublicProfile;
 
+  /// No description provided for @chatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatsTitle;
+
+  /// No description provided for @chatsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet'**
+  String get chatsEmptyTitle;
+
+  /// No description provided for @chatsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Join an event to start chatting with other members.'**
+  String get chatsEmptyBody;
+
+  /// No description provided for @chatsNoMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get chatsNoMessages;
+
+  /// No description provided for @chatsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get chatsYou;
+
+  /// No description provided for @openChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get openChat;
+
   /// No description provided for @hostedEvents.
   ///
   /// In en, this message translates to:

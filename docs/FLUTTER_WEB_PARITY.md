@@ -100,7 +100,7 @@ For each screen:
 **Profile** tab: **Profile settings** + links to location / identity / blocks.
 
 **Topbar:** live search → suggestions via `GET /search/suggest` (wifi **Searching** while typed query awaits API); Enter / See all → Discover; locale; avatar menu (Profile · Location · Identity · Blocks · Logout).
-*(Web bell icon is decorative → My Events — do not invent a notifications API.)*
+*(Topbar chat icon → `/chats` with unread dot when messages arrive.)*
 
 ---
 
@@ -418,6 +418,9 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 | | |
 |--|--|
 | **Blade** | `events/chat.blade.php` |
+| **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` |
+| **Toast** | Web: Reverb user channel `.chat.message` → Uiverse toast while browsing (suppressed on that event’s chat). Flutter: poll `/api/chats` every 15s → SnackBar |
+| **Unread** | `event_chat_reads.last_read_message_id`; mark on open thread / `POST /api/events/{id}/messages/read` |
 | **API** | `GET /api/events/{id}/messages`, `POST .../messages` |
 | **Access** | Joined members only |
 
@@ -1137,6 +1140,7 @@ Use web admin at `https://fun.idigital-cs.com/admin`.
 | `/events/:id` | `/events/{id}` |
 | `/events/:id/ticket` | `/events/{id}/ticket` |
 | `/events/:id/edit` | `/events/{id}/edit` |
+| `/chats` | `/chats` |
 | `/events/:id/chat` | `/events/{id}/chat` |
 | `/events/:id/requests` | `/events/{id}/requests` |
 | `/events/:id/members` | `/events/{id}/members` |
@@ -1182,7 +1186,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 7. **Cards** — rich vs compact per surface  
 8. **Create/edit** — all fields + image  
 9. **Members** — promote / demote / transfer + report/block links  
-10. **Chat** — list/post; poll until websockets  
+10. **Chat** — inbox `/chats` + thread list/post; web toast via Reverb; Flutter poll until websockets
 11. **Home** — participations + weather (city) + category counts + nearby  
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages.

@@ -70,6 +70,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get openPublicProfile => 'فتح الملف العام';
 
   @override
+  String get chatsTitle => 'المحادثات';
+
+  @override
+  String get chatsEmptyTitle => 'لا محادثات بعد';
+
+  @override
+  String get chatsEmptyBody => 'انضم إلى فعالية لبدء المحادثة مع الأعضاء.';
+
+  @override
+  String get chatsNoMessages => 'لا رسائل بعد';
+
+  @override
+  String get chatsYou => 'أنت';
+
+  @override
+  String get openChat => 'فتح المحادثة';
+
+  @override
   String get hostedEvents => 'فعاليات مستضافة';
 
   @override

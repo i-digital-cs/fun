@@ -31,7 +31,7 @@ class EventChatTest extends TestCase
 
     public function test_member_can_post_and_list_messages_via_api(): void
     {
-        EventFacade::fake([EventMessagePosted::class]);
+        EventFacade::fake([EventMessagePosted::class, \App\Events\UserChatMessageReceived::class]);
 
         $owner = User::factory()->active()->create();
         $event = $this->publishedEventFor($owner);
@@ -83,7 +83,7 @@ class EventChatTest extends TestCase
 
     public function test_rejects_oversized_and_empty_after_sanitize(): void
     {
-        EventFacade::fake([EventMessagePosted::class]);
+        EventFacade::fake([EventMessagePosted::class, \App\Events\UserChatMessageReceived::class]);
 
         $owner = User::factory()->active()->create();
         $event = $this->publishedEventFor($owner);
@@ -101,7 +101,7 @@ class EventChatTest extends TestCase
 
     public function test_rejects_duplicate_message_within_window(): void
     {
-        EventFacade::fake([EventMessagePosted::class]);
+        EventFacade::fake([EventMessagePosted::class, \App\Events\UserChatMessageReceived::class]);
 
         $owner = User::factory()->active()->create();
         $event = $this->publishedEventFor($owner);
@@ -155,7 +155,7 @@ class EventChatTest extends TestCase
 
     public function test_idor_cannot_post_to_another_event_by_swapping_id(): void
     {
-        EventFacade::fake([EventMessagePosted::class]);
+        EventFacade::fake([EventMessagePosted::class, \App\Events\UserChatMessageReceived::class]);
 
         $ownerA = User::factory()->active()->create();
         $ownerB = User::factory()->active()->create();

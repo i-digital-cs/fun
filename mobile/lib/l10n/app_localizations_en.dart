@@ -70,6 +70,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openPublicProfile => 'Open public profile';
 
   @override
+  String get chatsTitle => 'Chats';
+
+  @override
+  String get chatsEmptyTitle => 'No chats yet';
+
+  @override
+  String get chatsEmptyBody =>
+      'Join an event to start chatting with other members.';
+
+  @override
+  String get chatsNoMessages => 'No messages yet';
+
+  @override
+  String get chatsYou => 'You';
+
+  @override
+  String get openChat => 'Open chat';
+
+  @override
   String get hostedEvents => 'Hosted events';
 
   @override

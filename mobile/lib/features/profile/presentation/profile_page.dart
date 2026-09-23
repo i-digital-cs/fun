@@ -97,6 +97,11 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 24),
           ],
           ProfileLinkTile(
+            icon: Icons.chat_bubble_outline,
+            title: l10n.chatsTitle,
+            onTap: () => context.push('/chats'),
+          ),
+          ProfileLinkTile(
             icon: Icons.location_on_outlined,
             title: l10n.location,
             onTap: () => context.push('/settings/location'),

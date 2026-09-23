@@ -17,6 +17,7 @@ import 'package:fun_mobile/features/identity/presentation/identity_page.dart';
 import 'package:fun_mobile/features/profile/presentation/location_page.dart';
 import 'package:fun_mobile/features/profile/presentation/profile_page.dart';
 import 'package:fun_mobile/features/profile/presentation/public_profile_page.dart';
+import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/safety/presentation/blocks_page.dart';
 import 'package:fun_mobile/features/safety/presentation/report_page.dart';
 import 'package:fun_mobile/features/safety/presentation/safety_guidelines_page.dart';
@@ -84,6 +85,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/account/deactivated',
         parentNavigatorKey: _rootKey,
         builder: (context, state) => const AccountDeactivatedPage(),
+      ),
+      GoRoute(
+        path: '/chats',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const ChatsPage(),
       ),
       GoRoute(
         path: '/events/:id',
@@ -162,7 +168,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return MainShell(navigationShell: navigationShell);
+          return ChatToastListener(
+            child: MainShell(navigationShell: navigationShell),
+          );
         },
         branches: [
           StatefulShellBranch(
