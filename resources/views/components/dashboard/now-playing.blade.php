@@ -57,7 +57,7 @@
             @if ($running)
                 <a href="{{ route('events.show', $running) }}" class="now-playing__row now-playing__row--live">
                     <img
-                        src="{{ event_cover_url($running->imageUrl(), $running->id) }}"
+                        src="{{ $running->coverUrl() }}"
                         alt=""
                         class="now-playing__cover"
                     >
@@ -80,7 +80,7 @@
             @foreach ($next as $event)
                 <a href="{{ route('events.show', $event) }}" class="now-playing__row">
                     <img
-                        src="{{ event_cover_url($event->imageUrl(), $event->id) }}"
+                        src="{{ $event->coverUrl() }}"
                         alt=""
                         class="now-playing__cover"
                     >
@@ -99,7 +99,7 @@
             @foreach ($previous as $event)
                 <a href="{{ route('events.show', $event) }}" class="now-playing__row now-playing__row--past">
                     <img
-                        src="{{ event_cover_url($event->imageUrl(), $event->id) }}"
+                        src="{{ $event->coverUrl() }}"
                         alt=""
                         class="now-playing__cover"
                     >

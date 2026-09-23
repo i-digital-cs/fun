@@ -16,7 +16,7 @@
         ? __('events.free')
         : __('events.cost_per_person_amount', ['amount' => $event->cost_per_person]);
     $action = $joinAction?->value;
-    $cover = event_cover_url($event->imageUrl(), $event->id);
+    $cover = $event->coverUrl();
     $schedule = $event->starts_at?->timezone(config('app.timezone'))->translatedFormat('D · M j · g:i A');
 @endphp
 
