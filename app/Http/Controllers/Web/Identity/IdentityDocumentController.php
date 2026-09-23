@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\IdentityDocument;
 use App\Services\Identity\SubmitIdentityDocumentsService;
 use App\Services\Media\PrivateMediaAccessService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -42,15 +43,37 @@ class IdentityDocumentController extends Controller
     public function store(
         StoreIdentityDocumentsRequest $request,
         SubmitIdentityDocumentsService $service,
-    ): RedirectResponse {
+    ): RedirectResponse|JsonResponse {
         try {
-            $service->submit($request->user(), $request->validated());
+            $user = $service->submit($request->user(), $request->validated());
         } catch (DomainException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    'errors' => ['identity' => [$exception->getMessage()]],
+                ], 422);
+            }
+
             return back()->withErrors(['identity' => $exception->getMessage()]);
         }
 
-        return redirect()->route($request->user()->defaultHomeRoute())
-            ->with('status', __('identity.activated'));
+        $url = route($user->defaultHomeRoute());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('identity.activated'),
+                'redirect' => $url,
+                'user' => [
+                    'id' => $user->id,
+                    'status' => $user->status->value,
+                    'needs_identity_documents' => $user->needsIdentityDocuments(),
+                    'has_identity_documents' => $user->hasRequiredIdentityDocuments(),
+                    'identity_resubmit_required' => $user->identityResubmitRequired(),
+                ],
+            ]);
+        }
+
+        return redirect()->to($url)->with('status', __('identity.activated'));
     }
 
     public function showDocument(

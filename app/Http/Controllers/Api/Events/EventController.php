@@ -27,8 +27,9 @@ class EventController extends Controller
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
     ): AnonymousResourceCollection {
-        $events = $discover->discover($request->user(), $request->filters());
-        $actions = $joinActions->resolveMany($request->user(), $events->getCollection());
+        $user = $request->user('sanctum');
+        $events = $discover->discover($user, $request->filters());
+        $actions = $joinActions->resolveMany($user, $events->getCollection());
 
         $events->getCollection()->transform(function (Event $event) use ($actions) {
             $event->setAttribute('join_action', $actions[$event->id]->value ?? null);
@@ -75,9 +76,9 @@ class EventController extends Controller
     ): JsonResponse {
         $this->authorize('view', $event);
 
-        $event->load(['category', 'city', 'creator:id,name'])->loadCount('members');
+        $event->load(['category', 'city', 'creator:id,name,profile_image_path'])->loadCount('members');
 
-        $user = auth()->user();
+        $user = auth('sanctum')->user();
         $userRating = null;
 
         if ($user !== null) {
@@ -91,8 +92,10 @@ class EventController extends Controller
             ? $ratingSummary->forUser($event->creator)
             : ['average' => null, 'count' => 0];
 
+        $resource = (new EventResource($event))->resolve();
+
         return response()->json([
-            'data' => (new EventResource($event))->resolve(),
+            'data' => $resource,
             'join_action' => $joinActionService->resolve($user, $event)->value,
             'ready_for_ratings' => $event->isReadyForRatings(),
             'can_rate' => $user !== null && $user->can('rate', $event),
@@ -100,6 +103,7 @@ class EventController extends Controller
                 ? (new \App\Http\Resources\EventRatingResource($userRating))->resolve()
                 : null,
             'creator_rating' => $creatorSummary,
+            'creator' => $resource['creator'] ?? null,
         ]);
     }
 

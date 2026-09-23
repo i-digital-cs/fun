@@ -1,11 +1,10 @@
 # Flutter ↔ Web (Blade) Feature Parity Guide
 
-**Purpose:** Close the gap between the Laravel Blade web app and the Flutter client.  
-Implement Flutter screens so they match **structure, content, CTAs, and states** of the Blade pages below — responsive for phone/tablet, same design system as [`DESIGN.md`](../DESIGN.md).
+**Purpose:** Keep **zero intentional gap** between the Laravel Blade web app and the Flutter client — every member/public screen, gate, CTA, and data field.
 
 **Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
 
-**Rule:** Pixel-perfect copy of desktop layout is not required. **Same information hierarchy, same actions, same join states, same brand tokens** are required.
+**Rule:** Pixel-perfect desktop layout is not required. **Same information hierarchy, same actions, same join states, same brand tokens, same account gates** are required. If web can do it, Flutter must be able to do it via API (or an explicit “web-only” note — admin only).
 
 ---
 
@@ -19,6 +18,46 @@ For each screen:
 4. Check the **Parity checklist** at the bottom before calling the screen done.
 
 **Out of scope for member Flutter app:** `/admin/*` (platform admin stays web-only unless a separate admin app is requested).
+
+---
+
+## 0.1 Full-project parity contract (non-negotiable)
+
+| Layer | Web (Blade) | Flutter must |
+|-------|-------------|--------------|
+| **Shell (logged in)** | `layouts/dashboard` — sidebar + topbar + mobile 5-tab | Same IA: Home · Discover · Create · My Events · Profile |
+| **Shell (guest auth)** | `layouts/app` + ambient + glass | Ambient + glass cards; brand from API |
+| **Branding** | Admin display name + logo | `GET /api/site` → name + logo on auth/identity/home |
+| **Auth** | Login/register + cinema + email code + forgot/reset | Same flows via Auth API (§2A) |
+| **Gates** | email verified → identity → active | Same order using `/api/user` flags |
+| **Discover / events** | Filters, rich cards, join states | Same filters + `join_action` (send **Bearer** on event GETs) |
+| **Dashboard home** | Greeting, hero, categories+counts, nearby, safety, how-it-works, CTA | Compose from events/categories/user/participations |
+| **Profile** | Photo, name, email, locale, password | `PUT /api/settings/profile` |
+| **Identity** | Status chips, thumbs, 3 uploads, cinema | `GET/POST /api/identity` + document streams |
+| **Safety** | Guidelines, report, blocks | l10n + `POST /api/reports` + blocks API |
+
+**Do not ship Flutter screens that invent different CTAs, skip gates, or ignore `join_action`.**
+
+---
+
+## 0.2 Master API map (member)
+
+| Area | Endpoints |
+|------|-----------|
+| Branding | `GET /api/site` |
+| Auth | `POST /register` · `/login` · `/logout` · `/email/verify` · `/email/verify/resend` · `/forgot-password` · `/forgot-password/verify` · `/reset-password` |
+| Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `can_participate`, `has_password`, city…) |
+| Profile | `PUT /api/settings/profile` · `PUT /api/settings/location` |
+| Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) |
+| Catalog | `GET /api/cities` · `GET /api/categories` |
+| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · publish/cancel/complete |
+| Join | `POST .../join|leave` · requests accept/reject · members promote/demote/transfer |
+| Chat | `GET/POST /api/events/{id}/messages` |
+| Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
+| Identity | `GET/POST /api/identity` · `GET /api/identity/documents/{id}` |
+| Safety | `POST /api/reports` (`description` not `details`) · `GET /api/blocks` · block/unblock user |
+
+**Auth header:** Send `Authorization: Bearer {token}` on **all** authenticated calls **and** on public `GET /api/events` / `GET /api/events/{id}` so `join_action` is personalized.
 
 ---
 
@@ -46,6 +85,8 @@ For each screen:
 | Topbar | `components/dashboard/topbar.blade.php` |
 | Mobile nav | `components/dashboard/mobile-nav.blade.php` |
 
+**Web reference pages using this shell:** dashboard, discover, event detail/create/edit/mine/requests/members/chat, profile, location, identity, blocks, report, account deactivated.
+
 **Flutter must (responsive):**
 
 | Breakpoint | Chrome |
@@ -53,9 +94,12 @@ For each screen:
 | Phone (&lt; ~850px) | Bottom nav 5 tabs: **Home · Discover · Create · My Events · Profile** |
 | Wide | Left sidebar (same items + Blocked users + location card) |
 
-**Create** tab: opens create-event (or identity gate if user cannot participate) — not a permanent empty tab.
+**Create** tab: opens create-event (or identity gate if `!can_participate`) — not a permanent empty tab.
 
-**Topbar (home/discover):** search field, locale toggle, profile entry (notifications optional if API not ready).
+**Profile** tab: **Profile settings** + links to location / identity / blocks.
+
+**Topbar:** search → Discover; locale; avatar menu (Profile · Location · Identity · Blocks · Logout).  
+*(Web bell icon is decorative → My Events — do not invent a notifications API.)*
 
 ---
 
@@ -68,7 +112,7 @@ For each screen:
 | **Route** | `home` → `/` |
 | **Blade** | `home/index.blade.php` |
 | **Guest?** | Yes (also shows extra blocks when authed) |
-| **API** | `GET /api/events`, `GET /api/categories` (+ auth memberships if logged in) |
+| **API** | `GET /api/site`, `GET /api/events` (+ Bearer), `GET /api/categories`, `GET /api/home/participations` (auth) |
 
 **Sections (order):**
 
@@ -88,7 +132,7 @@ For each screen:
 | **Route** | `dashboard` → `/dashboard` |
 | **Blade** | `home/dashboard.blade.php` |
 | **Auth** | Required |
-| **API** | `GET /api/events` (nearby filters), `GET /api/categories`, `GET /api/cities`, `GET /api/user` |
+| **API** | `GET /api/site`, `GET /api/user`, `GET /api/events` (nearby + Bearer), `GET /api/categories` (`published_events_count`), `GET /api/cities`, `GET /api/home/participations` |
 
 **Sections (order) — implement all:**
 
@@ -110,7 +154,7 @@ For each screen:
 | **Route** | `events.index` → `/events` |
 | **Blade** | `events/index.blade.php` |
 | **Guest?** | Yes (Create CTA only if authed + canParticipate) |
-| **API** | `GET /api/events?q&category_id&city_id&distance_km` |
+| **API** | `GET /api/events?q&category_id&city_id&distance_km&when` (+ **Bearer** for join_action) |
 
 **Must implement:**
 
@@ -131,7 +175,7 @@ For each screen:
 |--|--|
 | **Route** | `events.show` |
 | **Blade** | `events/show.blade.php` |
-| **API** | `GET /api/events/{id}`, join/leave, ratings endpoints |
+| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating` |
 
 **Layout hierarchy (same as web):**
 
@@ -242,11 +286,21 @@ Web uses realtime; Flutter may poll until websockets are wired — document poll
 
 | | |
 |--|--|
-| **Blade** | `auth/login.blade.php` |
+| **Blade** | `auth/login.blade.php` (`x-auth.access-shell`) |
 | **API** | `POST /api/login` → token |
 
-Glass card, email + password, **indigo→violet** primary CTA, link to register.  
-(Google OAuth on web — optional for Flutter; if skipped, note in UI.)
+Glass card with **site name + logo** (from admin settings). Email + password, remember, **indigo→violet** CTA, Google (web), links to register + forgot password.
+
+**After submit (web cinematic):** digits orbit → verify ring 1–100 → celebrate → redirect.  
+**Flutter:** optional matching animation; always handle API flags:
+
+| Response field | Flutter action |
+|----------------|----------------|
+| `needs_email_verification` / `email_verified: false` | Navigate to **Verify email** (code was emailed) |
+| `needs_identity_documents` | Navigate to Identity |
+| else | Member home / dashboard |
+
+`user` also includes `email_verified`, `email_verified_at`, `needs_identity_documents`.
 
 ---
 
@@ -257,7 +311,91 @@ Glass card, email + password, **indigo→violet** primary CTA, link to register.
 | **Blade** | `auth/register.blade.php` |
 | **API** | `POST /api/register` |
 
-Name, email, password, confirmation, locale. **Orange→amber** CTA.
+Name, email, password, confirmation, locale. **Orange→amber** CTA. Site branding on card.
+
+**Response:** Sanctum `token` + `email_verified: false`. A **4-digit email code** is sent automatically.
+
+**Next screen:** Verify email (`§2.12a`) — do **not** open Identity until email is verified.
+
+---
+
+### 2.12a Verify email `/email/verify` *(new — required)*
+
+| | |
+|--|--|
+| **Blade** | `auth/verify-email.blade.php` |
+| **API** | `POST /api/email/verify` · `POST /api/email/verify/resend` |
+| **Auth** | Bearer (Sanctum) |
+
+**UI:** 4 digit OTP boxes (auto-advance / paste), Resend, site logo + name. Web uses the same access-code theater animation.
+
+| Call | Body | Success |
+|------|------|---------|
+| Verify | `{ "code": "1234" }` | `email_verified: true` + `user` → then Identity or Home |
+| Resend | `{}` | `{ "message", "email" }` |
+
+Codes expire in **15 minutes**. Gate Identity / create / join until `email_verified`.
+
+---
+
+### 2.12b Forgot password `/forgot-password` *(new — required)*
+
+| | |
+|--|--|
+| **Blade** | `auth/forgot-password.blade.php` |
+| **API** | `POST /api/forgot-password` |
+
+Email field + send code. Response always looks successful (no email enumeration).
+
+```json
+{ "email": "user@example.com" }
+```
+
+→ then **Verify reset code** screen.
+
+---
+
+### 2.12c Verify reset code `/forgot-password/verify` *(new — required)*
+
+| | |
+|--|--|
+| **Blade** | `auth/verify-reset-code.blade.php` |
+| **API** | `POST /api/forgot-password/verify` · `POST /api/forgot-password` (resend = same as request) |
+
+```json
+{ "email": "user@example.com", "code": "1234" }
+```
+
+**Success:**
+```json
+{
+  "message": "...",
+  "reset_token": "<opaque>",
+  "expires_in_minutes": 15
+}
+```
+
+Store `reset_token` + email for the next screen. Do **not** treat this as a login token.
+
+---
+
+### 2.12d Reset password `/reset-password` *(new — required)*
+
+| | |
+|--|--|
+| **Blade** | `auth/reset-password.blade.php` |
+| **API** | `POST /api/reset-password` |
+
+```json
+{
+  "email": "user@example.com",
+  "reset_token": "<from verify>",
+  "password": "NewPassword1!",
+  "password_confirmation": "NewPassword1!"
+}
+```
+
+**Success:** Sanctum `token` + `user` (user is logged in). Route by `needs_identity_documents` / home.
 
 ---
 
@@ -265,8 +403,25 @@ Name, email, password, confirmation, locale. **Orange→amber** CTA.
 
 | | |
 |--|--|
-| **Blade** | `identity/create.blade.php` (status + view + upload) |
-| **API** | `GET /api/identity`, `GET /api/identity/documents/{id}`, `POST /api/identity` |
+| **Blade** | `identity/create.blade.php` (dashboard shell) |
+| **API** | `GET /api/identity` · `POST /api/identity` · `GET /api/identity/documents/{id}` |
+| **Auth** | Bearer + **email verified** first |
+| **Web UX** | Site logo/name, status chip, optional existing thumbs, 3 uploads with live preview, cinematic submit (orbit → 1–100 → celebrate) |
+
+**Must implement (Flutter = same states as Blade):**
+
+| UI block | When |
+|----------|------|
+| Brand header (app name + logo) | Always |
+| Title + help text | Always |
+| Status chip | `pending_upload` / `submitted` / `resubmit_required` |
+| Amber resubmit banner | `resubmit_required` |
+| Grid of 3 images (front / back / selfie) | Any uploaded docs exist — load via document `url` with Bearer |
+| Upload form (3 required image fields) | `can_upload` / `needs_upload` |
+| Live local previews before submit | Upload mode |
+| Orange **Submit** / **Submit new documents** | Upload mode |
+| Success copy + Home CTA | Submitted + cannot re-upload |
+| Cinematic / progress on submit | Optional polish; API is source of truth |
 
 **Cycle (Option 1 — immediate activate + admin resubmit):**
 
@@ -276,7 +431,33 @@ Name, email, password, confirmation, locale. **Orange→amber** CTA.
 4. Admin **Request documents again** → `pending_documents`; show previous images + banner + replace form  
 5. Re-upload all three → `active` again  
 
-Gate create/join/chat while `needs_identity_documents`. `GET /api/user` exposes `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`.
+**`GET /api/identity` response (parity):**
+
+```json
+{
+  "status": "pending_documents",
+  "email_verified": true,
+  "needs_email_verification": false,
+  "needs_upload": true,
+  "can_upload": true,
+  "needs_identity_documents": true,
+  "resubmit_required": false,
+  "has_identity_documents": false,
+  "documents": [
+    { "type": "id_front", "id": null, "url": null, "uploaded": false, "mime_type": null, "size": null },
+    { "type": "id_back", "id": null, "url": null, "uploaded": false, "mime_type": null, "size": null },
+    { "type": "selfie", "id": null, "url": null, "uploaded": false, "mime_type": null, "size": null }
+  ],
+  "user": { "id": 1, "status": "pending_documents", "needs_identity_documents": true, "..." : "..." }
+}
+```
+
+**`POST /api/identity`:** multipart `id_front`, `id_back`, `selfie` (jpeg/png/webp).  
+Success returns same shape as `GET` + `message` (account activated).
+
+**Document images:** `GET /api/identity/documents/{id}` with Bearer — display in Image with auth headers / downloaded bytes (not a public URL).
+
+Gate create/join/chat while `needs_identity_documents`. Routing order: email verify → identity → home.
 
 ---
 
@@ -290,7 +471,29 @@ Block app usage; show message + logout. No member APIs.
 
 ---
 
-### 2.15 Location settings `/settings/location`
+### 2.15 Profile settings `/settings/profile` *(new — required)*
+
+| | |
+|--|--|
+| **Blade** | `profile/edit.blade.php` (dashboard shell) |
+| **API** | `PUT /api/settings/profile` (JSON or multipart) |
+| **Auth** | Bearer |
+
+**Fields:** photo (optional), name, email, locale, current_password (if changing password), password + confirmation.
+
+| Behavior | Detail |
+|----------|--------|
+| Change password | Send `current_password` + `password` + `password_confirmation` |
+| Change email | Sets `email_verified: false`, sends new code → Verify email screen (`email_changed: true` in response) |
+| Photo | `photo` file part, or `remove_photo: true` |
+
+**Entry points:** Profile tab (bottom nav), topbar avatar menu → Profile.
+
+Also keep Location as a separate screen (`§2.16`).
+
+---
+
+### 2.16 Location settings `/settings/location`
 
 | | |
 |--|--|
@@ -301,7 +504,7 @@ City select + distance_km (5 / 10 / 25 / 50). Orange save. Feeds Discover/Home f
 
 ---
 
-### 2.16 Safety guidelines `/safety`
+### 2.17 Safety guidelines `/safety`
 
 | | |
 |--|--|
@@ -312,18 +515,18 @@ Readable guidelines page; linked from dashboard safety card.
 
 ---
 
-### 2.17 Report `/report`
+### 2.18 Report `/report`
 
 | | |
 |--|--|
 | **Blade** | `safety/report.blade.php` |
 | **API** | `POST /api/reports` |
 
-Params: `reportable_type` (`user` \| `event` \| `message`), `reportable_id`, reason, details.
+Params: `reportable_type` (`user` \| `event` \| `message`), `reportable_id`, reason, **`description`** (optional — not `details`).
 
 ---
 
-### 2.18 Blocks `/settings/blocks`
+### 2.19 Blocks `/settings/blocks`
 
 | | |
 |--|--|
@@ -331,6 +534,40 @@ Params: `reportable_type` (`user` \| `event` \| `message`), `reportable_id`, rea
 | **API** | `GET /api/blocks`, `POST/DELETE /api/users/{id}/block` |
 
 List blocked users + unblock. Block host from event detail.
+
+---
+
+## 2A. Auth API quick reference (Flutter)
+
+Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
+
+| Flow | Method | Path | Auth | Body |
+|------|--------|------|------|------|
+| Site branding | `GET` | `/site` | — | — → `{ display_name, logo_url }` |
+| Register | `POST` | `/register` | — | name, email, password, password_confirmation, locale? |
+| Login | `POST` | `/login` | — | email, password |
+| Logout | `POST` | `/logout` | Bearer | — |
+| Me | `GET` | `/user` | Bearer | — |
+| Resend verify code | `POST` | `/email/verify/resend` | Bearer | — |
+| Verify email | `POST` | `/email/verify` | Bearer | `code` |
+| Forgot password | `POST` | `/forgot-password` | — | `email` |
+| Verify reset code | `POST` | `/forgot-password/verify` | — | `email`, `code` → `reset_token` |
+| Reset password | `POST` | `/reset-password` | — | `email`, `reset_token`, `password`, `password_confirmation` |
+| Update profile | `PUT` | `/settings/profile` | Bearer | name, email, locale?, current_password?, password?, photo?, remove_photo? |
+| Home participations | `GET` | `/home/participations` | Bearer | memberships + pending_requests |
+| Identity status | `GET` | `/identity` | Bearer | — |
+| Upload identity | `POST` | `/identity` | Bearer | multipart: `id_front`, `id_back`, `selfie` |
+| Identity image | `GET` | `/identity/documents/{id}` | Bearer | stream |
+
+**Post-auth routing order:**
+
+1. `needs_email_verification` → Verify email  
+2. else `needs_identity_documents` → Identity  
+3. else → Home (`/dashboard`)
+
+Use `GET /api/site` for logo/name on auth + splash (same as admin Site settings).
+
+Site branding for auth UI: admin **display name** + **logo**.
 
 ---
 
@@ -384,12 +621,15 @@ Copy strings from `lang/en/*.php` and `lang/ar/*.php` into Flutter l10n (ARB).
 
 | User status | Flutter behavior |
 |-------------|------------------|
-| Guest | Login/register; public discover/detail read-only join → login |
-| `pending_documents` | Allow browse; block create/join/chat → Identity |
+| Guest | Login/register/forgot-password; public discover/detail read-only join → login |
+| Logged in + email **not** verified | Verify-email screen only (resend allowed); block Identity / create / join |
+| `pending_documents` + email verified | Allow browse; block create/join/chat → Identity |
 | `active` + canParticipate | Full member flows |
 | `deactivated` | Deactivated screen only |
 
-Mirror web: `account.active` + `canParticipate()` for create/join/report/rate.
+Mirror web: email verified → then `account.active` + `canParticipate()` for create/join/report/rate.
+
+`GET /api/user` / login / register expose: `email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`.
 
 ---
 
@@ -409,6 +649,10 @@ Use web admin at `https://fun.idigital-cs.com/admin`.
 |---------------|-------------|
 | `/login` | `/login` |
 | `/register` | `/register` |
+| `/email/verify` | `/email/verify` |
+| `/forgot-password` | `/forgot-password` |
+| `/forgot-password/verify` | `/forgot-password/verify` |
+| `/reset-password` | `/reset-password` |
 | `/home` | `/dashboard` |
 | `/discover` | `/events` |
 | `/events/create` | `/events/create` |
@@ -419,6 +663,7 @@ Use web admin at `https://fun.idigital-cs.com/admin`.
 | `/events/:id/members` | `/events/{id}/members` |
 | `/my-events` | `/my-events` |
 | `/identity` | `/identity` |
+| `/settings/profile` | `/settings/profile` |
 | `/settings/location` | `/settings/location` |
 | `/blocks` | `/settings/blocks` |
 | `/report` | `/report` |
@@ -444,16 +689,19 @@ Copy this into PRs:
 
 ## 10. Known gap themes (prioritize)
 
-When rebuilding Flutter on Windows, close these first:
+Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
-1. **Shell** — 5-tab nav + home = `/dashboard` (not discover-only)  
-2. **Discover filters** — full filter panel like web (city + distance + clear)  
-3. **Event detail** — full action matrix + ratings blocks + report/block  
-4. **Rich vs compact cards** — use correct card per surface  
-5. **Form parity** — `expected_cost`, image upload, all create fields  
-6. **Members** — promote / demote / transfer  
-7. **Chat** — report message; near-realtime updates  
-8. **Marketing home** — optional guest landing  
+1. **Auth + identity + profile** — full stack with `GET /api/site` branding  
+2. **Shell** — 5-tab + dashboard IA; Profile hub  
+3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
+4. **Event detail** — creator card, ratings, report/block, full owner matrix  
+5. **Cards** — rich vs compact per surface  
+6. **Create/edit** — all fields + image  
+7. **Members** — promote / demote / transfer + report/block links  
+8. **Chat** — list/post; poll until websockets  
+9. **Home** — participations + category counts + nearby  
+
+**Explicitly web-only (OK to skip in member app):** `/admin/*`, Google OAuth (until `POST /api/auth/google` exists).
 
 ---
 
@@ -467,15 +715,22 @@ Base: `https://fun.idigital-cs.com`
 | Dashboard | `/dashboard` |
 | Discover | `/events` |
 | Login | `/login` |
+| Register | `/register` |
+| Verify email | `/email/verify` |
+| Forgot password | `/forgot-password` |
+| Reset password | `/reset-password` |
 | Create | `/events/create` |
 | My events | `/my-events` |
+| Profile | `/settings/profile` |
 | Location | `/settings/location` |
 | Identity | `/identity` |
 | Safety | `/safety` |
 | Blocks | `/settings/blocks` |
+| Report | `/report` |
 
-API base: `https://fun.idigital-cs.com/api`
+API base: `https://fun.idigital-cs.com/api`  
+Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — sourced from `routes/web.php`, `routes/api.php`, and Blade views under `resources/views/`.*
+*Last updated: 2026-09-23 — full-project parity contract; member pages on dashboard shell; API site/participations/creator/sanctum join_action/category counts.*

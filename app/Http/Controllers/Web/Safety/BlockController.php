@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Safety;
 
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\User;
 use App\Models\UserBlock;
 use App\Services\Safety\UserBlockService;
@@ -21,7 +22,10 @@ class BlockController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('safety.blocks', compact('blocks'));
+        return view('safety.blocks', [
+            'blocks' => $blocks,
+            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
+        ]);
     }
 
     public function store(Request $request, User $user, UserBlockService $service): RedirectResponse

@@ -7,6 +7,7 @@ use App\Enums\ReportReason;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Safety\StoreReportRequest;
+use App\Models\Category;
 use App\Services\Safety\CreateReportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -22,6 +23,7 @@ class ReportController extends Controller
                 'reportable_type' => request('reportable_type'),
                 'reportable_id' => request('reportable_id'),
             ],
+            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
         ]);
     }
 

@@ -501,7 +501,7 @@ Automate signed builds via Fastlane / GitHub Actions / Codemagic / Bitrise → P
 ## 12. Navigation
 
 - Single declarative router (`go_router` / Navigator 2.0).
-- Central auth redirects (guest → login; pending identity → upload).
+- Central auth redirects (guest → login; **unverified email → verify code**; pending identity → upload).
 - Path params for IDs; refresh by id rather than passing stale full objects.
 - Use `push` vs `go` deliberately (stack vs replace).
 - Friendly fallback for unknown routes.

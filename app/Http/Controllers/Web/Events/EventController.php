@@ -87,7 +87,19 @@ class EventController extends Controller
             ->latest('starts_at')
             ->paginate(12);
 
-        return view('events.mine', compact('events'));
+        return view('events.mine', [
+            'events' => $events,
+            'categories' => Category::query()
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('name_en')
+                ->withCount([
+                    'events as published_events_count' => fn ($q) => $q
+                        ->where('status', EventStatus::Published)
+                        ->where('starts_at', '>=', now()->subDay()),
+                ])
+                ->get(),
+        ]);
     }
 
     public function create(): View
@@ -157,6 +169,16 @@ class EventController extends Controller
             'userRating' => $userRating,
             'ratings' => $ratings,
             'creatorSummary' => $creatorSummary,
+            'categories' => Category::query()
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('name_en')
+                ->withCount([
+                    'events as published_events_count' => fn ($q) => $q
+                        ->where('status', EventStatus::Published)
+                        ->where('starts_at', '>=', now()->subDay()),
+                ])
+                ->get(),
         ]);
     }
 

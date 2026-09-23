@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Events;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Events\Chat\StoreEventMessageRequest;
+use App\Models\Category;
 use App\Models\Event;
 use App\Services\Events\Chat\ListEventMessagesService;
 use App\Services\Events\Chat\PostEventMessageService;
@@ -24,6 +25,7 @@ class EventChatController extends Controller
             'event' => $event->load(['category', 'city']),
             'messages' => $messages->getCollection()->reverse()->values(),
             'paginator' => $messages,
+            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
         ]);
     }
 

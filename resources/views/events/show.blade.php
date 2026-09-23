@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', filled($event->title) ? $event->title : __('events.view_event'))
 

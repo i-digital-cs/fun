@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Profile;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\UpdateLocationPreferenceRequest;
+use App\Models\Category;
 use App\Models\City;
 use App\Services\Location\UpdateUserLocationPreferenceService;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ class LocationPreferenceController extends Controller
             'cities' => $cities,
             'distances' => $distances,
             'user' => auth()->user()->load('city'),
+            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
         ]);
     }
 

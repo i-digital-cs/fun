@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Events;
 
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
@@ -52,7 +53,11 @@ class EventMembershipController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('events.requests', compact('event', 'requests'));
+        return view('events.requests', [
+            'event' => $event,
+            'requests' => $requests,
+            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
+        ]);
     }
 
     public function accept(
@@ -102,6 +107,7 @@ class EventMembershipController extends Controller
             'event' => $event,
             'members' => $members,
             'joinAction' => $joinActionService->resolve(auth()->user(), $event),
+            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
         ]);
     }
 

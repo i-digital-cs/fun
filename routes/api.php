@@ -17,13 +17,16 @@ use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatControlle
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
 use App\Http\Controllers\Api\Events\EventRatingController as ApiEventRatingController;
+use App\Http\Controllers\Api\HomeParticipationsController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
 use App\Http\Controllers\Api\Profile\ProfileController as ApiProfileController;
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
 use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
+use App\Http\Controllers\Api\SiteBrandingController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/site', SiteBrandingController::class);
 Route::get('/cities', CityListController::class);
 Route::get('/categories', CategoryListController::class);
 Route::get('/events', [ApiEventController::class, 'index']);
@@ -58,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/settings/profile', [ApiProfileController::class, 'update'])
         ->middleware('throttle:uploads');
+
+    Route::get('/home/participations', HomeParticipationsController::class);
 
     Route::middleware('account.active')->group(function () {
         Route::put('/settings/location', [ApiLocationPreferenceController::class, 'update']);

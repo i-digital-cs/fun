@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "23fd213f-7876-4766-a0e7-4265240cb367",
-    "name": "Fun API — fun.idigital-cs.com",
-    "description": "Laravel Sanctum API for the Fun community events platform.\n\n1. Set `baseUrl` (default https://fun.idigital-cs.com/api).\n2. Run **Auth → Login** (token is saved automatically).\n3. Use Bearer `{{token}}` on protected routes.\n\nSeeded admin (if present): admin@example.com / password",
+    "name": "Fun API \u2014 fun.idigital-cs.com",
+    "description": "Laravel Sanctum API for the Fun community events platform.\n\n1. Set `baseUrl` (default https://fun.idigital-cs.com/api).\n2. Run **Auth \u2192 Login** (token is saved automatically).\n3. Use Bearer `{{token}}` on protected routes.\n\nSeeded admin (if present): admin@example.com / password",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -41,6 +41,10 @@
     {
       "key": "reportId",
       "value": "1"
+    },
+    {
+      "key": "resetToken",
+      "value": ""
     }
   ],
   "item": [
@@ -48,6 +52,33 @@
       "name": "Catalog (public)",
       "description": "",
       "item": [
+        {
+          "name": "Site branding",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/site",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "site"
+              ]
+            },
+            "description": "Public display_name + logo_url for Flutter splash/auth."
+          },
+          "response": []
+        },
         {
           "name": "List cities",
           "request": {
@@ -367,9 +398,42 @@
           ]
         },
         {
-          "name": "Me",
+          "name": "Resend email verify code",
           "request": {
-            "method": "GET",
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/email/verify/resend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "email",
+                "verify",
+                "resend"
+              ]
+            },
+            "description": "Sends a new 4-digit email verification code."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify email code",
+          "request": {
+            "method": "POST",
             "header": [
               {
                 "key": "Accept",
@@ -389,6 +453,197 @@
               }
             ],
             "url": {
+              "raw": "{{baseUrl}}/email/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "email",
+                "verify"
+              ]
+            },
+            "description": "Body: { \"code\": \"1234\" }",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "forgot-password"
+              ]
+            },
+            "description": "Sends 4-digit reset code if the email exists.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify reset code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/forgot-password/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "forgot-password",
+                "verify"
+              ]
+            },
+            "description": "Saves {{resetToken}} from response.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"code\": \"1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.reset_token) { pm.collectionVariables.set('resetToken', json.reset_token); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reset-password"
+              ]
+            },
+            "description": "Uses {{resetToken}}; saves new {{token}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"reset_token\": \"{{resetToken}}\",\n  \"password\": \"Password1!\",\n  \"password_confirmation\": \"Password1!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.token) { pm.collectionVariables.set('token', json.token); }",
+                  "  if (json.user && json.user.id) { pm.collectionVariables.set('userId', String(json.user.id)); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
               "raw": "{{baseUrl}}/user",
               "host": [
                 "{{baseUrl}}"
@@ -397,7 +652,7 @@
                 "user"
               ]
             },
-            "description": ""
+            "description": "Includes email_verified / needs_email_verification / needs_identity_documents."
           },
           "response": []
         },
@@ -413,10 +668,6 @@
               {
                 "key": "Accept-Language",
                 "value": "{{locale}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               },
               {
                 "key": "Authorization",
@@ -442,6 +693,114 @@
       "name": "Profile & safety",
       "description": "",
       "item": [
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "settings",
+                "profile"
+              ]
+            },
+            "description": "Change name/email/password. For photo use multipart with `photo`. Email change requires re-verify.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"locale\": \"en\",\n  \"current_password\": \"password\",\n  \"password\": \"Password1!\",\n  \"password_confirmation\": \"Password1!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get identity status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/identity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "identity"
+              ]
+            },
+            "description": "Full parity payload: needs_upload, resubmit_required, documents[3] with url/uploaded flags."
+          },
+          "response": []
+        },
+        {
+          "name": "Home participations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{locale}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/home/participations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "home",
+                "participations"
+              ]
+            },
+            "description": "memberships + pending_requests for home strip."
+          },
+          "response": []
+        },
         {
           "name": "Update location",
           "request": {
@@ -488,7 +847,7 @@
           "response": []
         },
         {
-          "name": "Upload identity document",
+          "name": "Upload identity documents",
           "request": {
             "method": "POST",
             "header": [
@@ -514,7 +873,7 @@
                 "identity"
               ]
             },
-            "description": "",
+            "description": "multipart: id_front, id_back, selfie. Returns full identity payload + activated user.",
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -1966,7 +2325,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"الرياض\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"is_active\": true\n}",
+              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"\u0627\u0644\u0631\u064a\u0627\u0636\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"is_active\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2012,7 +2371,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"الرياض\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753\n}",
+              "raw": "{\n  \"name_en\": \"Riyadh\",\n  \"name_ar\": \"\u0627\u0644\u0631\u064a\u0627\u0636\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2169,7 +2528,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"رياضة\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}",
+              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"\u0631\u064a\u0627\u0636\u0629\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2215,7 +2574,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"رياضة\",\n  \"sort_order\": 1\n}",
+              "raw": "{\n  \"name_en\": \"Sports\",\n  \"name_ar\": \"\u0631\u064a\u0627\u0636\u0629\",\n  \"sort_order\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"

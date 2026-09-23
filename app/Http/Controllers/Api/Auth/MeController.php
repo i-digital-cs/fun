@@ -22,6 +22,8 @@ class MeController extends Controller
             'city_id' => $user->city_id,
             'distance_km' => $user->distance_km,
             'profile_image_path' => $user->profile_image_path,
+            'has_password' => filled($user->getAuthPassword()),
+            'can_participate' => $user->canParticipate(),
             'email_verified' => $user->email_verified_at !== null,
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),
             'needs_email_verification' => $user->email_verified_at === null,
