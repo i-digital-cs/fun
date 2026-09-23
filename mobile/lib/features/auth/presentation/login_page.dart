@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/config/env.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -32,10 +34,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _goAfterAuth() {
     final auth = ref.read(authControllerProvider);
-    if (auth is Authenticated && auth.user.isDeactivated) {
-      context.go('/account/deactivated');
-    } else {
-      context.go('/home');
+    if (auth is Authenticated) {
+      context.go(auth.user.routeAfterAuth);
     }
   }
 
@@ -63,8 +63,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _error = null;
     });
     try {
+      final serverClientId = Env.googleServerClientId;
       final googleUser = await GoogleSignIn(
         scopes: const ['email', 'profile'],
+        serverClientId: serverClientId.isEmpty ? null : serverClientId,
       ).signIn();
       if (googleUser == null) {
         if (!mounted) return;
@@ -72,8 +74,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return;
       }
       final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
       final accessToken = googleAuth.accessToken;
-      if (accessToken == null || accessToken.isEmpty) {
+      final hasId = idToken != null && idToken.isNotEmpty;
+      final hasAccess = accessToken != null && accessToken.isNotEmpty;
+      if (!hasId && !hasAccess) {
         if (!mounted) return;
         setState(() {
           _submitting = false;
@@ -84,7 +89,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final locale = ref.read(localeCodeProvider);
       final error =
           await ref.read(authControllerProvider.notifier).loginWithGoogle(
-                accessToken: accessToken,
+                idToken: hasId ? idToken : null,
+                accessToken: hasAccess ? accessToken : null,
                 locale: locale,
               );
       if (!mounted) return;
@@ -137,6 +143,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          const AuthSiteBranding(),
                           Row(
                             children: [
                               Text(
@@ -191,14 +198,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               return null;
                             },
                           ),
+                          Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: TextButton(
+                              onPressed: () => context.go('/forgot-password'),
+                              child: Text(l10n.forgotPassword),
+                            ),
+                          ),
                           if (_error != null) ...[
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 4),
                             Text(
                               _error!,
                               style: const TextStyle(color: AppColors.danger),
                             ),
                           ],
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 12),
                           GradientButton.indigo(
                             label: l10n.login,
                             isLoading: _submitting,

@@ -48,10 +48,17 @@ class CatalogRemoteSource {
           .map((e) {
             final m = e as Map<String, dynamic>;
             return CategoryItem(
-              id: m['id'] as int,
+              id: m['id'] as int? ??
+                  (m['id'] is num ? (m['id'] as num).toInt() : 0),
               name: m['name'] as String? ??
                   m['name_en'] as String? ??
                   '',
+              publishedEventsCount:
+                  (m['published_events_count'] as num?)?.toInt() ??
+                      int.tryParse(
+                        '${m['published_events_count'] ?? ''}',
+                      ) ??
+                      0,
             );
           })
           .toList();

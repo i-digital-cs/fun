@@ -178,10 +178,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currencyShort => 'ج.م';
 
   @override
-  String costPerPersonAmount(String amount) => '$amount ج.م / فرد';
+  String costPerPersonAmount(String amount) {
+    return '$amount ج.م / فرد';
+  }
 
   @override
-  String nowPlayingTitle(String brand) => 'مباشر على $brand';
+  String nowPlayingTitle(String brand) {
+    return 'مباشر على $brand';
+  }
 
   @override
   String get nowPlayingLive => 'جارية الآن';
@@ -570,6 +574,27 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selected => 'تم الاختيار';
 
   @override
+  String get editProfile => 'تعديل الملف';
+
+  @override
+  String get updateProfile => 'تحديث الملف';
+
+  @override
+  String get currentPassword => 'كلمة المرور الحالية';
+
+  @override
+  String get removePhoto => 'إزالة الصورة الحالية';
+
+  @override
+  String get resubmitRequired => 'يرجى إعادة رفع مستندات الهوية';
+
+  @override
+  String get identityPending => 'بانتظار الرفع';
+
+  @override
+  String get identitySubmitted => 'تم رفع المستندات';
+
+  @override
   String get intoTitle => 'إيه اللي يهمك؟';
 
   @override
@@ -768,4 +793,102 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get loadMore => 'تحميل المزيد';
+
+  @override
+  String get verifyEmail => 'تأكيد البريد';
+
+  @override
+  String get verifyEmailHint =>
+      'أدخل الرمز المكوّن من 4 أرقام الذي أرسلناه إلى بريدك.';
+
+  @override
+  String get resendCode => 'إعادة إرسال الرمز';
+
+  @override
+  String get forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get sendResetCode => 'إرسال رمز الاستعادة';
+
+  @override
+  String get verifyResetCode => 'تأكيد رمز الاستعادة';
+
+  @override
+  String get resetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get enterCode => 'أدخل الرمز';
+
+  @override
+  String get codeSent => 'تم إرسال الرمز';
+
+  @override
+  String get favorites => 'المفضلة';
+
+  @override
+  String get favorite => 'إضافة للمفضلة';
+
+  @override
+  String get unfavorite => 'إزالة من المفضلة';
+
+  @override
+  String get emptyFavorites => 'لا مفضلات بعد. أضف فعاليات من اكتشف.';
+
+  @override
+  String get viewTicket => 'عرض التذكرة';
+
+  @override
+  String get eventTicket => 'تذكرة الفعالية';
+
+  @override
+  String get ticketWord => 'تذكرة';
+
+  @override
+  String get ticketHelp => 'أظهر هذه التذكرة في المكان. كل رمز فريد لك.';
+
+  @override
+  String get yourParticipations => 'مشاركاتك';
+
+  @override
+  String get manageAll => 'إدارة الكل';
+
+  @override
+  String get participationsEmpty => 'لا مشاركات قادمة. اكتشف شيئاً ممتعاً.';
+
+  @override
+  String get confirmedAttendance => 'مؤكد';
+
+  @override
+  String get requestPendingShort => 'قيد الانتظار';
+
+  @override
+  String get pendingReviewNotice => 'بانتظار موافقة المضيف على طلبك.';
+
+  @override
+  String get weatherSetLocation => 'حدد موقعك';
+
+  @override
+  String get weatherSetLocationHint =>
+      'اختر مدينة لعرض الطقس المحلي في الرئيسية.';
+
+  @override
+  String get requestToJoin => 'طلب الانضمام';
+
+  @override
+  String get updateAvailable => 'يتوفر تحديث';
+
+  @override
+  String get updateAvailableBody => 'يتوفر إصدار جديد من التطبيق.';
+
+  @override
+  String get updateNow => 'تحديث';
+
+  @override
+  String get updateLater => 'لاحقاً';
+
+  @override
+  String get searching => 'جاري البحث';
 }

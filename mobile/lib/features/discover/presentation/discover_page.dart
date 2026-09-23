@@ -199,6 +199,30 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                         ),
                       ),
                     ),
+                    if (state.isSearching)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.wifi_find,
+                                size: 16,
+                                color: AppColors.primary.withValues(alpha: 0.8),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.searching,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     if (state.isNationwide)
                       SliverToBoxAdapter(
                         child: Padding(
@@ -272,10 +296,17 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               );
                             }
                             final event = state.items[index];
+                            final authed =
+                                ref.watch(authControllerProvider) is Authenticated;
                             return EventCard(
                               event: event,
                               onView: () =>
                                   context.push('/events/${event.id}'),
+                              onFavorite: authed
+                                  ? () => ref
+                                      .read(discoverControllerProvider.notifier)
+                                      .toggleFavorite(event.id)
+                                  : null,
                             );
                           },
                         ),

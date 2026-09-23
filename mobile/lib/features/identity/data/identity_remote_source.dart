@@ -1,14 +1,45 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/features/identity/domain/identity_status.dart';
 
 class IdentityRemoteSource {
   IdentityRemoteSource(this._client);
 
   final ApiClient _client;
 
-  Future<({Failure? failure, String? status})> upload({
+  Future<({Failure? failure, IdentityStatus? data})> fetch() async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>('/identity');
+      return (
+        failure: null,
+        data: IdentityStatus.fromJson(response.data!),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, Uint8List? data})> documentBytes(int id) async {
+    try {
+      final response = await _client.dio.get<List<int>>(
+        '/identity/documents/$id',
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final bytes = response.data;
+      if (bytes == null) {
+        return (failure: null, data: Uint8List(0));
+      }
+      return (failure: null, data: Uint8List.fromList(bytes));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, IdentityStatus? data})> upload({
     required String idFrontPath,
     required String idBackPath,
     required String selfiePath,
@@ -32,13 +63,12 @@ class IdentityRemoteSource {
         '/identity',
         data: form,
       );
-      final user = response.data!['user'] as Map<String, dynamic>?;
       return (
         failure: null,
-        status: user?['status'] as String? ?? 'active',
+        data: IdentityStatus.fromJson(response.data!),
       );
     } on DioException catch (e) {
-      return (failure: mapDioException(e), status: null);
+      return (failure: mapDioException(e), data: null);
     }
   }
 }

@@ -410,34 +410,52 @@ abstract class AppLocalizations {
   /// **'Free'**
   String get free;
 
-  /// Short currency label for paid event chips (Egyptian pound).
+  /// No description provided for @currencyShort.
   ///
   /// In en, this message translates to:
   /// **'EGP'**
   String get currencyShort;
 
-  /// Full cost label with amount.
+  /// No description provided for @costPerPersonAmount.
   ///
   /// In en, this message translates to:
   /// **'{amount} EGP / person'**
   String costPerPersonAmount(String amount);
 
-  /// Live on {brand}
+  /// No description provided for @nowPlayingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live on {brand}'**
   String nowPlayingTitle(String brand);
 
-  /// Happening now
+  /// No description provided for @nowPlayingLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Happening now'**
   String get nowPlayingLive;
 
-  /// Nothing live right now — up next below.
+  /// No description provided for @nowPlayingIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing live right now — up next below.'**
   String get nowPlayingIdle;
 
-  /// Up next
+  /// No description provided for @nowPlayingUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
   String get nowPlayingUpNext;
 
-  /// Just wrapped
+  /// No description provided for @nowPlayingPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Just wrapped'**
   String get nowPlayingPrevious;
 
-  /// Events
+  /// No description provided for @eventsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
   String get eventsLabel;
 
   /// No description provided for @almostFull.
@@ -1160,6 +1178,48 @@ abstract class AppLocalizations {
   /// **'Selected'**
   String get selected;
 
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
+
+  /// No description provided for @updateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Update profile'**
+  String get updateProfile;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPassword;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove current photo'**
+  String get removePhoto;
+
+  /// No description provided for @resubmitRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please resubmit your identity documents'**
+  String get resubmitRequired;
+
+  /// No description provided for @identityPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending upload'**
+  String get identityPending;
+
+  /// No description provided for @identitySubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents submitted'**
+  String get identitySubmitted;
+
   /// No description provided for @intoTitle.
   ///
   /// In en, this message translates to:
@@ -1519,6 +1579,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Load more'**
   String get loadMore;
+
+  /// No description provided for @verifyEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify email'**
+  String get verifyEmail;
+
+  /// No description provided for @verifyEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 4-digit code we sent to your email.'**
+  String get verifyEmailHint;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get resendCode;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @sendResetCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset code'**
+  String get sendResetCode;
+
+  /// No description provided for @verifyResetCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify reset code'**
+  String get verifyResetCode;
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get resetPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPassword;
+
+  /// No description provided for @enterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter code'**
+  String get enterCode;
+
+  /// No description provided for @codeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent'**
+  String get codeSent;
+
+  /// No description provided for @favorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favorites;
+
+  /// No description provided for @favorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get favorite;
+
+  /// No description provided for @unfavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove favorite'**
+  String get unfavorite;
+
+  /// No description provided for @emptyFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet. Bookmark events from Discover.'**
+  String get emptyFavorites;
+
+  /// No description provided for @viewTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'View ticket'**
+  String get viewTicket;
+
+  /// No description provided for @eventTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Event ticket'**
+  String get eventTicket;
+
+  /// No description provided for @ticketWord.
+  ///
+  /// In en, this message translates to:
+  /// **'TICKET'**
+  String get ticketWord;
+
+  /// No description provided for @ticketHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this pass at the venue. Each code is unique to you.'**
+  String get ticketHelp;
+
+  /// No description provided for @yourParticipations.
+  ///
+  /// In en, this message translates to:
+  /// **'Your participations'**
+  String get yourParticipations;
+
+  /// No description provided for @manageAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage all'**
+  String get manageAll;
+
+  /// No description provided for @participationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming participations. Discover something fun.'**
+  String get participationsEmpty;
+
+  /// No description provided for @confirmedAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get confirmedAttendance;
+
+  /// No description provided for @requestPendingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get requestPendingShort;
+
+  /// No description provided for @pendingReviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the host to accept your request.'**
+  String get pendingReviewNotice;
+
+  /// No description provided for @weatherSetLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your location'**
+  String get weatherSetLocation;
+
+  /// No description provided for @weatherSetLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a city to see local weather on your home.'**
+  String get weatherSetLocationHint;
+
+  /// No description provided for @requestToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Request to join'**
+  String get requestToJoin;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of the app is available.'**
+  String get updateAvailableBody;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateNow;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get updateLater;
+
+  /// No description provided for @searching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching'**
+  String get searching;
 }
 
 class _AppLocalizationsDelegate

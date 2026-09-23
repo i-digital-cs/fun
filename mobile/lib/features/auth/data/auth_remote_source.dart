@@ -32,15 +32,99 @@ class AuthRemoteSource {
   }
 
   Future<({Failure? failure, AuthSessionDto? data})> loginWithGoogle({
-    required String accessToken,
+    String? idToken,
+    String? accessToken,
     String? locale,
   }) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/auth/google',
         data: {
-          'access_token': accessToken,
+          if (idToken != null && idToken.isNotEmpty) 'id_token': idToken,
+          if (accessToken != null && accessToken.isNotEmpty)
+            'access_token': accessToken,
           if (locale != null && locale.isNotEmpty) 'locale': locale,
+        },
+      );
+      return (failure: null, data: _parseSession(response.data!));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, User? data})> verifyEmail(String code) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/email/verify',
+        data: {'code': code},
+      );
+      final body = response.data!;
+      final userJson = body['user'];
+      if (userJson is Map<String, dynamic>) {
+        return (failure: null, data: User.fromJson(userJson));
+      }
+      return await me();
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> resendEmailVerify() async {
+    try {
+      await _client.dio.post<void>('/email/verify/resend');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, String? email})> forgotPassword(String email) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/forgot-password',
+        data: {'email': email},
+      );
+      return (
+        failure: null,
+        email: response.data?['email'] as String? ?? email,
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), email: null);
+    }
+  }
+
+  Future<({Failure? failure, String? resetToken})> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/forgot-password/verify',
+        data: {'email': email, 'code': code},
+      );
+      return (
+        failure: null,
+        resetToken: response.data?['reset_token'] as String?,
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), resetToken: null);
+    }
+  }
+
+  Future<({Failure? failure, AuthSessionDto? data})> resetPassword({
+    required String email,
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/reset-password',
+        data: {
+          'email': email,
+          'reset_token': resetToken,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
         },
       );
       return (failure: null, data: _parseSession(response.data!));
@@ -76,7 +160,7 @@ class AuthRemoteSource {
   Future<({Failure? failure, User? data})> me() async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>('/user');
-      return (failure: null, data: _parseUser(response.data!));
+      return (failure: null, data: User.fromJson(response.data!));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
@@ -94,23 +178,7 @@ class AuthRemoteSource {
   AuthSessionDto _parseSession(Map<String, dynamic> json) {
     return AuthSessionDto(
       token: json['token'] as String,
-      user: _parseUser(json['user'] as Map<String, dynamic>),
-    );
-  }
-
-  User _parseUser(Map<String, dynamic> json) {
-    final city = json['city'];
-    return User(
-      id: json['id'] as int,
-      publicId: json['public_id'] as String?,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      status: json['status'] as String? ?? 'active',
-      locale: json['locale'] as String? ?? 'en',
-      platformRole: json['platform_role'] as String?,
-      cityId: json['city_id'] as int?,
-      distanceKm: json['distance_km'] as int?,
-      cityName: city is Map<String, dynamic> ? city['name'] as String? : null,
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
     );
   }
 }

@@ -10,7 +10,8 @@ abstract class AuthRepository {
   });
 
   Future<Result<User>> loginWithGoogle({
-    required String accessToken,
+    String? idToken,
+    String? accessToken,
     String? locale,
   });
 
@@ -27,4 +28,22 @@ abstract class AuthRepository {
   Future<Result<void>> logout();
 
   Future<bool> hasToken();
+
+  Future<Result<User>> verifyEmail(String code);
+
+  Future<Result<void>> resendEmailVerify();
+
+  Future<Result<String>> forgotPassword(String email);
+
+  Future<Result<String>> verifyResetCode({
+    required String email,
+    required String code,
+  });
+
+  Future<Result<User>> resetPassword({
+    required String email,
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  });
 }

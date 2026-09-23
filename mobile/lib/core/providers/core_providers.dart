@@ -11,6 +11,7 @@ import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/data/events_remote_source.dart';
 import 'package:fun_mobile/features/events/data/events_repository_impl.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
+import 'package:fun_mobile/features/home/data/home_remote_source.dart';
 import 'package:fun_mobile/features/identity/data/identity_remote_source.dart';
 import 'package:fun_mobile/features/profile/data/profile_remote_source.dart';
 import 'package:fun_mobile/features/safety/data/safety_remote_source.dart';
@@ -79,4 +80,8 @@ final identityRemoteSourceProvider = Provider<IdentityRemoteSource>((ref) {
 
 final safetyRemoteSourceProvider = Provider<SafetyRemoteSource>((ref) {
   return SafetyRemoteSource(ref.watch(apiClientProvider));
+});
+
+final homeRemoteSourceProvider = Provider<HomeRemoteSource>((ref) {
+  return HomeRemoteSource(ref.watch(apiClientProvider));
 });

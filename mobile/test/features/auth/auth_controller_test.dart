@@ -35,7 +35,8 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Result<User>> loginWithGoogle({
-    required String accessToken,
+    String? idToken,
+    String? accessToken,
     String? locale,
   }) async =>
       (failure: const ValidationFailure('unused'), data: null);
@@ -47,6 +48,34 @@ class _FakeAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirmation,
     required String locale,
+  }) async =>
+      (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<User>> verifyEmail(String code) async =>
+      (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<void>> resendEmailVerify() async =>
+      (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<String>> forgotPassword(String email) async =>
+      (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<String>> verifyResetCode({
+    required String email,
+    required String code,
+  }) async =>
+      (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<User>> resetPassword({
+    required String email,
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
   }) async =>
       (failure: const ValidationFailure('unused'), data: null);
 }

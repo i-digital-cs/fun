@@ -29,6 +29,16 @@
 | Home participations | `GET /home/participations` |
 | Get identity status | `GET /identity` |
 | Upload identity | `POST /identity` (multipart id_front, id_back, selfie) |
+| Weather | `GET /weather` (Bearer; optional `?city_id={{cityId}}`) |
+| Now playing | `GET /events/now-playing` (optional Bearer; optional `?city_id={{cityId}}`) |
+| Public profile | `GET /users/{{publicId}}` |
+| List favorites | `GET /favorites` (Bearer) |
+| Toggle favorite | `POST /events/{{eventId}}/favorite` (Bearer) |
+| Event ticket | `GET /events/{{eventId}}/ticket` (Bearer) |
+| Cancel join request | `POST /events/{{eventId}}/join/cancel` (Bearer) |
+| Chat inbox | `GET /chats` (Bearer) |
+| Mark messages read | `POST /events/{{eventId}}/messages/read` (Bearer) |
+| Identity document stream | `GET /identity/documents/{{documentId}}` (Bearer) |
 
 See: [`FLUTTER_WEB_PARITY.md`](../FLUTTER_WEB_PARITY.md) §0.1–0.2 (full-project contract).
 
@@ -40,5 +50,7 @@ See: [`FLUTTER_WEB_PARITY.md`](../FLUTTER_WEB_PARITY.md) §0.1–0.2 (full-proje
 | `resetToken` | One-time password-reset token (auto from Verify reset code) |
 | `locale` | `en` or `ar` (`Accept-Language`) |
 | `eventId` / `cityId` / `categoryId` / `userId` | Path IDs |
+| `publicId` | Public profile id (default `Funity-F001007`) |
+| `documentId` | Identity document id for stream endpoint |
 
 Local: set `baseUrl` to your local `APP_URL` + `/api`.

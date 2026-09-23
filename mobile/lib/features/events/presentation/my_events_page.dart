@@ -127,6 +127,8 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
                       return MyEventCardWrapper(
                         event: event,
                         onView: () => context.push('/events/${event.id}'),
+                        onViewTicket: () =>
+                            context.push('/events/${event.id}/ticket'),
                       );
                     },
                   ),
@@ -145,23 +147,71 @@ class MyEventCardWrapper extends StatelessWidget {
     super.key,
     required this.event,
     required this.onView,
+    this.onViewTicket,
   });
 
   final EventItem event;
   final VoidCallback onView;
+  final VoidCallback? onViewTicket;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        EventCard(event: event, onView: onView),
-        if (event.status != null)
-          PositionedDirectional(
-            top: 12,
-            start: 12,
-            child: EventStatusChip(status: event.status!),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            EventCard(event: event, onView: onView),
+            if (event.status != null)
+              PositionedDirectional(
+                top: 12,
+                start: 12,
+                child: EventStatusChip(status: event.status!),
+              ),
+          ],
+        ),
+        if (onViewTicket != null) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Material(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: onViewTicket,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.confirmation_number_outlined,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.viewTicket,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
+        ],
       ],
     );
   }

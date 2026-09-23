@@ -8,6 +8,7 @@ class DiscoverState {
     this.items = const [],
     this.filters = const DiscoverFilters(allCities: true),
     this.isLoading = false,
+    this.isSearching = false,
     this.error,
     this.hasMore = false,
   });
@@ -15,6 +16,8 @@ class DiscoverState {
   final List<EventItem> items;
   final DiscoverFilters filters;
   final bool isLoading;
+  /// True while a typed `q` request is in flight (wifi Searching UI).
+  final bool isSearching;
   final String? error;
   final bool hasMore;
 
@@ -24,6 +27,7 @@ class DiscoverState {
     List<EventItem>? items,
     DiscoverFilters? filters,
     bool? isLoading,
+    bool? isSearching,
     String? error,
     bool clearError = false,
     bool? hasMore,
@@ -32,6 +36,7 @@ class DiscoverState {
       items: items ?? this.items,
       filters: filters ?? this.filters,
       isLoading: isLoading ?? this.isLoading,
+      isSearching: isSearching ?? this.isSearching,
       error: clearError ? null : (error ?? this.error),
       hasMore: hasMore ?? this.hasMore,
     );
@@ -53,8 +58,10 @@ class DiscoverController extends StateNotifier<DiscoverState> {
 
   Future<void> load({DiscoverFilters? filters, bool append = false}) async {
     final nextFilters = filters ?? state.filters;
+    final typedSearch = nextFilters.q != null && nextFilters.q!.trim().length >= 2;
     state = state.copyWith(
-      isLoading: true,
+      isLoading: !typedSearch || state.items.isEmpty,
+      isSearching: typedSearch,
       clearError: true,
       filters: nextFilters,
     );
@@ -66,6 +73,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       if (result.failure != null || result.data == null) {
         state = state.copyWith(
           isLoading: false,
+          isSearching: false,
           error: result.failure?.message ?? 'Failed to load events',
           hasMore: append ? false : state.hasMore,
         );
@@ -75,6 +83,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       final page = result.data!;
       state = state.copyWith(
         isLoading: false,
+        isSearching: false,
         items: append ? [...state.items, ...page.items] : page.items,
         hasMore: page.hasMore,
         filters: nextFilters,
@@ -82,6 +91,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
+        isSearching: false,
         error: e.toString(),
         hasMore: false,
       );
@@ -156,6 +166,40 @@ class DiscoverController extends StateNotifier<DiscoverState> {
   Future<void> search(String q) {
     return load(
       filters: state.filters.copyWith(q: q, page: 1, clearQ: q.trim().isEmpty),
+    );
+  }
+
+  Future<void> toggleFavorite(int eventId) async {
+    final items = state.items;
+    final index = items.indexWhere((e) => e.id == eventId);
+    if (index < 0) return;
+    final previous = items[index].isFavorited;
+    state = state.copyWith(
+      items: [
+        for (var i = 0; i < items.length; i++)
+          if (i == index)
+            items[i].copyWith(isFavorited: !previous)
+          else
+            items[i],
+      ],
+    );
+    final result =
+        await _ref.read(eventsRepositoryProvider).toggleFavorite(eventId);
+    if (result.failure != null) {
+      state = state.copyWith(
+        items: [
+          for (final e in state.items)
+            if (e.id == eventId) e.copyWith(isFavorited: previous) else e,
+        ],
+      );
+      return;
+    }
+    final favorited = result.data ?? !previous;
+    state = state.copyWith(
+      items: [
+        for (final e in state.items)
+          if (e.id == eventId) e.copyWith(isFavorited: favorited) else e,
+      ],
     );
   }
 }

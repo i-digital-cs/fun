@@ -1,0 +1,115 @@
+import 'package:equatable/equatable.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:dio/dio.dart';
+
+class SitePlatformUpdate extends Equatable {
+  const SitePlatformUpdate({
+    required this.latest,
+    required this.min,
+    this.storeUrl,
+  });
+
+  final String latest;
+  final String min;
+  final String? storeUrl;
+
+  @override
+  List<Object?> get props => [latest, min, storeUrl];
+}
+
+class SiteAppUpdate extends Equatable {
+  const SiteAppUpdate({
+    required this.forceUpdate,
+    this.message,
+    this.android,
+    this.ios,
+  });
+
+  final bool forceUpdate;
+  final String? message;
+  final SitePlatformUpdate? android;
+  final SitePlatformUpdate? ios;
+
+  @override
+  List<Object?> get props => [forceUpdate, message, android, ios];
+}
+
+class SiteBranding extends Equatable {
+  const SiteBranding({
+    required this.displayName,
+    this.logoUrl,
+    this.app,
+  });
+
+  final String displayName;
+  final String? logoUrl;
+  final SiteAppUpdate? app;
+
+  static const fallback = SiteBranding(displayName: 'Fun');
+
+  @override
+  List<Object?> get props => [displayName, logoUrl, app];
+}
+
+class SiteRemoteSource {
+  SiteRemoteSource(this._client);
+
+  final ApiClient _client;
+
+  Future<({Failure? failure, SiteBranding? data})> fetch({String? locale}) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/site',
+        queryParameters: {
+          if (locale != null && locale.isNotEmpty) 'locale': locale,
+        },
+      );
+      final json = response.data!;
+      final appRaw = json['app'];
+      SiteAppUpdate? app;
+      if (appRaw is Map) {
+        final map = Map<String, dynamic>.from(appRaw);
+        SitePlatformUpdate? parsePlatform(dynamic raw) {
+          if (raw is! Map) return null;
+          final p = Map<String, dynamic>.from(raw);
+          return SitePlatformUpdate(
+            latest: '${p['latest'] ?? '1.0.0'}',
+            min: '${p['min'] ?? '1.0.0'}',
+            storeUrl: p['store_url'] as String?,
+          );
+        }
+
+        app = SiteAppUpdate(
+          forceUpdate: map['force_update'] == true,
+          message: map['message'] as String?,
+          android: parsePlatform(map['android']),
+          ios: parsePlatform(map['ios']),
+        );
+      }
+      return (
+        failure: null,
+        data: SiteBranding(
+          displayName: json['display_name'] as String? ?? 'Fun',
+          logoUrl: json['logo_url'] as String?,
+          app: app,
+        ),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+}
+
+final siteRemoteSourceProvider = Provider<SiteRemoteSource>((ref) {
+  return SiteRemoteSource(ref.watch(apiClientProvider));
+});
+
+final siteBrandingProvider = FutureProvider<SiteBranding>((ref) async {
+  final locale = ref.watch(localeCodeProvider);
+  final result = await ref.read(siteRemoteSourceProvider).fetch(locale: locale);
+  return result.data ?? SiteBranding.fallback;
+});

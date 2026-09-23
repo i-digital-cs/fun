@@ -11,7 +11,10 @@ import 'package:fun_mobile/features/discover/presentation/discover_controller.da
 import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
+import 'package:fun_mobile/features/events/presentation/widgets/now_playing_card.dart';
 import 'package:fun_mobile/features/home/presentation/home_nearby_controller.dart';
+import 'package:fun_mobile/features/home/presentation/widgets/participations_section.dart';
+import 'package:fun_mobile/features/home/presentation/widgets/weather_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -150,6 +153,22 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
               ),
+              if (canParticipate)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                    child: ParticipationsSection(
+                      data: nearby.participations ??
+                          const HomeParticipations(),
+                      onDiscover: () => _openDiscoverAll(),
+                      onManageAll: () => context.go('/my-events'),
+                      onOpenEvent: (id) => context.push('/events/$id'),
+                      onOpenChat: (id) => context.push('/events/$id/chat'),
+                      onOpenTicket: (id) =>
+                          context.push('/events/$id/ticket'),
+                    ),
+                  ),
+                ),
               if (nearby.categories.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -161,6 +180,30 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  child: Column(
+                    children: [
+                      WeatherCard(
+                        weather: nearby.weather,
+                        onSetLocation: () =>
+                            context.push('/settings/location'),
+                      ),
+                      if (nearby.nowPlaying != null) ...[
+                        const SizedBox(height: 12),
+                        NowPlayingCard(
+                          feed: nearby.nowPlaying!,
+                          brand: l10n.appName,
+                          onOpenEvent: (e) =>
+                              context.push('/events/${e.id}'),
+                          onDiscover: () => _openDiscoverAll(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
@@ -272,9 +315,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                     separatorBuilder: (_, _) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final event = nearby.items[index];
+                      final authed = user != null;
                       return EventCard(
                         event: event,
                         onView: () => context.push('/events/${event.id}'),
+                        onFavorite: authed
+                            ? () => ref
+                                .read(homeNearbyControllerProvider.notifier)
+                                .toggleFavorite(event.id)
+                            : null,
                       );
                     },
                   ),
@@ -428,7 +477,7 @@ class _CategoriesSection extends StatelessWidget {
                       Text(
                         cat.name,
                         textAlign: TextAlign.center,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 11,
@@ -436,6 +485,17 @@ class _CategoriesSection extends StatelessWidget {
                           height: 1.15,
                         ),
                       ),
+                      if (cat.publishedEventsCount > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '${cat.publishedEventsCount}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

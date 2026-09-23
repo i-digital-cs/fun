@@ -64,11 +64,13 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<String?> loginWithGoogle({
-    required String accessToken,
+    String? idToken,
+    String? accessToken,
     String? locale,
   }) async {
     state = const AuthLoading();
     final result = await _ref.read(authRepositoryProvider).loginWithGoogle(
+          idToken: idToken,
           accessToken: accessToken,
           locale: locale,
         );
@@ -94,6 +96,63 @@ class AuthController extends StateNotifier<AuthState> {
           password: password,
           passwordConfirmation: passwordConfirmation,
           locale: locale,
+        );
+    if (result.failure != null || result.data == null) {
+      state = Unauthenticated(result.failure?.message);
+      return result.failure?.message;
+    }
+    state = Authenticated(result.data!);
+    return null;
+  }
+
+  Future<String?> verifyEmail(String code) async {
+    final result = await _ref.read(authRepositoryProvider).verifyEmail(code);
+    if (result.failure != null || result.data == null) {
+      return result.failure?.message;
+    }
+    state = Authenticated(result.data!);
+    return null;
+  }
+
+  Future<String?> resendEmailVerify() async {
+    final result = await _ref.read(authRepositoryProvider).resendEmailVerify();
+    return result.failure?.message;
+  }
+
+  Future<({String? error, String? email})> forgotPassword(String email) async {
+    final result = await _ref.read(authRepositoryProvider).forgotPassword(email);
+    if (result.failure != null) {
+      return (error: result.failure!.message, email: null);
+    }
+    return (error: null, email: result.data);
+  }
+
+  Future<({String? error, String? resetToken})> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final result = await _ref.read(authRepositoryProvider).verifyResetCode(
+          email: email,
+          code: code,
+        );
+    if (result.failure != null || result.data == null) {
+      return (error: result.failure?.message ?? 'Invalid code', resetToken: null);
+    }
+    return (error: null, resetToken: result.data);
+  }
+
+  Future<String?> resetPassword({
+    required String email,
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    state = const AuthLoading();
+    final result = await _ref.read(authRepositoryProvider).resetPassword(
+          email: email,
+          resetToken: resetToken,
+          password: password,
+          passwordConfirmation: passwordConfirmation,
         );
     if (result.failure != null || result.data == null) {
       state = Unauthenticated(result.failure?.message);

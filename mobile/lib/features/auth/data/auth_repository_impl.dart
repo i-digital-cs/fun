@@ -28,10 +28,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<User>> loginWithGoogle({
-    required String accessToken,
+    String? idToken,
+    String? accessToken,
     String? locale,
   }) async {
     final result = await _remote.loginWithGoogle(
+      idToken: idToken,
       accessToken: accessToken,
       locale: locale,
     );
@@ -85,5 +87,62 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<bool> hasToken() async {
     final token = await _tokenStorage.read();
     return token != null && token.isNotEmpty;
+  }
+
+  @override
+  Future<Result<User>> verifyEmail(String code) async {
+    final result = await _remote.verifyEmail(code);
+    if (result.failure != null) {
+      return (failure: result.failure, data: null);
+    }
+    return (failure: null, data: result.data);
+  }
+
+  @override
+  Future<Result<void>> resendEmailVerify() => _remote.resendEmailVerify();
+
+  @override
+  Future<Result<String>> forgotPassword(String email) async {
+    final result = await _remote.forgotPassword(email);
+    if (result.failure != null) {
+      return (failure: result.failure, data: null);
+    }
+    return (failure: null, data: result.email);
+  }
+
+  @override
+  Future<Result<String>> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    final result =
+        await _remote.verifyResetCode(email: email, code: code);
+    if (result.failure != null || result.resetToken == null) {
+      return (
+        failure: result.failure ?? const ValidationFailure('Invalid code'),
+        data: null,
+      );
+    }
+    return (failure: null, data: result.resetToken);
+  }
+
+  @override
+  Future<Result<User>> resetPassword({
+    required String email,
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final result = await _remote.resetPassword(
+      email: email,
+      resetToken: resetToken,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+    );
+    if (result.failure != null) {
+      return (failure: result.failure, data: null);
+    }
+    await _tokenStorage.write(result.data!.token);
+    return (failure: null, data: result.data!.user);
   }
 }

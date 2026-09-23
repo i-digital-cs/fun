@@ -60,6 +60,9 @@ class EventsRemoteSource {
           event: event.copyWith(
             joinAction: body['join_action'] as String? ?? event.joinAction,
             readyForRatings: body['ready_for_ratings'] as bool? ?? false,
+            isFavorited: body.containsKey('is_favorited')
+                ? _asBool(body['is_favorited'])
+                : event.isFavorited,
           ),
           joinAction: body['join_action'] as String? ?? event.joinAction ?? 'not_available',
           readyForRatings: body['ready_for_ratings'] as bool? ?? false,
@@ -437,11 +440,108 @@ class EventsRemoteSource {
     }
   }
 
+  Future<({Failure? failure, PaginatedEvents? data})> favorites({
+    int page = 1,
+  }) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/favorites',
+        queryParameters: {'page': page},
+      );
+      final body = response.data;
+      if (body == null) {
+        return (
+          failure: const ServerFailure('Empty response from server'),
+          data: null,
+        );
+      }
+      return (failure: null, data: _parsePage(body));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: ServerFailure(e.toString()), data: null);
+    }
+  }
+
+  Future<({Failure? failure, bool? data})> toggleFavorite(int id) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events/$id/favorite',
+      );
+      final body = response.data ?? const <String, dynamic>{};
+      return (failure: null, data: _asBool(body['is_favorited']));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: ServerFailure(e.toString()), data: null);
+    }
+  }
+
+  Future<({Failure? failure, EventTicket? data})> ticket(int id) async {
+    try {
+      final response =
+          await _client.dio.get<Map<String, dynamic>>('/events/$id/ticket');
+      final body = response.data ?? const <String, dynamic>{};
+      final data = body['data'] is Map
+          ? Map<String, dynamic>.from(body['data'] as Map)
+          : body;
+      return (failure: null, data: _parseTicket(data));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: ServerFailure(e.toString()), data: null);
+    }
+  }
+
+  static EventTicket _parseTicket(Map<String, dynamic> json) {
+    final memberRaw = json['member'];
+    final eventRaw = json['event'];
+    final member = memberRaw is Map
+        ? Map<String, dynamic>.from(memberRaw)
+        : null;
+    final event =
+        eventRaw is Map ? Map<String, dynamic>.from(eventRaw) : null;
+
+    return EventTicket(
+      code: json['code'] as String? ?? '',
+      role: json['role'] as String? ?? 'member',
+      passLabel: json['pass_label'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      dateLabel: json['date_label'] as String? ?? '',
+      dateIso: json['date_iso'] as String?,
+      venueLine: json['venue_line'] as String? ?? '',
+      barcodeShadow: json['barcode_shadow'] as String?,
+      member: member != null
+          ? EventTicketMember(
+              id: _asInt(member['id']) ?? 0,
+              name: member['name'] as String? ?? '',
+            )
+          : null,
+      event: event != null
+          ? EventTicketEventRef(
+              id: _asInt(event['id']) ?? 0,
+              title: event['title'] as String? ?? '',
+              status: event['status'] as String? ?? '',
+            )
+          : null,
+    );
+  }
+
   static int? _asInt(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value.trim());
     return null;
+  }
+
+  static bool _asBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final v = value.trim().toLowerCase();
+      return v == '1' || v == 'true' || v == 'yes';
+    }
+    return false;
   }
 
   static num? _asNum(dynamic value) {
@@ -482,6 +582,7 @@ class EventsRemoteSource {
       joinAction: json['join_action'] as String?,
       createdBy: _asInt(json['created_by']),
       readyForRatings: json['ready_for_ratings'] as bool? ?? false,
+      isFavorited: _asBool(json['is_favorited']),
       categoryId: _asInt(json['category_id']) ?? _asInt(category?['id']),
       cityId: _asInt(json['city_id']) ?? _asInt(city?['id']),
       category: category != null

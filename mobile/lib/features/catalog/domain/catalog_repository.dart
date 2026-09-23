@@ -12,13 +12,18 @@ class CityItem extends Equatable {
 }
 
 class CategoryItem extends Equatable {
-  const CategoryItem({required this.id, required this.name});
+  const CategoryItem({
+    required this.id,
+    required this.name,
+    this.publishedEventsCount = 0,
+  });
 
   final int id;
   final String name;
+  final int publishedEventsCount;
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, publishedEventsCount];
 }
 
 class CatalogBundle extends Equatable {

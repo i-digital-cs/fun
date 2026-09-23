@@ -97,4 +97,14 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Result<NowPlayingFeed>> nowPlaying({int? cityId}) =>
       _remote.nowPlaying(cityId: cityId);
+
+  @override
+  Future<Result<PaginatedEvents>> favorites({int page = 1}) =>
+      _remote.favorites(page: page);
+
+  @override
+  Future<Result<bool>> toggleFavorite(int id) => _remote.toggleFavorite(id);
+
+  @override
+  Future<Result<EventTicket>> ticket(int id) => _remote.ticket(id);
 }

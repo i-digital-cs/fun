@@ -28,6 +28,12 @@ abstract final class Env {
     defaultValue: 'prod',
   );
 
+  /// Web OAuth client ID for Google Sign-In `serverClientId` (id_token).
+  static const googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '',
+  );
+
   static bool get isProd => flavor == 'prod';
 
   static bool get isDev => flavor == 'dev';

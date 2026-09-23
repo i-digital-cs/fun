@@ -4,12 +4,16 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
+import 'package:fun_mobile/features/home/domain/weather.dart';
 
 class HomeNearbyState {
   const HomeNearbyState({
     this.items = const [],
     this.startingSoon = const [],
     this.categories = const [],
+    this.weather,
+    this.nowPlaying,
+    this.participations,
     this.isLoading = false,
     this.error,
     this.nationwideFallback = false,
@@ -18,6 +22,9 @@ class HomeNearbyState {
   final List<EventItem> items;
   final List<EventItem> startingSoon;
   final List<CategoryItem> categories;
+  final WeatherSnapshot? weather;
+  final NowPlayingFeed? nowPlaying;
+  final HomeParticipations? participations;
   final bool isLoading;
   final String? error;
 
@@ -28,15 +35,22 @@ class HomeNearbyState {
     List<EventItem>? items,
     List<EventItem>? startingSoon,
     List<CategoryItem>? categories,
+    WeatherSnapshot? weather,
+    NowPlayingFeed? nowPlaying,
+    HomeParticipations? participations,
     bool? isLoading,
     String? error,
     bool clearError = false,
+    bool clearWeather = false,
     bool? nationwideFallback,
   }) {
     return HomeNearbyState(
       items: items ?? this.items,
       startingSoon: startingSoon ?? this.startingSoon,
       categories: categories ?? this.categories,
+      weather: clearWeather ? null : (weather ?? this.weather),
+      nowPlaying: nowPlaying ?? this.nowPlaying,
+      participations: participations ?? this.participations,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       nationwideFallback: nationwideFallback ?? this.nationwideFallback,
@@ -56,6 +70,7 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       final user = auth is Authenticated ? auth.user : null;
       final repo = _ref.read(eventsRepositoryProvider);
       final catalog = _ref.read(catalogRepositoryProvider);
+      final home = _ref.read(homeRemoteSourceProvider);
 
       final hasCity = user?.cityId != null;
       final nearbyFilters = hasCity
@@ -76,6 +91,19 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       final nearbyResult = await repo.discover(nearbyFilters);
       final soonResult = await repo.discover(soonFilters);
       final categoriesResult = await catalog.categories();
+      final nowPlayingResult = await repo.nowPlaying(cityId: user?.cityId);
+
+      WeatherSnapshot? weather;
+      if (hasCity) {
+        final weatherResult = await home.weather(cityId: user!.cityId);
+        weather = weatherResult.data;
+      }
+
+      HomeParticipations? participations;
+      if (user != null && user.canParticipate) {
+        final partResult = await home.participations();
+        participations = partResult.data;
+      }
 
       final categories = categoriesResult.data ?? state.categories;
 
@@ -114,6 +142,10 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
         items: items,
         startingSoon: soonItems.take(4).toList(),
         categories: categories,
+        weather: weather,
+        clearWeather: !hasCity,
+        nowPlaying: nowPlayingResult.data,
+        participations: participations,
         nationwideFallback: nationwideFallback,
         error: error,
         clearError: error == null,
@@ -125,6 +157,43 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
         nationwideFallback: false,
       );
     }
+  }
+
+  Future<void> toggleFavorite(int eventId) async {
+    final items = state.items;
+    final index = items.indexWhere((e) => e.id == eventId);
+    if (index < 0) return;
+    final previous = items[index].isFavorited;
+    state = state.copyWith(
+      items: [
+        for (var i = 0; i < items.length; i++)
+          if (i == index)
+            items[i].copyWith(isFavorited: !previous)
+          else
+            items[i],
+      ],
+    );
+    final result =
+        await _ref.read(eventsRepositoryProvider).toggleFavorite(eventId);
+    if (result.failure != null) {
+      state = state.copyWith(
+        items: [
+          for (var i = 0; i < state.items.length; i++)
+            if (state.items[i].id == eventId)
+              state.items[i].copyWith(isFavorited: previous)
+            else
+              state.items[i],
+        ],
+      );
+      return;
+    }
+    final favorited = result.data ?? !previous;
+    state = state.copyWith(
+      items: [
+        for (final e in state.items)
+          if (e.id == eventId) e.copyWith(isFavorited: favorited) else e,
+      ],
+    );
   }
 }
 

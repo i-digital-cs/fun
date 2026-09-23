@@ -124,4 +124,7 @@ abstract class EventsRepository {
   Future<Result<EventRating>> rate(int id, {required int stars, String? comment});
 
   Future<Result<NowPlayingFeed>> nowPlaying({int? cityId});
+  Future<Result<PaginatedEvents>> favorites({int page = 1});
+  Future<Result<bool>> toggleFavorite(int id);
+  Future<Result<EventTicket>> ticket(int id);
 }

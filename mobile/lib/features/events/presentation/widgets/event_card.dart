@@ -4,7 +4,7 @@ import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 /// Mirrors Blade `x-events.card` — Uiverse 3D glass + cover image + members.
 class EventCard extends StatefulWidget {
@@ -12,10 +12,12 @@ class EventCard extends StatefulWidget {
     super.key,
     required this.event,
     required this.onView,
+    this.onFavorite,
   });
 
   final EventItem event;
   final VoidCallback onView;
+  final VoidCallback? onFavorite;
 
   @override
   State<EventCard> createState() => _EventCardState();
@@ -269,8 +271,33 @@ class _EventCardState extends State<EventCard> {
                   ],
                 ),
               ),
+              if (widget.onFavorite != null)
+                PositionedDirectional(
+                  top: 8,
+                  end: 8,
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: event.isFavorited
+                          ? AppLocalizations.of(context).unfavorite
+                          : AppLocalizations.of(context).favorite,
+                      onPressed: widget.onFavorite,
+                      icon: Icon(
+                        event.isFavorited
+                            ? Icons.bookmark
+                            : Icons.bookmark_border,
+                        color: event.isFavorited
+                            ? AppColors.accentAmber
+                            : AppColors.muted,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
-                top: 8,
+                top: widget.onFavorite != null ? 52 : 8,
                 right: isRtl ? null : 8,
                 left: isRtl ? 8 : null,
                 child: _LogoStack(

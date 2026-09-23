@@ -97,20 +97,39 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 24),
           ],
           ProfileLinkTile(
+            icon: Icons.event_outlined,
+            title: l10n.navMyEvents,
+            onTap: () => context.go('/my-events'),
+          ),
+          ProfileLinkTile(
+            icon: Icons.bookmark_outline,
+            title: l10n.favorites,
+            onTap: () => context.push('/favorites'),
+          ),
+          ProfileLinkTile(
             icon: Icons.chat_bubble_outline,
             title: l10n.chatsTitle,
             onTap: () => context.push('/chats'),
+          ),
+          ProfileLinkTile(
+            icon: Icons.edit_outlined,
+            title: l10n.editProfile,
+            onTap: () => context.push('/settings/profile'),
           ),
           ProfileLinkTile(
             icon: Icons.location_on_outlined,
             title: l10n.location,
             onTap: () => context.push('/settings/location'),
           ),
-          if (user?.needsIdentity == true)
+          if (user?.needsIdentity == true ||
+              user?.hasIdentityDocuments == true ||
+              user?.identityResubmitRequired == true)
             ProfileLinkTile(
               icon: Icons.badge_outlined,
               title: l10n.identity,
-              subtitle: l10n.verifyIdentity,
+              subtitle: user?.needsIdentity == true
+                  ? l10n.verifyIdentity
+                  : null,
               onTap: () => context.push('/identity'),
             ),
           ProfileLinkTile(

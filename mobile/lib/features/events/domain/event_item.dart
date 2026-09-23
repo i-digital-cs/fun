@@ -57,6 +57,7 @@ class EventItem extends Equatable {
     this.joinAction,
     this.createdBy,
     this.readyForRatings = false,
+    this.isFavorited = false,
   });
 
   final int id;
@@ -80,6 +81,7 @@ class EventItem extends Equatable {
   final String? joinAction;
   final int? createdBy;
   final bool readyForRatings;
+  final bool isFavorited;
 
   bool get isFree => costPerPerson == null || costPerPerson! <= 0;
 
@@ -100,6 +102,7 @@ class EventItem extends Equatable {
     String? status,
     int? membersCount,
     bool? readyForRatings,
+    bool? isFavorited,
   }) {
     return EventItem(
       id: id,
@@ -123,6 +126,7 @@ class EventItem extends Equatable {
       joinAction: joinAction ?? this.joinAction,
       createdBy: createdBy,
       readyForRatings: readyForRatings ?? this.readyForRatings,
+      isFavorited: isFavorited ?? this.isFavorited,
     );
   }
 
@@ -149,6 +153,7 @@ class EventItem extends Equatable {
         joinAction,
         createdBy,
         readyForRatings,
+        isFavorited,
       ];
 }
 
@@ -317,4 +322,104 @@ class NowPlayingFeed {
 
   bool get hasAny =>
       running != null || next.isNotEmpty || previous.isNotEmpty;
+}
+
+class EventTicketMember extends Equatable {
+  const EventTicketMember({required this.id, required this.name});
+
+  final int id;
+  final String name;
+
+  @override
+  List<Object?> get props => [id, name];
+}
+
+class EventTicketEventRef extends Equatable {
+  const EventTicketEventRef({
+    required this.id,
+    required this.title,
+    required this.status,
+  });
+
+  final int id;
+  final String title;
+  final String status;
+
+  @override
+  List<Object?> get props => [id, title, status];
+}
+
+/// Pass payload from `GET /events/{id}/ticket`.
+class EventTicket extends Equatable {
+  const EventTicket({
+    required this.code,
+    required this.role,
+    required this.passLabel,
+    required this.title,
+    required this.dateLabel,
+    required this.venueLine,
+    this.dateIso,
+    this.barcodeShadow,
+    this.member,
+    this.event,
+  });
+
+  final String code;
+  final String role;
+  final String passLabel;
+  final String title;
+  final String dateLabel;
+  final String? dateIso;
+  final String venueLine;
+  final String? barcodeShadow;
+  final EventTicketMember? member;
+  final EventTicketEventRef? event;
+
+  @override
+  List<Object?> get props => [
+        code,
+        role,
+        passLabel,
+        title,
+        dateLabel,
+        dateIso,
+        venueLine,
+        barcodeShadow,
+        member,
+        event,
+      ];
+}
+
+class HomeParticipationRow extends Equatable {
+  const HomeParticipationRow({
+    required this.event,
+    this.role,
+    this.requestId,
+    this.status,
+  });
+
+  final EventItem event;
+  final String? role;
+  final int? requestId;
+  final String? status;
+
+  @override
+  List<Object?> get props => [event, role, requestId, status];
+}
+
+class HomeParticipations extends Equatable {
+  const HomeParticipations({
+    this.memberships = const [],
+    this.pendingRequests = const [],
+  });
+
+  final List<HomeParticipationRow> memberships;
+  final List<HomeParticipationRow> pendingRequests;
+
+  int get scheduledCount => memberships.length + pendingRequests.length;
+
+  bool get isEmpty => scheduledCount == 0;
+
+  @override
+  List<Object?> get props => [memberships, pendingRequests];
 }

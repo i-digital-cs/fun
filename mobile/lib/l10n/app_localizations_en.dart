@@ -179,10 +179,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currencyShort => 'EGP';
 
   @override
-  String costPerPersonAmount(String amount) => '$amount EGP / person';
+  String costPerPersonAmount(String amount) {
+    return '$amount EGP / person';
+  }
 
   @override
-  String nowPlayingTitle(String brand) => 'Live on $brand';
+  String nowPlayingTitle(String brand) {
+    return 'Live on $brand';
+  }
 
   @override
   String get nowPlayingLive => 'Happening now';
@@ -573,6 +577,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selected => 'Selected';
 
   @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get updateProfile => 'Update profile';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get removePhoto => 'Remove current photo';
+
+  @override
+  String get resubmitRequired => 'Please resubmit your identity documents';
+
+  @override
+  String get identityPending => 'Pending upload';
+
+  @override
+  String get identitySubmitted => 'Documents submitted';
+
+  @override
   String get intoTitle => 'What are you into?';
 
   @override
@@ -773,4 +798,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadMore => 'Load more';
+
+  @override
+  String get verifyEmail => 'Verify email';
+
+  @override
+  String get verifyEmailHint => 'Enter the 4-digit code we sent to your email.';
+
+  @override
+  String get resendCode => 'Resend code';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get sendResetCode => 'Send reset code';
+
+  @override
+  String get verifyResetCode => 'Verify reset code';
+
+  @override
+  String get resetPassword => 'Reset password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get enterCode => 'Enter code';
+
+  @override
+  String get codeSent => 'Code sent';
+
+  @override
+  String get favorites => 'Favorites';
+
+  @override
+  String get favorite => 'Favorite';
+
+  @override
+  String get unfavorite => 'Remove favorite';
+
+  @override
+  String get emptyFavorites =>
+      'No favorites yet. Bookmark events from Discover.';
+
+  @override
+  String get viewTicket => 'View ticket';
+
+  @override
+  String get eventTicket => 'Event ticket';
+
+  @override
+  String get ticketWord => 'TICKET';
+
+  @override
+  String get ticketHelp =>
+      'Show this pass at the venue. Each code is unique to you.';
+
+  @override
+  String get yourParticipations => 'Your participations';
+
+  @override
+  String get manageAll => 'Manage all';
+
+  @override
+  String get participationsEmpty =>
+      'No upcoming participations. Discover something fun.';
+
+  @override
+  String get confirmedAttendance => 'Confirmed';
+
+  @override
+  String get requestPendingShort => 'Pending';
+
+  @override
+  String get pendingReviewNotice =>
+      'Waiting for the host to accept your request.';
+
+  @override
+  String get weatherSetLocation => 'Set your location';
+
+  @override
+  String get weatherSetLocationHint =>
+      'Choose a city to see local weather on your home.';
+
+  @override
+  String get requestToJoin => 'Request to join';
+
+  @override
+  String get updateAvailable => 'Update available';
+
+  @override
+  String get updateAvailableBody => 'A new version of the app is available.';
+
+  @override
+  String get updateNow => 'Update';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get searching => 'Searching';
 }

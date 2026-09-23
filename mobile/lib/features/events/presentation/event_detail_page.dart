@@ -27,6 +27,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   String? _error;
   bool _loading = true;
   bool _acting = false;
+  bool _favoriting = false;
 
   @override
   void initState() {
@@ -76,6 +77,59 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   bool get _canParticipate {
     final auth = ref.read(authControllerProvider);
     return auth is Authenticated && auth.user.canParticipate;
+  }
+
+  Future<void> _toggleFavorite() async {
+    final detail = _detail;
+    if (detail == null || _favoriting) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth is! Authenticated) {
+      context.push('/login');
+      return;
+    }
+    final previous = detail.event.isFavorited;
+    setState(() {
+      _favoriting = true;
+      _detail = EventDetail(
+        event: detail.event.copyWith(isFavorited: !previous),
+        joinAction: detail.joinAction,
+        readyForRatings: detail.readyForRatings,
+        canRate: detail.canRate,
+        myRating: detail.myRating,
+        creatorRating: detail.creatorRating,
+      );
+    });
+    final result =
+        await ref.read(eventsRepositoryProvider).toggleFavorite(widget.eventId);
+    if (!mounted) return;
+    setState(() => _favoriting = false);
+    if (result.failure != null) {
+      setState(() {
+        _detail = EventDetail(
+          event: detail.event.copyWith(isFavorited: previous),
+          joinAction: detail.joinAction,
+          readyForRatings: detail.readyForRatings,
+          canRate: detail.canRate,
+          myRating: detail.myRating,
+          creatorRating: detail.creatorRating,
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.failure!.message)),
+      );
+      return;
+    }
+    final favorited = result.data ?? !previous;
+    setState(() {
+      _detail = EventDetail(
+        event: detail.event.copyWith(isFavorited: favorited),
+        joinAction: detail.joinAction,
+        readyForRatings: detail.readyForRatings,
+        canRate: detail.canRate,
+        myRating: detail.myRating,
+        creatorRating: detail.creatorRating,
+      );
+    });
   }
 
   Future<void> _join() async {
@@ -299,6 +353,20 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
       appBar: AppBar(
         title: Text(l10n.viewEvent),
         actions: [
+          if (detail != null &&
+              ref.watch(authControllerProvider) is Authenticated)
+            IconButton(
+              icon: Icon(
+                detail.event.isFavorited
+                    ? Icons.bookmark
+                    : Icons.bookmark_border,
+                color: detail.event.isFavorited ? AppColors.accentAmber : null,
+              ),
+              tooltip: detail.event.isFavorited
+                  ? l10n.unfavorite
+                  : l10n.favorite,
+              onPressed: _favoriting ? null : _toggleFavorite,
+            ),
           if (detail != null && !_isOwner) ...[
             IconButton(
               icon: const Icon(Icons.flag_outlined),
@@ -358,6 +426,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                           context.push('/events/${widget.eventId}/members'),
                       onChat: () =>
                           context.push('/events/${widget.eventId}/chat'),
+                      onViewTicket: () =>
+                          context.push('/events/${widget.eventId}/ticket'),
                     )
                   else if (ref.watch(authControllerProvider) is! Authenticated)
                     GradientButton.indigo(
@@ -376,6 +446,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                           context.push('/events/${widget.eventId}/chat'),
                       onMembers: () =>
                           context.push('/events/${widget.eventId}/members'),
+                      onViewTicket: () =>
+                          context.push('/events/${widget.eventId}/ticket'),
                     ),
                   if (detail.canRate) ...[
                     const SizedBox(height: 12),
@@ -714,6 +786,7 @@ class EventJoinActions extends StatelessWidget {
     required this.onCancelJoin,
     required this.onChat,
     this.onMembers,
+    this.onViewTicket,
   });
 
   final String joinAction;
@@ -723,6 +796,7 @@ class EventJoinActions extends StatelessWidget {
   final VoidCallback onCancelJoin;
   final VoidCallback onChat;
   final VoidCallback? onMembers;
+  final VoidCallback? onViewTicket;
 
   @override
   Widget build(BuildContext context) {
@@ -730,7 +804,7 @@ class EventJoinActions extends StatelessWidget {
 
     return switch (joinAction) {
       'request_to_join' => GradientButton(
-          label: l10n.join,
+          label: l10n.requestToJoin,
           isLoading: acting,
           onPressed: onJoin,
         ),
@@ -755,8 +829,16 @@ class EventJoinActions extends StatelessWidget {
               label: l10n.joined,
               color: AppColors.success,
             ),
+            if (onViewTicket != null) ...[
+              const SizedBox(height: 12),
+              GradientButton(
+                label: l10n.viewTicket,
+                onPressed: onViewTicket,
+                icon: Icons.confirmation_number_outlined,
+              ),
+            ],
             const SizedBox(height: 12),
-            GradientButton(
+            GradientButton.indigo(
               label: l10n.chat,
               onPressed: onChat,
               icon: Icons.chat_bubble_outline,
@@ -840,6 +922,7 @@ class EventOwnerActions extends StatelessWidget {
     required this.onRequests,
     required this.onMembers,
     this.onChat,
+    this.onViewTicket,
   });
 
   final EventItem event;
@@ -850,6 +933,7 @@ class EventOwnerActions extends StatelessWidget {
   final VoidCallback onRequests;
   final VoidCallback onMembers;
   final VoidCallback? onChat;
+  final VoidCallback? onViewTicket;
 
   @override
   Widget build(BuildContext context) {
@@ -865,6 +949,14 @@ class EventOwnerActions extends StatelessWidget {
             onPressed: onPublish,
           ),
         if (event.isPublished) ...[
+          if (onViewTicket != null) ...[
+            GradientButton(
+              label: l10n.viewTicket,
+              onPressed: onViewTicket,
+              icon: Icons.confirmation_number_outlined,
+            ),
+            const SizedBox(height: 8),
+          ],
           GradientButton.indigo(
             label: l10n.viewRequests,
             onPressed: onRequests,

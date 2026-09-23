@@ -28,8 +28,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Join'), findsOneWidget);
-    await tester.tap(find.text('Join'));
+    expect(find.text('Request to join'), findsOneWidget);
+    await tester.tap(find.text('Request to join'));
     expect(joined, isTrue);
   });
 
