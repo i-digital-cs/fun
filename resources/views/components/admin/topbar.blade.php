@@ -6,14 +6,14 @@
     $firstName = filled($user?->name) ? explode(' ', trim($user->name))[0] : '';
 @endphp
 
-<header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
-    <div class="pointer-events-none absolute inset-0 -z-10 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
-    <div>
+<header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between overflow-visible border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
+    <div class="pointer-events-none absolute inset-0 z-0 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
+    <div class="relative z-10">
         <p class="text-[11px] font-bold uppercase tracking-widest text-indigo-500">{{ __('admin.panel') }}</p>
         <p class="text-sm font-extrabold text-slate-900">@yield('topbar_title', __('admin.dashboard'))</p>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="relative z-10 flex items-center gap-3">
         <form method="POST" action="{{ route('locale.update') }}" class="hidden sm:inline-flex">
             @csrf
             <input type="hidden" name="locale" value="{{ $oppositeLocale }}">

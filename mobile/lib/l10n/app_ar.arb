@@ -95,6 +95,8 @@
   "viewRequests": "طلبات الانضمام",
   "viewMembers": "الأعضاء",
   "joinPending": "الطلب قيد المراجعة",
+  "cancelJoin": "إلغاء الانضمام",
+  "confirmCancelJoin": "هل أنت متأكد أنك تريد إلغاء طلب الانضمام؟",
   "eventFull": "الفعالية ممتلئة",
   "requestRejected": "تم رفض الطلب",
   "joined": "أنت منضم!",

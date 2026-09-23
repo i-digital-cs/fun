@@ -23,6 +23,7 @@ return [
     'confirm_yes' => 'Yes, continue',
     'confirm_leave_event' => 'Are you sure you want to leave this event?',
     'confirm_cancel_event' => 'Are you sure you want to cancel this event?',
+    'confirm_cancel_join' => 'Are you sure you want to cancel your join request?',
     'confirm_reject_request' => 'Are you sure you want to reject this join request?',
     'confirm_deactivate' => 'Are you sure you want to deactivate this?',
     'confirm_deactivate_user' => 'Are you sure you want to deactivate this user?',

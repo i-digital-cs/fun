@@ -305,6 +305,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get joinPending => 'الطلب قيد المراجعة';
 
   @override
+  String get cancelJoin => 'إلغاء الانضمام';
+
+  @override
+  String get confirmCancelJoin => 'هل أنت متأكد أنك تريد إلغاء طلب الانضمام؟';
+
+  @override
   String get eventFull => 'الفعالية ممتلئة';
 
   @override

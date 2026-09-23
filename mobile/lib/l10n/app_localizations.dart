@@ -668,6 +668,18 @@ abstract class AppLocalizations {
   /// **'Request pending'**
   String get joinPending;
 
+  /// No description provided for @cancelJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel join'**
+  String get cancelJoin;
+
+  /// No description provided for @confirmCancelJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel your join request?'**
+  String get confirmCancelJoin;
+
   /// No description provided for @eventFull.
   ///
   /// In en, this message translates to:

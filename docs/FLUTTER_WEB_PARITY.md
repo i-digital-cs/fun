@@ -52,7 +52,7 @@ For each screen:
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
 | Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting) |
-| Join | `POST .../join|leave` · requests accept/reject · members promote/demote/transfer |
+| Join | `POST .../join` · `POST .../join/cancel` (withdraw pending) · `POST .../leave` · requests accept/reject · members promote/demote/transfer |
 | Chat | `GET/POST /api/events/{id}/messages` |
 | Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
 | Identity | `GET/POST /api/identity` · `GET /api/identity/documents/{id}` |
@@ -1034,13 +1034,13 @@ From `App\Enums\EventJoinAction` — drive buttons on cards + event detail:
 | Value | UI |
 |-------|-----|
 | `request_to_join` | Orange **Request to join** |
-| `request_pending` | Muted “Request pending” (no primary join) |
+| `request_pending` | Muted “Request pending” + **Cancel join** (`POST /api/events/{id}/join/cancel`, web `events.join.cancel`) |
 | `joined` | Emerald “Joined” + **View ticket** + Chat + Members (+ **Leave** via cancel/stop button if not owner) |
 | `…` | Owner **Cancel event** also uses the same cancel/stop control (web `x-ui.cancel-btn`: idle label → focus/press shows **Stop**) |
 
-**Cancel / close pattern (web + Flutter):** destructive dismiss actions — leave event, cancel event, reject join request, modal Cancel/Close — use the **Cancel → Stop** control (`x-ui.cancel-btn`: idle label → focus/press shows **Stop**). Web uses a compact dark/orange button (readable inside overflow cards). Flutter: same two-state control for leave, cancel, close sheet, reject.
+**Cancel / close pattern (web + Flutter):** destructive dismiss actions — leave event, **cancel join request**, cancel event, reject join request, modal Cancel/Close — use the **Cancel → Stop** control (`x-ui.cancel-btn`: idle label → focus/press shows **Stop**). Web uses a compact dark/orange button (readable inside overflow cards). Flutter: same two-state control for leave, cancel join, cancel event, close sheet, reject.
 
-**Confirm dialogs (web + Flutter):** any “Are you sure…?” (leave, cancel event, reject, delete, identity resubmit) uses the branded confirm modal with the **tapping hand** animation (`x-ui.confirm-dialog` / `x-ui.tapping-hand`) — never the native browser `confirm()`. Flutter: modal/sheet with the same hand animation + message + Cancel/Stop + confirm CTA.
+**Confirm dialogs (web + Flutter):** any “Are you sure…?” (leave, cancel join, cancel event, reject, delete, identity resubmit) uses the branded confirm modal with the **tapping hand** animation (`x-ui.confirm-dialog` / `x-ui.tapping-hand`) — never the native browser `confirm()`. Flutter: modal/sheet with the same hand animation + message + Cancel/Stop + confirm CTA.
 | `request_rejected` | Amber rejected + allow request again |
 | `event_full` | Muted “Event full” |
 | `not_available` | Hide join / guest → login |

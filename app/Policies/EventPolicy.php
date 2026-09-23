@@ -72,6 +72,11 @@ class EventPolicy
         return $event->isMember($user);
     }
 
+    public function cancelJoinRequest(User $user, Event $event): bool
+    {
+        return $user->canParticipate();
+    }
+
     public function chat(User $user, Event $event): bool
     {
         return $user->canParticipate()

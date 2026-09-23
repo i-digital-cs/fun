@@ -133,6 +133,42 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
     await _load();
   }
 
+  Future<void> _cancelJoinRequest() async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.cancelJoin),
+        content: Text(l10n.confirmCancelJoin),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.cancelJoin),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _acting = true);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .cancelJoinRequest(widget.eventId);
+    if (!mounted) return;
+    setState(() => _acting = false);
+    if (result.failure != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.failure!.message)),
+      );
+      return;
+    }
+    await _load();
+  }
+
   Future<void> _publish() async {
     setState(() => _acting = true);
     final result =
@@ -335,6 +371,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                       acting: _acting,
                       onJoin: _join,
                       onLeave: _leave,
+                      onCancelJoin: _cancelJoinRequest,
                       onChat: () =>
                           context.push('/events/${widget.eventId}/chat'),
                       onMembers: () =>
@@ -674,6 +711,7 @@ class EventJoinActions extends StatelessWidget {
     required this.acting,
     required this.onJoin,
     required this.onLeave,
+    required this.onCancelJoin,
     required this.onChat,
     this.onMembers,
   });
@@ -682,6 +720,7 @@ class EventJoinActions extends StatelessWidget {
   final bool acting;
   final VoidCallback onJoin;
   final VoidCallback onLeave;
+  final VoidCallback onCancelJoin;
   final VoidCallback onChat;
   final VoidCallback? onMembers;
 
@@ -695,9 +734,19 @@ class EventJoinActions extends StatelessWidget {
           isLoading: acting,
           onPressed: onJoin,
         ),
-      'request_pending' => JoinStatusBanner(
-          label: l10n.joinPending,
-          color: AppColors.muted,
+      'request_pending' => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            JoinStatusBanner(
+              label: l10n.joinPending,
+              color: AppColors.muted,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: acting ? null : onCancelJoin,
+              child: Text(l10n.cancelJoin),
+            ),
+          ],
         ),
       'joined' => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

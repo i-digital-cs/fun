@@ -166,6 +166,20 @@ class EventsRemoteSource {
     }
   }
 
+  Future<({Failure? failure, String? data})> cancelJoinRequest(int id) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events/$id/join/cancel',
+      );
+      return (
+        failure: null,
+        data: response.data?['join_action'] as String? ?? 'request_to_join',
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
   Future<({Failure? failure, List<JoinRequestItem>? data})> joinRequests(
     int id,
   ) async {

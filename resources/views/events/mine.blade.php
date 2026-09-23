@@ -36,7 +36,13 @@
                                 </p>
                                 <p class="mt-2 text-xs text-amber-800">{{ __('home.pending_review_notice') }}</p>
                             </div>
-                            <a href="{{ route('events.show', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <a href="{{ route('events.show', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
+                                <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot py-0" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                                    @csrf
+                                    <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
+                                </form>
+                            </div>
                         </div>
                     </div>
                 @endforeach

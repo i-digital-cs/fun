@@ -22,6 +22,7 @@ void main() {
           acting: false,
           onJoin: () => joined = true,
           onLeave: () {},
+          onCancelJoin: () {},
           onChat: () {},
         ),
       ),
@@ -32,7 +33,8 @@ void main() {
     expect(joined, isTrue);
   });
 
-  testWidgets('request_pending shows pending banner', (tester) async {
+  testWidgets('request_pending shows pending banner and cancel join', (tester) async {
+    var cancelled = false;
     await tester.pumpWidget(
       _wrap(
         EventJoinActions(
@@ -40,12 +42,16 @@ void main() {
           acting: false,
           onJoin: () {},
           onLeave: () {},
+          onCancelJoin: () => cancelled = true,
           onChat: () {},
         ),
       ),
     );
 
     expect(find.text('Request pending'), findsOneWidget);
+    expect(find.text('Cancel join'), findsOneWidget);
+    await tester.tap(find.text('Cancel join'));
+    expect(cancelled, isTrue);
   });
 
   testWidgets('joined shows chat and leave', (tester) async {
@@ -56,6 +62,7 @@ void main() {
           acting: false,
           onJoin: () {},
           onLeave: () {},
+          onCancelJoin: () {},
           onChat: () {},
         ),
       ),
@@ -73,6 +80,7 @@ void main() {
           acting: false,
           onJoin: () {},
           onLeave: () {},
+          onCancelJoin: () {},
           onChat: () {},
         ),
       ),

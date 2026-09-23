@@ -107,6 +107,7 @@ abstract class EventsRepository {
 
   Future<Result<String>> join(int id, {String? message});
   Future<Result<void>> leave(int id);
+  Future<Result<String>> cancelJoinRequest(int id);
   Future<Result<List<JoinRequestItem>>> joinRequests(int id);
   Future<Result<void>> acceptRequest(int eventId, int requestId);
   Future<Result<void>> rejectRequest(int eventId, int requestId);

@@ -155,6 +155,10 @@ Route::middleware('auth')->group(function () {
             ->whereNumber('event')
             ->middleware('throttle:joins')
             ->name('events.join');
+        Route::post('/events/{event}/join/cancel', [EventMembershipController::class, 'cancelJoinRequest'])
+            ->whereNumber('event')
+            ->middleware('throttle:joins')
+            ->name('events.join.cancel');
         Route::get('/events/{event}/requests', [EventMembershipController::class, 'requests'])
             ->whereNumber('event')
             ->name('events.requests');

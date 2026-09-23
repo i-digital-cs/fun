@@ -123,6 +123,10 @@
                         @endif
                     @elseif ($joinAction->value === 'request_pending')
                         <span class="inline-flex items-center rounded-xl border border-slate-200/70 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-500">{{ __('events.request_pending') }}</span>
+                        <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                            @csrf
+                            <x-ui.cancel-btn type="submit" :label="__('events.cancel_join')" />
+                        </form>
                     @elseif ($joinAction->value === 'joined')
                         <span class="inline-flex items-center rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">{{ __('events.joined') }}</span>
                         <a href="{{ route('events.ticket', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.view_ticket') }}</a>

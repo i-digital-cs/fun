@@ -119,6 +119,10 @@
         <div class="mt-auto space-y-2">
             @if ($action === 'request_pending')
                 <span class="block rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-center text-sm font-medium text-slate-500">{{ __('events.request_pending') }}</span>
+                <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot py-1" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                    @csrf
+                    <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
+                </form>
             @elseif ($action === 'joined')
                 <span class="block rounded-xl bg-emerald-50 px-3 py-2 text-center text-sm font-medium text-emerald-700">{{ __('events.joined') }}</span>
             @elseif ($action === 'request_rejected')

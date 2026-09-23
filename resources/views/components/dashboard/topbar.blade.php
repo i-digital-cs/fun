@@ -1,6 +1,6 @@
-<header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
+<header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between overflow-visible border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
     {{-- Blur on a separate layer so the live-search dropdown is not clipped --}}
-    <div class="pointer-events-none absolute inset-0 -z-10 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute inset-0 z-0 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
 @php
     $user = auth()->user();
     $locale = app()->getLocale();
@@ -11,7 +11,7 @@
 @endphp
 
     <div
-        class="live-search relative w-full max-w-[540px] sm:w-[min(540px,55vw)]"
+        class="live-search relative z-10 w-full max-w-[540px] sm:w-[min(540px,55vw)]"
         data-live-search
         data-live-search-type="events"
         data-live-search-url="{{ route('search.suggest') }}"
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <div class="ms-3 flex shrink-0 items-center gap-3 sm:gap-4">
+    <div class="relative z-10 ms-3 flex shrink-0 items-center gap-3 sm:gap-4">
         <form method="POST" action="{{ route('locale.update') }}" class="hidden sm:inline-flex">
             @csrf
             <input type="hidden" name="locale" value="{{ $oppositeLocale }}">

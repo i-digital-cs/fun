@@ -23,6 +23,7 @@ return [
     'confirm_yes' => 'نعم، متابعة',
     'confirm_leave_event' => 'هل أنت متأكد أنك تريد مغادرة هذه الفعالية؟',
     'confirm_cancel_event' => 'هل أنت متأكد أنك تريد إلغاء هذه الفعالية؟',
+    'confirm_cancel_join' => 'هل أنت متأكد أنك تريد إلغاء طلب الانضمام؟',
     'confirm_reject_request' => 'هل أنت متأكد أنك تريد رفض طلب الانضمام؟',
     'confirm_deactivate' => 'هل أنت متأكد أنك تريد إلغاء التفعيل؟',
     'confirm_deactivate_user' => 'هل أنت متأكد أنك تريد إلغاء تفعيل هذا المستخدم؟',

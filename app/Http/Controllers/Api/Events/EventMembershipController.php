@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
+use App\Services\Events\CancelJoinRequestService;
 use App\Services\Events\LeaveEventService;
 use App\Services\Events\PromoteEventMemberService;
 use App\Services\Events\RequestToJoinEventService;
@@ -212,5 +213,24 @@ class EventMembershipController extends Controller
         }
 
         return response()->json(['message' => __('events.left_event')]);
+    }
+
+    public function cancelJoinRequest(
+        Event $event,
+        CancelJoinRequestService $service,
+        ResolveEventJoinActionService $joinActionService,
+    ): JsonResponse {
+        $this->authorize('cancelJoinRequest', $event);
+
+        try {
+            $service->cancel(request()->user(), $event);
+        } catch (DomainException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => __('events.join_request_cancelled'),
+            'join_action' => $joinActionService->resolve(request()->user(), $event->refresh())->value,
+        ]);
     }
 }

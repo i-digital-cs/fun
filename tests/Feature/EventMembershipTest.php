@@ -131,6 +131,30 @@ class EventMembershipTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_user_can_cancel_pending_join_request(): void
+    {
+        $owner = User::factory()->active()->create();
+        $applicant = User::factory()->active()->create();
+        $event = $this->publishedEvent($owner, 5);
+
+        EventJoinRequest::query()->create([
+            'event_id' => $event->id,
+            'user_id' => $applicant->id,
+            'status' => JoinRequestStatus::Pending,
+        ]);
+
+        Sanctum::actingAs($applicant);
+        $this->postJson("/api/events/{$event->id}/join/cancel")
+            ->assertOk()
+            ->assertJsonPath('join_action', 'request_to_join');
+
+        $this->assertDatabaseHas('event_join_requests', [
+            'event_id' => $event->id,
+            'user_id' => $applicant->id,
+            'status' => JoinRequestStatus::Cancelled->value,
+        ]);
+    }
+
     public function test_non_manager_cannot_accept_join_request(): void
     {
         $owner = User::factory()->active()->create();

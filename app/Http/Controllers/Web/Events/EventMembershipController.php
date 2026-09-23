@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
+use App\Services\Events\CancelJoinRequestService;
 use App\Services\Events\LeaveEventService;
 use App\Services\Events\PromoteEventMemberService;
 use App\Services\Events\RequestToJoinEventService;
@@ -177,5 +178,19 @@ class EventMembershipController extends Controller
 
         return redirect()->route('events.show', $event)
             ->with('status', __('events.left_event'));
+    }
+
+    public function cancelJoinRequest(Event $event, CancelJoinRequestService $service): RedirectResponse
+    {
+        $this->authorize('cancelJoinRequest', $event);
+
+        try {
+            $service->cancel(request()->user(), $event);
+        } catch (DomainException $exception) {
+            return back()->withErrors(['join' => $exception->getMessage()]);
+        }
+
+        return redirect()->route('events.show', $event)
+            ->with('status', __('events.join_request_cancelled'));
     }
 }

@@ -43,6 +43,10 @@ class EventsRepositoryImpl implements EventsRepository {
   Future<Result<void>> leave(int id) => _remote.leave(id);
 
   @override
+  Future<Result<String>> cancelJoinRequest(int id) =>
+      _remote.cancelJoinRequest(id);
+
+  @override
   Future<Result<List<JoinRequestItem>>> joinRequests(int id) =>
       _remote.joinRequests(id);
 

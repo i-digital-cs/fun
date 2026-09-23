@@ -307,12 +307,18 @@
                                 <p class="text-[11px] font-medium text-slate-400">{{ __('home.host') }}</p>
                             </div>
                         </div>
-                        <a href="{{ route('events.show', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0">
-                            {{ __('events.view_event') }}
-                            <svg class="h-3.5 w-3.5 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path stroke-linecap="round" d="M5 12h14M13 5l7 7-7 7"/>
-                            </svg>
-                        </a>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot py-0" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                                @csrf
+                                <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
+                            </form>
+                            <a href="{{ route('events.show', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0">
+                                {{ __('events.view_event') }}
+                                <svg class="h-3.5 w-3.5 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" d="M5 12h14M13 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
                     </div>
                 </article>
             @endforeach

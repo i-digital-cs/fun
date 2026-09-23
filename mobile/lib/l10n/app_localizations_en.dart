@@ -305,6 +305,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinPending => 'Request pending';
 
   @override
+  String get cancelJoin => 'Cancel join';
+
+  @override
+  String get confirmCancelJoin =>
+      'Are you sure you want to cancel your join request?';
+
+  @override
   String get eventFull => 'Event full';
 
   @override

@@ -97,6 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/events/{event}/join', [ApiEventMembershipController::class, 'join'])
             ->middleware('throttle:joins');
+        Route::post('/events/{event}/join/cancel', [ApiEventMembershipController::class, 'cancelJoinRequest'])
+            ->middleware('throttle:joins');
         Route::get('/events/{event}/requests', [ApiEventMembershipController::class, 'requests']);
         Route::post('/events/{event}/requests/{joinRequest}/accept', [ApiEventMembershipController::class, 'accept']);
         Route::post('/events/{event}/requests/{joinRequest}/reject', [ApiEventMembershipController::class, 'reject']);

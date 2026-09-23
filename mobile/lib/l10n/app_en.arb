@@ -116,6 +116,8 @@
   "viewRequests": "Join requests",
   "viewMembers": "Members",
   "joinPending": "Request pending",
+  "cancelJoin": "Cancel join",
+  "confirmCancelJoin": "Are you sure you want to cancel your join request?",
   "eventFull": "Event full",
   "requestRejected": "Request rejected",
   "joined": "You're in!",

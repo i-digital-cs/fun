@@ -11,9 +11,9 @@
     $isMine = request()->routeIs('events.mine');
 @endphp
 
-<header class="relative sticky top-0 z-50 border-b border-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
-    <div class="pointer-events-none absolute inset-0 -z-10 bg-white/70 backdrop-blur-xl" aria-hidden="true"></div>
-    <nav class="mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 py-3 sm:px-6" aria-label="{{ __('ui.primary_nav') }}">
+<header class="relative sticky top-0 z-50 overflow-visible border-b border-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
+    <div class="pointer-events-none absolute inset-0 z-0 bg-white/70 backdrop-blur-xl" aria-hidden="true"></div>
+    <nav class="relative z-10 mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 py-3 sm:px-6" aria-label="{{ __('ui.primary_nav') }}">
         <a href="{{ route('home') }}" class="group flex shrink-0 items-center gap-2.5 no-underline" aria-label="{{ $brand }}">
             @if ($siteLogoUrl ?? site_logo_url())
                 <img src="{{ $siteLogoUrl ?? site_logo_url() }}" alt="{{ $brand }}" class="h-10 w-auto max-w-[2.75rem] rounded-2xl object-contain shadow-lg shadow-indigo-600/20 transition-transform duration-300 group-hover:scale-105">
