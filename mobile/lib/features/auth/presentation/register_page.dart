@@ -6,6 +6,7 @@ import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +27,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _passwordConfirm = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _theater = false;
 
   @override
   void dispose() {
@@ -37,32 +39,28 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   void _goAfterAuth() {
-    final auth = ref.read(authControllerProvider);
-    if (auth is Authenticated) {
-      context.go(auth.user.routeAfterAuth);
-    }
+    ref.read(authControllerProvider.notifier).commitPendingSession();
   }
 
-  Future<void> _submit() async {
+  void _startTheater() {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
-      _submitting = true;
+      _theater = true;
       _error = null;
+      _submitting = true;
     });
+  }
+
+  Future<String?> _authenticate() {
     final locale = ref.read(localeCodeProvider);
-    final error = await ref.read(authControllerProvider.notifier).register(
+    return ref.read(authControllerProvider.notifier).register(
           name: _name.text.trim(),
           email: _email.text.trim(),
           password: _password.text,
           passwordConfirmation: _passwordConfirm.text,
           locale: locale,
+          commitSession: false,
         );
-    if (!mounted) return;
-    setState(() {
-      _submitting = false;
-      _error = error;
-    });
-    if (error == null) _goAfterAuth();
   }
 
   Future<void> _google() async {
@@ -145,110 +143,144 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(28),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const AuthSiteBranding(),
-                          Text(
-                            l10n.register,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
+                    child: _theater
+                        ? AuthAccessTheater(
+                            digits: AuthAccessTheater.digitsFrom(
+                              source: AuthDigitSource.password,
+                              password: _password.text,
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          TextFormField(
-                            controller: _name,
-                            textCapitalization: TextCapitalization.words,
-                            decoration: InputDecoration(labelText: l10n.name),
-                            validator: (v) =>
-                                (v == null || v.trim().isEmpty)
-                                    ? l10n.validationRequired
-                                    : null,
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _email,
-                            keyboardType: TextInputType.emailAddress,
-                            autocorrect: false,
-                            decoration: InputDecoration(labelText: l10n.email),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return l10n.validationRequired;
-                              }
-                              if (!v.contains('@')) {
-                                return l10n.validationEmail;
-                              }
-                              return null;
+                            title: l10n.accessEnterTitle,
+                            subtitle: l10n.accessLoginEnterSub,
+                            authenticate: _authenticate,
+                            onSuccess: _goAfterAuth,
+                            onCancel: (error) {
+                              if (!mounted) return;
+                              ref
+                                  .read(authControllerProvider.notifier)
+                                  .discardPendingSession();
+                              setState(() {
+                                _theater = false;
+                                _submitting = false;
+                                _error = error;
+                              });
                             },
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _password,
-                            obscureText: true,
-                            decoration:
-                                InputDecoration(labelText: l10n.password),
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? l10n.validationRequired
-                                : null,
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _passwordConfirm,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              labelText: l10n.passwordConfirmation,
+                          )
+                        : Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const AuthSiteBranding(),
+                                Text(
+                                  l10n.register,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                TextFormField(
+                                  controller: _name,
+                                  textCapitalization: TextCapitalization.words,
+                                  decoration:
+                                      InputDecoration(labelText: l10n.name),
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty)
+                                          ? l10n.validationRequired
+                                          : null,
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  controller: _email,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autocorrect: false,
+                                  decoration:
+                                      InputDecoration(labelText: l10n.email),
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty) {
+                                      return l10n.validationRequired;
+                                    }
+                                    if (!v.contains('@')) {
+                                      return l10n.validationEmail;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  controller: _password,
+                                  obscureText: true,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.password,
+                                  ),
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? l10n.validationRequired
+                                      : null,
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  controller: _passwordConfirm,
+                                  obscureText: true,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.passwordConfirmation,
+                                  ),
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) {
+                                      return l10n.validationRequired;
+                                    }
+                                    if (v != _password.text) {
+                                      return l10n.passwordConfirmation;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                if (_error != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _error!,
+                                    style: const TextStyle(
+                                      color: AppColors.danger,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 20),
+                                GradientButton(
+                                  label: l10n.register,
+                                  isLoading: _submitting,
+                                  onPressed: _startTheater,
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  onPressed: _submitting ? null : _google,
+                                  icon: const Icon(
+                                    Icons.g_mobiledata,
+                                    size: 28,
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  label: Text(l10n.continueWithGoogle),
+                                ),
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: () => context.go('/discover'),
+                                  child: Text(l10n.browseAsGuest),
+                                ),
+                                TextButton(
+                                  onPressed: () => context.go('/login'),
+                                  child: Text(
+                                    '${l10n.haveAccount} ${l10n.login}',
+                                  ),
+                                ),
+                              ],
                             ),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return l10n.validationRequired;
-                              }
-                              if (v != _password.text) {
-                                return l10n.passwordConfirmation;
-                              }
-                              return null;
-                            },
                           ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 12),
-                            Text(
-                              _error!,
-                              style: const TextStyle(color: AppColors.danger),
-                            ),
-                          ],
-                          const SizedBox(height: 20),
-                          GradientButton(
-                            label: l10n.register,
-                            isLoading: _submitting,
-                            onPressed: _submit,
-                          ),
-                          const SizedBox(height: 10),
-                          OutlinedButton.icon(
-                            onPressed: _submitting ? null : _google,
-                            icon: const Icon(Icons.g_mobiledata, size: 28),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            label: Text(l10n.continueWithGoogle),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () => context.go('/discover'),
-                            child: Text(l10n.browseAsGuest),
-                          ),
-                          TextButton(
-                            onPressed: () => context.go('/login'),
-                            child: Text('${l10n.haveAccount} ${l10n.login}'),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ),

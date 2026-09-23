@@ -1604,6 +1604,78 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
+  /// No description provided for @forgotPasswordSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we’ll send a 4-digit code.'**
+  String get forgotPasswordSub;
+
+  /// No description provided for @verifyResetCodeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email for the 4-digit code.'**
+  String get verifyResetCodeSub;
+
+  /// No description provided for @accessFormSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue to your community.'**
+  String get accessFormSub;
+
+  /// No description provided for @accessEnterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Access Code'**
+  String get accessEnterTitle;
+
+  /// No description provided for @accessEnterSub.
+  ///
+  /// In en, this message translates to:
+  /// **'A 4-digit code has been sent to your device.'**
+  String get accessEnterSub;
+
+  /// No description provided for @accessLoginEnterSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Using your password digits to unlock.'**
+  String get accessLoginEnterSub;
+
+  /// No description provided for @accessVerifyingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying...'**
+  String get accessVerifyingTitle;
+
+  /// No description provided for @accessVerifyingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Securely checking your credentials.'**
+  String get accessVerifyingSub;
+
+  /// No description provided for @accessGrantedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Granted'**
+  String get accessGrantedTitle;
+
+  /// No description provided for @accessGrantedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back. Taking you in…'**
+  String get accessGrantedSub;
+
+  /// No description provided for @accessRegisteredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created'**
+  String get accessRegisteredTitle;
+
+  /// No description provided for @accessRegisteredSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: verify your email with the code we sent.'**
+  String get accessRegisteredSub;
+
   /// No description provided for @sendResetCode.
   ///
   /// In en, this message translates to:
@@ -1685,8 +1757,26 @@ abstract class AppLocalizations {
   /// No description provided for @ticketHelp.
   ///
   /// In en, this message translates to:
-  /// **'Show this pass at the venue. Each code is unique to you.'**
+  /// **'Show this pass at the venue. Your code is unique to you for this event.'**
   String get ticketHelp;
+
+  /// No description provided for @ticketRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get ticketRoleOwner;
+
+  /// No description provided for @ticketRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get ticketRoleAdmin;
+
+  /// No description provided for @ticketRoleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass'**
+  String get ticketRoleMember;
 
   /// No description provided for @yourParticipations.
   ///

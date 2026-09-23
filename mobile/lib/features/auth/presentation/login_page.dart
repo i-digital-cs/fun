@@ -6,6 +6,7 @@ import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _password = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _theater = false;
 
   @override
   void dispose() {
@@ -32,29 +34,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  void _goAfterAuth() {
-    final auth = ref.read(authControllerProvider);
-    if (auth is Authenticated) {
-      context.go(auth.user.routeAfterAuth);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _submitting = true;
-      _error = null;
-    });
-    final error = await ref.read(authControllerProvider.notifier).login(
+  Future<String?> _authenticate() {
+    return ref.read(authControllerProvider.notifier).login(
           email: _email.text.trim(),
           password: _password.text,
+          commitSession: false,
         );
-    if (!mounted) return;
+  }
+
+  void _goAfterAuth() {
+    ref.read(authControllerProvider.notifier).commitPendingSession();
+  }
+
+  void _startTheater() {
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
-      _submitting = false;
-      _error = error;
+      _theater = true;
+      _error = null;
+      _submitting = true;
     });
-    if (error == null) _goAfterAuth();
   }
 
   Future<void> _google() async {
@@ -138,110 +136,169 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(28),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const AuthSiteBranding(),
-                          Row(
-                            children: [
-                              Text(
-                                l10n.login,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.5,
+                    child: _theater
+                        ? AuthAccessTheater(
+                            digits: AuthAccessTheater.digitsFrom(
+                              source: AuthDigitSource.password,
+                              password: _password.text,
+                            ),
+                            title: l10n.accessEnterTitle,
+                            subtitle: l10n.accessLoginEnterSub,
+                            authenticate: _authenticate,
+                            onSuccess: _goAfterAuth,
+                            onCancel: (error) {
+                              if (!mounted) return;
+                              ref
+                                  .read(authControllerProvider.notifier)
+                                  .discardPendingSession();
+                              setState(() {
+                                _theater = false;
+                                _submitting = false;
+                                _error = error;
+                              });
+                            },
+                          )
+                        : Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const AuthSiteBranding(),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            l10n.login,
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -0.5,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            l10n.accessFormSub,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: AppColors.muted
+                                                  .withValues(alpha: 0.95),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        final next =
+                                            locale == 'ar' ? 'en' : 'ar';
+                                        ref
+                                            .read(localeCodeProvider.notifier)
+                                            .state = next;
+                                        await ref
+                                            .read(sharedPreferencesProvider)
+                                            .setString('locale', next);
+                                        ref
+                                            .read(apiClientProvider)
+                                            .setLocale(next);
+                                      },
+                                      child: Text(locale == 'ar' ? 'EN' : 'ع'),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: () async {
-                                  final next = locale == 'ar' ? 'en' : 'ar';
-                                  ref.read(localeCodeProvider.notifier).state =
-                                      next;
-                                  await ref
-                                      .read(sharedPreferencesProvider)
-                                      .setString('locale', next);
-                                  ref.read(apiClientProvider).setLocale(next);
-                                },
-                                child: Text(locale == 'ar' ? 'EN' : 'ع'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          TextFormField(
-                            controller: _email,
-                            keyboardType: TextInputType.emailAddress,
-                            autocorrect: false,
-                            decoration: InputDecoration(labelText: l10n.email),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return l10n.validationRequired;
-                              }
-                              if (!v.contains('@')) {
-                                return l10n.validationEmail;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            controller: _password,
-                            obscureText: true,
-                            decoration:
-                                InputDecoration(labelText: l10n.password),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return l10n.validationRequired;
-                              }
-                              return null;
-                            },
-                          ),
-                          Align(
-                            alignment: AlignmentDirectional.centerEnd,
-                            child: TextButton(
-                              onPressed: () => context.go('/forgot-password'),
-                              child: Text(l10n.forgotPassword),
+                                const SizedBox(height: 24),
+                                TextFormField(
+                                  controller: _email,
+                                  keyboardType: TextInputType.emailAddress,
+                                  autocorrect: false,
+                                  decoration:
+                                      InputDecoration(labelText: l10n.email),
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty) {
+                                      return l10n.validationRequired;
+                                    }
+                                    if (!v.contains('@')) {
+                                      return l10n.validationEmail;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  controller: _password,
+                                  obscureText: true,
+                                  decoration:
+                                      InputDecoration(labelText: l10n.password),
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) {
+                                      return l10n.validationRequired;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  child: TextButton(
+                                    onPressed: () =>
+                                        context.go('/forgot-password'),
+                                    child: Text(
+                                      l10n.forgotPassword,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (_error != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _error!,
+                                    style: const TextStyle(
+                                      color: AppColors.danger,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                GradientButton.indigo(
+                                  label: l10n.login,
+                                  isLoading: _submitting,
+                                  onPressed: _startTheater,
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton.icon(
+                                  onPressed: _submitting ? null : _google,
+                                  icon: const Icon(
+                                    Icons.g_mobiledata,
+                                    size: 28,
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  label: Text(l10n.continueWithGoogle),
+                                ),
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: () => context.go('/discover'),
+                                  child: Text(l10n.browseAsGuest),
+                                ),
+                                TextButton(
+                                  onPressed: () => context.go('/register'),
+                                  child: Text(
+                                    '${l10n.noAccount} ${l10n.register}',
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          if (_error != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              _error!,
-                              style: const TextStyle(color: AppColors.danger),
-                            ),
-                          ],
-                          const SizedBox(height: 12),
-                          GradientButton.indigo(
-                            label: l10n.login,
-                            isLoading: _submitting,
-                            onPressed: _submit,
-                          ),
-                          const SizedBox(height: 10),
-                          OutlinedButton.icon(
-                            onPressed: _submitting ? null : _google,
-                            icon: const Icon(Icons.g_mobiledata, size: 28),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            label: Text(l10n.continueWithGoogle),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () => context.go('/discover'),
-                            child: Text(l10n.browseAsGuest),
-                          ),
-                          TextButton(
-                            onPressed: () => context.go('/register'),
-                            child: Text('${l10n.noAccount} ${l10n.register}'),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ),

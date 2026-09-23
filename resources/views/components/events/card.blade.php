@@ -41,16 +41,6 @@
             'event-3d__price--paid' => ! $isFree,
         ])>{{ $priceLabel }}</span>
 
-        <div class="event-3d__logo" aria-hidden="true">
-            <span class="event-3d__circle event-3d__circle--1"></span>
-            <span class="event-3d__circle event-3d__circle--2"></span>
-            <span class="event-3d__circle event-3d__circle--3"></span>
-            <span class="event-3d__circle event-3d__circle--4"></span>
-            <span class="event-3d__circle event-3d__circle--5">
-                <img src="{{ $cover }}" alt="">
-            </span>
-        </div>
-
         <div class="event-3d__glass" aria-hidden="true"></div>
 
         <div class="event-3d__favorite">

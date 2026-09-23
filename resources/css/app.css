@@ -3454,7 +3454,7 @@ html[data-page-loading='1'] {
     font-weight: 900;
     color: #fff;
     transform: translate3d(0, 0, 30px);
-    max-width: calc(100% - 11.5rem);
+    max-width: calc(100% - 2rem);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3472,7 +3472,7 @@ html[data-page-loading='1'] {
     position: absolute;
     z-index: 7;
     inset-inline-end: 0.85rem;
-    top: 7.6rem;
+    top: 0.85rem;
     transform: translate3d(0, 0, 40px);
 }
 

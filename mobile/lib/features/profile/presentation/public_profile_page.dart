@@ -63,7 +63,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
           ? const Center(child: FunLoader())
           : _error != null
               ? Center(child: Text(_error!))
-                  : _profile == null
+              : _profile == null
                   ? Center(child: Text(l10n.profileNotFound))
                   : ListView(
                       padding: const EdgeInsets.all(20),
@@ -147,6 +147,8 @@ class PublicProfileCard extends StatelessWidget {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,81 +180,71 @@ class PublicProfileCard extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: SizedBox(
-                  height: 96,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            profile.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            [
-                              profile.roleLabel,
-                              if (profile.cityName != null) profile.cityName!,
-                            ].join(' · '),
-                            style: const TextStyle(
-                              color: Color(0xFFC7D2FE),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            profile.publicId,
-                            style: const TextStyle(
-                              color: Color(0xFFFDBA74),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      profile.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
                       ),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            _Stat(
-                              label: l10n.statHosted,
-                              value: '${profile.hostedEventsCount}',
-                            ),
-                            _Stat(
-                              label: l10n.statJoined,
-                              value: '${profile.joinedEventsCount}',
-                            ),
-                            _Stat(
-                              label: l10n.statRating,
-                              value: profile.ratingCount > 0
-                                  ? '${profile.ratingAverage}★'
-                                  : '—',
-                            ),
-                          ],
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      [
+                        profile.roleLabel,
+                        if (profile.cityName != null) profile.cityName!,
+                      ].join(' · '),
+                      style: const TextStyle(
+                        color: Color(0xFFC7D2FE),
+                        fontSize: 12,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      profile.publicId,
+                      style: const TextStyle(
+                        color: Color(0xFFFDBA74),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Full-width stats — never share the avatar's 96px height.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                _Stat(
+                  label: l10n.statHosted,
+                  value: '${profile.hostedEventsCount}',
+                ),
+                _Stat(
+                  label: l10n.statJoined,
+                  value: '${profile.joinedEventsCount}',
+                ),
+                _Stat(
+                  label: l10n.statRating,
+                  value: profile.ratingCount > 0
+                      ? '${profile.ratingAverage}★'
+                      : '—',
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -270,11 +262,13 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
             style: const TextStyle(fontSize: 10, color: AppColors.muted),
           ),
+          const SizedBox(height: 2),
           Text(
             value,
             style: const TextStyle(

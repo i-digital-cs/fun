@@ -4,6 +4,7 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_code_fields.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -25,33 +26,39 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
   String? _info;
   bool _submitting = false;
   bool _resending = false;
+  bool _theater = false;
+  String? _resetToken;
 
-  Future<void> _verify() async {
+  void _startTheater() {
     if (_code.length != 4 || widget.email.isEmpty) return;
     setState(() {
-      _submitting = true;
+      _theater = true;
       _error = null;
       _info = null;
+      _submitting = true;
+      _resetToken = null;
     });
+  }
+
+  Future<String?> _authenticate() async {
     final result = await ref
         .read(authControllerProvider.notifier)
         .verifyResetCode(email: widget.email, code: _code);
-    if (!mounted) return;
-    setState(() {
-      _submitting = false;
-      _error = result.error;
-    });
-    if (result.error == null && result.resetToken != null) {
-      context.go(
-        Uri(
-          path: '/reset-password',
-          queryParameters: {
-            'email': widget.email,
-            'resetToken': result.resetToken!,
-          },
-        ).toString(),
-      );
-    }
+    _resetToken = result.resetToken;
+    return result.error;
+  }
+
+  void _onSuccess() {
+    if (_resetToken == null) return;
+    context.go(
+      Uri(
+        path: '/reset-password',
+        queryParameters: {
+          'email': widget.email,
+          'resetToken': _resetToken!,
+        },
+      ).toString(),
+    );
   }
 
   Future<void> _resend() async {
@@ -104,79 +111,107 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const AuthSiteBranding(),
-                        Text(
-                          l10n.verifyResetCode,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.enterCode,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 14,
-                          ),
-                        ),
-                        if (widget.email.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            widget.email,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                    child: _theater
+                        ? AuthAccessTheater(
+                            digits: AuthAccessTheater.digitsFrom(
+                              source: AuthDigitSource.code,
+                              code: _code,
                             ),
+                            title: l10n.accessEnterTitle,
+                            subtitle: l10n.accessEnterSub,
+                            authenticate: _authenticate,
+                            onSuccess: _onSuccess,
+                            onCancel: (error) {
+                              if (!mounted) return;
+                              setState(() {
+                                _theater = false;
+                                _submitting = false;
+                                _error = error;
+                              });
+                            },
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const AuthSiteBranding(),
+                              Text(
+                                l10n.verifyResetCode,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.verifyResetCodeSub,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              if (widget.email.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  widget.email,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 24),
+                              OtpCodeFields(
+                                enabled: !_submitting,
+                                onChanged: (code) =>
+                                    setState(() => _code = code),
+                              ),
+                              if (_error != null) ...[
+                                const SizedBox(height: 12),
+                                Text(
+                                  _error!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.danger,
+                                  ),
+                                ),
+                              ],
+                              if (_info != null) ...[
+                                const SizedBox(height: 12),
+                                Text(
+                                  _info!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 20),
+                              GradientButton.indigo(
+                                label: l10n.verifyResetCode,
+                                isLoading: _submitting,
+                                onPressed:
+                                    _code.length == 4 ? _startTheater : null,
+                              ),
+                              const SizedBox(height: 8),
+                              TextButton(
+                                onPressed: (_submitting || _resending)
+                                    ? null
+                                    : _resend,
+                                child: _resending
+                                    ? Text(l10n.loading)
+                                    : Text(l10n.resendCode),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    context.go('/forgot-password'),
+                                child: Text(l10n.back),
+                              ),
+                            ],
                           ),
-                        ],
-                        const SizedBox(height: 24),
-                        OtpCodeFields(
-                          enabled: !_submitting,
-                          onChanged: (code) => setState(() => _code = code),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.danger),
-                          ),
-                        ],
-                        if (_info != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _info!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.primary),
-                          ),
-                        ],
-                        const SizedBox(height: 20),
-                        GradientButton.indigo(
-                          label: l10n.verifyResetCode,
-                          isLoading: _submitting,
-                          onPressed: _code.length == 4 ? _verify : null,
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: (_submitting || _resending) ? null : _resend,
-                          child: _resending
-                              ? Text(l10n.loading)
-                              : Text(l10n.resendCode),
-                        ),
-                        TextButton(
-                          onPressed: () => context.go('/forgot-password'),
-                          child: Text(l10n.back),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),

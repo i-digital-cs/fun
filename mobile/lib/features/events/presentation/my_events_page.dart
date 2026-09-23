@@ -161,17 +161,12 @@ class MyEventCardWrapper extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            EventCard(event: event, onView: onView),
-            if (event.status != null)
-              PositionedDirectional(
-                top: 12,
-                start: 12,
-                child: EventStatusChip(status: event.status!),
-              ),
-          ],
+        EventCard(
+          event: event,
+          onView: onView,
+          statusBadge: event.status != null
+              ? EventStatusChip(status: event.status!)
+              : null,
         ),
         if (onViewTicket != null) ...[
           const SizedBox(height: 8),

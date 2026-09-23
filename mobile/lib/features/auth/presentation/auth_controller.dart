@@ -29,6 +29,10 @@ class AuthController extends StateNotifier<AuthState> {
 
   final Ref _ref;
 
+  /// Session ready after a theater login/register, but not yet applied to
+  /// [state] — so GoRouter does not tear down the page mid-sequence.
+  User? _pendingUser;
+
   Future<void> bootstrap() async {
     state = const AuthLoading();
     final repo = _ref.read(authRepositoryProvider);
@@ -46,20 +50,42 @@ class AuthController extends StateNotifier<AuthState> {
     state = Authenticated(result.data!);
   }
 
+  /// Apply a deferred session after the access theater finishes.
+  void commitPendingSession() {
+    final user = _pendingUser;
+    if (user == null) return;
+    _pendingUser = null;
+    state = Authenticated(user);
+  }
+
+  void discardPendingSession() {
+    _pendingUser = null;
+  }
+
+  void _applyUser(User user, {required bool commitSession}) {
+    if (commitSession) {
+      _pendingUser = null;
+      state = Authenticated(user);
+    } else {
+      _pendingUser = user;
+    }
+  }
+
   Future<String?> login({
     required String email,
     required String password,
+    bool commitSession = true,
   }) async {
-    state = const AuthLoading();
+    // Stay Unauthenticated while the request runs — AuthLoading would
+    // redirect to /splash and kill the access theater.
     final result = await _ref.read(authRepositoryProvider).login(
           email: email,
           password: password,
         );
     if (result.failure != null || result.data == null) {
-      state = Unauthenticated(result.failure?.message);
       return result.failure?.message;
     }
-    state = Authenticated(result.data!);
+    _applyUser(result.data!, commitSession: commitSession);
     return null;
   }
 
@@ -68,14 +94,12 @@ class AuthController extends StateNotifier<AuthState> {
     String? accessToken,
     String? locale,
   }) async {
-    state = const AuthLoading();
     final result = await _ref.read(authRepositoryProvider).loginWithGoogle(
           idToken: idToken,
           accessToken: accessToken,
           locale: locale,
         );
     if (result.failure != null || result.data == null) {
-      state = Unauthenticated(result.failure?.message);
       return result.failure?.message;
     }
     state = Authenticated(result.data!);
@@ -88,8 +112,8 @@ class AuthController extends StateNotifier<AuthState> {
     required String password,
     required String passwordConfirmation,
     required String locale,
+    bool commitSession = true,
   }) async {
-    state = const AuthLoading();
     final result = await _ref.read(authRepositoryProvider).register(
           name: name,
           email: email,
@@ -98,19 +122,21 @@ class AuthController extends StateNotifier<AuthState> {
           locale: locale,
         );
     if (result.failure != null || result.data == null) {
-      state = Unauthenticated(result.failure?.message);
       return result.failure?.message;
     }
-    state = Authenticated(result.data!);
+    _applyUser(result.data!, commitSession: commitSession);
     return null;
   }
 
-  Future<String?> verifyEmail(String code) async {
+  Future<String?> verifyEmail(
+    String code, {
+    bool commitSession = true,
+  }) async {
     final result = await _ref.read(authRepositoryProvider).verifyEmail(code);
     if (result.failure != null || result.data == null) {
       return result.failure?.message;
     }
-    state = Authenticated(result.data!);
+    _applyUser(result.data!, commitSession: commitSession);
     return null;
   }
 
@@ -146,8 +172,8 @@ class AuthController extends StateNotifier<AuthState> {
     required String resetToken,
     required String password,
     required String passwordConfirmation,
+    bool commitSession = true,
   }) async {
-    state = const AuthLoading();
     final result = await _ref.read(authRepositoryProvider).resetPassword(
           email: email,
           resetToken: resetToken,
@@ -155,19 +181,20 @@ class AuthController extends StateNotifier<AuthState> {
           passwordConfirmation: passwordConfirmation,
         );
     if (result.failure != null || result.data == null) {
-      state = Unauthenticated(result.failure?.message);
       return result.failure?.message;
     }
-    state = Authenticated(result.data!);
+    _applyUser(result.data!, commitSession: commitSession);
     return null;
   }
 
   Future<void> logout() async {
+    _pendingUser = null;
     await _ref.read(authRepositoryProvider).logout();
     state = const Unauthenticated();
   }
 
   void markLoggedOut() {
+    _pendingUser = null;
     state = const Unauthenticated();
   }
 

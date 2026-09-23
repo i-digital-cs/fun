@@ -808,6 +808,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String get forgotPassword => 'نسيت كلمة المرور؟';
 
   @override
+  String get forgotPasswordSub => 'أدخل بريدك وسنرسل رمزاً مكوّناً من 4 أرقام.';
+
+  @override
+  String get verifyResetCodeSub =>
+      'تحقق من بريدك للحصول على الرمز المكوّن من 4 أرقام.';
+
+  @override
+  String get accessFormSub => 'سجّل الدخول للمتابعة إلى مجتمعك.';
+
+  @override
+  String get accessEnterTitle => 'أدخل رمز الوصول';
+
+  @override
+  String get accessEnterSub => 'تم إرسال رمز مكوّن من 4 أرقام إلى جهازك.';
+
+  @override
+  String get accessLoginEnterSub => 'نستخدم أرقام كلمة المرور لفتح الجلسة.';
+
+  @override
+  String get accessVerifyingTitle => 'جارٍ التحقق...';
+
+  @override
+  String get accessVerifyingSub => 'نتحقق من بياناتك بأمان.';
+
+  @override
+  String get accessGrantedTitle => 'تم منح الوصول';
+
+  @override
+  String get accessGrantedSub => 'مرحباً بعودتك. جارٍ التحويل...';
+
+  @override
+  String get accessRegisteredTitle => 'تم إنشاء الحساب';
+
+  @override
+  String get accessRegisteredSub =>
+      'التالي: تحقق من بريدك بالرمز الذي أرسلناه.';
+
+  @override
   String get sendResetCode => 'إرسال رمز الاستعادة';
 
   @override
@@ -847,7 +885,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ticketWord => 'تذكرة';
 
   @override
-  String get ticketHelp => 'أظهر هذه التذكرة في المكان. كل رمز فريد لك.';
+  String get ticketHelp =>
+      'اعرض هذا التصريح في المكان. الرمز فريد لك لهذه الفعالية.';
+
+  @override
+  String get ticketRoleOwner => 'مضيف';
+
+  @override
+  String get ticketRoleAdmin => 'مشرف';
+
+  @override
+  String get ticketRoleMember => 'تصريح';
 
   @override
   String get yourParticipations => 'مشاركاتك';

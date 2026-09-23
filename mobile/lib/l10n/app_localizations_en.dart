@@ -812,6 +812,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
+  String get forgotPasswordSub =>
+      'Enter your email and we’ll send a 4-digit code.';
+
+  @override
+  String get verifyResetCodeSub => 'Check your email for the 4-digit code.';
+
+  @override
+  String get accessFormSub => 'Sign in to continue to your community.';
+
+  @override
+  String get accessEnterTitle => 'Enter Access Code';
+
+  @override
+  String get accessEnterSub => 'A 4-digit code has been sent to your device.';
+
+  @override
+  String get accessLoginEnterSub => 'Using your password digits to unlock.';
+
+  @override
+  String get accessVerifyingTitle => 'Verifying...';
+
+  @override
+  String get accessVerifyingSub => 'Securely checking your credentials.';
+
+  @override
+  String get accessGrantedTitle => 'Access Granted';
+
+  @override
+  String get accessGrantedSub => 'Welcome back. Taking you in…';
+
+  @override
+  String get accessRegisteredTitle => 'Account created';
+
+  @override
+  String get accessRegisteredSub =>
+      'Next: verify your email with the code we sent.';
+
+  @override
   String get sendResetCode => 'Send reset code';
 
   @override
@@ -853,7 +891,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketHelp =>
-      'Show this pass at the venue. Each code is unique to you.';
+      'Show this pass at the venue. Your code is unique to you for this event.';
+
+  @override
+  String get ticketRoleOwner => 'Host';
+
+  @override
+  String get ticketRoleAdmin => 'Admin';
+
+  @override
+  String get ticketRoleMember => 'Pass';
 
   @override
   String get yourParticipations => 'Your participations';
