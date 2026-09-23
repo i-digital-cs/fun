@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -84,6 +85,22 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           distanceKm: _draftDistanceKm,
           allCities: _draftAllCities,
         );
+  }
+
+  Future<void> _cancelJoin(int eventId) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmCancelJoin,
+    );
+    if (confirm != true || !mounted) return;
+    final error = await ref
+        .read(discoverControllerProvider.notifier)
+        .cancelJoinRequest(eventId);
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
   }
 
   Future<void> _clear() async {
@@ -306,6 +323,10 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                                   ? () => ref
                                       .read(discoverControllerProvider.notifier)
                                       .toggleFavorite(event.id)
+                                  : null,
+                              onCancelJoin: authed &&
+                                      event.joinAction == 'request_pending'
+                                  ? () => _cancelJoin(event.id)
                                   : null,
                             );
                           },

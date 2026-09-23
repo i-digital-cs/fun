@@ -353,8 +353,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get placeClear => 'Clear pin';
 
   @override
-  String get placePinned =>
-      'Pin saved — guests can open this place in maps.';
+  String get placePinned => 'Pin saved — guests can open this place in maps.';
 
   @override
   String get placeFromLink => 'Location read from your maps link.';
@@ -444,7 +443,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestRejected => 'Request rejected';
 
   @override
-  String get joined => 'You\'re in!';
+  String get requestPending => 'Request Pending';
+
+  @override
+  String get joined => 'Joined';
 
   @override
   String get notAvailable => 'Not available';
@@ -653,6 +655,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seeAllResults => 'See all results';
+
+  @override
+  String get attachmentHint => 'Click the folder to choose a file';
+
+  @override
+  String get attachmentAdd => 'Add file';
+
+  @override
+  String get attachmentFiles => 'Files';
+
+  @override
+  String get attachmentClear => 'Remove';
 
   @override
   String get selected => 'Selected';

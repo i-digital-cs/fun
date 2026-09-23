@@ -926,10 +926,16 @@ abstract class AppLocalizations {
   /// **'Request rejected'**
   String get requestRejected;
 
+  /// No description provided for @requestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Pending'**
+  String get requestPending;
+
   /// No description provided for @joined.
   ///
   /// In en, this message translates to:
-  /// **'You\'re in!'**
+  /// **'Joined'**
   String get joined;
 
   /// No description provided for @notAvailable.
@@ -1321,6 +1327,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See all results'**
   String get seeAllResults;
+
+  /// No description provided for @attachmentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the folder to choose a file'**
+  String get attachmentHint;
+
+  /// No description provided for @attachmentAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add file'**
+  String get attachmentAdd;
+
+  /// No description provided for @attachmentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get attachmentFiles;
+
+  /// No description provided for @attachmentClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get attachmentClear;
 
   /// No description provided for @selected.
   ///

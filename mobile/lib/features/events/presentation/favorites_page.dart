@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
@@ -117,6 +118,31 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
     }
   }
 
+  Future<void> _cancelJoin(EventItem event) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showFunConfirm(
+      context,
+      message: l10n.confirmCancelJoin,
+    );
+    if (confirm != true || !mounted) return;
+    final result =
+        await ref.read(eventsRepositoryProvider).cancelJoinRequest(event.id);
+    if (!mounted) return;
+    if (result.failure != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.failure!.message)),
+      );
+      return;
+    }
+    final next = result.data ?? 'request_to_join';
+    setState(() {
+      _items = [
+        for (final e in _items)
+          if (e.id == event.id) e.copyWith(joinAction: next) else e,
+      ];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -175,6 +201,9 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
                 event: event,
                 onView: () => context.push('/events/${event.id}'),
                 onFavorite: () => _toggleFavorite(event),
+                onCancelJoin: event.joinAction == 'request_pending'
+                    ? () => _cancelJoin(event)
+                    : null,
               );
             },
           ),

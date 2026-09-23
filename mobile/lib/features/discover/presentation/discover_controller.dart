@@ -202,6 +202,21 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       ],
     );
   }
+
+  /// Returns error message on failure; otherwise updates local join_action.
+  Future<String?> cancelJoinRequest(int eventId) async {
+    final result =
+        await _ref.read(eventsRepositoryProvider).cancelJoinRequest(eventId);
+    if (result.failure != null) return result.failure!.message;
+    final next = result.data ?? 'request_to_join';
+    state = state.copyWith(
+      items: [
+        for (final e in state.items)
+          if (e.id == eventId) e.copyWith(joinAction: next) else e,
+      ],
+    );
+    return null;
+  }
 }
 
 final discoverControllerProvider =

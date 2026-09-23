@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/attachment_folder_picker.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -341,6 +342,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 onPickStart: () => _pickDateTime(isStart: true),
                 onPickEnd: () => _pickDateTime(isStart: false),
                 onPickImage: _pickImage,
+                onClearImage: _imagePath == null
+                    ? null
+                    : () => setState(() => _imagePath = null),
                 onMapsUrlChanged: _applyMapsUrl,
                 onClearPlace: _clearPlace,
               ),
@@ -384,6 +388,7 @@ class CreateEventFormCard extends StatelessWidget {
     required this.onPickImage,
     required this.onMapsUrlChanged,
     required this.onClearPlace,
+    this.onClearImage,
     this.latitude,
     this.longitude,
     this.placeStatus,
@@ -410,6 +415,7 @@ class CreateEventFormCard extends StatelessWidget {
   final VoidCallback onPickStart;
   final VoidCallback onPickEnd;
   final VoidCallback onPickImage;
+  final VoidCallback? onClearImage;
   final VoidCallback onMapsUrlChanged;
   final VoidCallback onClearPlace;
   final double? latitude;
@@ -561,9 +567,11 @@ class CreateEventFormCard extends StatelessWidget {
             decoration: InputDecoration(labelText: l10n.costPerPerson),
           ),
           const SizedBox(height: 12),
-          ImagePickerField(
+          AttachmentFolderPicker(
+            label: l10n.pickImage,
             path: imagePath,
             onPick: onPickImage,
+            onClear: onClearImage,
           ),
         ],
       ),
@@ -603,32 +611,6 @@ class DateTimePickerField extends StatelessWidget {
             color: value != null ? AppColors.text : AppColors.muted,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class ImagePickerField extends StatelessWidget {
-  const ImagePickerField({
-    super.key,
-    required this.path,
-    required this.onPick,
-  });
-
-  final String? path;
-  final VoidCallback onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return OutlinedButton.icon(
-      onPressed: onPick,
-      icon: Icon(path != null ? Icons.check_circle : Icons.image_outlined),
-      label: Text(path != null ? l10n.imageSelected : l10n.pickImage),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
+import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -13,12 +14,16 @@ class EventCard extends StatefulWidget {
     required this.event,
     required this.onView,
     this.onFavorite,
+    this.onCancelJoin,
     this.statusBadge,
   });
 
   final EventItem event;
   final VoidCallback onView;
   final VoidCallback? onFavorite;
+
+  /// Cancel pending join request (Blade card cancel under status).
+  final VoidCallback? onCancelJoin;
 
   /// Optional chip stacked above category (e.g. Published) — never overlays text.
   final Widget? statusBadge;
@@ -43,6 +48,13 @@ class _EventCardState extends State<EventCard> {
     return l10n.costPerPersonAmount(amount);
   }
 
+  bool _showsJoinStatus(String? action) {
+    return action == 'request_pending' ||
+        action == 'joined' ||
+        action == 'request_rejected' ||
+        action == 'event_full';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -62,6 +74,12 @@ class _EventCardState extends State<EventCard> {
     final currencyPill = event.isFree ? '✓' : l10n.currencyShort;
     final venueLine = event.placeLine;
     final tilt = _pressed ? 0.28 : 0.0;
+    final action = event.joinAction;
+    final showJoinStatus = _showsJoinStatus(action);
+    final showCancel =
+        action == 'request_pending' && widget.onCancelJoin != null;
+    final cardHeight =
+        360.0 + (showCancel ? 78.0 : (showJoinStatus ? 40.0 : 0.0));
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -74,13 +92,13 @@ class _EventCardState extends State<EventCard> {
         duration: const Duration(milliseconds: 480),
         curve: Curves.easeInOut,
         transformAlignment: Alignment.center,
-        height: 360,
+        height: cardHeight,
         transform: Matrix4.identity()
           ..setEntry(3, 2, 0.001)
           ..rotateX(tilt)
           ..rotateY(isRtl ? -tilt : tilt),
         child: Container(
-          height: 360,
+          height: cardHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(44),
             gradient: const LinearGradient(
@@ -431,6 +449,14 @@ class _EventCardState extends State<EventCard> {
                             ],
                           ),
                         ),
+                      if (showJoinStatus) ...[
+                        const SizedBox(height: 10),
+                        _JoinStatusStrip(
+                          action: action!,
+                          onCancelJoin:
+                              showCancel ? widget.onCancelJoin : null,
+                        ),
+                      ],
                       ],
                     ),
                   ),
@@ -481,6 +507,83 @@ class _EventCardState extends State<EventCard> {
             ),
         ),
       ),
+    );
+  }
+}
+
+class _JoinStatusStrip extends StatelessWidget {
+  const _JoinStatusStrip({
+    required this.action,
+    this.onCancelJoin,
+  });
+
+  final String action;
+  final VoidCallback? onCancelJoin;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final (label, bg, fg, border) = switch (action) {
+      'joined' => (
+          l10n.joined,
+          const Color(0xFFECFDF5),
+          const Color(0xFF047857),
+          Colors.transparent,
+        ),
+      'request_rejected' => (
+          l10n.requestRejected,
+          const Color(0xFFFFFBEB),
+          const Color(0xFFB45309),
+          const Color(0xFFFDE68A),
+        ),
+      'event_full' => (
+          l10n.eventFull,
+          Colors.white.withValues(alpha: 0.8),
+          const Color(0xFF475569),
+          const Color(0xFFE2E8F0),
+        ),
+      _ => (
+          l10n.requestPending,
+          Colors.white.withValues(alpha: 0.8),
+          const Color(0xFF475569),
+          const Color(0xFFE2E8F0),
+        ),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: fg,
+            ),
+          ),
+        ),
+        if (onCancelJoin != null) ...[
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: () {},
+            onTapDown: (_) {},
+            child: CancelStopButton(
+              label: l10n.cancelJoin,
+              size: CancelStopSize.sm,
+              onPressed: onCancelJoin,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

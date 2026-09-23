@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/attachment_folder_picker.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -286,22 +287,31 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
                   ],
                   if (canUpload) ...[
                     const SizedBox(height: 20),
-                    IdentityFolderPicker(
+                    AttachmentFolderPicker(
                       label: l10n.idFront,
                       path: _idFrontPath,
                       onPick: () => _pick('front'),
+                      onClear: _idFrontPath == null
+                          ? null
+                          : () => setState(() => _idFrontPath = null),
                     ),
                     const SizedBox(height: 12),
-                    IdentityFolderPicker(
+                    AttachmentFolderPicker(
                       label: l10n.idBack,
                       path: _idBackPath,
                       onPick: () => _pick('back'),
+                      onClear: _idBackPath == null
+                          ? null
+                          : () => setState(() => _idBackPath = null),
                     ),
                     const SizedBox(height: 12),
-                    IdentityFolderPicker(
+                    AttachmentFolderPicker(
                       label: l10n.selfie,
                       path: _selfiePath,
                       onPick: () => _pick('selfie'),
+                      onClear: _selfiePath == null
+                          ? null
+                          : () => setState(() => _selfiePath = null),
                     ),
                   ],
                   if (!canUpload && hasDocs) ...[
@@ -373,71 +383,6 @@ class _DocumentThumb extends StatelessWidget {
           style: const TextStyle(fontSize: 12, color: AppColors.muted),
         ),
       ],
-    );
-  }
-}
-
-class IdentityFolderPicker extends StatelessWidget {
-  const IdentityFolderPicker({
-    super.key,
-    required this.label,
-    required this.path,
-    required this.onPick,
-  });
-
-  final String label;
-  final String? path;
-  final VoidCallback onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final filename = path?.split(RegExp(r'[\\/]')).last;
-
-    return InkWell(
-      onTap: onPick,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderSoft),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              path != null ? Icons.folder_open : Icons.folder_outlined,
-              color: path != null ? AppColors.success : AppColors.primary,
-              size: 28,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    filename ?? l10n.pickImage,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            if (path != null)
-              const Icon(Icons.check_circle, color: AppColors.success, size: 20),
-          ],
-        ),
-      ),
     );
   }
 }

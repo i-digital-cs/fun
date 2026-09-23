@@ -441,7 +441,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get requestRejected => 'تم رفض الطلب';
 
   @override
-  String get joined => 'أنت منضم!';
+  String get requestPending => 'الطلب قيد الانتظار';
+
+  @override
+  String get joined => 'منضم';
 
   @override
   String get notAvailable => 'غير متاح';
@@ -647,6 +650,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seeAllResults => 'عرض كل النتائج';
+
+  @override
+  String get attachmentHint => 'اضغط على المجلد لاختيار ملف';
+
+  @override
+  String get attachmentAdd => 'إضافة ملف';
+
+  @override
+  String get attachmentFiles => 'ملفات';
+
+  @override
+  String get attachmentClear => 'إزالة';
 
   @override
   String get selected => 'تم الاختيار';

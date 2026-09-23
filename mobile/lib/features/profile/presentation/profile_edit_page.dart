@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/attachment_folder_picker.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -123,7 +124,6 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final auth = ref.watch(authControllerProvider);
     final hasPassword =
         auth is Authenticated ? auth.user.hasPassword : true;
-    final photoName = _photoPath?.split(RegExp(r'[\\/]')).last;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -218,55 +218,13 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  InkWell(
-                    onTap: _pickPhoto,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderSoft),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _photoPath != null
-                                ? Icons.folder_open
-                                : Icons.folder_outlined,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.pickImage,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  photoName ?? l10n.pickImage,
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_photoPath != null)
-                            IconButton(
-                              onPressed: () => setState(() {
-                                _photoPath = null;
-                              }),
-                              icon: const Icon(Icons.close, size: 20),
-                            ),
-                        ],
-                      ),
-                    ),
+                  AttachmentFolderPicker(
+                    label: l10n.pickImage,
+                    path: _photoPath,
+                    onPick: _pickPhoto,
+                    onClear: _photoPath == null
+                        ? null
+                        : () => setState(() => _photoPath = null),
                   ),
                   const SizedBox(height: 8),
                   CheckboxListTile(
