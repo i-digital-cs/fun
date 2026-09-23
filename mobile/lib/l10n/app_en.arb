@@ -17,6 +17,14 @@
   "navCreate": "Create",
   "navMyEvents": "My Events",
   "navProfile": "Profile",
+  "publicProfile": "Public profile",
+  "yourPublicId": "Your public ID",
+  "openPublicProfile": "Open public profile",
+  "hostedEvents": "Hosted events",
+  "statHosted": "Hosted",
+  "statJoined": "Joined",
+  "statRating": "Rating",
+  "profileNotFound": "Profile not found",
   "greetingMorning": "Good morning, {name}",
   "@greetingMorning": {
     "placeholders": {

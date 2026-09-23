@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\CategoryListController;
 use App\Http\Controllers\Api\CityListController;
 use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatController;
+use App\Http\Controllers\Api\Chat\ChatInboxController as ApiChatInboxController;
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
 use App\Http\Controllers\Api\Events\EventFavoriteController as ApiEventFavoriteController;
 use App\Http\Controllers\Api\Events\EventMembershipController as ApiEventMembershipController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\HomeParticipationsController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
 use App\Http\Controllers\Api\Profile\ProfileController as ApiProfileController;
+use App\Http\Controllers\Api\Profile\PublicProfileController as ApiPublicProfileController;
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
 use App\Http\Controllers\Api\Safety\ReportController as ApiReportController;
 use App\Http\Controllers\Api\SiteBrandingController;
@@ -38,6 +40,9 @@ Route::get('/events', [ApiEventController::class, 'index']);
 Route::get('/events/now-playing', ApiEventNowPlayingController::class);
 Route::get('/events/{event}', [ApiEventController::class, 'show'])->whereNumber('event');
 Route::get('/events/{event}/ratings', [ApiEventRatingController::class, 'index'])->whereNumber('event');
+Route::get('/users/{publicId}', [ApiPublicProfileController::class, 'show'])
+    ->where('publicId', \App\Support\UserPublicId::routePattern())
+    ->middleware('throttle:60,1');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [RegisterController::class, 'store']);
@@ -107,6 +112,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/events/{event}/members/{user}/demote', [ApiEventMembershipController::class, 'demote']);
         Route::post('/events/{event}/transfer', [ApiEventMembershipController::class, 'transfer']);
         Route::post('/events/{event}/leave', [ApiEventMembershipController::class, 'leave']);
+
+        Route::get('/chats', [ApiChatInboxController::class, 'index']);
+        Route::post('/events/{event}/messages/read', [ApiChatInboxController::class, 'markRead'])
+            ->whereNumber('event');
 
         Route::get('/events/{event}/messages', [ApiEventChatController::class, 'index']);
         Route::post('/events/{event}/messages', [ApiEventChatController::class, 'store'])

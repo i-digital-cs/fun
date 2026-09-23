@@ -53,14 +53,21 @@
             </button>
         </form>
 
-        <a href="{{ route('events.mine') }}"
+        <a href="{{ route('chats.index') }}"
            class="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-900"
-           aria-label="{{ __('ui.notifications') }}">
+           aria-label="{{ __('chat.inbox_title') }}">
             <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .53-.21 1.04-.59 1.41L4 17h5"/>
-                <path stroke-linecap="round" d="M9.5 17a2.5 2.5 0 005 0"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
             </svg>
-            <span class="absolute end-1 top-1 h-[7px] w-[7px] rounded-full border-2 border-white bg-red-500"></span>
+            @php
+                $chatUnread = app(\App\Services\Events\Chat\ListUserChatsService::class)->unreadTotal($user);
+            @endphp
+            <span data-chat-unread-dot
+                  @class([
+                      'absolute end-1 top-1 h-[7px] w-[7px] rounded-full border-2 border-white bg-indigo-600',
+                      'hidden' => $chatUnread < 1,
+                  ])
+                  @if ($chatUnread < 1) hidden @endif></span>
         </a>
 
         <details class="relative hidden md:block">

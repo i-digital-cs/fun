@@ -38,6 +38,7 @@ class LoginController extends Controller
             'needs_email_verification' => ! $emailVerified,
             'user' => [
                 'id' => $user->id,
+                'public_id' => $user->public_id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'status' => $user->status->value,

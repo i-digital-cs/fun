@@ -16,4 +16,13 @@ return [
     'empty_thread' => 'لا توجد رسائل بعد. قل مرحبًا.',
     'open_chat' => 'فتح المحادثة',
     'realtime_unavailable' => 'التحديثات المباشرة غير متاحة — حدّث الصفحة لرؤية الرسائل الجديدة.',
+    'inbox_title' => 'المحادثات',
+    'inbox_subtitle' => 'محادثات فعالياتك في مكان واحد.',
+    'inbox_empty_title' => 'لا محادثات بعد',
+    'inbox_empty_body' => 'انضم إلى فعالية لبدء المحادثة مع الأعضاء.',
+    'inbox_no_messages' => 'لا رسائل بعد',
+    'you' => 'أنت',
+    'unread_count' => '{1} :count غير مقروءة|[2,*] :count غير مقروءة',
+    'toast_new' => 'رسالة جديدة',
+    'toast_just_now' => 'الآن',
 ];

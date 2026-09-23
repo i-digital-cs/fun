@@ -16,6 +16,7 @@ import 'package:fun_mobile/features/home/presentation/main_shell.dart';
 import 'package:fun_mobile/features/identity/presentation/identity_page.dart';
 import 'package:fun_mobile/features/profile/presentation/location_page.dart';
 import 'package:fun_mobile/features/profile/presentation/profile_page.dart';
+import 'package:fun_mobile/features/profile/presentation/public_profile_page.dart';
 import 'package:fun_mobile/features/safety/presentation/blocks_page.dart';
 import 'package:fun_mobile/features/safety/presentation/report_page.dart';
 import 'package:fun_mobile/features/safety/presentation/safety_guidelines_page.dart';
@@ -35,6 +36,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = loc == '/login' || loc == '/register';
       final isGuestBrowse = loc == '/discover' ||
           loc == '/safety/guidelines' ||
+          loc.startsWith('/u/') ||
           _isGuestEventShow(loc);
 
       if (auth is AuthInitial || auth is AuthLoading) {
@@ -124,6 +126,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/u/:publicId',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) {
+          final publicId = state.pathParameters['publicId'] ?? '';
+          return PublicProfilePage(publicId: publicId);
+        },
       ),
       GoRoute(
         path: '/settings/location',

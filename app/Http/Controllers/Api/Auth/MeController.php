@@ -14,6 +14,7 @@ class MeController extends Controller
 
         return response()->json([
             'id' => $user->id,
+            'public_id' => $user->public_id,
             'name' => $user->name,
             'email' => $user->email,
             'status' => $user->status->value,

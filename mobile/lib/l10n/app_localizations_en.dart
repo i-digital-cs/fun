@@ -61,6 +61,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
+  String get publicProfile => 'Public profile';
+
+  @override
+  String get yourPublicId => 'Your public ID';
+
+  @override
+  String get openPublicProfile => 'Open public profile';
+
+  @override
+  String get hostedEvents => 'Hosted events';
+
+  @override
+  String get statHosted => 'Hosted';
+
+  @override
+  String get statJoined => 'Joined';
+
+  @override
+  String get statRating => 'Rating';
+
+  @override
+  String get profileNotFound => 'Profile not found';
+
+  @override
   String greetingMorning(String name) {
     return 'Good morning, $name';
   }

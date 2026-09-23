@@ -37,6 +37,7 @@ class ProfileController extends Controller
             'email_verified' => $user->email_verified_at !== null,
             'user' => [
                 'id' => $user->id,
+                'public_id' => $user->public_id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'status' => $user->status->value,

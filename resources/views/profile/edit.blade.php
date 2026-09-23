@@ -16,6 +16,20 @@
             <p class="mt-1 text-sm text-slate-500">{{ __('profile.subtitle') }}</p>
         </div>
 
+        @if ($user->public_id)
+            <section class="mb-6 rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 via-white to-orange-50/60 p-5 shadow-sm sm:p-6">
+                <p class="text-xs font-bold uppercase tracking-wider text-indigo-500">{{ __('profile.your_public_id') }}</p>
+                <p class="mt-2 font-mono text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">{{ $user->public_id }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ __('profile.public_id_help') }}</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <a href="{{ route('users.public.show', $user->public_id) }}"
+                       class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500">
+                        {{ __('profile.copy_profile_link') }}
+                    </a>
+                </div>
+            </section>
+        @endif
+
         <form method="POST" action="{{ route('settings.profile.update') }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @method('PUT')

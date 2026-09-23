@@ -190,12 +190,26 @@
         </div>
     </div>
 
-    @if ($event->creator)
+            @if ($event->creator)
         <section class="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
             <h2 class="text-lg font-extrabold tracking-tight text-slate-900">{{ __('ratings.organizer_rating') }}</h2>
             <div class="mt-3 flex items-center gap-3">
-                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-md shadow-indigo-600/25">{{ user_initials($event->creator->name) }}</span>
-                <p class="text-sm font-semibold text-slate-800">{{ $event->creator->name }}</p>
+                @if ($event->creator->public_id)
+                    <a href="{{ route('users.public.show', $event->creator->public_id) }}" class="flex items-center gap-3 no-underline">
+                        @if ($event->creator->profile_image_path)
+                            <img src="{{ $event->creator->profile_image_path }}" alt="" class="h-11 w-11 rounded-full object-cover shadow-md shadow-indigo-600/25">
+                        @else
+                            <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-md shadow-indigo-600/25">{{ user_initials($event->creator->name) }}</span>
+                        @endif
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800 hover:text-indigo-700">{{ $event->creator->name }}</p>
+                            <p class="text-xs font-medium text-indigo-500">{{ __('profile.view_profile') }}</p>
+                        </div>
+                    </a>
+                @else
+                    <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-md shadow-indigo-600/25">{{ user_initials($event->creator->name) }}</span>
+                    <p class="text-sm font-semibold text-slate-800">{{ $event->creator->name }}</p>
+                @endif
             </div>
             @if (($creatorSummary['count'] ?? 0) > 0)
                 <p class="mt-3 text-sm font-medium text-slate-900">

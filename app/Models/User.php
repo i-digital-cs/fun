@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccountStatus;
 use App\Enums\IdentityDocumentType;
 use App\Enums\PlatformRole;
+use App\Support\UserPublicId;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'public_id',
         'name',
         'email',
         'password',
@@ -54,6 +56,30 @@ class User extends Authenticatable
             'deactivated_at' => 'datetime',
             'distance_km' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (! filled($user->public_id)) {
+                $user->public_id = UserPublicId::generate();
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        // Keep numeric {user} route model binding for block/admin.
+        return 'id';
+    }
+
+    public function publicProfileUrl(): ?string
+    {
+        if (! filled($this->public_id)) {
+            return null;
+        }
+
+        return route('users.public.show', $this->public_id);
     }
 
     public function identityDocuments(): HasMany

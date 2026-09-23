@@ -200,6 +200,54 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get navProfile;
 
+  /// No description provided for @publicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Public profile'**
+  String get publicProfile;
+
+  /// No description provided for @yourPublicId.
+  ///
+  /// In en, this message translates to:
+  /// **'Your public ID'**
+  String get yourPublicId;
+
+  /// No description provided for @openPublicProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open public profile'**
+  String get openPublicProfile;
+
+  /// No description provided for @hostedEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosted events'**
+  String get hostedEvents;
+
+  /// No description provided for @statHosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosted'**
+  String get statHosted;
+
+  /// No description provided for @statJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get statJoined;
+
+  /// No description provided for @statRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get statRating;
+
+  /// No description provided for @profileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile not found'**
+  String get profileNotFound;
+
   /// No description provided for @greetingMorning.
   ///
   /// In en, this message translates to:

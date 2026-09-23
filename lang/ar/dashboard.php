@@ -48,6 +48,7 @@ return [
     'nav_home' => 'الرئيسية',
     'nav_discover' => 'اكتشف',
     'nav_my_events' => 'فعالياتي',
+    'nav_chats' => 'المحادثات',
     'nav_favorites' => 'المفضلة',
     'nav_create' => 'إنشاء فعالية',
     'nav_profile' => 'الملف',

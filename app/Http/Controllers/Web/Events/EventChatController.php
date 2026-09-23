@@ -8,6 +8,7 @@ use App\Http\Requests\Events\Chat\StoreEventMessageRequest;
 use App\Models\Category;
 use App\Models\Event;
 use App\Services\Events\Chat\ListEventMessagesService;
+use App\Services\Events\Chat\MarkEventChatReadService;
 use App\Services\Events\Chat\PostEventMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,11 +16,16 @@ use Illuminate\View\View;
 
 class EventChatController extends Controller
 {
-    public function show(Event $event, ListEventMessagesService $listService): View
-    {
+    public function show(
+        Event $event,
+        ListEventMessagesService $listService,
+        MarkEventChatReadService $readService,
+    ): View {
         $this->authorize('chat', $event);
 
-        $messages = $listService->list(request()->user(), $event, 50);
+        $user = request()->user();
+        $messages = $listService->list($user, $event, 50);
+        $readService->mark($user, $event);
 
         return view('events.chat', [
             'event' => $event->load(['category', 'city']),

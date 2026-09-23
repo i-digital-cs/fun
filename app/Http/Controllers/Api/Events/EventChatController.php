@@ -8,6 +8,7 @@ use App\Http\Requests\Events\Chat\StoreEventMessageRequest;
 use App\Http\Resources\EventMessageResource;
 use App\Models\Event;
 use App\Services\Events\Chat\ListEventMessagesService;
+use App\Services\Events\Chat\MarkEventChatReadService;
 use App\Services\Events\Chat\PostEventMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,8 +16,12 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EventChatController extends Controller
 {
-    public function index(Request $request, Event $event, ListEventMessagesService $service): AnonymousResourceCollection|JsonResponse
-    {
+    public function index(
+        Request $request,
+        Event $event,
+        ListEventMessagesService $service,
+        MarkEventChatReadService $readService,
+    ): AnonymousResourceCollection|JsonResponse {
         $this->authorize('chat', $event);
 
         try {
@@ -25,6 +30,7 @@ class EventChatController extends Controller
                 $event,
                 (int) $request->integer('per_page', 50)
             );
+            $readService->mark($request->user(), $event);
         } catch (DomainException $exception) {
             return response()->json(['message' => $exception->getMessage()], 403);
         }

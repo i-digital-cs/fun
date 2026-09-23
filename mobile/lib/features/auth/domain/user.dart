@@ -7,6 +7,7 @@ class User extends Equatable {
     required this.email,
     required this.status,
     required this.locale,
+    this.publicId,
     this.platformRole,
     this.cityId,
     this.distanceKm,
@@ -18,6 +19,7 @@ class User extends Equatable {
   final String email;
   final String status;
   final String locale;
+  final String? publicId;
   final String? platformRole;
   final int? cityId;
   final int? distanceKm;
@@ -47,6 +49,7 @@ class User extends Equatable {
     String? email,
     String? status,
     String? locale,
+    String? publicId,
     String? platformRole,
     int? cityId,
     int? distanceKm,
@@ -58,6 +61,7 @@ class User extends Equatable {
       email: email ?? this.email,
       status: status ?? this.status,
       locale: locale ?? this.locale,
+      publicId: publicId ?? this.publicId,
       platformRole: platformRole ?? this.platformRole,
       cityId: cityId ?? this.cityId,
       distanceKm: distanceKm ?? this.distanceKm,
@@ -66,6 +70,16 @@ class User extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [id, name, email, status, locale, platformRole, cityId, distanceKm, cityName];
+  List<Object?> get props => [
+        id,
+        name,
+        email,
+        status,
+        locale,
+        publicId,
+        platformRole,
+        cityId,
+        distanceKm,
+        cityName,
+      ];
 }

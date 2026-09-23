@@ -48,7 +48,7 @@ For each screen:
 | Branding | `GET /api/site` |
 | Auth | `POST /register` · `/login` · `/auth/google` · `/logout` · `/email/verify` · `/email/verify/resend` · `/forgot-password` · `/forgot-password/verify` · `/reset-password` |
 | Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `can_participate`, `has_password`, city…) |
-| Profile | `PUT /api/settings/profile` · `PUT /api/settings/location` |
+| Profile | `GET /api/users/{publicId}` (public) · `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
 | Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting) |
@@ -617,6 +617,22 @@ Block app usage; show message + logout. No member APIs.
 
 ---
 
+### 2.15a Public profile `/u/{public_id}` *(required)*
+
+| | |
+|--|--|
+| **Web** | `GET /u/{publicId}` → `profile/public.blade.php` + `x-profile.public-card` (Uiverse card) |
+| **API** | `GET /api/users/{publicId}` (public, throttled) |
+| **ID** | Immutable sequential `users.public_id` = `Funity-F` + 6 digits starting at `Funity-F001007` (then `F001008`…) |
+
+**Public fields only:** `public_id`, `name`, `initials`, `profile_image_path`, `role_label`, `city.name`, stats (`hosted_events`, `joined_events`, `rating_average`, `rating_count`), recent hosted published events. **Never** email / private prefs.
+
+**Entry points:** event organizer card → profile; settings “Open public profile”; Flutter Profile hub + `/u/:publicId` route (guest-browsable).
+
+`GET /api/user` and auth payloads include `public_id`. Event `creator` includes `public_id` + `profile_url`.
+
+---
+
 ### 2.15 Profile settings `/settings/profile` *(new — required)*
 
 | | |
@@ -1127,6 +1143,7 @@ Use web admin at `https://fun.idigital-cs.com/admin`.
 | `/my-events` | `/my-events` |
 | `/favorites` | `/favorites` |
 | `/identity` | `/identity` |
+| `/u/:publicId` | `/u/{publicId}` |
 | `/settings/profile` | `/settings/profile` |
 | `/settings/location` | `/settings/location` |
 | `/blocks` | `/settings/blocks` |
@@ -1157,6 +1174,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 
 1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C)  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
+2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
 4. **Event detail** — creator card, ratings, report/block, full owner matrix, **View ticket**  
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  

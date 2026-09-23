@@ -18,6 +18,7 @@ use App\Http\Controllers\Web\Auth\PasswordResetController;
 use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\Events\EventChatController;
+use App\Http\Controllers\Web\Chat\ChatInboxController;
 use App\Http\Controllers\Web\Events\EventController;
 use App\Http\Controllers\Web\Events\EventFavoriteController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Web\Identity\IdentityDocumentController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
 use App\Http\Controllers\Web\Profile\ProfileController;
+use App\Http\Controllers\Web\Profile\PublicProfileController;
 use App\Http\Controllers\Web\Safety\BlockController;
 use App\Http\Controllers\Web\Safety\ReportController;
 use App\Http\Controllers\Web\Safety\SafetyGuidelinesController;
@@ -48,6 +50,10 @@ Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])
     ->whereNumber('event')
     ->name('events.show');
+
+Route::get('/u/{publicId}', [PublicProfileController::class, 'show'])
+    ->where('publicId', \App\Support\UserPublicId::routePattern())
+    ->name('users.public.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
@@ -183,6 +189,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/events/{event}/leave', [EventMembershipController::class, 'leave'])
             ->whereNumber('event')
             ->name('events.leave');
+
+        Route::get('/chats', [ChatInboxController::class, 'index'])->name('chats.index');
 
         Route::get('/events/{event}/chat', [EventChatController::class, 'show'])
             ->whereNumber('event')

@@ -4,8 +4,10 @@ namespace App\Services\Events\Chat;
 
 use App\Enums\EventStatus;
 use App\Events\EventMessagePosted;
+use App\Events\UserChatMessageReceived;
 use App\Exceptions\DomainException;
 use App\Models\Event;
+use App\Models\EventMember;
 use App\Models\EventMessage;
 use App\Models\User;
 use App\Services\Safety\UserBlockService;
@@ -65,7 +67,7 @@ class PostEventMessageService
             'is_system' => false,
         ]);
 
-        $message->load('user:id,name');
+        $message->load('user:id,name,profile_image_path');
 
         try {
             broadcast(new EventMessagePosted($message))->toOthers();
@@ -77,6 +79,41 @@ class PostEventMessageService
             ]);
         }
 
+        $this->notifyOtherMembers($event, $message, $user);
+
         return $message;
+    }
+
+    private function notifyOtherMembers(Event $event, EventMessage $message, User $sender): void
+    {
+        $recipientIds = EventMember::query()
+            ->where('event_id', $event->id)
+            ->where('user_id', '!=', $sender->id)
+            ->pluck('user_id');
+
+        if ($recipientIds->isEmpty()) {
+            return;
+        }
+
+        $chatUrl = route('events.chat', $event);
+        $title = $event->title;
+
+        foreach ($recipientIds as $recipientId) {
+            try {
+                broadcast(new UserChatMessageReceived(
+                    $message,
+                    (int) $recipientId,
+                    $title,
+                    $chatUrl,
+                ));
+            } catch (BroadcastException $exception) {
+                Log::warning('User chat notification broadcast failed.', [
+                    'event_id' => $event->id,
+                    'message_id' => $message->id,
+                    'recipient_id' => $recipientId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
     }
 }

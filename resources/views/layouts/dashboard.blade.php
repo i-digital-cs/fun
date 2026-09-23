@@ -44,6 +44,9 @@
 
     <x-ui.cancel-filters />
     <x-ui.confirm-dialog />
+    @auth
+        <x-ui.chat-toast-host />
+    @endauth
 
     @stack('scripts')
 </body>

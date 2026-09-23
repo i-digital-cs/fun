@@ -2,6 +2,7 @@ import './bootstrap';
 import { initLiveSearch } from './live-search';
 import { initAttachmentFolders } from './attachment-folder';
 import { initConfirmDialog } from './confirm-dialog';
+import { initChatToasts } from './chat-toast';
 
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
@@ -31,3 +32,6 @@ document.documentElement.dataset.attachmentFolderReady = '1';
 
 initConfirmDialog();
 document.documentElement.dataset.confirmDialogReady = '1';
+
+initChatToasts();
+document.documentElement.dataset.chatToastReady = '1';

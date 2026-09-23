@@ -102,6 +102,7 @@ class AuthRemoteSource {
     final city = json['city'];
     return User(
       id: json['id'] as int,
+      publicId: json['public_id'] as String?,
       name: json['name'] as String,
       email: json['email'] as String,
       status: json['status'] as String? ?? 'active',

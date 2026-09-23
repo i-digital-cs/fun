@@ -48,6 +48,7 @@ return [
     'nav_home' => 'Home',
     'nav_discover' => 'Discover',
     'nav_my_events' => 'My Events',
+    'nav_chats' => 'Chats',
     'nav_favorites' => 'Favorites',
     'nav_create' => 'Create Event',
     'nav_profile' => 'Profile',

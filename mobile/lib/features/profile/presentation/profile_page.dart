@@ -48,6 +48,45 @@ class ProfilePage extends ConsumerWidget {
               user.email,
               style: const TextStyle(color: AppColors.muted),
             ),
+            if (user.publicId != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.yourPublicId,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.publicId!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton(
+                      onPressed: () => context.push('/u/${user.publicId}'),
+                      child: Text(l10n.openPublicProfile),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             if (user.cityName != null) ...[
               const SizedBox(height: 4),
               Text(

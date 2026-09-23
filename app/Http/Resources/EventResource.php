@@ -60,9 +60,11 @@ class EventResource extends JsonResource
             'created_by' => $this->created_by,
             'creator' => $this->whenLoaded('creator', fn () => [
                 'id' => $this->creator->id,
+                'public_id' => $this->creator->public_id,
                 'name' => $this->creator->name,
                 'profile_image_path' => $this->creator->profile_image_path,
                 'initials' => user_initials($this->creator->name),
+                'profile_url' => $this->creator->publicProfileUrl(),
             ]),
         ];
     }

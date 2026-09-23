@@ -61,6 +61,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navProfile => 'الملف';
 
   @override
+  String get publicProfile => 'الملف العام';
+
+  @override
+  String get yourPublicId => 'معرّفك العام';
+
+  @override
+  String get openPublicProfile => 'فتح الملف العام';
+
+  @override
+  String get hostedEvents => 'فعاليات مستضافة';
+
+  @override
+  String get statHosted => 'استضاف';
+
+  @override
+  String get statJoined => 'انضم';
+
+  @override
+  String get statRating => 'التقييم';
+
+  @override
+  String get profileNotFound => 'الملف غير موجود';
+
+  @override
   String greetingMorning(String name) {
     return 'صباح الخير، $name';
   }

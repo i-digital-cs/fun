@@ -16,4 +16,13 @@ return [
     'empty_thread' => 'No messages yet. Say hello.',
     'open_chat' => 'Open chat',
     'realtime_unavailable' => 'Live updates unavailable — refresh to see new messages.',
+    'inbox_title' => 'Chats',
+    'inbox_subtitle' => 'Your event conversations in one place.',
+    'inbox_empty_title' => 'No chats yet',
+    'inbox_empty_body' => 'Join an event to start chatting with other members.',
+    'inbox_no_messages' => 'No messages yet',
+    'you' => 'You',
+    'unread_count' => '{1} :count unread|[2,*] :count unread',
+    'toast_new' => 'New message',
+    'toast_just_now' => 'Just now',
 ];
