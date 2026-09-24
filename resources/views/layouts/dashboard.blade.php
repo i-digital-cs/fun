@@ -24,12 +24,16 @@
         :robots="$seo['robots'] ?? 'noindex,nofollow'"
         :json-ld="$seo['jsonLd'] ?? null"
     />
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap">
+    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap" rel="stylesheet">
+    </noscript>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
-<body class="bg-[#f5f7fb] text-slate-900 antialiased">
+<body @auth data-realtime="1" @endauth class="bg-[#f5f7fb] text-slate-900 antialiased">
     <div class="flex min-h-screen">
         <x-dashboard.sidebar :categories="$categories ?? collect()" />
 

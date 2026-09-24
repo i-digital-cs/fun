@@ -2,7 +2,7 @@
 
 **Purpose:** Keep **zero intentional gap** between the Laravel Blade web app and the Flutter client — every member/public screen, gate, CTA, and data field.
 
-**Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
+**Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · [`docs/FLUTTER_SEX_FIELD.md`](FLUTTER_SEX_FIELD.md) *(required sex: male/female/mix)* · [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
 
 **Rule:** Pixel-perfect desktop layout is not required. **Same information hierarchy, same actions, same join states, same brand tokens, same account gates** are required. If web can do it, Flutter must be able to do it via API (or an explicit “web-only” note — admin only).
 
@@ -51,7 +51,7 @@ For each screen:
 | Profile | `GET /api/users/{publicId}` (public) · `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
-| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting) |
+| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting); covers: `image_url` (card) + `image_url_detail` |
 | Join | `POST .../join` · `POST .../join/cancel` (withdraw pending) · `POST .../leave` · requests accept/reject · members promote/demote/transfer |
 | Chat | `GET/POST /api/events/{id}/messages` |
 | Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
@@ -247,8 +247,8 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 |--|--|
 | **Route** | `events.show` |
 | **Blade** | `events/show.blade.php` |
-| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating` |
-| **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, and **Event** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use `coverUrl()`. API payload unchanged. |
+| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant) |
+| **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, and **Event** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use detail `coverUrl()`. API payload adds optimized cover variants. |
 
 **Layout hierarchy (same as web):**
 
@@ -1227,7 +1227,8 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 10. **Chat** — inbox `/chats` + thread list/post; Reverb toast (Flutter + web); Flutter poll fallback
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
-13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs). Optional later: expose `slug` / share image variants on event API for in-app share sheets.
+13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  
+14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 
@@ -1265,4 +1266,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-24 — Phase 1 web SEO (meta/OG/JSON-LD, robots, sitemap); required user sex; official logo; event location_label + place pin.*
+*Last updated: 2026-09-24 — Phase 2 CWV (WebP covers, upload resize, JS split); Phase 1 web SEO; required user sex; official logo; event location_label + place pin.*

@@ -138,7 +138,7 @@ class HomeController extends Controller
             'nowPlaying' => $playback,
             'seo' => Seo::forHome(
                 $cityName,
-                $highlight?->coverUrl(),
+                $highlight?->coverUrl('detail'),
             ),
         ]);
     }

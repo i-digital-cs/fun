@@ -5,27 +5,7 @@ import { initConfirmDialog } from './confirm-dialog';
 import { initChatToasts } from './chat-toast';
 import { initPageLoader } from './page-loader';
 
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
-const key = import.meta.env.VITE_REVERB_APP_KEY;
-const enabled = Boolean(key);
-
-window.Echo = enabled
-    ? new Echo({
-          broadcaster: 'reverb',
-          key,
-          wsHost: import.meta.env.VITE_REVERB_HOST,
-          wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-          wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-          forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-          enabledTransports: ['ws', 'wss'],
-      })
-    : null;
-
-import { initEventPlaceMaps } from './event-place-map';
+window.Echo = null;
 
 initLiveSearch();
 document.documentElement.dataset.liveSearchReady = '1';
@@ -36,11 +16,36 @@ document.documentElement.dataset.attachmentFolderReady = '1';
 initConfirmDialog();
 document.documentElement.dataset.confirmDialogReady = '1';
 
-initChatToasts();
-document.documentElement.dataset.chatToastReady = '1';
-
 initPageLoader();
 document.documentElement.dataset.pageLoaderReady = '1';
 
-initEventPlaceMaps();
-document.documentElement.dataset.eventPlaceMapReady = '1';
+const needsRealtime =
+    document.body?.dataset?.realtime === '1' ||
+    Boolean(document.getElementById('chat-toast-host'));
+
+if (needsRealtime) {
+    import('./realtime')
+        .then(({ initRealtime }) => {
+            initRealtime();
+            initChatToasts();
+            document.documentElement.dataset.chatToastReady = '1';
+        })
+        .catch(() => {
+            // Realtime is optional; keep page usable offline.
+        });
+}
+
+const needsPlaceMaps = Boolean(
+    document.querySelector('[data-event-place-picker], [data-event-place-viewer]')
+);
+
+if (needsPlaceMaps) {
+    import('./event-place-map')
+        .then(({ initEventPlaceMaps }) => {
+            initEventPlaceMaps();
+            document.documentElement.dataset.eventPlaceMapReady = '1';
+        })
+        .catch(() => {
+            // Maps are progressive enhancement.
+        });
+}

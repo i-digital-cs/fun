@@ -32,7 +32,8 @@
     $hlVenue = 'Obour Sporting Club · Pitch 4';
     $hlTime = 'Tonight · 9:00 PM';
     $hlSpots = 3;
-    $hlImage = asset('images/activities/football.png');
+    $hlImage = asset('images/activities/football-640.webp');
+    $hlCoverEvent = null;
     $hlLink = route('events.index');
     $hlGoing = 7;
 
@@ -41,7 +42,8 @@
         $hlVenue = $highlight->venue . ($highlight->city ? ' · ' . $highlight->city->localizedName() : '');
         $hlTime = $highlight->starts_at?->timezone(config('app.timezone'))->translatedFormat('l · g:i A') ?? '';
         $hlSpots = $highlight->remainingCapacity();
-        $hlImage = $highlight->coverUrl();
+        $hlImage = $highlight->coverUrl('card');
+        $hlCoverEvent = $highlight;
         $hlLink = route('events.show', $highlight);
         $hlGoing = $highlight->acceptedMembersCount();
     } elseif ($user?->canParticipate()) {
@@ -177,7 +179,25 @@
                 </div>
 
                 <div class="relative overflow-hidden rounded-2xl">
-                    <img src="{{ $hlImage }}" alt="{{ $hlTitle }}" class="h-36 w-full object-cover">
+                    @if ($hlCoverEvent)
+                        <x-events.cover-img
+                            :event="$hlCoverEvent"
+                            size="card"
+                            priority
+                            :alt="$hlTitle"
+                            class="h-36 w-full object-cover"
+                        />
+                    @else
+                        <img
+                            src="{{ $hlImage }}"
+                            alt="{{ $hlTitle }}"
+                            width="640"
+                            height="360"
+                            fetchpriority="high"
+                            decoding="async"
+                            class="h-36 w-full object-cover"
+                        >
+                    @endif
                     <div class="absolute inset-0 bg-gradient-to-t from-indigo-950/80 to-transparent"></div>
                     <div class="absolute bottom-3 start-3 end-3">
                         <p class="text-base font-extrabold leading-snug text-white">{{ $hlTitle }}</p>

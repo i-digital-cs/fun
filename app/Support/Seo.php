@@ -171,7 +171,7 @@ class Seo
             ? $event->description
             : __('events.discover_subtitle');
         $url = route('events.show', $event);
-        $image = $event->coverUrl();
+        $image = $event->coverUrl('detail');
 
         $location = [
             '@type' => 'Place',

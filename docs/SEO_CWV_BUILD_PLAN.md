@@ -266,13 +266,13 @@ event-place-map → already separate logic; only import when picker/viewer nodes
 
 ### Phase 2 checklist
 
-- [ ] Compress/convert stock activities + helper srcset  
-- [ ] Upload resize + WebP  
-- [ ] LCP attrs on show + hero  
-- [ ] Font display / self-host  
-- [ ] Split Echo/Pusher + conditional maps  
-- [ ] Quick Lighthouse pass on `/` and `/events/{id}`  
-- [ ] Parity note on media variants  
+- [x] Compress/convert stock activities + helper srcset  
+- [x] Upload resize + WebP  
+- [x] LCP attrs on show + hero  
+- [x] Font display / async load  
+- [x] Split Echo/Pusher + conditional maps  
+- [ ] Quick Lighthouse pass on `/` and `/events/{id}` _(manual)_  
+- [x] Parity note on media variants  
 
 ---
 

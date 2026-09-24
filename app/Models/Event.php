@@ -170,29 +170,60 @@ class Event extends Model
         return $role?->canManageEvent() === true;
     }
 
-    public function imageUrl(): ?string
+    public function imageUrl(?string $size = 'detail'): ?string
     {
         if ($this->image_path === null) {
             return null;
         }
 
         $disk = $this->image_disk ?: MediaDisk::public();
+        $path = $this->image_path;
 
-        return Storage::disk($disk)->url($this->image_path);
+        if (in_array($size, ['card', 'thumb'], true)) {
+            $cardPath = event_image_card_path($path);
+            if ($cardPath !== null && Storage::disk($disk)->exists($cardPath)) {
+                $path = $cardPath;
+            }
+        }
+
+        return Storage::disk($disk)->url($path);
     }
 
     /**
      * Uploaded cover or category-matched stock activity image.
+     *
+     * @param  'card'|'detail'|'thumb'  $size
      */
-    public function coverUrl(): string
+    public function coverUrl(string $size = 'card'): string
     {
         $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+        $hint = trim($this->title.' '.($category?->name_en ?? '').' '.($category?->name_ar ?? ''));
 
         return event_cover_url(
-            $this->imageUrl(),
+            $this->imageUrl($size === 'detail' ? 'detail' : 'card'),
             (int) $this->id,
             $category?->slug,
-            trim($this->title.' '.($category?->name_en ?? '').' '.($category?->name_ar ?? ''))
+            $hint,
+            $size,
+        );
+    }
+
+    /**
+     * @param  'card'|'detail'|'thumb'  $size
+     * @return array{src: string, srcset: ?string, sizes: string, width: int, height: int, webp_srcset: ?string}
+     */
+    public function coverAttrs(string $size = 'card'): array
+    {
+        $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+        $hint = trim($this->title.' '.($category?->name_en ?? '').' '.($category?->name_ar ?? ''));
+
+        return event_cover_attrs(
+            $this->imageUrl('detail'),
+            $this->imageUrl('card'),
+            (int) $this->id,
+            $category?->slug,
+            $hint,
+            $size,
         );
     }
 

@@ -50,20 +50,142 @@ if (! function_exists('event_cover_url')) {
     /**
      * Uploaded cover, or a stock activity image matched to category / title
      * (not a random pick by event id).
+     *
+     * @param  'card'|'detail'|'thumb'  $size
      */
     function event_cover_url(
         ?string $imageUrl,
         int $seed = 0,
         ?string $categorySlug = null,
         ?string $hint = null,
+        string $size = 'card',
     ): string {
         if (filled($imageUrl)) {
             return $imageUrl;
         }
 
         $file = event_cover_filename($categorySlug, $hint, $seed);
+        $base = pathinfo($file, PATHINFO_FILENAME);
+        $width = match ($size) {
+            'thumb' => 320,
+            'detail' => 1280,
+            default => 640,
+        };
+        $webp = "images/activities/{$base}-{$width}.webp";
+
+        if (is_file(public_path($webp))) {
+            return asset($webp);
+        }
 
         return asset('images/activities/'.$file);
+    }
+}
+
+if (! function_exists('event_image_card_path')) {
+    /**
+     * Sibling card variant path for an uploaded cover (`cover_uuid.webp` → `cover_uuid_640.webp`).
+     */
+    function event_image_card_path(string $path): ?string
+    {
+        if (preg_match('/^(.*\/cover_[0-9a-f-]+)\.(webp|jpe?g|png)$/i', $path, $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1].'_640.'.$matches[2];
+    }
+}
+
+if (! function_exists('event_cover_attrs')) {
+    /**
+     * Responsive cover attributes for Blade `<img>` / `<picture>`.
+     *
+     * @param  'card'|'detail'|'thumb'  $size
+     * @return array{src: string, srcset: ?string, sizes: string, width: int, height: int, webp_srcset: ?string}
+     */
+    function event_cover_attrs(
+        ?string $uploadedUrl,
+        ?string $uploadedCardUrl,
+        int $seed = 0,
+        ?string $categorySlug = null,
+        ?string $hint = null,
+        string $size = 'card',
+    ): array {
+        $aspectW = 16;
+        $aspectH = 9;
+
+        if (filled($uploadedUrl)) {
+            $src = match ($size) {
+                'thumb', 'card' => $uploadedCardUrl ?: $uploadedUrl,
+                default => $uploadedUrl,
+            };
+
+            $width = match ($size) {
+                'thumb' => 84,
+                'detail' => 1200,
+                default => 640,
+            };
+            $height = (int) round($width * $aspectH / $aspectW);
+
+            $srcset = null;
+            if ($uploadedCardUrl && $uploadedCardUrl !== $uploadedUrl) {
+                $srcset = $uploadedCardUrl.' 640w, '.$uploadedUrl.' 1280w';
+            }
+
+            $sizes = match ($size) {
+                'thumb' => '42px',
+                'detail' => '(max-width: 768px) 100vw, 896px',
+                default => '(max-width: 640px) 100vw, 360px',
+            };
+
+            return [
+                'src' => $src,
+                'srcset' => $srcset,
+                'sizes' => $sizes,
+                'width' => $width,
+                'height' => $height,
+                'webp_srcset' => null,
+            ];
+        }
+
+        $file = event_cover_filename($categorySlug, $hint, $seed);
+        $base = pathinfo($file, PATHINFO_FILENAME);
+        $widths = [320, 640, 1280];
+        $srcsetParts = [];
+        foreach ($widths as $w) {
+            $path = "images/activities/{$base}-{$w}.webp";
+            if (is_file(public_path($path))) {
+                $srcsetParts[] = asset($path).' '.$w.'w';
+            }
+        }
+
+        $defaultW = match ($size) {
+            'thumb' => 320,
+            'detail' => 1280,
+            default => 640,
+        };
+        $srcPath = "images/activities/{$base}-{$defaultW}.webp";
+        $src = is_file(public_path($srcPath))
+            ? asset($srcPath)
+            : asset('images/activities/'.$file);
+
+        $displayW = match ($size) {
+            'thumb' => 84,
+            'detail' => 1200,
+            default => 640,
+        };
+
+        return [
+            'src' => $src,
+            'srcset' => $srcsetParts !== [] ? implode(', ', $srcsetParts) : null,
+            'sizes' => match ($size) {
+                'thumb' => '42px',
+                'detail' => '(max-width: 768px) 100vw, 896px',
+                default => '(max-width: 640px) 100vw, 360px',
+            },
+            'width' => $displayW,
+            'height' => (int) round($displayW * $aspectH / $aspectW),
+            'webp_srcset' => $srcsetParts !== [] ? implode(', ', $srcsetParts) : null,
+        ];
     }
 }
 

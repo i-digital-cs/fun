@@ -56,11 +56,12 @@
         <div class="now-playing__list">
             @if ($running)
                 <a href="{{ route('events.show', $running) }}" class="now-playing__row now-playing__row--live">
-                    <img
-                        src="{{ $running->coverUrl() }}"
-                        alt=""
+                    <x-events.cover-img
+                        :event="$running"
+                        size="thumb"
+                        :alt="$running->title"
                         class="now-playing__cover"
-                    >
+                    />
                     <span class="now-playing__meta">
                         <span class="now-playing__name">{{ $running->title }}</span>
                         <span class="now-playing__desc">
@@ -79,11 +80,12 @@
 
             @foreach ($next as $event)
                 <a href="{{ route('events.show', $event) }}" class="now-playing__row">
-                    <img
-                        src="{{ $event->coverUrl() }}"
-                        alt=""
+                    <x-events.cover-img
+                        :event="$event"
+                        size="thumb"
+                        :alt="$event->title"
                         class="now-playing__cover"
-                    >
+                    />
                     <span class="now-playing__meta">
                         <span class="now-playing__name">{{ $event->title }}</span>
                         <span class="now-playing__desc">{{ __('dashboard.now_playing_up_next') }} · {{ $timeLabel($event) }}</span>
@@ -98,11 +100,12 @@
 
             @foreach ($previous as $event)
                 <a href="{{ route('events.show', $event) }}" class="now-playing__row now-playing__row--past">
-                    <img
-                        src="{{ $event->coverUrl() }}"
-                        alt=""
+                    <x-events.cover-img
+                        :event="$event"
+                        size="thumb"
+                        :alt="$event->title"
                         class="now-playing__cover"
-                    >
+                    />
                     <span class="now-playing__meta">
                         <span class="now-playing__name">{{ $event->title }}</span>
                         <span class="now-playing__desc">{{ __('dashboard.now_playing_previous') }} · {{ $timeLabel($event) }}</span>

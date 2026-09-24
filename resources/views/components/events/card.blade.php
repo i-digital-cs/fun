@@ -18,7 +18,6 @@
             'amount' => number_format((float) $event->cost_per_person, 2, '.', ''),
         ]);
     $action = $joinAction?->value;
-    $cover = $event->coverUrl();
     $schedule = $event->starts_at?->timezone(config('app.timezone'))->translatedFormat('D · M j · g:i A');
 @endphp
 
@@ -26,7 +25,7 @@
     <article class="event-3d__card">
         <div class="event-3d__media">
             <a href="{{ route('events.show', $event) }}" class="block h-full" tabindex="-1" aria-hidden="true">
-                <img src="{{ $cover }}" alt="" loading="lazy">
+                <x-events.cover-img :event="$event" size="card" class="h-full w-full object-cover" />
             </a>
             <div class="event-3d__media-fade" aria-hidden="true"></div>
         </div>

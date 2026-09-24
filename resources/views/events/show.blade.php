@@ -32,9 +32,12 @@
 <article class="mx-auto max-w-4xl space-y-6">
     <div class="overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
         <div class="relative h-56 overflow-hidden sm:h-72 md:h-80">
-            <img src="{{ $event->coverUrl() }}"
-                 alt=""
-                 class="h-full w-full object-cover">
+            <x-events.cover-img
+                :event="$event"
+                size="detail"
+                priority
+                class="h-full w-full object-cover"
+            />
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent"></div>
             <x-ui.espiral tone="indigo" size="md" :arms="3" :dots="12" class="espiral--anchor-cover" />
 
