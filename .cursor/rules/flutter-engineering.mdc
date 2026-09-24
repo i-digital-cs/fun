@@ -1,0 +1,132 @@
+---
+description: Flutter mobile engineering constitution — do not regress locked rules.
+globs:
+  - mobile/**/*
+alwaysApply: false
+---
+
+# Flutter mobile — locked engineering rules
+
+Before changing anything under `mobile/`:
+
+1. Read `MASTER_CONTEXT.md`, `AGENT.md`, `mobile/docs/FLUTTER_PRINCIPLES.md`, and `mobile/docs/ENGINEERING_CONSTITUTION.md`.
+2. Prefer the smallest production-safe change. No rewrites / no UseCases for fashion.
+
+## BUILD-001 — Android release signing & ABI (NON-NEGOTIABLE)
+
+Implementation must stay consistent with `mobile/android/app/build.gradle.kts` and `mobile/docs/RELEASE.md`.
+
+- Production/store releases **MUST** use a real production/upload keystore via `mobile/android/key.properties`.
+- Production/store releases **MUST NOT** silently fall back to debug signing.
+- Missing production signing **MUST fail closed** (GradleException) — do not “fix” by always assigning debug signing to `release`.
+- Debug signing on the release build type is allowed **ONLY** with:
+  `-PallowDebugReleaseSigning=true`
+  and **ONLY** for local/non-store testing.
+- Do **NOT** reintroduce `abiFilters` / `ndk.abiFilters` restricted to `x86_64` in `defaultConfig` unless the Source of Truth is deliberately updated.
+- Do **NOT** weaken BUILD-001 just to make a build pass. If asked to bypass it, stop and request an explicit constitution change.
+
+## BUILD-002 — Android backup (NON-NEGOTIABLE)
+
+Implementation: `mobile/android/app/src/main/AndroidManifest.xml`.
+
+- `<application>` **MUST** keep `android:allowBackup="false"`.
+- `<application>` **MUST** keep `android:fullBackupContent="false"`.
+- Do **NOT** re-enable Auto Backup / cloud backup without an explicit SoT security decision.
+- Do **NOT** flip these flags for convenience or tooling warnings.
+
+## AUTHZ-JOIN-001 — Participation / join gates (NON-NEGOTIABLE)
+
+Product: `MASTER_CONTEXT.md` §5. Implementation: event detail join, create-event bootstrap, router identity blocks.
+
+- Join and create UX **MUST** require `user.canParticipate`; otherwise navigate to `/identity`.
+- Do **NOT** show `EventJoinActions` / join APIs for authenticated users who cannot participate.
+- Client gates are defense-in-depth only; **Laravel remains authoritative**.
+- Do **NOT** remove identity-blocked routes for create/chat/manage without an explicit SoT change.
+
+## SEC-PRIV-001 / SEC-PRIV-002 / SEC-RESET-001 / SEC-UPLOAD-001 / SEC-SESSION-001 (NON-NEGOTIABLE)
+
+- **SEC-PRIV-001:** Never render password characters in auth theater (bullets only).
+- **SEC-PRIV-002:** Never echo chat message bodies in global toasts/banners (`newChatMessage` only).
+- **SEC-RESET-001:** Never put `resetToken` in URLs; use `ResetPasswordArgs` / `GoRouter` `extra` only.
+- **SEC-UPLOAD-001:** Validate image type/size client-side before multipart; server remains authoritative.
+- **SEC-SESSION-001:** Do not fake logout on restore network failures; use `AuthSessionRestoreFailed` + retry; 401 still logs out.
+- Do **NOT** weaken these for UX convenience. If asked to bypass, stop and request an explicit constitution change.
+
+## NET-001 / NET-RACE-001 / NET-CANCEL-001 / NAV-001 (NON-NEGOTIABLE)
+
+- **NET-001:** Dio connect/send/receive timeouts; typed `Failure` via `mapDioException` / `failureUserMessage`; no unsafe auto-retries; no raw `e.toString()` as primary UX.
+- **NET-RACE-001:** Discover (and similar) must use latest-request-wins generation; do not drop race guards.
+- **NET-CANCEL-001:** CancelToken + dispose for chat loads; prevent overlapping inbox polls; no unbounded global pollers.
+- **NAV-001:** `parsePositiveRouteId` only — never coerce invalid IDs to `0`.
+- Do **NOT** weaken these to silence errors. If asked to bypass, stop and request an explicit constitution change.
+
+## SEC-URL-001 / ARCH-FAV-001 / ARCH-DOMAIN-001 (NON-NEGOTIABLE)
+
+- **SEC-URL-001:** Use `launchSafeExternalUrl` for external/server-provided URLs (http/https only).
+- **ARCH-FAV-001:** Reuse `toggleFavoriteInList` for list favorites; do not duplicate optimistic/rollback logic.
+- **ARCH-DOMAIN-001:** Domain must not import Dio/Platform/url_launcher/PackageInfo/Flutter UI.
+- Do **NOT** weaken these for speed. If asked to bypass, stop and request an explicit constitution change.
+
+## ERR-001 (NON-NEGOTIABLE)
+
+- Non-Dio catches **MUST** use `mapUnexpectedError` → generic `UnknownFailure`.
+- Never `ServerFailure(e.toString())` or put exception text into Failures shown to users.
+- Prefer `failureUserMessage` for SnackBars/forms.
+- Do **NOT** weaken this for debugging UX. If asked to bypass, stop and request an explicit constitution change.
+
+## ARCH-REPO-SAFETY-001 (NON-NEGOTIABLE)
+
+- Presentation **MUST** use `safetyRepositoryProvider` / `SafetyRepository` for block/unblock/report/listBlocks.
+- Do **NOT** call `SafetyRemoteSource` from UI.
+- Do **NOT** weaken this for speed. If asked to bypass, stop and request an explicit constitution change.
+
+## ARCH-REPO-PROFILE / IDENTITY / CHAT / HOME (NON-NEGOTIABLE)
+
+- Presentation **MUST** use:
+  - `profileRepositoryProvider` / `publicProfileRepositoryProvider`
+  - `identityRepositoryProvider`
+  - `chatsRepositoryProvider`
+  - `homeRepositoryProvider` (weather, participations, search suggest)
+- Do **NOT** call the matching remotes from UI.
+- Do **NOT** weaken this for speed. If asked to bypass, stop and request an explicit constitution change.
+
+## ARCH-GOD-DETAIL-001 (NON-NEGOTIABLE)
+
+- Event detail mutations **MUST** go through `EventDetailController` / `eventDetailControllerProvider`.
+- Do **NOT** re-embed repository join/favorite/lifecycle loops into `event_detail_page.dart`.
+- Keep AUTHZ-JOIN gates in the controller (`needLogin` / `needIdentity`).
+- Do **NOT** weaken this for speed. If asked to bypass, stop and request an explicit constitution change.
+
+## ARCH-GOD-CREATE-001 (NON-NEGOTIABLE)
+
+- Create/edit catalog load, edit hydrate, maps resolve, submit/publish **MUST** go through `CreateEventController` / `createEventControllerProvider`.
+- Do **NOT** re-embed those repository loops into `create_event_page.dart` (form text controllers may remain on the page).
+- Keep create identity gate in the controller (`CreateGate.needIdentity`).
+- Do **NOT** weaken this for speed. If asked to bypass, stop and request an explicit constitution change.
+
+## ARCH-GOD-HOME-001 (NON-NEGOTIABLE)
+
+- Keep `home_page.dart` as composition; section/hero widgets in `widgets/home_sections.dart`, `widgets/home_hero_banner.dart`, `widgets/location_shortcut_card.dart`.
+- Do **NOT** re-merge those widgets into `home_page.dart`.
+- Nearby feed loading stays in `HomeNearbyController`.
+- Do **NOT** weaken this for speed. If asked to bypass, stop and request an explicit constitution change.
+
+## OPS-RELEASE-001 (NON-NEGOTIABLE checklist)
+
+- Follow `mobile/docs/RELEASE.md` before store: real keystore, ARM device APK QA, `GOOGLE_SERVER_CLIENT_ID` when Google login is production.
+- Do **NOT** claim release-ready from unit tests alone.
+
+## A11Y-RTL-001 (NON-NEGOTIABLE)
+
+- Prefer `EdgeInsetsDirectional` / `AlignmentDirectional` for asymmetric layout.
+- Forward chevrons via `directionalChevronForward` (or equivalent Directionality check).
+- Icon-only / tappable chrome **MUST** expose `Semantics` or `tooltip`.
+- Do **NOT** hard-code LTR-only shared chrome. If asked to ignore RTL, stop and request an explicit constitution change.
+
+## Other non-negotiables
+
+- Tokens in secure storage only; never log tokens/passwords/KYC.
+- Do not call RemoteSource from UI when a repository exists for that feature (auth/events/catalog/safety/profile/identity/chat/home).
+- Auth/nav/security/networking changes need tests.
+
+If a user asks to bypass a locked rule, stop and request an explicit constitution update.

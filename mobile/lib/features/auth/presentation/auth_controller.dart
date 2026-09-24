@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 
@@ -12,6 +13,13 @@ class AuthInitial extends AuthState {
 
 class AuthLoading extends AuthState {
   const AuthLoading();
+}
+
+/// Token exists but `/user` failed for a non-auth reason (e.g. network).
+/// Token is retained; splash should offer retry (SEC-SESSION-001).
+class AuthSessionRestoreFailed extends AuthState {
+  const AuthSessionRestoreFailed([this.message]);
+  final String? message;
 }
 
 class Authenticated extends AuthState {
@@ -43,11 +51,20 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     final result = await repo.me();
-    if (result.failure != null || result.data == null) {
+    if (result.data != null) {
+      state = Authenticated(result.data!);
+      return;
+    }
+
+    final failure = result.failure;
+    // 401 interceptor already cleared storage; treat as logged out.
+    if (failure is UnauthorizedFailure || !await repo.hasToken()) {
       state = const Unauthenticated();
       return;
     }
-    state = Authenticated(result.data!);
+
+    // Keep token on network/server blips — do not fake logout.
+    state = AuthSessionRestoreFailed(failure?.message);
   }
 
   /// Apply a deferred session after the access theater finishes.

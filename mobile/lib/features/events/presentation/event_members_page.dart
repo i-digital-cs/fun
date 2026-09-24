@@ -119,7 +119,7 @@ class _EventMembersPageState extends ConsumerState<EventMembersPage> {
     if (confirm != true || !mounted) return;
     setState(() => _acting = true);
     final result =
-        await ref.read(safetyRemoteSourceProvider).block(member.userId);
+        await ref.read(safetyRepositoryProvider).block(member.userId);
     if (!mounted) return;
     setState(() => _acting = false);
     if (result.failure != null) {

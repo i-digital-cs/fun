@@ -38,7 +38,7 @@ class HomeRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 
@@ -51,7 +51,7 @@ class HomeRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 

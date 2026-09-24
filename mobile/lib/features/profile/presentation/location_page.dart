@@ -54,7 +54,7 @@ class _LocationPageState extends ConsumerState<LocationPage> {
   Future<void> _save() async {
     if (_cityId == null || _distanceKm == null) return;
     setState(() => _saving = true);
-    final result = await ref.read(profileRemoteSourceProvider).updateLocation(
+    final result = await ref.read(profileRepositoryProvider).updateLocation(
           cityId: _cityId!,
           distanceKm: _distanceKm!,
         );

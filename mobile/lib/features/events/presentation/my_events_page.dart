@@ -47,7 +47,7 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
     final mineFuture =
         ref.read(eventsRepositoryProvider).mine(page: refresh ? 1 : _page);
     final pendingFuture = refresh
-        ? ref.read(homeRemoteSourceProvider).participations()
+        ? ref.read(homeRepositoryProvider).participations()
         : null;
 
     final mine = await mineFuture;

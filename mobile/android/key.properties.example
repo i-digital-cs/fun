@@ -1,0 +1,7 @@
+# Copy to android/key.properties (never commit key.properties or the keystore).
+# BUILD-001 — Production release signing.
+
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=your_key_alias
+storeFile=../path/to/your-upload-keystore.jks

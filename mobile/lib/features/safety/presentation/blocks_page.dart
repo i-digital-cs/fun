@@ -5,7 +5,7 @@ import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
-import 'package:fun_mobile/features/safety/data/safety_remote_source.dart';
+import 'package:fun_mobile/features/safety/domain/safety_models.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 
 class BlocksPage extends ConsumerStatefulWidget {
@@ -43,7 +43,7 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
 
     final page = append ? _page + 1 : 1;
     final result =
-        await ref.read(safetyRemoteSourceProvider).listBlocks(page: page);
+        await ref.read(safetyRepositoryProvider).listBlocks(page: page);
     if (!mounted) return;
 
     if (result.failure != null) {
@@ -76,7 +76,7 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
     if (confirm != true || !mounted) return;
 
     final result =
-        await ref.read(safetyRemoteSourceProvider).unblock(user.userId);
+        await ref.read(safetyRepositoryProvider).unblock(user.userId);
     if (!mounted) return;
     if (result.failure != null) {
       ScaffoldMessenger.of(context).showSnackBar(

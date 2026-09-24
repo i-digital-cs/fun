@@ -45,9 +45,11 @@ class AuthAccessTheater extends StatefulWidget {
   }) {
     switch (source) {
       case AuthDigitSource.password:
+        // SEC-PRIV-001: never render password characters (shoulder surfing).
+        final filled = password.isEmpty ? 0 : password.length.clamp(1, 4);
         return List<String>.generate(
           4,
-          (i) => i < password.length ? password[i] : '',
+          (i) => i < filled ? '•' : '',
         );
       case AuthDigitSource.email:
         final local = email.split('@').first;

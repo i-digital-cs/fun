@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
@@ -28,12 +29,14 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   final _text = TextEditingController();
   final _scroll = ScrollController();
   Timer? _poll;
+  CancelToken? _cancel;
 
   @override
   void initState() {
     super.initState();
     _load();
-    _poll = Timer.periodic(const Duration(seconds: 5), (_) {
+    // Polling retained (product latency); CancelToken + dispose stop overlapping work.
+    _poll = Timer.periodic(const Duration(seconds: 8), (_) {
       if (!_sending) _load(silent: true);
     });
   }
@@ -41,6 +44,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   @override
   void dispose() {
     _poll?.cancel();
+    _cancel?.cancel();
     _text.dispose();
     _scroll.dispose();
     super.dispose();
@@ -53,9 +57,13 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
         _error = null;
       });
     }
-    final result =
-        await ref.read(eventsRepositoryProvider).messages(widget.eventId);
-    if (!mounted) return;
+    _cancel?.cancel();
+    _cancel = CancelToken();
+    final result = await ref.read(eventsRepositoryProvider).messages(
+          widget.eventId,
+          cancelToken: _cancel,
+        );
+    if (!mounted || result.data == null && result.failure == null) return;
     final next = result.data ?? _messages;
     final grew = next.length > _messages.length;
     setState(() {
@@ -157,7 +165,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
       case 'block':
         if (message.userId != null) {
           final result =
-              await ref.read(safetyRemoteSourceProvider).block(message.userId!);
+              await ref.read(safetyRepositoryProvider).block(message.userId!);
           if (!mounted) return;
           if (result.failure != null) {
             ScaffoldMessenger.of(context).showSnackBar(

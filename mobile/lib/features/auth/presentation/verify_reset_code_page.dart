@@ -4,6 +4,7 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/reset_password_page.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_code_fields.dart';
@@ -51,13 +52,11 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
   void _onSuccess() {
     if (_resetToken == null) return;
     context.go(
-      Uri(
-        path: '/reset-password',
-        queryParameters: {
-          'email': widget.email,
-          'resetToken': _resetToken!,
-        },
-      ).toString(),
+      '/reset-password',
+      extra: ResetPasswordArgs(
+        email: widget.email,
+        resetToken: _resetToken!,
+      ),
     );
   }
 

@@ -6,16 +6,11 @@ import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
-import 'package:fun_mobile/features/profile/data/public_profile_remote_source.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-final publicProfileRemoteSourceProvider = Provider(
-  (ref) => PublicProfileRemoteSource(ref.watch(apiClientProvider)),
-);
 
 class PublicProfilePage extends ConsumerStatefulWidget {
   const PublicProfilePage({super.key, required this.publicId});
@@ -44,7 +39,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
       _error = null;
     });
     final result =
-        await ref.read(publicProfileRemoteSourceProvider).show(widget.publicId);
+        await ref.read(publicProfileRepositoryProvider).show(widget.publicId);
     if (!mounted) return;
     setState(() {
       _loading = false;
@@ -67,7 +62,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     );
     if (ok != true || !mounted) return;
     setState(() => _blocking = true);
-    final result = await ref.read(safetyRemoteSourceProvider).block(id);
+    final result = await ref.read(safetyRepositoryProvider).block(id);
     if (!mounted) return;
     setState(() => _blocking = false);
     if (result.failure != null) {

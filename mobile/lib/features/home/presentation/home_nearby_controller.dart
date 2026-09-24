@@ -4,6 +4,7 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
+import 'package:fun_mobile/features/events/presentation/event_favorite_actions.dart';
 import 'package:fun_mobile/features/home/domain/weather.dart';
 
 class HomeNearbyState {
@@ -70,7 +71,7 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       final user = auth is Authenticated ? auth.user : null;
       final repo = _ref.read(eventsRepositoryProvider);
       final catalog = _ref.read(catalogRepositoryProvider);
-      final home = _ref.read(homeRemoteSourceProvider);
+      final home = _ref.read(homeRepositoryProvider);
 
       final hasCity = user?.cityId != null;
       final nearbyFilters = hasCity
@@ -150,50 +151,23 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
         error: error,
         clearError: error == null,
       );
-    } catch (e) {
+    } catch (_) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: 'Network error',
         nationwideFallback: false,
       );
     }
   }
 
   Future<void> toggleFavorite(int eventId) async {
-    final items = state.items;
-    final index = items.indexWhere((e) => e.id == eventId);
-    if (index < 0) return;
-    final previous = items[index].isFavorited;
-    state = state.copyWith(
-      items: [
-        for (var i = 0; i < items.length; i++)
-          if (i == index)
-            items[i].copyWith(isFavorited: !previous)
-          else
-            items[i],
-      ],
+    final outcome = await toggleFavoriteInList(
+      repository: _ref.read(eventsRepositoryProvider),
+      items: state.items,
+      eventId: eventId,
+      onOptimistic: (items) => state = state.copyWith(items: items),
     );
-    final result =
-        await _ref.read(eventsRepositoryProvider).toggleFavorite(eventId);
-    if (result.failure != null) {
-      state = state.copyWith(
-        items: [
-          for (var i = 0; i < state.items.length; i++)
-            if (state.items[i].id == eventId)
-              state.items[i].copyWith(isFavorited: previous)
-            else
-              state.items[i],
-        ],
-      );
-      return;
-    }
-    final favorited = result.data ?? !previous;
-    state = state.copyWith(
-      items: [
-        for (final e in state.items)
-          if (e.id == eventId) e.copyWith(isFavorited: favorited) else e,
-      ],
-    );
+    state = state.copyWith(items: outcome.items);
   }
 
   /// Returns error message on failure; otherwise updates local join_action.

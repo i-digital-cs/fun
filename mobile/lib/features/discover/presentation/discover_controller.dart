@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
+import 'package:fun_mobile/features/events/presentation/event_favorite_actions.dart';
 
 class DiscoverState {
   const DiscoverState({
@@ -49,6 +50,8 @@ class DiscoverController extends StateNotifier<DiscoverState> {
   final Ref _ref;
   bool _bootstrapped = false;
   bool _loadingMore = false;
+  /// Latest-request-wins generation (NET-RACE-001).
+  int _loadGeneration = 0;
 
   Future<void> ensureLoaded() async {
     if (_bootstrapped && state.items.isNotEmpty) return;
@@ -59,6 +62,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
   Future<void> load({DiscoverFilters? filters, bool append = false}) async {
     final nextFilters = filters ?? state.filters;
     final typedSearch = nextFilters.q != null && nextFilters.q!.trim().length >= 2;
+    final generation = ++_loadGeneration;
     state = state.copyWith(
       isLoading: !typedSearch || state.items.isEmpty,
       isSearching: typedSearch,
@@ -66,36 +70,29 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       filters: nextFilters,
     );
 
-    try {
-      final result =
-          await _ref.read(eventsRepositoryProvider).discover(nextFilters);
+    final result =
+        await _ref.read(eventsRepositoryProvider).discover(nextFilters);
 
-      if (result.failure != null || result.data == null) {
-        state = state.copyWith(
-          isLoading: false,
-          isSearching: false,
-          error: result.failure?.message ?? 'Failed to load events',
-          hasMore: append ? false : state.hasMore,
-        );
-        return;
-      }
+    if (generation != _loadGeneration) return;
 
-      final page = result.data!;
+    if (result.failure != null || result.data == null) {
       state = state.copyWith(
         isLoading: false,
         isSearching: false,
-        items: append ? [...state.items, ...page.items] : page.items,
-        hasMore: page.hasMore,
-        filters: nextFilters,
+        error: result.failure?.message,
+        hasMore: append ? false : state.hasMore,
       );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        isSearching: false,
-        error: e.toString(),
-        hasMore: false,
-      );
+      return;
     }
+
+    final page = result.data!;
+    state = state.copyWith(
+      isLoading: false,
+      isSearching: false,
+      items: append ? [...state.items, ...page.items] : page.items,
+      hasMore: page.hasMore,
+      filters: nextFilters,
+    );
   }
 
   Future<void> loadMore() async {
@@ -172,37 +169,13 @@ class DiscoverController extends StateNotifier<DiscoverState> {
   }
 
   Future<void> toggleFavorite(int eventId) async {
-    final items = state.items;
-    final index = items.indexWhere((e) => e.id == eventId);
-    if (index < 0) return;
-    final previous = items[index].isFavorited;
-    state = state.copyWith(
-      items: [
-        for (var i = 0; i < items.length; i++)
-          if (i == index)
-            items[i].copyWith(isFavorited: !previous)
-          else
-            items[i],
-      ],
+    final outcome = await toggleFavoriteInList(
+      repository: _ref.read(eventsRepositoryProvider),
+      items: state.items,
+      eventId: eventId,
+      onOptimistic: (items) => state = state.copyWith(items: items),
     );
-    final result =
-        await _ref.read(eventsRepositoryProvider).toggleFavorite(eventId);
-    if (result.failure != null) {
-      state = state.copyWith(
-        items: [
-          for (final e in state.items)
-            if (e.id == eventId) e.copyWith(isFavorited: previous) else e,
-        ],
-      );
-      return;
-    }
-    final favorited = result.data ?? !previous;
-    state = state.copyWith(
-      items: [
-        for (final e in state.items)
-          if (e.id == eventId) e.copyWith(isFavorited: favorited) else e,
-      ],
-    );
+    state = state.copyWith(items: outcome.items);
   }
 
   /// Returns error message on failure; otherwise updates local join_action.

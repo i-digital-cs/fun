@@ -74,7 +74,8 @@ class EventsRepositoryImpl implements EventsRepository {
       _remote.transferOwnership(eventId, userId);
 
   @override
-  Future<Result<List<ChatMessage>>> messages(int id) => _remote.messages(id);
+  Future<Result<List<ChatMessage>>> messages(int id, {Object? cancelToken}) =>
+      _remote.messages(id, cancelToken: cancelToken);
 
   @override
   Future<Result<ChatMessage>> postMessage(int id, String body) =>

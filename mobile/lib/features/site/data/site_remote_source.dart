@@ -1,10 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/config/env.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
-import 'package:dio/dio.dart';
 
 class SitePlatformUpdate extends Equatable {
   const SitePlatformUpdate({
@@ -38,21 +39,71 @@ class SiteAppUpdate extends Equatable {
   List<Object?> get props => [forceUpdate, message, android, ios];
 }
 
+/// Public Reverb / Pusher client options from `GET /api/site` (never secret).
+class SiteBroadcastConfig extends Equatable {
+  const SiteBroadcastConfig({
+    required this.enabled,
+    this.key,
+    this.host,
+    this.port,
+    this.scheme,
+  });
+
+  final bool enabled;
+  final String? key;
+  final String? host;
+  final int? port;
+  final String? scheme;
+
+  static const disabled = SiteBroadcastConfig(enabled: false);
+
+  /// Prefer compile-time `--dart-define` overrides, else API payload.
+  factory SiteBroadcastConfig.resolve({SiteBroadcastConfig? fromApi}) {
+    const defineKey = Env.reverbAppKey;
+    const defineHost = Env.reverbHost;
+    if (defineKey.isNotEmpty && defineHost.isNotEmpty) {
+      final port = Env.reverbPort > 0
+          ? Env.reverbPort
+          : (fromApi?.port ?? 8080);
+      final scheme = Env.reverbScheme.isNotEmpty
+          ? Env.reverbScheme
+          : (fromApi?.scheme ?? 'http');
+      return SiteBroadcastConfig(
+        enabled: true,
+        key: defineKey,
+        host: defineHost,
+        port: port,
+        scheme: scheme,
+      );
+    }
+    return fromApi ?? disabled;
+  }
+
+  String get wsScheme => (scheme ?? 'https') == 'https' ? 'wss' : 'ws';
+
+  int get wsPort => port ?? ((scheme ?? 'https') == 'https' ? 443 : 80);
+
+  @override
+  List<Object?> get props => [enabled, key, host, port, scheme];
+}
+
 class SiteBranding extends Equatable {
   const SiteBranding({
     required this.displayName,
     this.logoUrl,
     this.app,
+    this.broadcast = SiteBroadcastConfig.disabled,
   });
 
   final String displayName;
   final String? logoUrl;
   final SiteAppUpdate? app;
+  final SiteBroadcastConfig broadcast;
 
   static const fallback = SiteBranding(displayName: 'Fun');
 
   @override
-  List<Object?> get props => [displayName, logoUrl, app];
+  List<Object?> get props => [displayName, logoUrl, app, broadcast];
 }
 
 class SiteRemoteSource {
@@ -90,12 +141,27 @@ class SiteRemoteSource {
           ios: parsePlatform(map['ios']),
         );
       }
+
+      SiteBroadcastConfig? broadcast;
+      final broadcastRaw = json['broadcast'];
+      if (broadcastRaw is Map) {
+        final b = Map<String, dynamic>.from(broadcastRaw);
+        broadcast = SiteBroadcastConfig(
+          enabled: b['enabled'] == true,
+          key: b['key'] as String?,
+          host: b['host'] as String?,
+          port: (b['port'] as num?)?.toInt(),
+          scheme: b['scheme'] as String?,
+        );
+      }
+
       return (
         failure: null,
         data: SiteBranding(
           displayName: json['display_name'] as String? ?? 'Fun',
           logoUrl: json['logo_url'] as String?,
           app: app,
+          broadcast: SiteBroadcastConfig.resolve(fromApi: broadcast),
         ),
       );
     } on DioException catch (e) {
@@ -111,5 +177,9 @@ final siteRemoteSourceProvider = Provider<SiteRemoteSource>((ref) {
 final siteBrandingProvider = FutureProvider<SiteBranding>((ref) async {
   final locale = ref.watch(localeCodeProvider);
   final result = await ref.read(siteRemoteSourceProvider).fetch(locale: locale);
-  return result.data ?? SiteBranding.fallback;
+  return result.data ??
+      SiteBranding(
+        displayName: SiteBranding.fallback.displayName,
+        broadcast: SiteBroadcastConfig.resolve(),
+      );
 });

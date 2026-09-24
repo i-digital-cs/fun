@@ -21,6 +21,26 @@ class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure([super.message = 'Unauthorized']);
 }
 
+/// HTTP 403 — authenticated but not allowed.
+class ForbiddenFailure extends Failure {
+  const ForbiddenFailure([super.message = 'Forbidden']);
+}
+
+/// HTTP 404.
+class NotFoundFailure extends Failure {
+  const NotFoundFailure([super.message = 'Not found']);
+}
+
+/// HTTP 409 — e.g. capacity / state conflict.
+class ConflictFailure extends Failure {
+  const ConflictFailure([super.message = 'Conflict']);
+}
+
+/// HTTP 429.
+class RateLimitFailure extends Failure {
+  const RateLimitFailure([super.message = 'Too many requests']);
+}
+
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message, [this.errors = const {}]);
 

@@ -27,6 +27,35 @@ class SiteBrandingController extends Controller
             'display_name' => $settings->displayName(),
             'logo_url' => $settings->logoUrl(),
             'app' => $settings->appUpdatePayload($locale),
+            // Public Reverb client options only (never secret / app id).
+            'broadcast' => $this->broadcastClientConfig(),
         ]);
+    }
+
+    /**
+     * @return array{enabled: bool, key: ?string, host: ?string, port: ?int, scheme: ?string}|null
+     */
+    private function broadcastClientConfig(): ?array
+    {
+        $driver = (string) config('broadcasting.default');
+        if ($driver !== 'reverb') {
+            return ['enabled' => false, 'key' => null, 'host' => null, 'port' => null, 'scheme' => null];
+        }
+
+        $key = config('broadcasting.connections.reverb.key');
+        $host = config('broadcasting.connections.reverb.options.host');
+        $port = config('broadcasting.connections.reverb.options.port');
+        $scheme = config('broadcasting.connections.reverb.options.scheme');
+
+        $enabled = is_string($key) && $key !== ''
+            && is_string($host) && $host !== '';
+
+        return [
+            'enabled' => $enabled,
+            'key' => $enabled ? $key : null,
+            'host' => $enabled ? $host : null,
+            'port' => $enabled ? (int) ($port ?: 80) : null,
+            'scheme' => $enabled ? (string) ($scheme ?: 'https') : null,
+        ];
     }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/utils/rtl.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -315,7 +316,7 @@ class _RowItem extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      isRtl ? Icons.chevron_left : Icons.chevron_right,
+                      directionalChevronForward(context),
                       size: 16,
                       color: AppColors.primary,
                     ),

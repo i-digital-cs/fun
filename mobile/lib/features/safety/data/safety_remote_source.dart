@@ -1,38 +1,8 @@
-import 'package:equatable/equatable.dart';
 import 'package:dio/dio.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
-
-class BlockedUser extends Equatable {
-  const BlockedUser({
-    required this.userId,
-    required this.name,
-  });
-
-  final int userId;
-  final String name;
-
-  @override
-  List<Object?> get props => [userId, name];
-}
-
-class BlocksPageResult extends Equatable {
-  const BlocksPageResult({
-    required this.items,
-    required this.currentPage,
-    required this.lastPage,
-  });
-
-  final List<BlockedUser> items;
-  final int currentPage;
-  final int lastPage;
-
-  bool get hasMore => currentPage < lastPage;
-
-  @override
-  List<Object?> get props => [items, currentPage, lastPage];
-}
+import 'package:fun_mobile/features/safety/domain/safety_models.dart';
 
 class SafetyRemoteSource {
   SafetyRemoteSource(this._client);
@@ -106,7 +76,7 @@ class SafetyRemoteSource {
           'reportable_type': reportableType,
           'reportable_id': reportableId,
           'reason': reason,
-          'description': ?description,
+          if (description != null) 'description': description,
         },
       );
       return (failure: null, data: null);

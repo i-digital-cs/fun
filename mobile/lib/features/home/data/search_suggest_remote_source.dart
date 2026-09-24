@@ -1,23 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
-import 'package:fun_mobile/core/providers/core_providers.dart';
-
-class SearchSuggestItem {
-  const SearchSuggestItem({
-    required this.id,
-    required this.title,
-    this.subtitle,
-    this.meta,
-  });
-
-  final int id;
-  final String title;
-  final String? subtitle;
-  final String? meta;
-}
+import 'package:fun_mobile/features/home/domain/search_suggest_item.dart';
 
 class SearchSuggestRemoteSource {
   SearchSuggestRemoteSource(this._client);
@@ -52,7 +37,3 @@ class SearchSuggestRemoteSource {
     }
   }
 }
-
-final searchSuggestRemoteSourceProvider = Provider(
-  (ref) => SearchSuggestRemoteSource(ref.watch(apiClientProvider)),
-);

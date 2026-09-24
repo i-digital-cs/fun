@@ -238,6 +238,24 @@ class EventDetail extends Equatable {
   final EventRating? myRating;
   final CreatorRating? creatorRating;
 
+  EventDetail copyWith({
+    EventItem? event,
+    String? joinAction,
+    bool? readyForRatings,
+    bool? canRate,
+    EventRating? myRating,
+    CreatorRating? creatorRating,
+  }) {
+    return EventDetail(
+      event: event ?? this.event,
+      joinAction: joinAction ?? this.joinAction,
+      readyForRatings: readyForRatings ?? this.readyForRatings,
+      canRate: canRate ?? this.canRate,
+      myRating: myRating ?? this.myRating,
+      creatorRating: creatorRating ?? this.creatorRating,
+    );
+  }
+
   @override
   List<Object?> get props =>
       [event, joinAction, readyForRatings, canRate, myRating, creatorRating];

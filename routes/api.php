@@ -33,6 +33,8 @@ use App\Http\Controllers\Api\SiteBrandingController;
 use App\Http\Controllers\Api\SearchSuggestController;
 use App\Http\Controllers\Api\WeatherController;
 use App\Http\Controllers\Api\ResolveMapsUrlController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/site', SiteBrandingController::class);
@@ -63,6 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [MeController::class, 'show']);
     Route::get('/weather', WeatherController::class)->middleware('throttle:60,1');
     Route::post('/maps/resolve', ResolveMapsUrlController::class)->middleware('throttle:30,1');
+    // Sanctum Bearer auth for mobile / API clients (web uses /broadcasting/auth + session).
+    Route::post('/broadcasting/auth', function (Request $request) {
+        return Broadcast::auth($request);
+    });
     Route::post('/logout', [LoginController::class, 'destroy']);
 
     Route::post('/email/verify', [EmailVerificationController::class, 'verify'])

@@ -43,7 +43,10 @@ class SiteBrandingApiTest extends TestCase
         $this->getJson('/api/site?locale=en')
             ->assertOk()
             ->assertJsonPath('display_name', 'Fun Test')
-            ->assertJsonStructure(['logo_url', 'app'])
+            ->assertJsonStructure(['logo_url', 'app', 'broadcast'])
+            ->assertJsonStructure([
+                'broadcast' => ['enabled', 'key', 'host', 'port', 'scheme'],
+            ])
             ->assertJsonPath('app.force_update', true)
             ->assertJsonPath('app.message', 'Please update')
             ->assertJsonPath('app.android.latest', '2.1.0')

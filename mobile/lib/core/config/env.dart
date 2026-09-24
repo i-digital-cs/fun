@@ -34,6 +34,12 @@ abstract final class Env {
     defaultValue: '',
   );
 
+  /// Optional Reverb overrides (prefer `/api/site` `broadcast` when unset).
+  static const reverbAppKey = String.fromEnvironment('REVERB_APP_KEY');
+  static const reverbHost = String.fromEnvironment('REVERB_HOST');
+  static const reverbPort = int.fromEnvironment('REVERB_PORT', defaultValue: 0);
+  static const reverbScheme = String.fromEnvironment('REVERB_SCHEME');
+
   static bool get isProd => flavor == 'prod';
 
   static bool get isDev => flavor == 'dev';

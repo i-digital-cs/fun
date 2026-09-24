@@ -116,7 +116,7 @@ abstract class EventsRepository {
   Future<Result<void>> demoteMember(int eventId, int userId);
   Future<Result<void>> transferOwnership(int eventId, int userId);
 
-  Future<Result<List<ChatMessage>>> messages(int id);
+  Future<Result<List<ChatMessage>>> messages(int id, {Object? cancelToken});
   Future<Result<ChatMessage>> postMessage(int id, String body);
 
   Future<Result<List<EventRating>>> ratings(int id);

@@ -8,6 +8,8 @@ import 'package:fun_mobile/features/auth/presentation/register_page.dart';
 import 'package:fun_mobile/features/auth/presentation/reset_password_page.dart';
 import 'package:fun_mobile/features/auth/presentation/verify_email_page.dart';
 import 'package:fun_mobile/features/auth/presentation/verify_reset_code_page.dart';
+import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/utils/route_ids.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/features/events/presentation/create_event_page.dart';
@@ -30,6 +32,7 @@ import 'package:fun_mobile/features/safety/presentation/blocks_page.dart';
 import 'package:fun_mobile/features/safety/presentation/report_page.dart';
 import 'package:fun_mobile/features/safety/presentation/safety_guidelines_page.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
+import 'package:fun_mobile/features/site/data/app_update_service.dart';
 import 'package:fun_mobile/features/site/domain/app_update.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -55,7 +58,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc.startsWith('/u/') ||
           _isGuestEventShow(loc);
 
-      if (auth is AuthInitial || auth is AuthLoading) {
+      if (auth is AuthInitial ||
+          auth is AuthLoading ||
+          auth is AuthSessionRestoreFailed) {
         return loc == '/splash' ? null : '/splash';
       }
 
@@ -144,11 +149,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reset-password',
         builder: (context, state) {
-          final q = state.uri.queryParameters;
-          return ResetPasswordPage(
-            email: q['email'] ?? '',
-            resetToken: q['resetToken'] ?? '',
-          );
+          final extra = state.extra;
+          if (extra is ResetPasswordArgs &&
+              extra.email.isNotEmpty &&
+              extra.resetToken.isNotEmpty) {
+            return ResetPasswordPage(
+              email: extra.email,
+              resetToken: extra.resetToken,
+            );
+          }
+          // SEC-RESET-001: never accept resetToken from query/path.
+          return const ForgotPasswordPage();
         },
       ),
       GoRoute(
@@ -165,7 +176,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/events/:id',
         parentNavigatorKey: _rootKey,
         builder: (context, state) {
-          final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+          final id = parsePositiveRouteId(state.pathParameters['id']);
+          if (id == null) return const _InvalidRoutePage();
           return EventDetailPage(eventId: id);
         },
         routes: [
@@ -173,7 +185,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'chat',
             parentNavigatorKey: _rootKey,
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final id = parsePositiveRouteId(state.pathParameters['id']);
+              if (id == null) return const _InvalidRoutePage();
               return EventChatPage(eventId: id);
             },
           ),
@@ -181,7 +194,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'requests',
             parentNavigatorKey: _rootKey,
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final id = parsePositiveRouteId(state.pathParameters['id']);
+              if (id == null) return const _InvalidRoutePage();
               return JoinRequestsPage(eventId: id);
             },
           ),
@@ -189,7 +203,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'members',
             parentNavigatorKey: _rootKey,
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final id = parsePositiveRouteId(state.pathParameters['id']);
+              if (id == null) return const _InvalidRoutePage();
               return EventMembersPage(eventId: id);
             },
           ),
@@ -197,7 +212,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'edit',
             parentNavigatorKey: _rootKey,
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final id = parsePositiveRouteId(state.pathParameters['id']);
+              if (id == null) return const _InvalidRoutePage();
               return CreateEventPage(eventId: id);
             },
           ),
@@ -205,7 +221,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'ticket',
             parentNavigatorKey: _rootKey,
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final id = parsePositiveRouteId(state.pathParameters['id']);
+              if (id == null) return const _InvalidRoutePage();
               return EventTicketPage(eventId: id);
             },
           ),
@@ -311,7 +328,8 @@ bool _isGuestEventShow(String loc) {
   return RegExp(r'^/events/\d+$').hasMatch(loc);
 }
 
-/// Create / join / chat routes blocked until identity docs are submitted.
+/// Create / chat / manage routes blocked until identity docs are submitted.
+/// Join is gated on the event detail UI (AUTHZ-JOIN-001); server remains authoritative.
 bool _isIdentityBlockedRoute(String loc) {
   if (loc == '/create' || loc == '/chats' || loc == '/report') return true;
   if (RegExp(r'^/events/\d+/(chat|requests|members|edit)$').hasMatch(loc)) {
@@ -330,6 +348,38 @@ class _AuthRefresh extends ChangeNotifier {
   final Ref _ref;
 }
 
+class _InvalidRoutePage extends StatelessWidget {
+  const _InvalidRoutePage();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.invalidRoute,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.go('/discover'),
+                child: Text(l10n.discoverTitle),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SplashPage extends ConsumerStatefulWidget {
   const _SplashPage();
 
@@ -338,6 +388,8 @@ class _SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<_SplashPage> {
+  String? _restoreError;
+
   @override
   void initState() {
     super.initState();
@@ -345,6 +397,7 @@ class _SplashPageState extends ConsumerState<_SplashPage> {
   }
 
   Future<void> _boot() async {
+    setState(() => _restoreError = null);
     final locale = ref.read(localeCodeProvider);
     final update = await checkForUpdate(
       ref.read(siteRemoteSourceProvider),
@@ -388,10 +441,42 @@ class _SplashPageState extends ConsumerState<_SplashPage> {
     }
 
     await ref.read(authControllerProvider.notifier).bootstrap();
+    if (!mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth is AuthSessionRestoreFailed) {
+      setState(() => _restoreError = auth.message ?? l10nFallback());
+    }
   }
+
+  String l10nFallback() => AppLocalizations.of(context).errorOffline;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (_restoreError != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _restoreError!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.muted),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: _boot,
+                  child: Text(l10n.retry),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return const Scaffold(
       body: Center(
         child: FunLoader(size: FunLoaderSize.lg),

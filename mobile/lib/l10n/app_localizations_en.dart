@@ -572,7 +572,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusCompleted => 'Completed';
 
   @override
-  String get notActiveAccount => 'Verify your identity before creating events.';
+  String get notActiveAccount =>
+      'Verify your identity before creating or joining events.';
+
+  @override
+  String get invalidRoute => 'This link is invalid.';
+
+  @override
+  String get newChatMessage => 'You have a new chat message.';
+
+  @override
+  String get chatToastNew => 'New message';
+
+  @override
+  String get chatToastJustNow => 'Just now';
+
+  @override
+  String get uploadTooLarge => 'Image is too large (max 8 MB).';
+
+  @override
+  String get uploadBadType => 'Use a JPG, PNG, or WEBP image.';
+
+  @override
+  String get uploadMissing => 'Could not read that image. Try another file.';
+
+  @override
+  String get failedToLoadEvents => 'Failed to load events.';
+
+  @override
+  String get invalidCode => 'Invalid code';
 
   @override
   String get accept => 'Accept';

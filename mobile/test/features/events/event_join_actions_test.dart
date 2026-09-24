@@ -69,7 +69,7 @@ void main() {
     );
 
     expect(find.text('Chat'), findsOneWidget);
-    expect(find.text('Leave'), findsOneWidget);
+    expect(find.text('Leave event'), findsOneWidget);
   });
 
   testWidgets('event_full shows full banner', (tester) async {

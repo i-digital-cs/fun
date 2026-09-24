@@ -12,9 +12,24 @@ import 'package:fun_mobile/features/events/data/events_remote_source.dart';
 import 'package:fun_mobile/features/events/data/events_repository_impl.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 import 'package:fun_mobile/features/home/data/home_remote_source.dart';
+import 'package:fun_mobile/features/home/data/home_repository_impl.dart';
+import 'package:fun_mobile/features/home/data/search_suggest_remote_source.dart';
+import 'package:fun_mobile/features/home/domain/home_repository.dart';
 import 'package:fun_mobile/features/identity/data/identity_remote_source.dart';
+import 'package:fun_mobile/features/identity/data/identity_repository_impl.dart';
+import 'package:fun_mobile/features/identity/domain/identity_repository.dart';
 import 'package:fun_mobile/features/profile/data/profile_remote_source.dart';
+import 'package:fun_mobile/features/profile/data/profile_repository_impl.dart';
+import 'package:fun_mobile/features/profile/data/public_profile_remote_source.dart';
+import 'package:fun_mobile/features/profile/data/public_profile_repository_impl.dart';
+import 'package:fun_mobile/features/profile/domain/profile_repository.dart';
+import 'package:fun_mobile/features/profile/domain/public_profile_repository.dart';
+import 'package:fun_mobile/features/chat/data/chats_remote_source.dart';
+import 'package:fun_mobile/features/chat/data/chats_repository_impl.dart';
+import 'package:fun_mobile/features/chat/domain/chats_repository.dart';
 import 'package:fun_mobile/features/safety/data/safety_remote_source.dart';
+import 'package:fun_mobile/features/safety/data/safety_repository_impl.dart';
+import 'package:fun_mobile/features/safety/domain/safety_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -82,14 +97,55 @@ final profileRemoteSourceProvider = Provider<ProfileRemoteSource>((ref) {
   return ProfileRemoteSource(ref.watch(apiClientProvider));
 });
 
+final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
+  return ProfileRepositoryImpl(ref.watch(profileRemoteSourceProvider));
+});
+
+final publicProfileRemoteSourceProvider = Provider<PublicProfileRemoteSource>(
+  (ref) => PublicProfileRemoteSource(ref.watch(apiClientProvider)),
+);
+
+final publicProfileRepositoryProvider = Provider<PublicProfileRepository>(
+  (ref) => PublicProfileRepositoryImpl(
+    ref.watch(publicProfileRemoteSourceProvider),
+  ),
+);
+
 final identityRemoteSourceProvider = Provider<IdentityRemoteSource>((ref) {
   return IdentityRemoteSource(ref.watch(apiClientProvider));
+});
+
+final identityRepositoryProvider = Provider<IdentityRepository>((ref) {
+  return IdentityRepositoryImpl(ref.watch(identityRemoteSourceProvider));
 });
 
 final safetyRemoteSourceProvider = Provider<SafetyRemoteSource>((ref) {
   return SafetyRemoteSource(ref.watch(apiClientProvider));
 });
 
+final safetyRepositoryProvider = Provider<SafetyRepository>((ref) {
+  return SafetyRepositoryImpl(ref.watch(safetyRemoteSourceProvider));
+});
+
 final homeRemoteSourceProvider = Provider<HomeRemoteSource>((ref) {
   return HomeRemoteSource(ref.watch(apiClientProvider));
+});
+
+final searchSuggestRemoteSourceProvider = Provider<SearchSuggestRemoteSource>(
+  (ref) => SearchSuggestRemoteSource(ref.watch(apiClientProvider)),
+);
+
+final homeRepositoryProvider = Provider<HomeRepository>((ref) {
+  return HomeRepositoryImpl(
+    ref.watch(homeRemoteSourceProvider),
+    ref.watch(searchSuggestRemoteSourceProvider),
+  );
+});
+
+final chatsRemoteSourceProvider = Provider<ChatsRemoteSource>((ref) {
+  return ChatsRemoteSource(ref.watch(apiClientProvider));
+});
+
+final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
+  return ChatsRepositoryImpl(ref.watch(chatsRemoteSourceProvider));
 });

@@ -67,10 +67,122 @@ The platform facilitates:
 * Flutter documentation (source of truth for the mobile app):
   * `mobile/ROADMAP.md` — Flutter phases & tasks (session continuity for mobile)
   * `mobile/docs/FLUTTER_PRINCIPLES.md` — Flutter principles, stack rules, Blade-parity rules
+  * `mobile/docs/ENGINEERING_CONSTITUTION.md` — locked security/release/networking do-not-regress rules
   * `mobile/docs/FLUTTER_BEST_PRACTICES.md` — deep Flutter/Dart production standards
   * `mobile/docs/DESIGN.md` — design tokens copied for the mobile tree
+  * `mobile/docs/RELEASE.md` — signing, ABI, store checklist
   * `mobile/docs/postman/` — API collection used by the client
   * `mobile/README.md` — how to run the app
+
+### Mobile architecture (pragmatic)
+
+```
+Presentation → Controller/Notifier (server-backed) → Repository → RemoteSource
+```
+
+* Feature-first folders under `mobile/lib/features/`
+* Domain layer must stay free of Dio / Platform / Flutter UI
+* Client `canParticipate` / identity gates are UX only; **Laravel authorization is authoritative**
+* `pending_documents` users must not create, join, or use event chat until documents are uploaded (product rule §5)
+
+### Mobile Android release (BUILD-001 — locked)
+
+Implemented in `mobile/android/app/build.gradle.kts`. Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → BUILD-001. Checklist: `mobile/docs/RELEASE.md`.
+
+* Production/store releases **MUST** use a real production/upload keystore via `mobile/android/key.properties` (never commit keystore or `key.properties`).
+* Production/store releases **MUST NOT** silently fall back to debug signing.
+* Missing production signing configuration **MUST fail closed** (Gradle throws; build does not succeed).
+* Debug release signing is allowed **ONLY** via the explicit opt-in `-PallowDebugReleaseSigning=true`, and **only** for local/non-store testing.
+* Do **NOT** reintroduce `ndk.abiFilters` limited to `x86_64` in `defaultConfig` unless an explicit documented architecture decision changes the Source of Truth.
+* Future developers and AI agents **MUST NOT** weaken these rules merely to make a build pass.
+
+### Mobile Android backup (BUILD-002 — locked)
+
+Implemented in `mobile/android/app/src/main/AndroidManifest.xml`. Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → BUILD-002. Checklist: `mobile/docs/RELEASE.md`.
+
+* The `<application>` element **MUST** set `android:allowBackup="false"`.
+* The `<application>` element **MUST** set `android:fullBackupContent="false"` (no full-backup content allowlist for auto backup).
+* Do **NOT** re-enable Android Auto Backup / cloud backup of app data without an explicit Source-of-Truth security decision (tokens and local state must not be backup-exported by default).
+* Future developers and AI agents **MUST NOT** flip these flags merely for convenience or to silence tooling warnings.
+
+### Mobile participation gates (AUTHZ-JOIN-001 — locked)
+
+Product rule (§5): `pending_documents` users cannot create events, join events, or use event chat until documents are uploaded. Client UX gates are defense-in-depth; **Laravel authorization remains authoritative**.
+
+* Event detail join UI and join actions **MUST** require `user.canParticipate`; otherwise route the user to identity (`/identity`), not join.
+* Create-event flow **MUST** refuse when `!canParticipate` and send the user to identity.
+* Router identity blocks for create/chat/manage routes **MUST** remain; do not open join/create/chat for non-participating accounts via client-only shortcuts.
+* Do **NOT** treat client gates as a substitute for server enforcement.
+
+### Mobile sensitive-data & session security (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → SEC-PRIV-001, SEC-PRIV-002, SEC-RESET-001, SEC-UPLOAD-001, SEC-SESSION-001.
+
+* **SEC-PRIV-001:** Auth theater **MUST NEVER** render password characters (bullets only).
+* **SEC-PRIV-002:** Global chat notifications **MUST NEVER** echo private message bodies (generic localized copy only).
+* **SEC-RESET-001:** Password-reset tokens **MUST** travel via in-memory `GoRouter` `extra` (`ResetPasswordArgs`) — **never** query/path URLs.
+* **SEC-UPLOAD-001:** Client **MUST** validate image type/size before multipart upload; **server validation remains authoritative**.
+* **SEC-SESSION-001:** Session restore network/server failures **MUST NOT** fake logout / clear a still-valid token; use restore-failed + retry. Unauthorized (401) still logs out.
+* Future developers and AI agents **MUST NOT** weaken these rules for UX convenience or to “just make it work.”
+
+### Mobile networking & navigation (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → NET-001, NET-RACE-001, NET-CANCEL-001, NAV-001.
+
+* **NET-001:** Dio **MUST** use connect/send/receive timeouts; map HTTP/network errors to typed `Failure`s (incl. 401/403/404/409/422/429); prefer `failureUserMessage` for UI. Do **NOT** auto-retry unsafe mutations.
+* **NET-RACE-001:** Concurrent list/search loads (e.g. Discover) **MUST** use latest-request-wins (generation) or equivalent so stale responses cannot overwrite newer state.
+* **NET-CANCEL-001:** Screen-scoped polls/loads that can outlive the screen **MUST** cancel on dispose (`CancelToken` and/or overlap guards). Do **NOT** leave unbounded overlapping pollers.
+* **NAV-001:** Route path IDs **MUST NOT** coerce invalid values to `0`; show an intentional invalid-route UX.
+* Future developers and AI agents **MUST NOT** weaken these rules merely to silence errors or speed demos.
+
+### Mobile architecture hygiene (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → SEC-URL-001, ARCH-FAV-001, ARCH-DOMAIN-001.
+
+* **SEC-URL-001:** External URL opens **MUST** go through `launchSafeExternalUrl` (http/https only). Do not call unrestricted `launchUrl` for server-/user-provided URLs.
+* **ARCH-FAV-001:** Optimistic favorite toggle for event **lists** **MUST** reuse `toggleFavoriteInList` (shared helper with rollback). Do not fork duplicate favorite mutation logic across discover/home.
+* **ARCH-DOMAIN-001:** Domain code **MUST** stay free of Dio, Platform, PackageInfo, url_launcher, and Flutter UI. Infrastructure (update checks, store opens) lives in data/application layers.
+* Future developers and AI agents **MUST NOT** reintroduce domain pollution or duplicate favorite pipelines without an explicit SoT change.
+
+### Mobile error surfacing (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → ERR-001.
+
+* **ERR-001:** Non-Dio / parse failures **MUST** map via `mapUnexpectedError` → `UnknownFailure` with a generic message. Do **NOT** put `e.toString()` into `ServerFailure` / UI. Prefer `failureUserMessage` for SnackBars/forms. Dio unknowns must not leak raw `error.message` internals.
+* Future developers and AI agents **MUST NOT** reintroduce exception-text leaks to silence debugging in production UX.
+
+### Mobile repository boundary — safety (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → ARCH-REPO-SAFETY-001.
+
+* **ARCH-REPO-SAFETY-001:** Presentation **MUST** call `SafetyRepository` / `safetyRepositoryProvider` for block/unblock/report/listBlocks. Do **NOT** call `SafetyRemoteSource` from UI once the repository exists.
+* Future developers and AI agents **MUST NOT** reintroduce RemoteSource-from-UI for safety without an explicit SoT change.
+
+### Mobile repository boundaries (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → ARCH-REPO-PROFILE-001, ARCH-REPO-IDENTITY-001, ARCH-REPO-CHAT-001, ARCH-REPO-HOME-001.
+
+* **ARCH-REPO-PROFILE-001:** Profile settings + public profile via `ProfileRepository` / `PublicProfileRepository` only (not remotes from UI).
+* **ARCH-REPO-IDENTITY-001:** Identity fetch/upload/document bytes via `IdentityRepository` only.
+* **ARCH-REPO-CHAT-001:** Inbox list/markRead via `ChatsRepository` only.
+* **ARCH-REPO-HOME-001:** Weather, participations, search suggest via `HomeRepository` only.
+* Future developers and AI agents **MUST NOT** call these features’ remotes from presentation while repositories exist.
+
+### Mobile presentation controllers (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → ARCH-GOD-DETAIL-001.
+
+* **ARCH-GOD-DETAIL-001:** Event detail load/join/favorite/lifecycle mutations **MUST** live in `EventDetailController` (`eventDetailControllerProvider`). The page keeps confirms, SnackBars, and navigation only. Do not re-embed repository mutation loops into `event_detail_page.dart`.
+* **ARCH-GOD-CREATE-001:** Create/edit event catalog load, edit hydrate, maps resolve, and submit/publish **MUST** live in `CreateEventController` (`createEventControllerProvider`). Form text controllers may stay on the page. Do not re-embed catalog/submit repository loops into `create_event_page.dart`.
+* **ARCH-GOD-HOME-001:** Home dashboard composition stays in `home_page.dart`; section/hero widgets **MUST** live under `features/home/presentation/widgets/` (`home_sections.dart`, `home_hero_banner.dart`, `location_shortcut_card.dart`). Feed loading stays in `HomeNearbyController`. Do not re-merge large private section widgets back into `home_page.dart`.
+* Future developers and AI agents **MUST NOT** regress these action/widget layers into god pages without an explicit SoT change.
+
+### Mobile a11y / RTL (LOCKED)
+
+Full traceability: `mobile/docs/ENGINEERING_CONSTITUTION.md` → A11Y-RTL-001.
+
+* **A11Y-RTL-001:** Prefer directional APIs (`EdgeInsetsDirectional`, `AlignmentDirectional`, `directionalChevronForward`) for asymmetric layout. Icon-only / tappable chrome **MUST** expose `Semantics` or `tooltip`. Arabic locale **MUST** resolve to `TextDirection.rtl` (covered by tests). Broader screen-by-screen Semantics remain incremental.
+* Future developers and AI agents **MUST NOT** hard-code LTR-only chevrons/padding for shared chrome without an explicit SoT change.
 
 ## API
 

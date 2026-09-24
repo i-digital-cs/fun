@@ -6,21 +6,20 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
-import 'package:fun_mobile/features/chat/data/chats_remote_source.dart';
+import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/chat/domain/chat_thread.dart';
+import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
+import 'package:fun_mobile/features/chat/presentation/widgets/chat_toast_banner.dart';
+import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
-
-final chatsRemoteSourceProvider = Provider<ChatsRemoteSource>((ref) {
-  return ChatsRemoteSource(ref.watch(apiClientProvider));
-});
 
 /// Ambient unread badge for shell topbar / sidebar (updated by [ChatToastListener]).
 final chatUnreadTotalProvider = StateProvider<int>((ref) => 0);
 
 final chatsListProvider =
     FutureProvider.autoDispose<({List<ChatThread> data, int unreadTotal})>((ref) async {
-  final result = await ref.watch(chatsRemoteSourceProvider).list();
+  final result = await ref.watch(chatsRepositoryProvider).list();
   if (result.failure != null) {
     throw result.failure!;
   }
@@ -73,7 +72,7 @@ class ChatsPage extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               itemCount: payload.data.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final chat = payload.data[index];
                 final last = chat.lastMessage;
@@ -186,6 +185,7 @@ class ChatsPage extends ConsumerWidget {
 }
 
 /// Polls chat inbox while browsing and shows a SnackBar for new messages.
+/// Shell wrapper: Reverb live toasts + inbox poll fallback / unread sync.
 class ChatToastListener extends ConsumerStatefulWidget {
   const ChatToastListener({super.key, required this.child});
 
@@ -199,71 +199,241 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   Timer? _timer;
   final Map<int, int> _lastSeenMessageIds = {};
   bool _primed = false;
+  bool _inFlight = false;
+  bool _usePollToasts = true;
+
+  ChatRealtimeClient? _realtime;
+  StreamSubscription<ChatToastPayload>? _realtimeSub;
+  final List<ChatToastPayload> _toasts = [];
+  final Set<int> _shownMessageIds = {};
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 15), (_) => _poll());
-    WidgetsBinding.instance.addPostFrameCallback((_) => _poll());
+    _schedulePoll(const Duration(seconds: 15));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _poll();
+      _syncRealtime();
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    unawaited(_teardownRealtime());
     super.dispose();
   }
 
+  void _schedulePoll(Duration interval) {
+    _timer?.cancel();
+    _timer = Timer.periodic(interval, (_) => _poll());
+  }
+
+  Future<void> _teardownRealtime() async {
+    await _realtimeSub?.cancel();
+    _realtimeSub = null;
+    await _realtime?.dispose();
+    _realtime = null;
+    _usePollToasts = true;
+  }
+
+  Future<void> _syncRealtime() async {
+    final auth = ref.read(authControllerProvider);
+    if (auth is! Authenticated) {
+      await _teardownRealtime();
+      _schedulePoll(const Duration(seconds: 15));
+      return;
+    }
+
+    final branding = await ref.read(siteBrandingProvider.future);
+    final config = branding.broadcast;
+    if (!config.enabled) {
+      await _teardownRealtime();
+      _schedulePoll(const Duration(seconds: 15));
+      return;
+    }
+
+    if (_realtime?.userId == auth.user.id && _realtime?.isConnected == true) {
+      return;
+    }
+
+    await _teardownRealtime();
+    final client = ChatRealtimeClient(
+      tokenStorage: ref.read(tokenStorageProvider),
+    );
+    _realtime = client;
+    _realtimeSub = client.messages.listen(_onRealtimeMessage);
+
+    final started = await client.connect(userId: auth.user.id, config: config);
+    if (!mounted) return;
+
+    if (!started) {
+      _usePollToasts = true;
+      _schedulePoll(const Duration(seconds: 15));
+      return;
+    }
+
+    // Keep poll toasts until the socket is live, then slow down.
+    _usePollToasts = true;
+    _schedulePoll(const Duration(seconds: 15));
+    Future<void>.delayed(const Duration(seconds: 8), () {
+      if (!mounted) return;
+      if (_realtime?.isConnected == true) {
+        _usePollToasts = false;
+        _schedulePoll(const Duration(seconds: 60));
+      }
+    });
+  }
+
+  void _onRealtimeMessage(
+    ChatToastPayload payload, {
+    bool bumpUnread = true,
+  }) {
+    if (!mounted) return;
+
+    if (payload.messageId > 0) {
+      if (_shownMessageIds.contains(payload.messageId)) return;
+      _shownMessageIds.add(payload.messageId);
+      _lastSeenMessageIds[payload.eventId] = payload.messageId;
+    }
+
+    final location = GoRouterState.of(context).uri.path;
+    if (location == '/events/${payload.eventId}/chat') {
+      return;
+    }
+
+    if (bumpUnread) {
+      ref.read(chatUnreadTotalProvider.notifier).update((n) => n + 1);
+    }
+
+    setState(() {
+      _toasts.insert(0, payload);
+      if (_toasts.length > 3) {
+        _toasts.removeRange(3, _toasts.length);
+      }
+    });
+
+    Future<void>.delayed(const Duration(seconds: 7), () {
+      if (!mounted) return;
+      _dismissToast(payload);
+    });
+  }
+
+  void _dismissToast(ChatToastPayload payload) {
+    setState(() => _toasts.removeWhere((t) => identical(t, payload) ||
+        (t.messageId != 0 && t.messageId == payload.messageId)));
+  }
+
   Future<void> _poll() async {
+    if (_inFlight) return;
     final auth = ref.read(authControllerProvider);
     if (auth is! Authenticated) {
       _primed = false;
       _lastSeenMessageIds.clear();
+      _shownMessageIds.clear();
       ref.read(chatUnreadTotalProvider.notifier).state = 0;
       return;
     }
 
-    final result = await ref.read(chatsRemoteSourceProvider).list();
-    if (!mounted || result.failure != null) {
-      return;
-    }
-
-    ref.read(chatUnreadTotalProvider.notifier).state = result.unreadTotal;
-
-    final location = GoRouterState.of(context).uri.path;
-    final l10n = AppLocalizations.of(context);
-
-    for (final chat in result.data) {
-      final lastId = chat.lastMessage?.id ?? 0;
-      final previous = _lastSeenMessageIds[chat.eventId] ?? 0;
-      _lastSeenMessageIds[chat.eventId] = lastId;
-
-      if (!_primed || lastId <= previous || lastId == 0) {
-        continue;
-      }
-      if (chat.lastMessage?.isMine == true) {
-        continue;
-      }
-      if (location == '/events/${chat.eventId}/chat') {
-        continue;
+    _inFlight = true;
+    try {
+      final result = await ref.read(chatsRepositoryProvider).list();
+      if (!mounted || result.failure != null) {
+        return;
       }
 
-      final name = chat.lastMessage?.userName ?? '';
-      final body = chat.lastMessage?.body ?? '';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$name: $body'),
-          action: SnackBarAction(
-            label: l10n.openChat,
-            onPressed: () => context.push('/events/${chat.eventId}/chat'),
+      ref.read(chatUnreadTotalProvider.notifier).state = result.unreadTotal;
+
+      if (!_usePollToasts) {
+        for (final chat in result.data) {
+          final lastId = chat.lastMessage?.id ?? 0;
+          if (lastId > 0) {
+            _lastSeenMessageIds[chat.eventId] = lastId;
+          }
+        }
+        _primed = true;
+        return;
+      }
+
+      final location = GoRouterState.of(context).uri.path;
+
+      for (final chat in result.data) {
+        final lastId = chat.lastMessage?.id ?? 0;
+        final previous = _lastSeenMessageIds[chat.eventId] ?? 0;
+        _lastSeenMessageIds[chat.eventId] = lastId;
+
+        if (!_primed || lastId <= previous || lastId == 0) {
+          continue;
+        }
+        if (chat.lastMessage?.isMine == true) {
+          continue;
+        }
+        if (location == '/events/${chat.eventId}/chat') {
+          continue;
+        }
+
+        final last = chat.lastMessage;
+        _onRealtimeMessage(
+          ChatToastPayload(
+            messageId: lastId,
+            eventId: chat.eventId,
+            eventTitle: chat.title,
+            senderName: last?.userName ?? '',
+            senderInitials: (last?.userName?.trim().isNotEmpty == true)
+                ? last!.userName!.trim()[0].toUpperCase()
+                : '?',
           ),
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    }
+          bumpUnread: false,
+        );
+      }
 
-    _primed = true;
+      _primed = true;
+    } finally {
+      _inFlight = false;
+    }
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    ref.listen<AuthState>(authControllerProvider, (prev, next) {
+      unawaited(_syncRealtime());
+    });
+
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final wide = MediaQuery.sizeOf(context).width >= 1024;
+
+    return Stack(
+      children: [
+        widget.child,
+        if (_toasts.isNotEmpty)
+          Positioned(
+            right: 16,
+            left: 16,
+            bottom: wide ? 24 + bottomInset : 88 + bottomInset,
+            child: Align(
+              alignment: AlignmentDirectional.bottomEnd,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 320),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final toast in _toasts) ...[
+                      ChatToastBanner(
+                        payload: toast,
+                        onDismiss: () => _dismissToast(toast),
+                        onOpen: () {
+                          _dismissToast(toast);
+                          context.push('/events/${toast.eventId}/chat');
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

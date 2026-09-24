@@ -54,7 +54,7 @@ class _ReportPageState extends ConsumerState<ReportPage> {
     }
 
     setState(() => _submitting = true);
-    final result = await ref.read(safetyRemoteSourceProvider).report(
+    final result = await ref.read(safetyRepositoryProvider).report(
           reportableType: _type,
           reportableId: id,
           reason: _reason,

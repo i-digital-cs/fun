@@ -51,7 +51,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
-    final result = await ref.read(safetyRemoteSourceProvider).report(
+    final result = await ref.read(safetyRepositoryProvider).report(
           reportableType: widget.reportableType,
           reportableId: widget.reportableId,
           reason: _reason,

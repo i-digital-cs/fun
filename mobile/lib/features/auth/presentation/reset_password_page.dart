@@ -9,6 +9,17 @@ import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
+/// In-memory navigation args — never put [resetToken] in URLs (SEC-RESET-001).
+class ResetPasswordArgs {
+  const ResetPasswordArgs({
+    required this.email,
+    required this.resetToken,
+  });
+
+  final String email;
+  final String resetToken;
+}
+
 class ResetPasswordPage extends ConsumerStatefulWidget {
   const ResetPasswordPage({
     super.key,

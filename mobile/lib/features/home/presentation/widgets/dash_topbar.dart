@@ -10,7 +10,7 @@ import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
-import 'package:fun_mobile/features/home/data/search_suggest_remote_source.dart';
+import 'package:fun_mobile/features/home/domain/search_suggest_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -75,7 +75,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
     _portal.show();
     _debounce = Timer(const Duration(milliseconds: 280), () async {
       final result =
-          await ref.read(searchSuggestRemoteSourceProvider).suggest(q);
+          await ref.read(homeRepositoryProvider).suggest(q);
       if (!mounted || _search.text.trim() != q) return;
       setState(() {
         _lastQ = q;
@@ -135,7 +135,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                 controller: _portal,
                 overlayChildBuilder: (context) {
                   return UnconstrainedBox(
-                    alignment: Alignment.topLeft,
+                    alignment: AlignmentDirectional.topStart,
                     child: CompositedTransformFollower(
                       link: _link,
                       showWhenUnlinked: false,
@@ -209,7 +209,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                         ),
                         if (_suggesting)
                           const Padding(
-                            padding: EdgeInsets.only(left: 4),
+                            padding: EdgeInsetsDirectional.only(start: 4),
                             child: FunSearching(
                               size: FunSearchingSize.sm,
                               showLabel: false,
@@ -224,7 +224,10 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
             ),
             const SizedBox(width: 10),
             if (!widget.compact) ...[
-              InkWell(
+              Semantics(
+                button: true,
+                label: oppositeLabel,
+                child: InkWell(
                 onTap: _toggleLocale,
                 borderRadius: BorderRadius.circular(999),
                 child: Container(
@@ -258,6 +261,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                   ),
                 ),
               ),
+              ),
               const SizedBox(width: 8),
             ],
             IconButton(
@@ -287,6 +291,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
               )
             else if (widget.compact)
               IconButton(
+                tooltip: l10n.navProfile,
                 onPressed: () => context.go('/profile'),
                 icon: _Avatar(user: user),
               )

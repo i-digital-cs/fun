@@ -569,7 +569,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statusCompleted => 'مكتملة';
 
   @override
-  String get notActiveAccount => 'تحقق من هويتك قبل إنشاء الفعاليات.';
+  String get notActiveAccount =>
+      'تحقق من هويتك قبل إنشاء الفعاليات أو الانضمام إليها.';
+
+  @override
+  String get invalidRoute => 'هذا الرابط غير صالح.';
+
+  @override
+  String get newChatMessage => 'لديك رسالة دردشة جديدة.';
+
+  @override
+  String get chatToastNew => 'رسالة جديدة';
+
+  @override
+  String get chatToastJustNow => 'الآن';
+
+  @override
+  String get uploadTooLarge => 'الصورة كبيرة جداً (الحد الأقصى 8 ميغابايت).';
+
+  @override
+  String get uploadBadType => 'استخدم صورة بصيغة JPG أو PNG أو WEBP.';
+
+  @override
+  String get uploadMissing => 'تعذر قراءة الصورة. جرّب ملفاً آخر.';
+
+  @override
+  String get failedToLoadEvents => 'تعذر تحميل الفعاليات.';
+
+  @override
+  String get invalidCode => 'رمز غير صالح';
 
   @override
   String get accept => 'قبول';

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
-import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/upload_validator.dart';
 import 'package:fun_mobile/core/widgets/attachment_folder_picker.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
-import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
-import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
+import 'package:fun_mobile/features/events/presentation/create_event_controller.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -36,22 +35,12 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   final _costPerPerson = TextEditingController();
   final _picker = ImagePicker();
 
-  List<CategoryItem> _categories = [];
-  List<CityItem> _cities = [];
-  int? _categoryId;
-  int? _cityId;
-  DateTime? _startsAt;
-  DateTime? _endsAt;
-  String? _imagePath;
-  String? _error;
-  bool _loadingCatalog = true;
-  bool _loadingEvent = false;
-  bool _submitting = false;
-  double? _latitude;
-  double? _longitude;
-  String? _placeStatus;
+  int get _controllerKey => widget.eventId ?? 0;
 
   bool get _isEdit => widget.eventId != null;
+
+  CreateEventController get _ctrl =>
+      ref.read(createEventControllerProvider(_controllerKey).notifier);
 
   @override
   void initState() {
@@ -60,71 +49,26 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   }
 
   Future<void> _bootstrap() async {
-    final auth = ref.read(authControllerProvider);
-    if (auth is Authenticated && !auth.user.canParticipate) {
-      if (!mounted) return;
+    final result = await _ctrl.bootstrap();
+    if (!mounted) return;
+    if (result.gate == CreateGate.needIdentity) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).notActiveAccount)),
       );
       context.go('/identity');
       return;
     }
-    await _loadCatalog();
-    if (_isEdit) await _loadEvent();
-  }
-
-  Future<void> _loadCatalog() async {
-    setState(() {
-      _loadingCatalog = true;
-      _error = null;
-    });
-    final cats = await ref.read(catalogRepositoryProvider).categories();
-    final cities = await ref.read(catalogRepositoryProvider).cities();
-    if (!mounted) return;
-    if (cats.failure != null || cities.failure != null) {
-      setState(() {
-        _loadingCatalog = false;
-        _error = cats.failure?.message ?? cities.failure?.message;
-      });
-      return;
+    final event = result.editEvent;
+    if (event != null) {
+      _title.text = event.title;
+      _description.text = event.description ?? '';
+      _venue.text = event.venue;
+      _mapsUrl.text = event.mapsUrl ?? '';
+      _maxParticipants.text = event.maxParticipants.toString();
+      _requirements.text = event.requirements ?? '';
+      _expectedCost.text = event.expectedCost ?? '';
+      _costPerPerson.text = event.costPerPerson?.toString() ?? '';
     }
-    setState(() {
-      _loadingCatalog = false;
-      _categories = cats.data ?? [];
-      _cities = cities.data ?? [];
-      _categoryId ??= _categories.firstOrNull?.id;
-      _cityId ??= _cities.firstOrNull?.id;
-    });
-  }
-
-  Future<void> _loadEvent() async {
-    setState(() => _loadingEvent = true);
-    final result =
-        await ref.read(eventsRepositoryProvider).show(widget.eventId!);
-    if (!mounted) return;
-    setState(() => _loadingEvent = false);
-    if (result.failure != null || result.data == null) {
-      setState(() => _error = result.failure?.message);
-      return;
-    }
-    final event = result.data!.event;
-    _title.text = event.title;
-    _description.text = event.description ?? '';
-    _venue.text = event.venue;
-    _mapsUrl.text = event.mapsUrl ?? '';
-    _maxParticipants.text = event.maxParticipants.toString();
-    _requirements.text = event.requirements ?? '';
-    _expectedCost.text = event.expectedCost ?? '';
-    _costPerPerson.text = event.costPerPerson?.toString() ?? '';
-    setState(() {
-      _categoryId = event.categoryId ?? event.category?.id;
-      _cityId = event.cityId ?? event.city?.id;
-      _startsAt = event.startsAt;
-      _endsAt = event.endsAt;
-      _latitude = event.latitude;
-      _longitude = event.longitude;
-      _placeStatus = event.hasPlacePin ? AppLocalizations.of(context).placePinned : null;
-    });
   }
 
   @override
@@ -140,9 +84,23 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     super.dispose();
   }
 
+  String? _placeStatusLabel(CreatePlaceStatus status, AppLocalizations l10n) {
+    return switch (status) {
+      CreatePlaceStatus.none => null,
+      CreatePlaceStatus.pinned => l10n.placePinned,
+      CreatePlaceStatus.fromLink => l10n.placeFromLink,
+      CreatePlaceStatus.resolving => l10n.placeResolving,
+      CreatePlaceStatus.unresolved => l10n.mapsUrlUnresolved,
+      CreatePlaceStatus.cleared => l10n.placeCleared,
+    };
+  }
+
   Future<void> _pickDateTime({required bool isStart}) async {
+    final state = ref.read(createEventControllerProvider(_controllerKey));
     final now = DateTime.now();
-    final initial = isStart ? (_startsAt ?? now) : (_endsAt ?? _startsAt ?? now);
+    final initial = isStart
+        ? (state.startsAt ?? now)
+        : (state.endsAt ?? state.startsAt ?? now);
     final date = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -155,14 +113,13 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       initialTime: TimeOfDay.fromDateTime(initial),
     );
     if (time == null || !mounted) return;
-    final value = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-    setState(() {
-      if (isStart) {
-        _startsAt = value;
-      } else {
-        _endsAt = value;
-      }
-    });
+    final value =
+        DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    if (isStart) {
+      _ctrl.setStartsAt(value);
+    } else {
+      _ctrl.setEndsAt(value);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -171,62 +128,48 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       maxWidth: 2000,
       imageQuality: 85,
     );
-    if (file != null) setState(() => _imagePath = file.path);
+    if (file == null || !mounted) return;
+    final validation = await UploadValidator.validateImageFile(file.path);
+    if (!mounted) return;
+    if (!validation.ok) {
+      final l10n = AppLocalizations.of(context);
+      final msg = switch (validation.errorKey) {
+        'uploadTooLarge' => l10n.uploadTooLarge,
+        'uploadBadType' => l10n.uploadBadType,
+        _ => l10n.uploadMissing,
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      return;
+    }
+    _ctrl.setImagePath(file.path);
   }
 
   Future<void> _applyMapsUrl() async {
-    final raw = _mapsUrl.text.trim();
-    final l10n = AppLocalizations.of(context);
-    final parsed = MapsUrlParser.parse(raw);
-    if (parsed != null) {
-      setState(() {
-        _latitude = parsed.lat;
-        _longitude = parsed.lng;
-        _placeStatus = l10n.placeFromLink;
-      });
-      return;
-    }
-    if (raw.isEmpty) return;
-    setState(() => _placeStatus = l10n.placeResolving);
-    final result =
-        await ref.read(eventsRepositoryProvider).resolveMapsUrl(raw);
+    await _ctrl.applyMapsUrl(_mapsUrl.text);
     if (!mounted) return;
-    if (result.failure != null || result.data == null) {
-      setState(() => _placeStatus = l10n.mapsUrlUnresolved);
-      return;
+    final resolved =
+        ref.read(createEventControllerProvider(_controllerKey)).resolvedMapsUrl;
+    if (resolved != null && resolved.isNotEmpty) {
+      _mapsUrl.text = resolved;
     }
-    setState(() {
-      _latitude = result.data!.lat;
-      _longitude = result.data!.lng;
-      _mapsUrl.text = result.data!.mapsUrl;
-      _placeStatus = l10n.placeFromLink;
-    });
   }
 
   void _clearPlace() {
-    setState(() {
-      _latitude = null;
-      _longitude = null;
-      _mapsUrl.clear();
-      _placeStatus = AppLocalizations.of(context).placeCleared;
-    });
+    _ctrl.clearPlace();
+    _mapsUrl.clear();
   }
 
   void _onMapPin(double lat, double lng) {
-    final l10n = AppLocalizations.of(context);
-    setState(() {
-      _latitude = lat;
-      _longitude = lng;
-      final current = _mapsUrl.text.trim();
-      if (current.isEmpty || current.contains('openstreetmap.org')) {
-        _mapsUrl.text = osmMapsUrl(lat, lng);
-      }
-      _placeStatus = l10n.placePinned;
-    });
+    final next = _ctrl.pin(lat, lng, currentMapsUrl: _mapsUrl.text);
+    if (next != null) _mapsUrl.text = next;
   }
 
-  EventDraft? _buildDraft() {
-    if (_startsAt == null || _categoryId == null || _cityId == null) return null;
+  EventDraft? _buildDraft(CreateEventState state) {
+    if (state.startsAt == null ||
+        state.categoryId == null ||
+        state.cityId == null) {
+      return null;
+    }
     final maxP = int.tryParse(_maxParticipants.text.trim());
     if (maxP == null) return null;
     final mapsUrl = _mapsUrl.text.trim();
@@ -235,11 +178,11 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       description: _description.text.trim().isEmpty
           ? null
           : _description.text.trim(),
-      categoryId: _categoryId!,
-      cityId: _cityId!,
+      categoryId: state.categoryId!,
+      cityId: state.cityId!,
       venue: _venue.text.trim().isEmpty ? null : _venue.text.trim(),
-      startsAt: _startsAt!,
-      endsAt: _endsAt,
+      startsAt: state.startsAt!,
+      endsAt: state.endsAt,
       maxParticipants: maxP,
       requirements: _requirements.text.trim().isEmpty
           ? null
@@ -248,55 +191,52 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
           ? null
           : _expectedCost.text.trim(),
       costPerPerson: num.tryParse(_costPerPerson.text.trim()),
-      imagePath: _imagePath,
-      latitude: _latitude,
-      longitude: _longitude,
+      imagePath: state.imagePath,
+      latitude: state.latitude,
+      longitude: state.longitude,
       mapsUrl: mapsUrl.isEmpty ? null : mapsUrl,
     );
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_startsAt == null) {
+    final state = ref.read(createEventControllerProvider(_controllerKey));
+    if (state.startsAt == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).validationRequired)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).validationRequired),
+        ),
       );
       return;
     }
-    final draft = _buildDraft();
+    final draft = _buildDraft(state);
     if (draft == null) return;
 
-    setState(() => _submitting = true);
-    final repo = ref.read(eventsRepositoryProvider);
-    final result = _isEdit
-        ? await repo.update(widget.eventId!, draft)
-        : await repo.create(draft);
+    final result = await _ctrl.submit(draft);
     if (!mounted) return;
-    setState(() => _submitting = false);
-
-    if (result.failure != null || result.data == null) {
+    if (!result.ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure?.message ?? 'Error')),
+        SnackBar(content: Text(result.error ?? 'Error')),
       );
       return;
     }
 
-    final event = result.data!;
+    final event = result.event!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context).eventSaved)),
     );
 
-    if (!_isEdit && event.isDraft) {
+    if (result.offerPublish) {
       final publish = await showDialog<bool>(
         context: context,
         builder: (ctx) => PublishOfferDialog(eventTitle: event.title),
       );
       if (publish == true && mounted) {
-        final pub = await repo.publish(event.id);
+        final pubError = await _ctrl.publish(event.id);
         if (!mounted) return;
-        if (pub.failure != null) {
+        if (pubError != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(pub.failure!.message)),
+            SnackBar(content: Text(pubError)),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -315,7 +255,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final loading = _loadingCatalog || _loadingEvent;
+    final state = ref.watch(createEventControllerProvider(_controllerKey));
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -323,8 +263,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
         title: Text(_isEdit ? l10n.editEvent : l10n.createEvent),
       ),
       body: AsyncBody(
-        isLoading: loading,
-        error: _error,
+        isLoading: state.isLoading,
+        error: state.error,
         onRetry: _bootstrap,
         child: Form(
           key: _formKey,
@@ -340,25 +280,23 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 requirementsController: _requirements,
                 expectedCostController: _expectedCost,
                 costPerPersonController: _costPerPerson,
-                categories: _categories,
-                cities: _cities,
-                categoryId: _categoryId,
-                cityId: _cityId,
-                startsAt: _startsAt,
-                endsAt: _endsAt,
-                imagePath: _imagePath,
+                categories: state.categories,
+                cities: state.cities,
+                categoryId: state.categoryId,
+                cityId: state.cityId,
+                startsAt: state.startsAt,
+                endsAt: state.endsAt,
+                imagePath: state.imagePath,
                 locale: locale,
-                latitude: _latitude,
-                longitude: _longitude,
-                placeStatus: _placeStatus,
-                onCategoryChanged: (v) => setState(() => _categoryId = v),
-                onCityChanged: (v) => setState(() => _cityId = v),
+                latitude: state.latitude,
+                longitude: state.longitude,
+                placeStatus: _placeStatusLabel(state.placeStatus, l10n),
+                onCategoryChanged: _ctrl.setCategoryId,
+                onCityChanged: _ctrl.setCityId,
                 onPickStart: () => _pickDateTime(isStart: true),
                 onPickEnd: () => _pickDateTime(isStart: false),
                 onPickImage: _pickImage,
-                onClearImage: _imagePath == null
-                    ? null
-                    : () => setState(() => _imagePath = null),
+                onClearImage: state.imagePath == null ? null : _ctrl.clearImage,
                 onMapsUrlChanged: _applyMapsUrl,
                 onClearPlace: _clearPlace,
                 onPinChanged: _onMapPin,
@@ -366,7 +304,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
               const SizedBox(height: 24),
               GradientButton(
                 label: _isEdit ? l10n.save : l10n.createDraft,
-                isLoading: _submitting,
+                isLoading: state.submitting,
                 onPressed: _submit,
               ),
             ],

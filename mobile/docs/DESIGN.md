@@ -250,3 +250,47 @@ Do not add a second header/footer system.
 If an existing pattern can be reused, reuse it.
 
 Any visual-system change starts in **this file**, then lands in `resources/css/app.css` and shared Blade components, then propagates to pages — never the reverse.
+
+---
+
+## 19. Flutter UX implementation rules (mobile)
+
+These are product/UI consequences of the engineering constitution — not a second visual language.
+
+### State ownership
+
+* Server-backed lists/feeds → Riverpod controllers where complexity justifies (auth, discover, home nearby).
+* Ephemeral UI (form fields, theater animation, pickers) → local widget state.
+* Every remote screen: **loading → error (retry) → empty → success** (`AsyncBody` or equivalent).
+
+### Auth / identity UX (AUTHZ-JOIN-001)
+
+* Guests may browse Discover + event show; join/create/chat require login.
+* Authenticated users with `!canParticipate` (e.g. `pending_documents`) **MUST** see an identity CTA instead of join/create actions — never `EventJoinActions` / join API.
+* Create flow must refuse and send the user to identity when they cannot participate.
+* Client gates are UX only; server authorization remains authoritative (do not invent a client-only bypass).
+* **SEC-PRIV-001:** Auth theater must **never** show password characters (bullets only).
+* **SEC-PRIV-002:** Chat inbox toasts/banners: generic “new message” only — never message body.
+* **SEC-RESET-001:** Password reset never puts tokens in the URL bar (`GoRouter` `extra` only).
+
+### Uploads (SEC-UPLOAD-001)
+
+* Client rejects oversized / wrong-type images with localized messages before multipart upload.
+* Server validation remains authoritative.
+
+### Navigation UX (NAV-001)
+
+* Invalid event IDs show an intentional invalid-route screen (not silent `id=0`) — use `parsePositiveRouteId`.
+* Force-update dialog may block; soft-update is dismissible.
+
+### Chat (NET-CANCEL-001)
+
+* Polling is acceptable; stop on dispose (`CancelToken`); avoid overlapping polls.
+* Do not invent WebSocket UX unless backend product requires it and docs are updated.
+
+### RTL / a11y / l10n
+
+* All user-facing strings via ARB (`en` + `ar`).
+* Prefer directional insets / `AlignmentDirectional` / `directionalChevronForward` (`A11Y-RTL-001`).
+* Verify Arabic RTL on auth, discover, event show (and shared chrome).
+* Add `Semantics` or `tooltip` for icon-only critical actions when touching those widgets.

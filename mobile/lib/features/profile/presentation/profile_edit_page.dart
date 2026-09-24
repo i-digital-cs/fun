@@ -76,7 +76,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     }
 
     setState(() => _saving = true);
-    final result = await ref.read(profileRemoteSourceProvider).updateProfile(
+    final result = await ref.read(profileRepositoryProvider).updateProfile(
           name: _name.text.trim(),
           email: _email.text.trim(),
           locale: _locale,

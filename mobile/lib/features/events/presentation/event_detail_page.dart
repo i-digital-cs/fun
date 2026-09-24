@@ -10,12 +10,13 @@ import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/presentation/event_detail_controller.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:fun_mobile/core/utils/safe_url.dart';
 
 class EventDetailPage extends ConsumerStatefulWidget {
   const EventDetailPage({super.key, required this.eventId});
@@ -27,134 +28,56 @@ class EventDetailPage extends ConsumerStatefulWidget {
 }
 
 class _EventDetailPageState extends ConsumerState<EventDetailPage> {
-  EventDetail? _detail;
-  List<EventRating> _ratings = const [];
-  String? _error;
-  bool _loading = true;
-  bool _acting = false;
-  bool _favoriting = false;
-
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(eventDetailControllerProvider(widget.eventId).notifier).load();
+    });
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    final repo = ref.read(eventsRepositoryProvider);
-    final detailResult = await repo.show(widget.eventId);
-    final ratingsResult = await repo.ratings(widget.eventId);
+  EventDetailController get _ctrl =>
+      ref.read(eventDetailControllerProvider(widget.eventId).notifier);
+
+  Future<void> _handle(EventDetailMutation result) async {
     if (!mounted) return;
-    setState(() {
-      _loading = false;
-      if (detailResult.failure != null) {
-        _error = detailResult.failure!.message;
-      } else {
-        _detail = detailResult.data;
-        _ratings = ratingsResult.data ?? const [];
-      }
-    });
-  }
-
-  int? get _currentUserId {
-    final auth = ref.read(authControllerProvider);
-    return auth is Authenticated ? auth.user.id : null;
-  }
-
-  bool get _isOwner {
-    final detail = _detail;
-    final userId = _currentUserId;
-    return detail != null &&
-        userId != null &&
-        detail.event.createdBy == userId;
-  }
-
-  bool get _canEdit {
-    final event = _detail?.event;
-    if (!_isOwner || event == null) return false;
-    return event.status != 'cancelled' && event.status != 'completed';
-  }
-
-  bool get _canParticipate {
-    final auth = ref.read(authControllerProvider);
-    return auth is Authenticated && auth.user.canParticipate;
+    final l10n = AppLocalizations.of(context);
+    switch (result.gate) {
+      case EventDetailGate.needLogin:
+        context.push('/login');
+        return;
+      case EventDetailGate.needIdentity:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.notActiveAccount)),
+        );
+        context.push('/identity');
+        return;
+      case EventDetailGate.none:
+        break;
+    }
+    if (result.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.error!)),
+      );
+      return;
+    }
+    if (result.successMessageKey == 'eventPublished') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.eventPublished)),
+      );
+    } else if (result.successMessageKey == 'userBlocked') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.userBlocked)),
+      );
+    }
   }
 
   Future<void> _toggleFavorite() async {
-    final detail = _detail;
-    if (detail == null || _favoriting) return;
-    final auth = ref.read(authControllerProvider);
-    if (auth is! Authenticated) {
-      context.push('/login');
-      return;
-    }
-    final previous = detail.event.isFavorited;
-    setState(() {
-      _favoriting = true;
-      _detail = EventDetail(
-        event: detail.event.copyWith(isFavorited: !previous),
-        joinAction: detail.joinAction,
-        readyForRatings: detail.readyForRatings,
-        canRate: detail.canRate,
-        myRating: detail.myRating,
-        creatorRating: detail.creatorRating,
-      );
-    });
-    final result =
-        await ref.read(eventsRepositoryProvider).toggleFavorite(widget.eventId);
-    if (!mounted) return;
-    setState(() => _favoriting = false);
-    if (result.failure != null) {
-      setState(() {
-        _detail = EventDetail(
-          event: detail.event.copyWith(isFavorited: previous),
-          joinAction: detail.joinAction,
-          readyForRatings: detail.readyForRatings,
-          canRate: detail.canRate,
-          myRating: detail.myRating,
-          creatorRating: detail.creatorRating,
-        );
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    final favorited = result.data ?? !previous;
-    setState(() {
-      _detail = EventDetail(
-        event: detail.event.copyWith(isFavorited: favorited),
-        joinAction: detail.joinAction,
-        readyForRatings: detail.readyForRatings,
-        canRate: detail.canRate,
-        myRating: detail.myRating,
-        creatorRating: detail.creatorRating,
-      );
-    });
+    await _handle(await _ctrl.toggleFavorite());
   }
 
   Future<void> _join() async {
-    final auth = ref.read(authControllerProvider);
-    if (auth is! Authenticated) {
-      context.push('/login');
-      return;
-    }
-    setState(() => _acting = true);
-    final result =
-        await ref.read(eventsRepositoryProvider).join(widget.eventId);
-    if (!mounted) return;
-    setState(() => _acting = false);
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    await _load();
+    await _handle(await _ctrl.join());
   }
 
   Future<void> _leave() async {
@@ -164,19 +87,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
       message: l10n.confirmLeave,
     );
     if (confirm != true || !mounted) return;
-
-    setState(() => _acting = true);
-    final result =
-        await ref.read(eventsRepositoryProvider).leave(widget.eventId);
-    if (!mounted) return;
-    setState(() => _acting = false);
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    await _load();
+    await _handle(await _ctrl.leave());
   }
 
   Future<void> _cancelJoinRequest() async {
@@ -186,38 +97,11 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
       message: l10n.confirmCancelJoin,
     );
     if (confirm != true || !mounted) return;
-
-    setState(() => _acting = true);
-    final result = await ref
-        .read(eventsRepositoryProvider)
-        .cancelJoinRequest(widget.eventId);
-    if (!mounted) return;
-    setState(() => _acting = false);
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    await _load();
+    await _handle(await _ctrl.cancelJoinRequest());
   }
 
   Future<void> _publish() async {
-    setState(() => _acting = true);
-    final result =
-        await ref.read(eventsRepositoryProvider).publish(widget.eventId);
-    if (!mounted) return;
-    setState(() => _acting = false);
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).eventPublished)),
-    );
-    await _load();
+    await _handle(await _ctrl.publish());
   }
 
   Future<void> _cancelEvent() async {
@@ -227,37 +111,16 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
       message: l10n.confirmCancel,
     );
     if (confirm != true || !mounted) return;
-
-    setState(() => _acting = true);
-    final result =
-        await ref.read(eventsRepositoryProvider).cancel(widget.eventId);
-    if (!mounted) return;
-    setState(() => _acting = false);
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    await _load();
+    await _handle(await _ctrl.cancelEvent());
   }
 
   Future<void> _completeEvent() async {
-    setState(() => _acting = true);
-    final result =
-        await ref.read(eventsRepositoryProvider).complete(widget.eventId);
-    if (!mounted) return;
-    setState(() => _acting = false);
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    await _load();
+    await _handle(await _ctrl.completeEvent());
   }
 
   Future<void> _showRateSheet() async {
+    final detail =
+        ref.read(eventDetailControllerProvider(widget.eventId)).detail;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -267,39 +130,30 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
       ),
       builder: (ctx) => RateEventSheet(
         eventId: widget.eventId,
-        existingRating: _detail?.myRating,
-        onRated: _load,
+        existingRating: detail?.myRating,
+        onRated: () => _ctrl.load(),
       ),
     );
   }
 
   Future<void> _blockCreator() async {
-    final creatorId = _detail?.event.createdBy;
-    if (creatorId == null) return;
     final l10n = AppLocalizations.of(context);
     final confirm = await showFunConfirm(
       context,
       message: l10n.confirmBlock(l10n.blockCreator),
     );
     if (confirm != true || !mounted) return;
-    final result =
-        await ref.read(safetyRemoteSourceProvider).block(creatorId);
-    if (!mounted) return;
-    if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.userBlocked)),
-    );
+    await _handle(await _ctrl.blockCreator());
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final detail = _detail;
+    final state = ref.watch(eventDetailControllerProvider(widget.eventId));
+    final detail = state.detail;
+    final isOwner = _ctrl.isOwner;
+    final canEdit = _ctrl.canEdit;
+    final canParticipate = _ctrl.canParticipate;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -318,9 +172,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
               tooltip: detail.event.isFavorited
                   ? l10n.unfavorite
                   : l10n.favorite,
-              onPressed: _favoriting ? null : _toggleFavorite,
+              onPressed: state.favoriting ? null : _toggleFavorite,
             ),
-          if (detail != null && !_isOwner) ...[
+          if (detail != null && !isOwner) ...[
             IconButton(
               icon: const Icon(Icons.flag_outlined),
               tooltip: l10n.report,
@@ -330,25 +184,25 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                 reportableId: widget.eventId,
               ),
             ),
-            if (_canParticipate && detail.event.createdBy != null)
+            if (canParticipate && detail.event.createdBy != null)
               IconButton(
-                icon: const Icon(Icons.block_outlined),
+                icon: const Icon(Icons.block),
                 tooltip: l10n.blockCreator,
                 onPressed: _blockCreator,
               ),
           ],
-          if (_canEdit)
+          if (canEdit)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              onPressed: () =>
-                  context.push('/events/${widget.eventId}/edit'),
+              tooltip: l10n.editEvent,
+              onPressed: () => context.push('/events/${widget.eventId}/edit'),
             ),
         ],
       ),
       body: AsyncBody(
-        isLoading: _loading,
-        error: _error,
-        onRetry: _load,
+        isLoading: state.isLoading,
+        error: state.error,
+        onRetry: () => _ctrl.load(),
         child: detail == null
             ? const SizedBox.shrink()
             : ListView(
@@ -362,14 +216,14 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                   const SizedBox(height: 16),
                   CreatorRatingSection(
                     rating: detail.creatorRating,
-                    ratings: _ratings,
+                    ratings: state.ratings,
                     myRating: detail.myRating,
                   ),
                   const SizedBox(height: 20),
-                  if (_isOwner)
+                  if (isOwner)
                     EventOwnerActions(
                       event: detail.event,
-                      acting: _acting,
+                      acting: state.acting,
                       onPublish: _publish,
                       onCancel: _cancelEvent,
                       onComplete: _completeEvent,
@@ -388,10 +242,16 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                       onPressed: () => context.push('/login'),
                       icon: Icons.login,
                     )
+                  else if (!canParticipate)
+                    GradientButton.indigo(
+                      label: l10n.notActiveAccount,
+                      onPressed: () => context.push('/identity'),
+                      icon: Icons.verified_user_outlined,
+                    )
                   else
                     EventJoinActions(
                       joinAction: detail.joinAction,
-                      acting: _acting,
+                      acting: state.acting,
                       onJoin: _join,
                       onLeave: _leave,
                       onCancelJoin: _cancelJoinRequest,
@@ -553,9 +413,7 @@ class EventDetailInfoCard extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: () async {
-                  final uri = Uri.tryParse(event.mapsOpenUrl!);
-                  if (uri == null) return;
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  await launchSafeExternalUrl(event.mapsOpenUrl);
                 },
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: Text(l10n.openInMaps),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
+import 'package:fun_mobile/core/utils/rtl.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
@@ -421,9 +422,7 @@ class _EventCardState extends State<EventCard> {
                                         color: Color(0xFFE2E8F0),
                                       ),
                                       FractionallySizedBox(
-                                        alignment: isRtl
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
+                                        alignment: AlignmentDirectional.centerStart,
                                         widthFactor: (event.fillPercent / 100)
                                             .clamp(0.0, 1.0),
                                         child: DecoratedBox(
@@ -492,9 +491,7 @@ class _EventCardState extends State<EventCard> {
                             ),
                           ),
                           Icon(
-                            isRtl
-                                ? Icons.chevron_left
-                                : Icons.chevron_right,
+                            directionalChevronForward(context),
                             size: 16,
                             color: const Color(0xFFEA580C),
                           ),

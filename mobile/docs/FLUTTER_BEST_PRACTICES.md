@@ -395,13 +395,16 @@ Future<Either<Failure, User>> getUser(String id) async {
   try {
     final user = await api.fetchUser(id);
     return Right(user);
+  } on DioException catch (e) {
+    return Left(mapDioException(e));
   } catch (e) {
-    return Left(ServerFailure(e.toString()));
+    // ERR-001: never Left(ServerFailure(e.toString()))
+    return Left(mapUnexpectedError(e));
   }
 }
 ```
 
-Map once in the client: offline, timeout, 401, 403, 404, 422 (validation), 5xx.
+Map once in the client: offline, timeout, 401, 403, 404, 422 (validation), 5xx. Non-Dio parse failures → `mapUnexpectedError` / `UnknownFailure` (generic message only).
 
 ### Retries
 

@@ -453,13 +453,13 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 |--|--|
 | **Blade** | `events/chat.blade.php` |
 | **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` |
-| **Toast** | Web: Reverb user channel `.chat.message` → Uiverse toast while browsing (suppressed on that event’s chat). Flutter: poll `/api/chats` every 15s → SnackBar |
+| **Toast** | Web + Flutter: Reverb private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). Flutter: `GET /api/site` `broadcast` + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). SEC-PRIV-002: Flutter toasts never echo message body. |
 | **Unread** | `event_chat_reads.last_read_message_id`; mark on open thread / `POST /api/events/{id}/messages/read` |
 | **API** | `GET /api/events/{id}/messages`, `POST .../messages` |
 | **Access** | Joined members only |
 
 **Must:** message list (author, time, body), dark Uiverse-style composer (textarea + attach affordance + Chat chip + send plane), report message link, link back to event.  
-Web uses realtime; Flutter may poll until websockets are wired — document polling interval in app. Composer visual matches web (`ChatComposer` dark bar).
+Web and Flutter use Reverb for live toasts; Flutter keeps a poll fallback when Reverb is unavailable. Composer visual matches web (`ChatComposer` dark bar).
 
 ---
 
@@ -1220,7 +1220,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
 8. **Create/edit** — all fields + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web)  
 9. **Members** — promote / demote / transfer + report/block links  
-10. **Chat** — inbox `/chats` + thread list/post; web toast via Reverb; Flutter poll until websockets
+10. **Chat** — inbox `/chats` + thread list/post; Reverb toast (Flutter + web); Flutter poll fallback
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 

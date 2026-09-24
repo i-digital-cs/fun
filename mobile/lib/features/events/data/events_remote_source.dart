@@ -29,7 +29,7 @@ class EventsRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 
@@ -290,14 +290,23 @@ class EventsRemoteSource {
     }
   }
 
-  Future<({Failure? failure, List<ChatMessage>? data})> messages(int id) async {
+  Future<({Failure? failure, List<ChatMessage>? data})> messages(
+    int id, {
+    Object? cancelToken,
+  }) async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/events/$id/messages');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id/messages',
+        cancelToken: cancelToken is CancelToken ? cancelToken : null,
+      );
       final raw = response.data!['data'] as List<dynamic>? ?? [];
-      final list = raw.map((e) => _parseMessage(e as Map<String, dynamic>)).toList();
+      final list =
+          raw.map((e) => _parseMessage(e as Map<String, dynamic>)).toList();
       return (failure: null, data: list);
     } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        return (failure: null, data: null);
+      }
       return (failure: mapDioException(e), data: null);
     }
   }
@@ -436,7 +445,7 @@ class EventsRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 
@@ -459,7 +468,7 @@ class EventsRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 
@@ -473,7 +482,7 @@ class EventsRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 
@@ -489,7 +498,7 @@ class EventsRemoteSource {
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     } catch (e) {
-      return (failure: ServerFailure(e.toString()), data: null);
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 

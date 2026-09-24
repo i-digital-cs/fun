@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/upload_validator.dart';
 import 'package:fun_mobile/core/widgets/attachment_folder_picker.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
@@ -46,7 +47,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
       _loading = true;
       _error = null;
     });
-    final result = await ref.read(identityRemoteSourceProvider).fetch();
+    final result = await ref.read(identityRepositoryProvider).fetch();
     if (!mounted) return;
     if (result.failure != null) {
       setState(() {
@@ -64,7 +65,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
   }
 
   Future<void> _loadThumbs(IdentityStatus status) async {
-    final remote = ref.read(identityRemoteSourceProvider);
+    final remote = ref.read(identityRepositoryProvider);
     for (final doc in status.documents) {
       if (!doc.uploaded || doc.id == null) continue;
       if (_thumbBytes.containsKey(doc.id)) continue;
@@ -83,6 +84,18 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
       imageQuality: 85,
     );
     if (file == null || !mounted) return;
+    final validation = await UploadValidator.validateImageFile(file.path);
+    if (!mounted) return;
+    if (!validation.ok) {
+      final l10n = AppLocalizations.of(context);
+      final msg = switch (validation.errorKey) {
+        'uploadTooLarge' => l10n.uploadTooLarge,
+        'uploadBadType' => l10n.uploadBadType,
+        _ => l10n.uploadMissing,
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      return;
+    }
     setState(() {
       switch (slot) {
         case 'front':
@@ -110,7 +123,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
   }
 
   Future<String?> _authenticateUpload() async {
-    final result = await ref.read(identityRemoteSourceProvider).upload(
+    final result = await ref.read(identityRepositoryProvider).upload(
           idFrontPath: _idFrontPath!,
           idBackPath: _idBackPath!,
           selfiePath: _selfiePath!,

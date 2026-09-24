@@ -46,16 +46,27 @@ lib/
 
 | Layer | May use | Must not |
 |-------|---------|----------|
-| **Domain** | Pure Dart entities, repository contracts | Flutter, Dio, prefs |
+| **Domain** | Pure Dart entities, repository contracts | Flutter, Dio, prefs, Platform, url_launcher |
 | **Data** | Dio, DTOs, mappers, secure storage | Widgets |
-| **Presentation** | Riverpod, UI, go_router | Raw `Dio` / `Map` JSON in widgets |
+| **Presentation** | Riverpod, UI, go_router | Raw `Dio` / `Map` JSON in widgets; RemoteSource when a repository exists |
+
+**Pragmatic Clean Architecture (locked)**
+
+```
+UI → Controller/Notifier (when server-backed) → Repository → RemoteSource
+```
+
+* Ephemeral UI (form fields, animations, pickers) may stay in `StatefulWidget`.
+* Do **not** introduce UseCases unless multiple controllers share non-trivial domain orchestration.
+* Auth / events / catalog use repositories. Prefer repositories for new shared API surfaces.
+* See `docs/ENGINEERING_CONSTITUTION.md` for do-not-regress rules.
 
 **Rules**
 
 - Feature-first folders.
-- Presentation → repository abstractions (or use cases) only.
+- Presentation → repository abstractions for established features.
 - `main.dart` thin: bindings + `runApp`.
-- Config via `--dart-define` (`API_BASE_URL`, `FLAVOR`).
+- Config via `--dart-define` (`API_BASE_URL`, `FLAVOR`, `GOOGLE_SERVER_CLIENT_ID`).
 
 ---
 
@@ -97,15 +108,24 @@ From `DESIGN.md` / Blade:
 
 ---
 
-## 5. Networking
+## 5. Networking (NET-001 / NET-RACE-001 / NET-CANCEL-001 — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md` for full traceability.
 
 - One configured Dio client (`core/network/api_client.dart`)
-- Interceptors: Bearer attach, 401 → clear token + logout, debug logging only
+- Timeouts: connect + send + receive (20s) — **required** (`NET-001`)
+- Interceptors: Bearer attach, 401 → clear token + logout
 - Map JSON → typed models → UI; never pass `Map<String, dynamic>` into widgets
-- Multipart for event image + identity (`id_front`, `id_back`, `selfie`)
-- Discover filters: **empty `city_id` = nationwide**; **omitted `city_id` = user city fallback** (Blade “All cities” vs nearby)
+- Multipart for event image + identity (`id_front`, `id_back`, `selfie`) with client upload validation
+- Discover filters: **empty `city_id` = nationwide**; **omitted `city_id` = user city fallback**
+- Stale-request strategy: generation counters (discover) (`NET-RACE-001`) and/or `CancelToken` (chat) (`NET-CANCEL-001`)
+- Do **not** auto-retry unsafe mutations
+- Chat may poll; pollers must cancel on dispose and avoid overlap
+- Route IDs: `parsePositiveRouteId` — never coerce to `0` (`NAV-001`)
 
-Typed failures: `NetworkFailure`, `ServerFailure`, `UnauthorizedFailure`, `ValidationFailure`.
+Typed failures: `NetworkFailure`, `ServerFailure`, `UnauthorizedFailure`, `ForbiddenFailure`, `NotFoundFailure`, `ConflictFailure`, `ValidationFailure`, `RateLimitFailure`, `UnknownFailure`.
+
+Use `failureUserMessage` for SnackBars (prefers first 422 field error).
 
 ---
 
@@ -114,9 +134,97 @@ Typed failures: `NetworkFailure`, `ServerFailure`, `UnauthorizedFailure`, `Valid
 - Tokens only in secure storage; never `SharedPreferences`
 - Logout clears token + provider session
 - Never log tokens, passwords, or identity images
+- Never render password characters in auth theater digits
+- Never put reset tokens in URLs (`GoRouter` `extra` only)
+- Never echo chat message bodies in global toasts
 - Hide UI by role/status, but **server enforces** authorization
-- Gate create/join when `user.status != active` → identity upload (`pending_documents`)
+- Gate create/join when `!user.canParticipate` → identity upload (`pending_documents`)
+- Session restore: network failure keeps token and offers retry (`AuthSessionRestoreFailed`)
 - HTTPS only in production builds
+- External links: `http`/`https` only (`launchSafeExternalUrl`)
+
+### Release / Android (BUILD-001 — locked)
+
+See `docs/RELEASE.md` and `docs/ENGINEERING_CONSTITUTION.md` (BUILD-001). Agents must not weaken these rules to make a build pass.
+
+- Store/production releases **MUST** use `android/key.properties` + real upload/production keystore.
+- Store/production releases **MUST NOT** silently use debug signing.
+- Missing production signing **MUST fail closed**.
+- Debug signing for release is allowed **ONLY** with `-PallowDebugReleaseSigning=true` (local/non-store only).
+- Do **NOT** set `defaultConfig` `abiFilters` to `x86_64`-only (or other emulator-only sets) without an explicit SoT change.
+
+### Android backup (BUILD-002 — locked)
+
+See `docs/RELEASE.md` and `docs/ENGINEERING_CONSTITUTION.md` (BUILD-002).
+
+- `AndroidManifest.xml` `<application>` **MUST** keep `android:allowBackup="false"` and `android:fullBackupContent="false"`.
+- Do **NOT** re-enable Auto Backup without an explicit SoT security decision.
+
+### Participation gates (AUTHZ-JOIN-001 — locked)
+
+See `MASTER_CONTEXT.md` §5 and `docs/ENGINEERING_CONSTITUTION.md` (AUTHZ-JOIN-001).
+
+- Join and create UX **MUST** require `user.canParticipate`; otherwise send the user to identity.
+- Client gates are defense-in-depth; **server authorization remains authoritative**.
+- Do **NOT** expose join CTAs to authenticated non-participants.
+
+### Sensitive data & session (SEC-* — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md` (SEC-PRIV-001, SEC-PRIV-002, SEC-RESET-001, SEC-UPLOAD-001, SEC-SESSION-001).
+
+- Never render password characters in auth theater (bullets only).
+- Never echo chat message bodies in global toasts/banners.
+- Never put reset tokens in URLs (`ResetPasswordArgs` / `extra` only).
+- Validate image uploads client-side before multipart; server remains authoritative.
+- Session restore: keep token + retry on non-auth failures (`AuthSessionRestoreFailed`); 401 still logs out.
+
+### Networking & navigation (NET-* / NAV-001 — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md` (NET-001, NET-RACE-001, NET-CANCEL-001, NAV-001).
+
+- Dio timeouts + typed `Failure` mapping required; no unsafe auto-retries; no raw `e.toString()` as primary UX.
+- Discover concurrent loads must use latest-request-wins generation.
+- Chat loads/polls must CancelToken on dispose and prevent overlapping inbox polls.
+- Invalid route IDs must not become `0` (`parsePositiveRouteId` + invalid-route page).
+
+### URL / favorites / domain purity (SEC-URL-001 / ARCH-FAV-001 / ARCH-DOMAIN-001 — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md`.
+
+- External opens: `launchSafeExternalUrl` only (http/https).
+- List favorites: shared `toggleFavoriteInList` — do not fork duplicate pipelines.
+- Domain stays pure (no Dio/Platform/url_launcher/PackageInfo); infra in data layer.
+
+### Error surfacing (ERR-001 — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md`.
+
+- Non-Dio catches: `mapUnexpectedError` → generic `UnknownFailure` — never `ServerFailure(e.toString())`.
+- Prefer `failureUserMessage` for user-visible Failure text.
+- Dio unknown must not leak raw `error.message`.
+
+### Safety repository (ARCH-REPO-SAFETY-001 — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md`.
+
+- Block/report/listBlocks via `SafetyRepository` / `safetyRepositoryProvider` only — not `SafetyRemoteSource` from UI.
+
+### Repository boundaries (ARCH-REPO-PROFILE/IDENTITY/CHAT/HOME — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md`.
+
+- Profile / public profile / identity / chats / home: use matching `*Repository` providers from presentation only.
+
+### Event detail controller (ARCH-GOD-DETAIL-001 — locked)
+
+See `docs/ENGINEERING_CONSTITUTION.md`.
+
+- Load/join/favorite/owner mutations via `EventDetailController` / `eventDetailControllerProvider`.
+- Page keeps confirms, SnackBars, and navigation only.
+- Create/edit catalog+submit via `CreateEventController` / `createEventControllerProvider` (form text fields may stay on the page).
+- Home composition in `home_page.dart`; sections/hero in `widgets/` (`ARCH-GOD-HOME-001`); feed via `HomeNearbyController`.
+- Store readiness: `RELEASE.md` ARM install + `GOOGLE_SERVER_CLIENT_ID` checklist (`OPS-RELEASE-001`).
+- RTL/a11y: directional insets/chevrons (`directionalChevronForward`); Semantics/tooltip on icon-only chrome; AR → RTL (`A11Y-RTL-001`).
 
 ---
 
@@ -149,7 +257,10 @@ flutter analyze .
 flutter test
 ```
 
-Minimum coverage focus: auth session, discover filters (all cities vs nearby), join CTA states, error mapping.
+Minimum coverage focus: auth session restore, logout token clear, discover filters, join CTA states, error status mapping, upload validation, route id parsing, password theater privacy, favorite optimistic helper.
+
+Locked remediation rules: `docs/ENGINEERING_CONSTITUTION.md`.
+Release checklist: `docs/RELEASE.md`.
 
 ---
 
@@ -180,6 +291,8 @@ Minimum coverage focus: auth session, discover filters (all cities vs nearby), j
 
 | Doc | Role |
 |-----|------|
+| `docs/ENGINEERING_CONSTITUTION.md` | Locked do-not-regress rules |
+| `docs/RELEASE.md` | Store / signing / ABI checklist |
 | `ROADMAP.md` | Phases & tasks |
 | `docs/DESIGN.md` | Tokens, components, journeys |
 | `docs/FLUTTER_BEST_PRACTICES.md` | Full engineering standards |

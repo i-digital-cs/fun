@@ -1175,8 +1175,62 @@ abstract class AppLocalizations {
   /// No description provided for @notActiveAccount.
   ///
   /// In en, this message translates to:
-  /// **'Verify your identity before creating events.'**
+  /// **'Verify your identity before creating or joining events.'**
   String get notActiveAccount;
+
+  /// No description provided for @invalidRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is invalid.'**
+  String get invalidRoute;
+
+  /// No description provided for @newChatMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a new chat message.'**
+  String get newChatMessage;
+
+  /// No description provided for @chatToastNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New message'**
+  String get chatToastNew;
+
+  /// No description provided for @chatToastJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get chatToastJustNow;
+
+  /// No description provided for @uploadTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Image is too large (max 8 MB).'**
+  String get uploadTooLarge;
+
+  /// No description provided for @uploadBadType.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a JPG, PNG, or WEBP image.'**
+  String get uploadBadType;
+
+  /// No description provided for @uploadMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read that image. Try another file.'**
+  String get uploadMissing;
+
+  /// No description provided for @failedToLoadEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load events.'**
+  String get failedToLoadEvents;
+
+  /// No description provided for @invalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid code'**
+  String get invalidCode;
 
   /// No description provided for @accept.
   ///

@@ -4,6 +4,18 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+
+// BUILD-001: Production release signing + ARM ABIs (see mobile/docs/RELEASE.md).
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
+val allowDebugReleaseSigning =
+    (project.findProperty("allowDebugReleaseSigning") as String?) == "true"
+
 android {
     namespace = "com.funity.fun_mobile"
     compileSdk = flutter.compileSdkVersion
@@ -15,29 +27,44 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.funity.fun_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        ndk {
-            // Emulator is x86_64 — skip other ABIs for faster local builds.
-            abiFilters += listOf("x86_64")
+        // Production devices are ARM. Do NOT restrict to x86_64 (emulator-only).
+        // Emulator still runs via Flutter's default multi-ABI / host tools.
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
         }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            when {
+                keystorePropertiesFile.exists() -> {
+                    signingConfig = signingConfigs.getByName("release")
+                }
+                allowDebugReleaseSigning -> {
+                    // Local-only: flutter build/run --release -PallowDebugReleaseSigning=true
+                    signingConfig = signingConfigs.getByName("debug")
+                }
+                else -> {
+                    throw GradleException(
+                        "Release signing is not configured. Add android/key.properties " +
+                            "(see android/key.properties.example) or pass " +
+                            "-PallowDebugReleaseSigning=true for local non-store testing only.",
+                    )
+                }
+            }
         }
     }
 }

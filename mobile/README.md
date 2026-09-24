@@ -8,6 +8,7 @@ Flutter client for the Fun community activity platform.
 |-----|---------|
 | [`ROADMAP.md`](ROADMAP.md) | Phases & tasks (Blade parity plan) |
 | [`docs/FLUTTER_PRINCIPLES.md`](docs/FLUTTER_PRINCIPLES.md) | App principles & stack rules |
+| [`docs/ENGINEERING_CONSTITUTION.md`](docs/ENGINEERING_CONSTITUTION.md) | Locked do-not-regress rules |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Visual system (same as Blade) |
 | [`docs/FLUTTER_BEST_PRACTICES.md`](docs/FLUTTER_BEST_PRACTICES.md) | Deep Flutter standards |
 | [`docs/RELEASE.md`](docs/RELEASE.md) | Store / release checklist |
