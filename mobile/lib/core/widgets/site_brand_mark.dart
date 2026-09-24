@@ -4,18 +4,13 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:http/http.dart' as http;
 
-/// Official Funity mark geometry (matches production `funity-mark.svg`).
-const _kFunityMarkSvg = '''
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <circle cx="38" cy="50" r="22" stroke="#4F46E5" stroke-width="10" fill="none"/>
-  <circle cx="62" cy="50" r="22" stroke="#F97316" stroke-width="10" fill="none"/>
-  <path d="M 50 32 C 43 32 38 37 38 44 C 38 54 50 70 50 70 C 50 70 62 54 62 44 C 62 37 57 32 50 32 Z" fill="#10B981"/>
-  <circle cx="50" cy="44" r="3.5" fill="#FFFFFF"/>
-</svg>
-''';
+/// Bundled official mark — same geometry as `public/branding/funity-mark.svg`
+/// and Brand Identity System (icon-only). Used only when `logo_url` is missing
+/// or fails to load. In-app brand chrome always prefers `GET /api/site` logo.
+const kFunityMarkAsset = 'assets/branding/funity-mark.svg';
 
-/// Renders `GET /api/site` `logo_url` (SVG or raster).
-/// Falls back to the Funity mark — never a generic celebration icon.
+/// Renders `GET /api/site` `logo_url` (SVG or raster) exclusively when present.
+/// Falls back to the official Funity mark asset — never a generic icon.
 class SiteBrandMark extends StatefulWidget {
   const SiteBrandMark({
     super.key,
@@ -125,17 +120,16 @@ class _SiteBrandMarkState extends State<SiteBrandMark> {
   @override
   Widget build(BuildContext context) {
     final url = widget.logoUrl?.trim();
-    final mark = _BrandShell(
+    return _BrandShell(
       size: widget.size,
       borderRadius: widget.borderRadius,
       child: _buildChild(url),
     );
-    return mark;
   }
 
   Widget _buildChild(String? url) {
     if (url == null || url.isEmpty) {
-      return _FunityMarkSvg(size: widget.size, fit: widget.fit);
+      return _OfficialMark(size: widget.size, fit: widget.fit);
     }
 
     if (SiteBrandMark.isSvgUrl(url)) {
@@ -147,14 +141,13 @@ class _SiteBrandMarkState extends State<SiteBrandMark> {
           fit: widget.fit,
           allowDrawingOutsideViewBox: true,
           placeholderBuilder: (_) =>
-              _FunityMarkSvg(size: widget.size, fit: widget.fit),
+              _OfficialMark(size: widget.size, fit: widget.fit),
         );
       }
       if (_failed) {
-        return _FunityMarkSvg(size: widget.size, fit: widget.fit);
+        return _OfficialMark(size: widget.size, fit: widget.fit);
       }
-      // Loading remote SVG — show brand mark (not a generic icon).
-      return _FunityMarkSvg(size: widget.size, fit: widget.fit);
+      return _OfficialMark(size: widget.size, fit: widget.fit);
     }
 
     return AppNetworkImage(
@@ -162,7 +155,7 @@ class _SiteBrandMarkState extends State<SiteBrandMark> {
       logicalWidth: widget.size,
       logicalHeight: widget.size,
       fit: widget.fit,
-      error: _FunityMarkSvg(size: widget.size, fit: widget.fit),
+      error: _OfficialMark(size: widget.size, fit: widget.fit),
     );
   }
 }
@@ -201,16 +194,16 @@ class _BrandShell extends StatelessWidget {
   }
 }
 
-class _FunityMarkSvg extends StatelessWidget {
-  const _FunityMarkSvg({required this.size, required this.fit});
+class _OfficialMark extends StatelessWidget {
+  const _OfficialMark({required this.size, required this.fit});
 
   final double size;
   final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.string(
-      _kFunityMarkSvg,
+    return SvgPicture.asset(
+      kFunityMarkAsset,
       width: size,
       height: size,
       fit: fit,

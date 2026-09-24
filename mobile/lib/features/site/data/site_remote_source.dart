@@ -100,10 +100,25 @@ class SiteBranding extends Equatable {
   final SiteAppUpdate? app;
   final SiteBroadcastConfig broadcast;
 
-  static const fallback = SiteBranding(displayName: 'Fun');
+  /// Offline / error fallback — official wordmark only; mark comes from
+  /// [SiteBrandMark] bundled asset until `logo_url` arrives from the API.
+  static const fallback = SiteBranding(displayName: 'Funity');
 
   @override
   List<Object?> get props => [displayName, logoUrl, app, broadcast];
+}
+
+/// Prefer the live domain when the API still emits legacy asset hosts.
+String? normalizeSiteLogoUrl(String? raw) {
+  final url = raw?.trim();
+  if (url == null || url.isEmpty) return null;
+  final uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasScheme) return url;
+  final host = uri.host.toLowerCase();
+  if (host == 'fun.idigital-cs.com' || host == 'idigital-cs.com') {
+    return uri.replace(host: 'www.funnity.com').toString();
+  }
+  return url;
 }
 
 class SiteRemoteSource {
@@ -160,8 +175,9 @@ class SiteRemoteSource {
       return (
         failure: null,
         data: SiteBranding(
-          displayName: json['display_name'] as String? ?? 'Fun',
-          logoUrl: json['logo_url'] as String?,
+          displayName:
+              json['display_name'] as String? ?? SiteBranding.fallback.displayName,
+          logoUrl: normalizeSiteLogoUrl(json['logo_url'] as String?),
           app: app,
           broadcast: SiteBroadcastConfig.resolve(fromApi: broadcast),
         ),
