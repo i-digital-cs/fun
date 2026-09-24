@@ -15,6 +15,9 @@ final chatsRemoteSourceProvider = Provider<ChatsRemoteSource>((ref) {
   return ChatsRemoteSource(ref.watch(apiClientProvider));
 });
 
+/// Ambient unread badge for shell topbar / sidebar (updated by [ChatToastListener]).
+final chatUnreadTotalProvider = StateProvider<int>((ref) => 0);
+
 final chatsListProvider =
     FutureProvider.autoDispose<({List<ChatThread> data, int unreadTotal})>((ref) async {
   final result = await ref.watch(chatsRemoteSourceProvider).list();
@@ -215,6 +218,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     if (auth is! Authenticated) {
       _primed = false;
       _lastSeenMessageIds.clear();
+      ref.read(chatUnreadTotalProvider.notifier).state = 0;
       return;
     }
 
@@ -222,6 +226,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     if (!mounted || result.failure != null) {
       return;
     }
+
+    ref.read(chatUnreadTotalProvider.notifier).state = result.unreadTotal;
 
     final location = GoRouterState.of(context).uri.path;
     final l10n = AppLocalizations.of(context);

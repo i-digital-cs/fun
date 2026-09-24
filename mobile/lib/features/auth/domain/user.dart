@@ -12,6 +12,7 @@ class User extends Equatable {
     this.cityId,
     this.distanceKm,
     this.cityName,
+    this.profileImagePath,
     this.emailVerified = true,
     this.needsEmailVerification = false,
     this.needsIdentityDocuments = false,
@@ -31,6 +32,7 @@ class User extends Equatable {
   final int? cityId;
   final int? distanceKm;
   final String? cityName;
+  final String? profileImagePath;
   final bool emailVerified;
   final bool needsEmailVerification;
   final bool needsIdentityDocuments;
@@ -55,6 +57,7 @@ class User extends Equatable {
       cityId: json['city_id'] as int?,
       distanceKm: json['distance_km'] as int?,
       cityName: city is Map<String, dynamic> ? city['name'] as String? : null,
+      profileImagePath: json['profile_image_path'] as String?,
       emailVerified: emailVerified,
       needsEmailVerification:
           json['needs_email_verification'] as bool? ?? !emailVerified,
@@ -107,6 +110,7 @@ class User extends Equatable {
     int? cityId,
     int? distanceKm,
     String? cityName,
+    String? profileImagePath,
     bool? emailVerified,
     bool? needsEmailVerification,
     bool? needsIdentityDocuments,
@@ -114,6 +118,7 @@ class User extends Equatable {
     bool? identityResubmitRequired,
     bool? canParticipateFlag,
     bool? hasPassword,
+    bool clearProfileImage = false,
   }) {
     return User(
       id: id ?? this.id,
@@ -126,6 +131,9 @@ class User extends Equatable {
       cityId: cityId ?? this.cityId,
       distanceKm: distanceKm ?? this.distanceKm,
       cityName: cityName ?? this.cityName,
+      profileImagePath: clearProfileImage
+          ? null
+          : (profileImagePath ?? this.profileImagePath),
       emailVerified: emailVerified ?? this.emailVerified,
       needsEmailVerification:
           needsEmailVerification ?? this.needsEmailVerification,
@@ -151,6 +159,7 @@ class User extends Equatable {
         cityId,
         distanceKm,
         cityName,
+        profileImagePath,
         emailVerified,
         needsEmailVerification,
         needsIdentityDocuments,

@@ -61,6 +61,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
+  String get navExplore => 'Explore';
+
+  @override
   String get publicProfile => 'Public profile';
 
   @override
@@ -231,6 +234,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get search => 'Search';
 
   @override
+  String get searchPlaceholder => 'Search events, activities, locations...';
+
+  @override
   String get allCities => 'All cities';
 
   @override
@@ -339,6 +345,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get placeOnMapHelp =>
       'Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.';
+
+  @override
+  String get placeTapHint => 'Tap the map to drop or move the pin.';
 
   @override
   String get mapsUrl => 'Maps link';
@@ -760,6 +769,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tomorrow => 'Tomorrow';
 
   @override
+  String get weekend => 'This weekend';
+
+  @override
+  String get whenAny => 'Any time';
+
+  @override
+  String get whenFilter => 'When';
+
+  @override
   String get promote => 'Promote to admin';
 
   @override
@@ -1016,6 +1034,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pendingReviewNotice =>
       'Waiting for the host to accept your request.';
+
+  @override
+  String get pendingRequestsSection => 'Waiting for acceptance';
+
+  @override
+  String get joinedEventsSection => 'Events you joined';
 
   @override
   String get weatherSetLocation => 'Set your location';

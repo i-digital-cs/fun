@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -16,6 +17,7 @@ class ProfilePage extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final user = auth is Authenticated ? auth.user : null;
     final locale = ref.watch(localeCodeProvider);
+    final photo = user?.profileImagePath;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -24,21 +26,37 @@ class ProfilePage extends ConsumerWidget {
         padding: const EdgeInsets.all(20),
         children: [
           if (user != null) ...[
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: AppColors.primary,
-              child: Text(
-                user.initials,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                ),
-              ),
+            Center(
+              child: photo != null && photo.isNotEmpty
+                  ? ClipOval(
+                      child: SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: AppNetworkImage(
+                          url: photo,
+                          logicalWidth: 72,
+                          logicalHeight: 72,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  : CircleAvatar(
+                      radius: 36,
+                      backgroundColor: AppColors.primary,
+                      child: Text(
+                        user.initials,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
             ),
             const SizedBox(height: 12),
             Text(
               user.name,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
@@ -46,6 +64,7 @@ class ProfilePage extends ConsumerWidget {
             ),
             Text(
               user.email,
+              textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.muted),
             ),
             if (user.publicId != null) ...[

@@ -604,6 +604,22 @@ class _TicketShellPainter extends CustomPainter {
       );
     canvas.drawRect(Offset.zero & size, band);
 
+    // Diagonal shimmer sweep
+    final sweepX = size.width * (-0.3 + 1.6 * holoShift);
+    final shimmer = Paint()
+      ..blendMode = BlendMode.softLight
+      ..shader = ui.Gradient.linear(
+        Offset(sweepX, 0),
+        Offset(sweepX + size.width * 0.35, size.height),
+        [
+          Colors.transparent,
+          Colors.white.withValues(alpha: 0.55),
+          Colors.transparent,
+        ],
+        const [0.0, 0.5, 1.0],
+      );
+    canvas.drawRect(Offset.zero & size, shimmer);
+
     canvas.restore();
 
     // Drop shadow around path

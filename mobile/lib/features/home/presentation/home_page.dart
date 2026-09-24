@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
-import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/espiral_glow.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
+import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
@@ -24,10 +24,6 @@ import 'package:fun_mobile/features/home/presentation/widgets/weather_card.dart'
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-final searchSuggestRemoteSourceProvider = Provider(
-  (ref) => SearchSuggestRemoteSource(ref.watch(apiClientProvider)),
-);
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -209,24 +205,47 @@ class _HomePageState extends ConsumerState<HomePage> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-                  child: Column(
-                    children: [
-                      WeatherCard(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final sideBySide = constraints.maxWidth >= 640;
+                      final weather = WeatherCard(
                         weather: nearby.weather,
                         onSetLocation: () =>
                             context.push('/settings/location'),
-                      ),
-                      if (nearby.nowPlaying != null) ...[
-                        const SizedBox(height: 12),
-                        NowPlayingCard(
-                          feed: nearby.nowPlaying!,
-                          brand: l10n.appName,
-                          onOpenEvent: (e) =>
-                              context.push('/events/${e.id}'),
-                          onDiscover: () => _openDiscoverAll(),
+                      );
+                      final nowPlaying = nearby.nowPlaying == null
+                          ? null
+                          : NowPlayingCard(
+                              feed: nearby.nowPlaying!,
+                              brand: l10n.appName,
+                              onOpenEvent: (e) =>
+                                  context.push('/events/${e.id}'),
+                              onDiscover: () => _openDiscoverAll(),
+                            );
+
+                      if (!sideBySide || nowPlaying == null) {
+                        return Column(
+                          children: [
+                            weather,
+                            if (nowPlaying != null) ...[
+                              const SizedBox(height: 12),
+                              nowPlaying,
+                            ],
+                          ],
+                        );
+                      }
+
+                      return IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: weather),
+                            const SizedBox(width: 12),
+                            Expanded(child: nowPlaying),
+                          ],
                         ),
-                      ],
-                    ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -1110,13 +1129,11 @@ class _HeroBannerState extends ConsumerState<_HeroBanner> {
                                   ),
                                   suffixIcon: _suggesting
                                       ? const Padding(
-                                          padding: EdgeInsets.all(12),
-                                          child: SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
+                                          padding: EdgeInsets.all(8),
+                                          child: FunSearching(
+                                            size: FunSearchingSize.sm,
+                                            showLabel: false,
+                                            compact: true,
                                           ),
                                         )
                                       : null,

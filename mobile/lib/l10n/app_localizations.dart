@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get navProfile;
 
+  /// No description provided for @navExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get navExplore;
+
   /// No description provided for @publicProfile.
   ///
   /// In en, this message translates to:
@@ -512,6 +518,12 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get search;
 
+  /// No description provided for @searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search events, activities, locations...'**
+  String get searchPlaceholder;
+
   /// No description provided for @allCities.
   ///
   /// In en, this message translates to:
@@ -727,6 +739,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.'**
   String get placeOnMapHelp;
+
+  /// No description provided for @placeTapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the map to drop or move the pin.'**
+  String get placeTapHint;
 
   /// No description provided for @mapsUrl.
   ///
@@ -1520,6 +1538,24 @@ abstract class AppLocalizations {
   /// **'Tomorrow'**
   String get tomorrow;
 
+  /// No description provided for @weekend.
+  ///
+  /// In en, this message translates to:
+  /// **'This weekend'**
+  String get weekend;
+
+  /// No description provided for @whenAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time'**
+  String get whenAny;
+
+  /// No description provided for @whenFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get whenFilter;
+
   /// No description provided for @promote.
   ///
   /// In en, this message translates to:
@@ -1993,6 +2029,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for the host to accept your request.'**
   String get pendingReviewNotice;
+
+  /// No description provided for @pendingRequestsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for acceptance'**
+  String get pendingRequestsSection;
+
+  /// No description provided for @joinedEventsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Events you joined'**
+  String get joinedEventsSection;
 
   /// No description provided for @weatherSetLocation.
   ///

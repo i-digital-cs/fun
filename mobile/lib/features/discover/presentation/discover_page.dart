@@ -4,6 +4,7 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
+import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
@@ -28,6 +29,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   int? _draftCityId;
   int? _draftCategoryId;
   int? _draftDistanceKm;
+  String? _draftWhen;
   bool _draftAllCities = true;
   bool _catalogLoaded = false;
 
@@ -74,6 +76,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       _draftCityId = filters.cityId;
       _draftCategoryId = filters.categoryId;
       _draftDistanceKm = filters.distanceKm ?? _distances.firstOrNull ?? 25;
+      _draftWhen = filters.when;
     });
   }
 
@@ -83,6 +86,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           cityId: _draftCityId,
           categoryId: _draftCategoryId,
           distanceKm: _draftDistanceKm,
+          when: _draftWhen,
           allCities: _draftAllCities,
         );
   }
@@ -110,6 +114,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       _draftCityId = null;
       _draftCategoryId = null;
       _draftDistanceKm = _distances.firstOrNull ?? 25;
+      _draftWhen = null;
     });
     await ref.read(discoverControllerProvider.notifier).clearFilters();
   }
@@ -199,6 +204,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                           cityId: _draftCityId,
                           categoryId: _draftCategoryId,
                           distanceKm: _draftDistanceKm,
+                          when: _draftWhen,
                           onAllCitiesChanged: (v) => setState(() {
                             _draftAllCities = v;
                             if (v) _draftCityId = null;
@@ -211,32 +217,22 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               setState(() => _draftCategoryId = id),
                           onDistanceChanged: (km) =>
                               setState(() => _draftDistanceKm = km),
+                          onWhenChanged: (v) =>
+                              setState(() => _draftWhen = v),
                           onApply: _apply,
                           onClear: _clear,
                         ),
                       ),
                     ),
                     if (state.isSearching)
-                      SliverToBoxAdapter(
+                      const SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.wifi_find,
-                                size: 16,
-                                color: AppColors.primary.withValues(alpha: 0.8),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                l10n.searching,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                            ],
+                          padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: Center(
+                            child: FunSearching(
+                              size: FunSearchingSize.sm,
+                              compact: true,
+                            ),
                           ),
                         ),
                       ),
@@ -355,10 +351,12 @@ class DiscoverFilterPanel extends StatelessWidget {
     required this.cityId,
     required this.categoryId,
     required this.distanceKm,
+    required this.when,
     required this.onAllCitiesChanged,
     required this.onCityChanged,
     required this.onCategoryChanged,
     required this.onDistanceChanged,
+    required this.onWhenChanged,
     required this.onApply,
     required this.onClear,
   });
@@ -372,10 +370,12 @@ class DiscoverFilterPanel extends StatelessWidget {
   final int? cityId;
   final int? categoryId;
   final int? distanceKm;
+  final String? when;
   final ValueChanged<bool> onAllCitiesChanged;
   final ValueChanged<int?> onCityChanged;
   final ValueChanged<int?> onCategoryChanged;
   final ValueChanged<int?> onDistanceChanged;
+  final ValueChanged<String?> onWhenChanged;
   final VoidCallback onApply;
   final VoidCallback onClear;
 
@@ -428,6 +428,31 @@ class DiscoverFilterPanel extends StatelessWidget {
               ),
             ],
             onChanged: catalogLoaded ? onCategoryChanged : null,
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String?>(
+            // ignore: deprecated_member_use
+            value: when,
+            decoration: InputDecoration(labelText: l10n.whenFilter),
+            items: [
+              DropdownMenuItem<String?>(
+                value: null,
+                child: Text(l10n.whenAny),
+              ),
+              DropdownMenuItem<String?>(
+                value: 'today',
+                child: Text(l10n.today),
+              ),
+              DropdownMenuItem<String?>(
+                value: 'tomorrow',
+                child: Text(l10n.tomorrow),
+              ),
+              DropdownMenuItem<String?>(
+                value: 'weekend',
+                child: Text(l10n.weekend),
+              ),
+            ],
+            onChanged: onWhenChanged,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int?>(

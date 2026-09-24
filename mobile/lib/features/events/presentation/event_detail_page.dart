@@ -10,6 +10,7 @@ import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -559,6 +560,15 @@ class EventDetailInfoCard extends StatelessWidget {
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: Text(l10n.openInMaps),
               ),
+            ),
+          ],
+          if (event.hasPlacePin &&
+              event.latitude != null &&
+              event.longitude != null) ...[
+            const SizedBox(height: 12),
+            EventPlaceMapViewer(
+              latitude: event.latitude!,
+              longitude: event.longitude!,
             ),
           ],
           if (event.city != null) ...[

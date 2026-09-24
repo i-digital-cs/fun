@@ -9,6 +9,7 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
+import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -211,6 +212,19 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     });
   }
 
+  void _onMapPin(double lat, double lng) {
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _latitude = lat;
+      _longitude = lng;
+      final current = _mapsUrl.text.trim();
+      if (current.isEmpty || current.contains('openstreetmap.org')) {
+        _mapsUrl.text = osmMapsUrl(lat, lng);
+      }
+      _placeStatus = l10n.placePinned;
+    });
+  }
+
   EventDraft? _buildDraft() {
     if (_startsAt == null || _categoryId == null || _cityId == null) return null;
     final maxP = int.tryParse(_maxParticipants.text.trim());
@@ -347,6 +361,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     : () => setState(() => _imagePath = null),
                 onMapsUrlChanged: _applyMapsUrl,
                 onClearPlace: _clearPlace,
+                onPinChanged: _onMapPin,
               ),
               const SizedBox(height: 24),
               GradientButton(
@@ -388,6 +403,7 @@ class CreateEventFormCard extends StatelessWidget {
     required this.onPickImage,
     required this.onMapsUrlChanged,
     required this.onClearPlace,
+    required this.onPinChanged,
     this.onClearImage,
     this.latitude,
     this.longitude,
@@ -418,6 +434,7 @@ class CreateEventFormCard extends StatelessWidget {
   final VoidCallback? onClearImage;
   final VoidCallback onMapsUrlChanged;
   final VoidCallback onClearPlace;
+  final void Function(double lat, double lng) onPinChanged;
   final double? latitude;
   final double? longitude;
   final String? placeStatus;
@@ -499,6 +516,12 @@ class CreateEventFormCard extends StatelessWidget {
               ),
             ),
             onEditingComplete: onMapsUrlChanged,
+          ),
+          const SizedBox(height: 10),
+          EventPlaceMapPicker(
+            latitude: latitude,
+            longitude: longitude,
+            onChanged: onPinChanged,
           ),
           if (latitude != null && longitude != null) ...[
             const SizedBox(height: 8),

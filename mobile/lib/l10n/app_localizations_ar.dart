@@ -61,6 +61,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navProfile => 'الملف';
 
   @override
+  String get navExplore => 'استكشف';
+
+  @override
   String get publicProfile => 'الملف العام';
 
   @override
@@ -230,6 +233,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get search => 'بحث';
 
   @override
+  String get searchPlaceholder => 'ابحث عن فعاليات وأنشطة وأماكن...';
+
+  @override
   String get allCities => 'كل المدن';
 
   @override
@@ -338,6 +344,9 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get placeOnMapHelp =>
       'الصق رابط مشاركة من خرائط جوجل أو OpenStreetMap. بدون مفتاح Google — نقرأ الإحداثيات من الرابط.';
+
+  @override
+  String get placeTapHint => 'اضغط على الخريطة لوضع الدبوس أو تحريكه.';
 
   @override
   String get mapsUrl => 'رابط الخرائط';
@@ -753,6 +762,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tomorrow => 'غداً';
 
   @override
+  String get weekend => 'نهاية الأسبوع';
+
+  @override
+  String get whenAny => 'أي وقت';
+
+  @override
+  String get whenFilter => 'الوقت';
+
+  @override
   String get promote => 'ترقية إلى مشرف';
 
   @override
@@ -1007,6 +1025,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pendingReviewNotice => 'بانتظار موافقة المضيف على طلبك.';
+
+  @override
+  String get pendingRequestsSection => 'بانتظار القبول';
+
+  @override
+  String get joinedEventsSection => 'الفعاليات التي انضممت إليها';
 
   @override
   String get weatherSetLocation => 'حدد موقعك';

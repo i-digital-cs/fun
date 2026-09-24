@@ -116,6 +116,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
     int? cityId,
     int? categoryId,
     int? distanceKm,
+    String? when,
     required bool allCities,
   }) {
     return load(
@@ -124,6 +125,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
         cityId: allCities ? null : cityId,
         categoryId: categoryId,
         distanceKm: allCities ? null : distanceKm,
+        when: when,
         page: 1,
         allCities: allCities,
       ),

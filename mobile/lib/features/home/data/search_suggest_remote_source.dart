@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/core/providers/core_providers.dart';
 
 class SearchSuggestItem {
   const SearchSuggestItem({
@@ -50,3 +52,7 @@ class SearchSuggestRemoteSource {
     }
   }
 }
+
+final searchSuggestRemoteSourceProvider = Provider(
+  (ref) => SearchSuggestRemoteSource(ref.watch(apiClientProvider)),
+);
