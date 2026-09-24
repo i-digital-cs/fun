@@ -22,6 +22,7 @@ class AuthRegistrationTest extends TestCase
             'email' => 'ahmed@example.com',
             'password' => 'Password1!',
             'password_confirmation' => 'Password1!',
+            'sex' => 'male',
             'locale' => 'ar',
         ]);
 
@@ -32,6 +33,7 @@ class AuthRegistrationTest extends TestCase
         $this->assertNotNull($user);
         $this->assertSame(AccountStatus::PendingDocuments, $user->status);
         $this->assertSame('ar', $user->locale);
+        $this->assertSame('male', $user->sex?->value);
         $this->assertNull($user->email_verified_at);
 
         $code = null;
@@ -90,10 +92,12 @@ class AuthRegistrationTest extends TestCase
             'email' => 'sara@example.com',
             'password' => 'Password1!',
             'password_confirmation' => 'Password1!',
+            'sex' => 'female',
         ]);
 
-        $register->assertCreated()->assertJsonStructure(['token', 'user' => ['status']]);
+        $register->assertCreated()->assertJsonStructure(['token', 'user' => ['status', 'sex']]);
         $this->assertSame('pending_documents', $register->json('user.status'));
+        $this->assertSame('female', $register->json('user.sex'));
         $this->assertFalse($register->json('email_verified'));
 
         $login = $this->postJson('/api/login', [

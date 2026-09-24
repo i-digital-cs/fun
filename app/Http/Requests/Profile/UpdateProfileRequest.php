@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Profile;
 
+use App\Enums\UserSex;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -28,6 +29,7 @@ class UpdateProfileRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user?->id),
             ],
+            'sex' => ['required', Rule::enum(UserSex::class)],
             'locale' => ['nullable', 'in:en,ar'],
             'current_password' => ['nullable', 'string'],
             'password' => ['nullable', 'confirmed', Password::defaults()],

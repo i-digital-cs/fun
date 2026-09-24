@@ -33,7 +33,7 @@ For each screen:
 | **Gates** | email verified → identity → active | Same order using `/api/user` flags |
 | **Discover / events** | Filters, rich cards, join states | Same filters + `join_action` (send **Bearer** on event GETs) |
 | **Dashboard home** | Greeting, hero, categories+counts, nearby, safety, how-it-works, CTA | Compose from events/categories/user/participations |
-| **Profile** | Photo, name, email, locale, password | `PUT /api/settings/profile` |
+| **Profile** | Photo, name, email, sex (male/female/mix), locale, password | `PUT /api/settings/profile` |
 | **Identity** | Status chips, thumbs, 3 uploads, cinema | `GET/POST /api/identity` + document streams |
 | **Safety** | Guidelines, report, blocks | l10n + `POST /api/reports` + blocks API |
 
@@ -47,7 +47,7 @@ For each screen:
 |------|-----------|
 | Branding | `GET /api/site` |
 | Auth | `POST /register` · `/login` · `/auth/google` · `/logout` · `/email/verify` · `/email/verify/resend` · `/forgot-password` · `/forgot-password/verify` · `/reset-password` |
-| Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `can_participate`, `has_password`, city…) |
+| Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `sex`, `needs_sex`, `can_participate`, `has_password`, city…) |
 | Profile | `GET /api/users/{publicId}` (public) · `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
@@ -492,11 +492,13 @@ Glass card with **site name + logo** (from admin settings). Email + password, re
 | **Blade** | `auth/register.blade.php` |
 | **API** | `POST /api/register` |
 
-Name, email, password, confirmation, locale. **Orange→amber** CTA. Site branding on card.
+Name, email, **sex** (`male` \| `female` \| `mix`, required), password, confirmation, locale. **Orange→amber** CTA. Site branding on card.
 
-**Response:** Sanctum `token` + `email_verified: false`. A **4-digit email code** is sent automatically.
+**Response:** Sanctum `token` + `email_verified: false` + `user.sex`. A **4-digit email code** is sent automatically.
 
 **Next screen:** Verify email (`§2.12a`) — do **not** open Identity until email is verified.
+
+Google sign-up may leave `sex` null (`needs_sex: true`); user must set it on Profile settings.
 
 ---
 
@@ -678,10 +680,11 @@ Block app usage; show message + logout. No member APIs.
 | **API** | `PUT /api/settings/profile` (JSON or multipart) |
 | **Auth** | Bearer |
 
-**Fields:** photo (optional), name, email, locale, current_password (if changing password), password + confirmation.
+**Fields:** photo (optional), name, email, **sex** (`male` \| `female` \| `mix`, required), locale, current_password (if changing password), password + confirmation.
 
 | Behavior | Detail |
 |----------|--------|
+| Sex | Required; values `male`, `female`, `mix` |
 | Change password | Send `current_password` + `password` + `password_confirmation` |
 | Change email | Sets `email_verified: false`, sends new code → Verify email screen (`email_changed: true` in response) |
 | Photo | `photo` file part, or `remove_photo: true` |
@@ -743,17 +746,17 @@ Base: `{APP_URL}/api` · codes are **4 digits** · expire **15 minutes**.
 | Flow | Method | Path | Auth | Body |
 |------|--------|------|------|------|
 | Site branding | `GET` | `/site` | — | — → `{ display_name, logo_url, app }` (see §2C) |
-| Register | `POST` | `/register` | — | name, email, password, password_confirmation, locale? |
+| Register | `POST` | `/register` | — | name, email, password, password_confirmation, **sex** (`male`\|`female`\|`mix`), locale? |
 | Login | `POST` | `/login` | — | email, password |
-| Google Sign-In | `POST` | `/auth/google` | — | `id_token`, locale? → Sanctum token (email already verified) |
+| Google Sign-In | `POST` | `/auth/google` | — | `id_token`, locale? → Sanctum token (email already verified; `needs_sex` if sex unset) |
 | Logout | `POST` | `/logout` | Bearer | — |
-| Me | `GET` | `/user` | Bearer | — |
+| Me | `GET` | `/user` | Bearer | — → includes `sex`, `needs_sex` |
 | Resend verify code | `POST` | `/email/verify/resend` | Bearer | — |
 | Verify email | `POST` | `/email/verify` | Bearer | `code` |
 | Forgot password | `POST` | `/forgot-password` | — | `email` |
 | Verify reset code | `POST` | `/forgot-password/verify` | — | `email`, `code` → `reset_token` |
 | Reset password | `POST` | `/reset-password` | — | `email`, `reset_token`, `password`, `password_confirmation` |
-| Update profile | `PUT` | `/settings/profile` | Bearer | name, email, locale?, current_password?, password?, photo?, remove_photo? |
+| Update profile | `PUT` | `/settings/profile` | Bearer | name, email, **sex**, locale?, current_password?, password?, photo?, remove_photo? |
 | Home participations | `GET` | `/home/participations` | Bearer | memberships + pending_requests |
 | Identity status | `GET` | `/identity` | Bearer | — |
 | Upload identity | `POST` | `/identity` | Bearer | multipart: `id_front`, `id_back`, `selfie` |
@@ -1144,7 +1147,7 @@ Copy strings from `lang/en/*.php` and `lang/ar/*.php` into Flutter l10n (ARB).
 
 Mirror web: email verified → then `account.active` + `canParticipate()` for create/join/report/rate.
 
-`GET /api/user` / login / register expose: `email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`.
+`GET /api/user` / login / register expose: `email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `sex`, `needs_sex`.
 
 ---
 
@@ -1210,7 +1213,7 @@ Copy this into PRs:
 
 Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
-1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C)  
+1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API)  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
@@ -1258,4 +1261,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-23 — Official Funity logo via site settings; event `location_label` + nested `location` on API; free place pin.*
+*Last updated: 2026-09-24 — Required user sex (male/female/mix) on register + profile; Official Funity logo via site settings; event `location_label` + nested `location` on API; free place pin.*

@@ -140,6 +140,7 @@ class AuthRemoteSource {
     required String email,
     required String password,
     required String passwordConfirmation,
+    required String sex,
     required String locale,
   }) async {
     try {
@@ -150,6 +151,7 @@ class AuthRemoteSource {
           'email': email,
           'password': password,
           'password_confirmation': passwordConfirmation,
+          'sex': sex,
           'locale': locale,
         },
       );

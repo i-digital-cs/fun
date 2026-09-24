@@ -25,6 +25,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _passwordConfirm = TextEditingController();
+  String? _sex;
   String? _error;
   bool _submitting = false;
   bool _theater = false;
@@ -44,6 +45,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   void _startTheater() {
     if (!_formKey.currentState!.validate()) return;
+    if (_sex == null) {
+      setState(() => _error = AppLocalizations.of(context).sexRequired);
+      return;
+    }
     setState(() {
       _theater = true;
       _error = null;
@@ -60,6 +65,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           email: _email.text.trim(),
           password: _password.text,
           passwordConfirmation: _passwordConfirm.text,
+          sex: _sex!,
           locale: locale,
           commitSession: false,
         );
@@ -211,6 +217,31 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                     }
                                     return null;
                                   },
+                                ),
+                                const SizedBox(height: 14),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _sex,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.sex,
+                                  ),
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'male',
+                                      child: Text(l10n.sexMale),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'female',
+                                      child: Text(l10n.sexFemale),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'mix',
+                                      child: Text(l10n.sexMix),
+                                    ),
+                                  ],
+                                  onChanged: (v) => setState(() => _sex = v),
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? l10n.sexRequired
+                                      : null,
                                 ),
                                 const SizedBox(height: 14),
                                 TextFormField(

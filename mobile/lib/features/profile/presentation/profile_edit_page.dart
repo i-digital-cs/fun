@@ -24,6 +24,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   late final TextEditingController _password;
   late final TextEditingController _passwordConfirm;
   String _locale = 'en';
+  String? _sex;
   String? _photoPath;
   bool _removePhoto = false;
   bool _saving = false;
@@ -40,6 +41,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     _password = TextEditingController();
     _passwordConfirm = TextEditingController();
     _locale = user?.locale ?? ref.read(localeCodeProvider);
+    _sex = user?.sex;
   }
 
   @override
@@ -67,6 +69,12 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_sex == null || _sex!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).sexRequired)),
+      );
+      return;
+    }
     final changingPassword = _password.text.isNotEmpty;
     if (changingPassword && _currentPassword.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,6 +89,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         .updateProfile(
           name: _name.text.trim(),
           email: _email.text.trim(),
+          sex: _sex!,
           locale: _locale,
           currentPassword: changingPassword ? _currentPassword.text : null,
           password: changingPassword ? _password.text : null,
@@ -164,6 +173,30 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                       if (!v.contains('@')) return l10n.validationEmail;
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _sex,
+                    decoration: InputDecoration(labelText: l10n.sex),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'male',
+                        child: Text(l10n.sexMale),
+                      ),
+                      DropdownMenuItem(
+                        value: 'female',
+                        child: Text(l10n.sexFemale),
+                      ),
+                      DropdownMenuItem(
+                        value: 'mix',
+                        child: Text(l10n.sexMix),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _sex = v);
+                    },
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? l10n.sexRequired : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(

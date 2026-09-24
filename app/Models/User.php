@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccountStatus;
 use App\Enums\IdentityDocumentType;
 use App\Enums\PlatformRole;
+use App\Enums\UserSex;
 use App\Support\UserPublicId;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'password',
         'google_id',
         'locale',
+        'sex',
         'city_id',
         'distance_km',
         'profile_image_path',
@@ -53,9 +55,15 @@ class User extends Authenticatable
             'password' => 'hashed',
             'status' => AccountStatus::class,
             'platform_role' => PlatformRole::class,
+            'sex' => UserSex::class,
             'deactivated_at' => 'datetime',
             'distance_km' => 'integer',
         ];
+    }
+
+    public function needsSex(): bool
+    {
+        return $this->sex === null;
     }
 
     protected static function booted(): void

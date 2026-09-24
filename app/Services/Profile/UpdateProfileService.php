@@ -3,6 +3,7 @@
 namespace App\Services\Profile;
 
 use App\Enums\EmailAuthPurpose;
+use App\Enums\UserSex;
 use App\Exceptions\DomainException;
 use App\Models\User;
 use App\Services\Auth\EmailAuthCodeService;
@@ -22,6 +23,7 @@ class UpdateProfileService
      * @param  array{
      *     name: string,
      *     email: string,
+     *     sex: string|UserSex,
      *     locale?: string,
      *     current_password?: string|null,
      *     password?: string|null,
@@ -47,9 +49,14 @@ class UpdateProfileService
             }
         }
 
+        $sex = $data['sex'] instanceof UserSex
+            ? $data['sex']
+            : UserSex::from((string) $data['sex']);
+
         $payload = [
             'name' => $data['name'],
             'email' => $email,
+            'sex' => $sex,
         ];
 
         if (isset($data['locale']) && in_array($data['locale'], ['en', 'ar'], true)) {

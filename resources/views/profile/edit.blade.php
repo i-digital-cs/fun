@@ -76,6 +76,19 @@
                         <p class="mt-1 text-xs text-slate-400">{{ __('profile.email_help') }}</p>
                     </div>
                     <div>
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700" for="sex">{{ __('ui.sex') }}</label>
+                        <select id="sex" name="sex" required
+                                class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
+                            <option value="" disabled @selected(old('sex', $user->sex?->value) === null)>{{ __('ui.sex_required') }}</option>
+                            <option value="male" @selected(old('sex', $user->sex?->value) === 'male')>{{ __('ui.sex_male') }}</option>
+                            <option value="female" @selected(old('sex', $user->sex?->value) === 'female')>{{ __('ui.sex_female') }}</option>
+                            <option value="mix" @selected(old('sex', $user->sex?->value) === 'mix')>{{ __('ui.sex_mix') }}</option>
+                        </select>
+                        @error('sex')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700" for="locale">{{ __('ui.language') }}</label>
                         <select id="locale" name="locale" class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
                             <option value="en" @selected(old('locale', $user->locale) === 'en')>{{ __('ui.english') }}</option>

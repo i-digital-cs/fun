@@ -29,6 +29,7 @@ class ProfileRemoteSource {
   Future<({Failure? failure, User? data, bool emailChanged})> updateProfile({
     required String name,
     required String email,
+    required String sex,
     String? locale,
     String? currentPassword,
     String? password,
@@ -40,6 +41,7 @@ class ProfileRemoteSource {
       final fields = <String, dynamic>{
         'name': name,
         'email': email,
+        'sex': sex,
         if (locale != null && locale.isNotEmpty) 'locale': locale,
         if (currentPassword != null && currentPassword.isNotEmpty)
           'current_password': currentPassword,

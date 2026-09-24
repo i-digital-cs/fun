@@ -92,6 +92,7 @@ class ApiAuthFlowsTest extends TestCase
         $this->putJson('/api/settings/profile', [
             'name' => $user->name,
             'email' => $user->email,
+            'sex' => $user->sex?->value ?? 'male',
             'locale' => 'en',
             'current_password' => 'Password1!',
             'password' => 'Password9!',

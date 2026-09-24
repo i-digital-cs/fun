@@ -74,6 +74,8 @@ class GoogleAuthController extends Controller
                 'email' => $user->email,
                 'status' => $user->status->value,
                 'locale' => $user->locale,
+                'sex' => $user->sex?->value,
+                'needs_sex' => $user->needsSex(),
                 'platform_role' => $user->platform_role?->value,
                 'profile_image_path' => $user->profile_image_path,
                 'city_id' => $user->city_id,

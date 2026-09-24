@@ -146,6 +146,36 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get name;
 
+  /// No description provided for @sex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get sex;
+
+  /// No description provided for @sexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get sexMale;
+
+  /// No description provided for @sexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get sexFemale;
+
+  /// No description provided for @sexMix.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix'**
+  String get sexMix;
+
+  /// No description provided for @sexRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select your sex.'**
+  String get sexRequired;
+
   /// No description provided for @remember.
   ///
   /// In en, this message translates to:

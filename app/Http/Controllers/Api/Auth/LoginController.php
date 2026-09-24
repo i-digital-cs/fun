@@ -43,6 +43,8 @@ class LoginController extends Controller
                 'email' => $user->email,
                 'status' => $user->status->value,
                 'locale' => $user->locale,
+                'sex' => $user->sex?->value,
+                'needs_sex' => $user->needsSex(),
                 'platform_role' => $user->platform_role?->value,
                 'email_verified' => $emailVerified,
                 'email_verified_at' => $user->email_verified_at?->toIso8601String(),

@@ -51,6 +51,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     required String passwordConfirmation,
+    required String sex,
     required String locale,
   }) async {
     final result = await _remote.register(
@@ -58,6 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
       email: email,
       password: password,
       passwordConfirmation: passwordConfirmation,
+      sex: sex,
       locale: locale,
     );
     if (result.failure != null) {

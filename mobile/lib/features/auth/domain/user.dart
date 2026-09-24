@@ -8,6 +8,7 @@ class User extends Equatable {
     required this.status,
     required this.locale,
     this.publicId,
+    this.sex,
     this.platformRole,
     this.cityId,
     this.distanceKm,
@@ -18,6 +19,7 @@ class User extends Equatable {
     this.needsIdentityDocuments = false,
     this.hasIdentityDocuments = false,
     this.identityResubmitRequired = false,
+    this.needsSex = false,
     this.canParticipateFlag,
     this.hasPassword = true,
   });
@@ -28,6 +30,9 @@ class User extends Equatable {
   final String status;
   final String locale;
   final String? publicId;
+
+  /// API values: `male` | `female` | `mix`.
+  final String? sex;
   final String? platformRole;
   final int? cityId;
   final int? distanceKm;
@@ -38,6 +43,7 @@ class User extends Equatable {
   final bool needsIdentityDocuments;
   final bool hasIdentityDocuments;
   final bool identityResubmitRequired;
+  final bool needsSex;
 
   /// When non-null, API `can_participate` wins; else derived from status.
   final bool? canParticipateFlag;
@@ -47,6 +53,7 @@ class User extends Equatable {
     final city = json['city'];
     final emailVerified =
         json['email_verified'] as bool? ?? (json['email_verified_at'] != null);
+    final sex = json['sex'] as String?;
     return User(
       id: json['id'] as int,
       publicId: json['public_id'] as String?,
@@ -54,6 +61,7 @@ class User extends Equatable {
       email: json['email'] as String? ?? '',
       status: json['status'] as String? ?? 'active',
       locale: json['locale'] as String? ?? 'en',
+      sex: sex,
       platformRole: json['platform_role'] as String?,
       cityId: json['city_id'] as int?,
       distanceKm: json['distance_km'] as int?,
@@ -67,6 +75,7 @@ class User extends Equatable {
       hasIdentityDocuments: json['has_identity_documents'] as bool? ?? false,
       identityResubmitRequired:
           json['identity_resubmit_required'] as bool? ?? false,
+      needsSex: json['needs_sex'] as bool? ?? (sex == null || sex.isEmpty),
       canParticipateFlag: json['can_participate'] as bool?,
       hasPassword: json['has_password'] as bool? ?? true,
     );
@@ -107,6 +116,7 @@ class User extends Equatable {
     String? status,
     String? locale,
     String? publicId,
+    String? sex,
     String? platformRole,
     int? cityId,
     int? distanceKm,
@@ -117,9 +127,11 @@ class User extends Equatable {
     bool? needsIdentityDocuments,
     bool? hasIdentityDocuments,
     bool? identityResubmitRequired,
+    bool? needsSex,
     bool? canParticipateFlag,
     bool? hasPassword,
     bool clearProfileImage = false,
+    bool clearSex = false,
   }) {
     return User(
       id: id ?? this.id,
@@ -128,6 +140,7 @@ class User extends Equatable {
       status: status ?? this.status,
       locale: locale ?? this.locale,
       publicId: publicId ?? this.publicId,
+      sex: clearSex ? null : (sex ?? this.sex),
       platformRole: platformRole ?? this.platformRole,
       cityId: cityId ?? this.cityId,
       distanceKm: distanceKm ?? this.distanceKm,
@@ -143,6 +156,7 @@ class User extends Equatable {
       hasIdentityDocuments: hasIdentityDocuments ?? this.hasIdentityDocuments,
       identityResubmitRequired:
           identityResubmitRequired ?? this.identityResubmitRequired,
+      needsSex: needsSex ?? this.needsSex,
       canParticipateFlag: canParticipateFlag ?? this.canParticipateFlag,
       hasPassword: hasPassword ?? this.hasPassword,
     );
@@ -156,6 +170,7 @@ class User extends Equatable {
     status,
     locale,
     publicId,
+    sex,
     platformRole,
     cityId,
     distanceKm,
@@ -166,6 +181,7 @@ class User extends Equatable {
     needsIdentityDocuments,
     hasIdentityDocuments,
     identityResubmitRequired,
+    needsSex,
     canParticipateFlag,
     hasPassword,
   ];

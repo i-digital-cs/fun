@@ -26,6 +26,19 @@
                    class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
         </div>
         <div>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700" for="sex">{{ __('ui.sex') }}</label>
+            <select id="sex" name="sex" required
+                    class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
+                <option value="" disabled @selected(old('sex') === null)>{{ __('ui.sex_required') }}</option>
+                <option value="male" @selected(old('sex') === 'male')>{{ __('ui.sex_male') }}</option>
+                <option value="female" @selected(old('sex') === 'female')>{{ __('ui.sex_female') }}</option>
+                <option value="mix" @selected(old('sex') === 'mix')>{{ __('ui.sex_mix') }}</option>
+            </select>
+            @error('sex')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+        <div>
             <label class="mb-1.5 block text-sm font-medium text-slate-700" for="password">{{ __('ui.password') }}</label>
             <input id="password" type="password" name="password" required autocomplete="new-password"
                    class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">

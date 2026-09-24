@@ -41,6 +41,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String passwordConfirmation,
+    required String sex,
     required String locale,
   }) async => (failure: const ValidationFailure('unused'), data: null);
 

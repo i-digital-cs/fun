@@ -19,6 +19,8 @@ class MeController extends Controller
             'email' => $user->email,
             'status' => $user->status->value,
             'locale' => $user->locale,
+            'sex' => $user->sex?->value,
+            'needs_sex' => $user->needsSex(),
             'platform_role' => $user->platform_role?->value,
             'city_id' => $user->city_id,
             'distance_km' => $user->distance_km,

@@ -11,6 +11,7 @@ abstract class ProfileRepository {
   Future<({Failure? failure, User? data, bool emailChanged})> updateProfile({
     required String name,
     required String email,
+    required String sex,
     String? locale,
     String? currentPassword,
     String? password,

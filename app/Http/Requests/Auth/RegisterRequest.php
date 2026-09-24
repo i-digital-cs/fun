@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\UserSex;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
@@ -21,6 +23,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
+            'sex' => ['required', Rule::enum(UserSex::class)],
             'locale' => ['nullable', 'in:en,ar'],
         ];
     }

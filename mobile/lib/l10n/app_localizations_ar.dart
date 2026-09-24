@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -32,6 +31,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get name => 'الاسم';
+
+  @override
+  String get sex => 'الجنس';
+
+  @override
+  String get sexMale => 'ذكر';
+
+  @override
+  String get sexFemale => 'أنثى';
+
+  @override
+  String get sexMix => 'مختلط';
+
+  @override
+  String get sexRequired => 'يرجى اختيار الجنس.';
 
   @override
   String get remember => 'تذكرني';

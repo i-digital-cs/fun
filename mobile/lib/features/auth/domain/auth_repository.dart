@@ -17,6 +17,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String passwordConfirmation,
+    required String sex,
     required String locale,
   });
 

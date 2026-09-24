@@ -129,6 +129,7 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String password,
     required String passwordConfirmation,
+    required String sex,
     required String locale,
     bool commitSession = true,
   }) async {
@@ -139,6 +140,7 @@ class AuthController extends StateNotifier<AuthState> {
           email: email,
           password: password,
           passwordConfirmation: passwordConfirmation,
+          sex: sex,
           locale: locale,
         );
     if (result.failure != null || result.data == null) {

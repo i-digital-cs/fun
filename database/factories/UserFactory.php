@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\AccountStatus;
 use App\Enums\PlatformRole;
+use App\Enums\UserSex;
 use App\Models\User;
 use App\Support\UserPublicId;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -30,6 +31,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'status' => AccountStatus::PendingDocuments,
             'locale' => 'en',
+            'sex' => fake()->randomElement(UserSex::cases()),
             'remember_token' => Str::random(10),
         ];
     }

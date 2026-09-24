@@ -18,6 +18,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<({Failure? failure, User? data, bool emailChanged})> updateProfile({
     required String name,
     required String email,
+    required String sex,
     String? locale,
     String? currentPassword,
     String? password,
@@ -27,6 +28,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }) => _remote.updateProfile(
     name: name,
     email: email,
+    sex: sex,
     locale: locale,
     currentPassword: currentPassword,
     password: password,
