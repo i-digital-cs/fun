@@ -79,11 +79,18 @@
                 @endif
                 @php($placeLabel = $event->locationLabel())
                 @if ($placeLabel !== '')
-                    <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
-                        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
+                        <svg class="h-4 w-4 shrink-0 text-indigo-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
                         </svg>
-                        <span>{{ $placeLabel }}</span>
+                        <span class="truncate" title="{{ $placeLabel }}">{{ $placeLabel }}</span>
+                    </span>
+                @elseif ($event->hasPlacePin())
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">
+                        <svg class="h-4 w-4 shrink-0 text-indigo-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
+                        </svg>
+                        <span>{{ number_format((float) $event->latitude, 5) }}, {{ number_format((float) $event->longitude, 5) }}</span>
                     </span>
                 @endif
                 @if ($event->mapsOpenUrl())

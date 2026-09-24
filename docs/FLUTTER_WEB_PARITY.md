@@ -363,7 +363,7 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 }
 ```
 
-UI chips/cards use `location_label` (venue · city), never a bare form label like “Venue”.
+**Open in maps:** always derived from **pin** `latitude`/`longitude` (not a stale pasted `maps_url`). If the user pastes a link then moves the pin, the pin wins and `maps_url` is rewritten to match.
 
 CTA: orange create/save. After create → show or edit draft + publish.
 

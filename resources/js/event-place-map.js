@@ -124,7 +124,8 @@ async function initPicker(root) {
             });
         }
         if (zoom) map.setView([lat, lng], Math.max(map.getZoom(), 15));
-        if (writeUrl && (!urlInput.value || urlInput.value.includes('openstreetmap.org'))) {
+        // Pin is source of truth — always keep maps_url in sync with the marker.
+        if (writeUrl && urlInput) {
             urlInput.value = osmUrl(lat, lng);
         }
         setStatus(root.dataset.statusPinned || '');
