@@ -77,23 +77,23 @@ class IdentityStatus extends Equatable {
       hasIdentityDocuments: json['has_identity_documents'] as bool? ?? false,
       documents: docs is List
           ? docs
-              .whereType<Map<String, dynamic>>()
-              .map(IdentityDocument.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(IdentityDocument.fromJson)
+                .toList()
           : const [],
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        emailVerified,
-        needsEmailVerification,
-        needsUpload,
-        canUpload,
-        needsIdentityDocuments,
-        resubmitRequired,
-        hasIdentityDocuments,
-        documents,
-      ];
+    status,
+    emailVerified,
+    needsEmailVerification,
+    needsUpload,
+    canUpload,
+    needsIdentityDocuments,
+    resubmitRequired,
+    hasIdentityDocuments,
+    documents,
+  ];
 }

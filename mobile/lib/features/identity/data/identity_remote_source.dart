@@ -14,10 +14,7 @@ class IdentityRemoteSource {
   Future<({Failure? failure, IdentityStatus? data})> fetch() async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>('/identity');
-      return (
-        failure: null,
-        data: IdentityStatus.fromJson(response.data!),
-      );
+      return (failure: null, data: IdentityStatus.fromJson(response.data!));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
@@ -63,10 +60,7 @@ class IdentityRemoteSource {
         '/identity',
         data: form,
       );
-      return (
-        failure: null,
-        data: IdentityStatus.fromJson(response.data!),
-      );
+      return (failure: null, data: IdentityStatus.fromJson(response.data!));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }

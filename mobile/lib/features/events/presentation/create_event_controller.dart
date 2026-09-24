@@ -25,11 +25,7 @@ class CreateBootstrapResult {
 }
 
 class CreateSubmitResult {
-  const CreateSubmitResult({
-    this.error,
-    this.event,
-    this.offerPublish = false,
-  });
+  const CreateSubmitResult({this.error, this.event, this.offerPublish = false});
 
   final String? error;
   final EventItem? event;
@@ -124,7 +120,7 @@ class CreateEventState {
 /// Form text controllers stay on the page.
 class CreateEventController extends StateNotifier<CreateEventState> {
   CreateEventController(this._ref, this.eventId)
-      : super(const CreateEventState(loadingCatalog: true));
+    : super(const CreateEventState(loadingCatalog: true));
 
   final Ref _ref;
 
@@ -187,8 +183,9 @@ class CreateEventController extends StateNotifier<CreateEventState> {
       endsAt: event.endsAt,
       latitude: event.latitude,
       longitude: event.longitude,
-      placeStatus:
-          event.hasPlacePin ? CreatePlaceStatus.pinned : CreatePlaceStatus.none,
+      placeStatus: event.hasPlacePin
+          ? CreatePlaceStatus.pinned
+          : CreatePlaceStatus.none,
       clearError: true,
     );
     return event;
@@ -219,8 +216,9 @@ class CreateEventController extends StateNotifier<CreateEventState> {
     }
     if (raw.trim().isEmpty) return;
     state = state.copyWith(placeStatus: CreatePlaceStatus.resolving);
-    final result =
-        await _ref.read(eventsRepositoryProvider).resolveMapsUrl(raw.trim());
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .resolveMapsUrl(raw.trim());
     if (result.failure != null || result.data == null) {
       state = state.copyWith(placeStatus: CreatePlaceStatus.unresolved);
       return;
@@ -240,13 +238,9 @@ class CreateEventController extends StateNotifier<CreateEventState> {
     );
   }
 
-  /// Returns OSM maps URL when the current maps field should be replaced.
+  /// Returns OSM maps URL always matching the pin (link field is updated).
   String? pin(double lat, double lng, {required String currentMapsUrl}) {
-    final current = currentMapsUrl.trim();
-    String? nextUrl;
-    if (current.isEmpty || current.contains('openstreetmap.org')) {
-      nextUrl = MapsUrlParser.openStreetMapUrl(lat, lng);
-    }
+    final nextUrl = MapsUrlParser.openStreetMapUrl(lat, lng);
     state = state.copyWith(
       latitude: lat,
       longitude: lng,
@@ -282,5 +276,5 @@ class CreateEventController extends StateNotifier<CreateEventState> {
 /// [eventId] `0` = create; positive = edit.
 final createEventControllerProvider = StateNotifierProvider.autoDispose
     .family<CreateEventController, CreateEventState, int>((ref, eventId) {
-  return CreateEventController(ref, eventId);
-});
+      return CreateEventController(ref, eventId);
+    });

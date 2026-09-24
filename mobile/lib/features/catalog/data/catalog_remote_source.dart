@@ -34,34 +34,33 @@ class CatalogRemoteSource {
         name: m['name'] as String? ?? m['name_en'] as String? ?? '',
       );
     }).toList();
-    final distances = (body['distances_km'] as List<dynamic>? ?? [5, 10, 25, 50])
-        .map((e) => (e as num).toInt())
-        .toList();
+    final distances =
+        (body['distances_km'] as List<dynamic>? ?? [5, 10, 25, 50])
+            .map((e) => (e as num).toInt())
+            .toList();
     return CatalogBundle(cities: list, distancesKm: distances);
   }
 
   Future<({Failure? failure, List<CategoryItem>? data})> categories() async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/categories');
-      final list = (response.data!['categories'] as List<dynamic>? ?? [])
-          .map((e) {
-            final m = e as Map<String, dynamic>;
-            return CategoryItem(
-              id: m['id'] as int? ??
-                  (m['id'] is num ? (m['id'] as num).toInt() : 0),
-              name: m['name'] as String? ??
-                  m['name_en'] as String? ??
-                  '',
-              publishedEventsCount:
-                  (m['published_events_count'] as num?)?.toInt() ??
-                      int.tryParse(
-                        '${m['published_events_count'] ?? ''}',
-                      ) ??
-                      0,
-            );
-          })
-          .toList();
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/categories',
+      );
+      final list = (response.data!['categories'] as List<dynamic>? ?? []).map((
+        e,
+      ) {
+        final m = e as Map<String, dynamic>;
+        return CategoryItem(
+          id:
+              m['id'] as int? ??
+              (m['id'] is num ? (m['id'] as num).toInt() : 0),
+          name: m['name'] as String? ?? m['name_en'] as String? ?? '',
+          publishedEventsCount:
+              (m['published_events_count'] as num?)?.toInt() ??
+              int.tryParse('${m['published_events_count'] ?? ''}') ??
+              0,
+        );
+      }).toList();
       return (failure: null, data: list);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
-import 'package:fun_mobile/core/widgets/app_network_image.dart';
+import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 
-/// Site logo + display name for auth glass cards.
+/// Site logo + display name for auth glass cards (`GET /api/site`).
 class AuthSiteBranding extends ConsumerWidget {
   const AuthSiteBranding({super.key});
 
@@ -13,10 +13,8 @@ class AuthSiteBranding extends ConsumerWidget {
     final branding = ref.watch(siteBrandingProvider);
 
     return branding.when(
-      data: (site) => _BrandRow(
-        displayName: site.displayName,
-        logoUrl: site.logoUrl,
-      ),
+      data: (site) =>
+          _BrandRow(displayName: site.displayName, logoUrl: site.logoUrl),
       loading: () => const _BrandRow(displayName: 'Fun'),
       error: (_, _) => const _BrandRow(displayName: 'Fun'),
     );
@@ -31,30 +29,10 @@ class _BrandRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasLogo = logoUrl != null && logoUrl!.isNotEmpty;
-
     return Column(
       children: [
-        if (hasLogo) ...[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: 56,
-              height: 56,
-              child: AppNetworkImage(
-                url: logoUrl!,
-                logicalWidth: 56,
-                logicalHeight: 56,
-                fit: BoxFit.contain,
-                error: const ColoredBox(
-                  color: AppColors.primarySoft,
-                  child: Icon(Icons.celebration_outlined, color: AppColors.primary),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
+        SiteBrandMark(logoUrl: logoUrl, size: 56, borderRadius: 14),
+        const SizedBox(height: 12),
         Text(
           displayName,
           textAlign: TextAlign.center,

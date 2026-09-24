@@ -35,10 +35,9 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
   }
 
   Future<String?> _authenticate() {
-    return ref.read(authControllerProvider.notifier).verifyEmail(
-          _code,
-          commitSession: false,
-        );
+    return ref
+        .read(authControllerProvider.notifier)
+        .verifyEmail(_code, commitSession: false);
   }
 
   void _goAfterAuth() {
@@ -51,8 +50,9 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
       _error = null;
       _info = null;
     });
-    final error =
-        await ref.read(authControllerProvider.notifier).resendEmailVerify();
+    final error = await ref
+        .read(authControllerProvider.notifier)
+        .resendEmailVerify();
     if (!mounted) return;
     setState(() {
       _resending = false;
@@ -181,8 +181,9 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
                               GradientButton.indigo(
                                 label: l10n.verifyEmail,
                                 isLoading: _submitting,
-                                onPressed:
-                                    _code.length == 4 ? _startTheater : null,
+                                onPressed: _code.length == 4
+                                    ? _startTheater
+                                    : null,
                               ),
                               const SizedBox(height: 8),
                               TextButton(
@@ -197,8 +198,8 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
                                 onPressed: _submitting
                                     ? null
                                     : () => ref
-                                        .read(authControllerProvider.notifier)
-                                        .logout(),
+                                          .read(authControllerProvider.notifier)
+                                          .logout(),
                                 child: Text(l10n.logout),
                               ),
                             ],

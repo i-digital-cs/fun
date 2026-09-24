@@ -19,7 +19,7 @@ class _MemoryTokenStorage implements TokenStorage {
 }
 
 class _LogoutOnlyRemote extends AuthRemoteSource {
-  _LogoutOnlyRemote(ApiClient client) : super(client);
+  _LogoutOnlyRemote(super.client);
 
   bool called = false;
 
@@ -31,7 +31,7 @@ class _LogoutOnlyRemote extends AuthRemoteSource {
 }
 
 class _UnauthorizedLogoutRemote extends AuthRemoteSource {
-  _UnauthorizedLogoutRemote(ApiClient client) : super(client);
+  _UnauthorizedLogoutRemote(super.client);
 
   @override
   Future<({Failure? failure, void data})> logout() async {
@@ -40,38 +40,42 @@ class _UnauthorizedLogoutRemote extends AuthRemoteSource {
 }
 
 void main() {
-  test('AuthRepositoryImpl.logout clears token even when remote succeeds',
-      () async {
-    final storage = _MemoryTokenStorage()..value = 'secret';
-    final client = ApiClient(
-      tokenStorage: storage,
-      locale: 'en',
-      onUnauthorized: () {},
-    );
-    final remote = _LogoutOnlyRemote(client);
-    final repo = AuthRepositoryImpl(remote: remote, tokenStorage: storage);
+  test(
+    'AuthRepositoryImpl.logout clears token even when remote succeeds',
+    () async {
+      final storage = _MemoryTokenStorage()..value = 'secret';
+      final client = ApiClient(
+        tokenStorage: storage,
+        locale: 'en',
+        onUnauthorized: () {},
+      );
+      final remote = _LogoutOnlyRemote(client);
+      final repo = AuthRepositoryImpl(remote: remote, tokenStorage: storage);
 
-    final result = await repo.logout();
+      final result = await repo.logout();
 
-    expect(result.failure, isNull);
-    expect(remote.called, isTrue);
-    expect(storage.value, isNull);
-  });
+      expect(result.failure, isNull);
+      expect(remote.called, isTrue);
+      expect(storage.value, isNull);
+    },
+  );
 
-  test('AuthRepositoryImpl.logout clears token when remote returns 401',
-      () async {
-    final storage = _MemoryTokenStorage()..value = 'stale';
-    final client = ApiClient(
-      tokenStorage: storage,
-      locale: 'en',
-      onUnauthorized: () {},
-    );
-    final remote = _UnauthorizedLogoutRemote(client);
-    final repo = AuthRepositoryImpl(remote: remote, tokenStorage: storage);
+  test(
+    'AuthRepositoryImpl.logout clears token when remote returns 401',
+    () async {
+      final storage = _MemoryTokenStorage()..value = 'stale';
+      final client = ApiClient(
+        tokenStorage: storage,
+        locale: 'en',
+        onUnauthorized: () {},
+      );
+      final remote = _UnauthorizedLogoutRemote(client);
+      final repo = AuthRepositoryImpl(remote: remote, tokenStorage: storage);
 
-    final result = await repo.logout();
+      final result = await repo.logout();
 
-    expect(result.failure, isNull);
-    expect(storage.value, isNull);
-  });
+      expect(result.failure, isNull);
+      expect(storage.value, isNull);
+    },
+  );
 }

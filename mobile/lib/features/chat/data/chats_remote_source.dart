@@ -10,16 +10,18 @@ class ChatsRemoteSource {
   final ApiClient _client;
 
   Future<({Failure? failure, List<ChatThread> data, int unreadTotal})>
-      list() async {
+  list() async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>('/chats');
       final raw = response.data?['data'];
       final meta = response.data?['meta'] as Map<String, dynamic>? ?? {};
       final list = raw is List
           ? raw
-              .whereType<Map>()
-              .map((row) => ChatThread.fromJson(Map<String, dynamic>.from(row)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (row) => ChatThread.fromJson(Map<String, dynamic>.from(row)),
+                )
+                .toList()
           : <ChatThread>[];
       return (
         failure: null,

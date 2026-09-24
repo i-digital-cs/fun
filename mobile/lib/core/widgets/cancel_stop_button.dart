@@ -67,9 +67,7 @@ class _CancelStopButtonState extends State<CancelStopButton> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(radius),
                 border: Border.all(
-                  color: _stopping
-                      ? AppColors.danger
-                      : const Color(0xFFFB923C),
+                  color: _stopping ? AppColors.danger : const Color(0xFFFB923C),
                   width: 2,
                 ),
                 gradient: const LinearGradient(

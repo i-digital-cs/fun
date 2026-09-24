@@ -2,7 +2,7 @@
 
 # Fun Mobile Client — Implementation Roadmap
 
-1. Read `../docs/FLUTTER_WEB_PARITY.md` + `../docs/FLUTTER_BEST_PRACTICES.md`
+1. Read `../docs/FLUTTER_WEB_PARITY.md` + `../docs/FLUTTER_BEST_PRACTICES.md` + `docs/FLUTTER_PRINCIPLES.md`
 2. Read **this file** — continue first incomplete WP
 3. After each API wire: live smoke → mark done
 
@@ -12,7 +12,9 @@
 
 ## Current focus
 
-**Web ↔ Flutter parity WP0–WP8 complete** for member features. Use Postman for remaining Bearer-route smoke with a real login token.
+**WP9 — QA / release gate** (in progress): automated analyze+test+public smoke done; remaining = deploy Reverb API + manual device QA + store signing.
+
+See `docs/QA_PASS_2026-09-24.md` and `docs/RELEASE.md`.
 
 ---
 
@@ -29,6 +31,8 @@
 | WP6 Profile edit + Identity GET | `done` |
 | WP7 Membership/chat smoke | `done` |
 | WP8 Searching + analyze | `done` |
+| WP8b Chat Reverb toasts (+ poll fallback) | `done` (client); prod deploy pending |
+| WP9 QA / release gate | `in_progress` |
 
 ---
 
@@ -37,9 +41,11 @@
 | Endpoint | Result |
 |----------|--------|
 | `GET /site` | 200 — display_name Funity, app.android/ios |
+| `GET /site` broadcast | not on prod yet (2026-09-24) |
 | `GET /events/now-playing` | 200 — next/previous |
 | `GET /categories` | 200 — published_events_count |
-| `POST /login` | needs credentials (PowerShell JSON escaping) — retest with Postman |
+| `POST /broadcasting/auth` | 404 on prod — deploy pending |
+| `POST /login` | needs credentials — retest with Postman |
 | Auth Bearer routes | pending token |
 
 ---
@@ -50,4 +56,4 @@
 
 ---
 
-*Updated 2026-09-23 — WP0–WP6 shipped in session.*
+*Updated 2026-09-24 — WP8b client shipped; WP9 QA started.*

@@ -17,6 +17,7 @@ class DiscoverState {
   final List<EventItem> items;
   final DiscoverFilters filters;
   final bool isLoading;
+
   /// True while a typed `q` request is in flight (wifi Searching UI).
   final bool isSearching;
   final String? error;
@@ -50,6 +51,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
   final Ref _ref;
   bool _bootstrapped = false;
   bool _loadingMore = false;
+
   /// Latest-request-wins generation (NET-RACE-001).
   int _loadGeneration = 0;
 
@@ -61,7 +63,8 @@ class DiscoverController extends StateNotifier<DiscoverState> {
 
   Future<void> load({DiscoverFilters? filters, bool append = false}) async {
     final nextFilters = filters ?? state.filters;
-    final typedSearch = nextFilters.q != null && nextFilters.q!.trim().length >= 2;
+    final typedSearch =
+        nextFilters.q != null && nextFilters.q!.trim().length >= 2;
     final generation = ++_loadGeneration;
     state = state.copyWith(
       isLoading: !typedSearch || state.items.isEmpty,
@@ -70,8 +73,9 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       filters: nextFilters,
     );
 
-    final result =
-        await _ref.read(eventsRepositoryProvider).discover(nextFilters);
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .discover(nextFilters);
 
     if (generation != _loadGeneration) return;
 
@@ -180,8 +184,9 @@ class DiscoverController extends StateNotifier<DiscoverState> {
 
   /// Returns error message on failure; otherwise updates local join_action.
   Future<String?> cancelJoinRequest(int eventId) async {
-    final result =
-        await _ref.read(eventsRepositoryProvider).cancelJoinRequest(eventId);
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .cancelJoinRequest(eventId);
     if (result.failure != null) return result.failure!.message;
     final next = result.data ?? 'request_to_join';
     state = state.copyWith(
@@ -196,5 +201,5 @@ class DiscoverController extends StateNotifier<DiscoverState> {
 
 final discoverControllerProvider =
     StateNotifierProvider<DiscoverController, DiscoverState>((ref) {
-  return DiscoverController(ref);
-});
+      return DiscoverController(ref);
+    });

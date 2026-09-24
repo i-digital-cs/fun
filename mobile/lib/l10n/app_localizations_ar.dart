@@ -339,6 +339,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get venueTba => 'المكان غير محدد';
 
   @override
+  String get locationTba => 'الموقع غير محدد';
+
+  @override
   String get placeOnMap => 'الموقع على الخريطة';
 
   @override

@@ -56,8 +56,7 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
     }
     setState(() => _suggesting = true);
     _debounce = Timer(const Duration(milliseconds: 280), () async {
-      final result =
-          await ref.read(homeRepositoryProvider).suggest(q);
+      final result = await ref.read(homeRepositoryProvider).suggest(q);
       if (!mounted || widget.searchController.text.trim() != q) return;
       setState(() {
         _lastQ = q;
@@ -79,11 +78,7 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
         constraints: const BoxConstraints(minHeight: 280),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF08132C),
-              Color(0xFF1E1B4B),
-              Color(0xFF312E81),
-            ],
+            colors: [Color(0xFF08132C), Color(0xFF1E1B4B), Color(0xFF312E81)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
@@ -226,7 +221,9 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                         ),
                         if (_suggestions.isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          ..._suggestions.take(5).map(
+                          ..._suggestions
+                              .take(5)
+                              .map(
                                 (s) => ListTile(
                                   dense: true,
                                   contentPadding: const EdgeInsets.symmetric(
@@ -254,8 +251,7 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                                             color: AppColors.muted,
                                           ),
                                         ),
-                                  onTap: () =>
-                                      context.push('/events/${s.id}'),
+                                  onTap: () => context.push('/events/${s.id}'),
                                 ),
                               ),
                           TextButton(
@@ -298,11 +294,7 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
 }
 
 class HomeTrustChip extends StatelessWidget {
-  const HomeTrustChip({
-    super.key,
-    required this.icon,
-    required this.label,
-  });
+  const HomeTrustChip({super.key, required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -316,10 +308,7 @@ class HomeTrustChip extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.blue.shade100,
-            fontSize: 11,
-          ),
+          style: TextStyle(color: Colors.blue.shade100, fontSize: 11),
         ),
       ],
     );

@@ -95,10 +95,9 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     // Stay Unauthenticated while the request runs — AuthLoading would
     // redirect to /splash and kill the access theater.
-    final result = await _ref.read(authRepositoryProvider).login(
-          email: email,
-          password: password,
-        );
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .login(email: email, password: password);
     if (result.failure != null || result.data == null) {
       return result.failure?.message;
     }
@@ -111,7 +110,9 @@ class AuthController extends StateNotifier<AuthState> {
     String? accessToken,
     String? locale,
   }) async {
-    final result = await _ref.read(authRepositoryProvider).loginWithGoogle(
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .loginWithGoogle(
           idToken: idToken,
           accessToken: accessToken,
           locale: locale,
@@ -131,7 +132,9 @@ class AuthController extends StateNotifier<AuthState> {
     required String locale,
     bool commitSession = true,
   }) async {
-    final result = await _ref.read(authRepositoryProvider).register(
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .register(
           name: name,
           email: email,
           password: password,
@@ -145,10 +148,7 @@ class AuthController extends StateNotifier<AuthState> {
     return null;
   }
 
-  Future<String?> verifyEmail(
-    String code, {
-    bool commitSession = true,
-  }) async {
+  Future<String?> verifyEmail(String code, {bool commitSession = true}) async {
     final result = await _ref.read(authRepositoryProvider).verifyEmail(code);
     if (result.failure != null || result.data == null) {
       return result.failure?.message;
@@ -163,7 +163,9 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<({String? error, String? email})> forgotPassword(String email) async {
-    final result = await _ref.read(authRepositoryProvider).forgotPassword(email);
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .forgotPassword(email);
     if (result.failure != null) {
       return (error: result.failure!.message, email: null);
     }
@@ -174,12 +176,14 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String code,
   }) async {
-    final result = await _ref.read(authRepositoryProvider).verifyResetCode(
-          email: email,
-          code: code,
-        );
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .verifyResetCode(email: email, code: code);
     if (result.failure != null || result.data == null) {
-      return (error: result.failure?.message ?? 'Invalid code', resetToken: null);
+      return (
+        error: result.failure?.message ?? 'Invalid code',
+        resetToken: null,
+      );
     }
     return (error: null, resetToken: result.data);
   }
@@ -191,7 +195,9 @@ class AuthController extends StateNotifier<AuthState> {
     required String passwordConfirmation,
     bool commitSession = true,
   }) async {
-    final result = await _ref.read(authRepositoryProvider).resetPassword(
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .resetPassword(
           email: email,
           resetToken: resetToken,
           password: password,
@@ -225,7 +231,8 @@ class AuthController extends StateNotifier<AuthState> {
   }
 }
 
-final authControllerProvider =
-    StateNotifierProvider<AuthController, AuthState>((ref) {
-  return AuthController(ref);
-});
+final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
+  (ref) {
+    return AuthController(ref);
+  },
+);

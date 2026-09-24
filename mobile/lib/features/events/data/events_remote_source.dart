@@ -33,7 +33,9 @@ class EventsRemoteSource {
     }
   }
 
-  Future<({Failure? failure, PaginatedEvents? data})> mine({int page = 1}) async {
+  Future<({Failure? failure, PaginatedEvents? data})> mine({
+    int page = 1,
+  }) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/my-events',
@@ -47,8 +49,9 @@ class EventsRemoteSource {
 
   Future<({Failure? failure, EventDetail? data})> show(int id) async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/events/$id');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id',
+      );
       final body = response.data!;
       final data = body['data'] as Map<String, dynamic>? ?? body;
       final event = parseEvent(data);
@@ -64,7 +67,10 @@ class EventsRemoteSource {
                 ? _asBool(body['is_favorited'])
                 : event.isFavorited,
           ),
-          joinAction: body['join_action'] as String? ?? event.joinAction ?? 'not_available',
+          joinAction:
+              body['join_action'] as String? ??
+              event.joinAction ??
+              'not_available',
           readyForRatings: body['ready_for_ratings'] as bool? ?? false,
           canRate: body['can_rate'] as bool? ?? false,
           myRating: myRatingJson is Map<String, dynamic>
@@ -120,9 +126,7 @@ class EventsRemoteSource {
     }
   }
 
-  Future<({Failure? failure, EventItem? data})> _transition(
-    String path,
-  ) async {
+  Future<({Failure? failure, EventItem? data})> _transition(String path) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(path);
       final body = response.data!;
@@ -187,8 +191,9 @@ class EventsRemoteSource {
     int id,
   ) async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/events/$id/requests');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id/requests',
+      );
       final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
         final m = e as Map<String, dynamic>;
         final user = m['user'] as Map<String, dynamic>? ?? {};
@@ -210,8 +215,9 @@ class EventsRemoteSource {
     int requestId,
   ) async {
     try {
-      await _client.dio
-          .post<void>('/events/$eventId/requests/$requestId/accept');
+      await _client.dio.post<void>(
+        '/events/$eventId/requests/$requestId/accept',
+      );
       return (failure: null, data: null);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
@@ -223,8 +229,9 @@ class EventsRemoteSource {
     int requestId,
   ) async {
     try {
-      await _client.dio
-          .post<void>('/events/$eventId/requests/$requestId/reject');
+      await _client.dio.post<void>(
+        '/events/$eventId/requests/$requestId/reject',
+      );
       return (failure: null, data: null);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
@@ -233,14 +240,18 @@ class EventsRemoteSource {
 
   Future<({Failure? failure, List<EventMember>? data})> members(int id) async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/events/$id/members');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id/members',
+      );
       final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
         final m = e as Map<String, dynamic>;
         return EventMember(
           userId: m['user_id'] as int? ?? m['id'] as int? ?? 0,
-          name: m['name'] as String? ??
-              (m['user'] is Map ? (m['user'] as Map)['name'] as String? : null) ??
+          name:
+              m['name'] as String? ??
+              (m['user'] is Map
+                  ? (m['user'] as Map)['name'] as String?
+                  : null) ??
               '',
           role: m['role'] as String? ?? 'member',
         );
@@ -300,8 +311,9 @@ class EventsRemoteSource {
         cancelToken: cancelToken is CancelToken ? cancelToken : null,
       );
       final raw = response.data!['data'] as List<dynamic>? ?? [];
-      final list =
-          raw.map((e) => _parseMessage(e as Map<String, dynamic>)).toList();
+      final list = raw
+          .map((e) => _parseMessage(e as Map<String, dynamic>))
+          .toList();
       return (failure: null, data: list);
     } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
@@ -320,8 +332,8 @@ class EventsRemoteSource {
         '/events/$id/messages',
         data: {'body': body},
       );
-      final data = response.data!['data'] as Map<String, dynamic>? ??
-          response.data!;
+      final data =
+          response.data!['data'] as Map<String, dynamic>? ?? response.data!;
       return (failure: null, data: _parseMessage(data));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
@@ -330,8 +342,9 @@ class EventsRemoteSource {
 
   Future<({Failure? failure, List<EventRating>? data})> ratings(int id) async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/events/$id/ratings');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id/ratings',
+      );
       final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
         return _parseRating(e as Map<String, dynamic>);
       }).toList();
@@ -343,14 +356,12 @@ class EventsRemoteSource {
 
   Future<({Failure? failure, EventRating? data})> myRating(int id) async {
     try {
-      final response = await _client.dio
-          .get<Map<String, dynamic>>('/events/$id/ratings/me');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id/ratings/me',
+      );
       final data = response.data!['data'];
       if (data == null) return (failure: null, data: null);
-      return (
-        failure: null,
-        data: _parseRating(data as Map<String, dynamic>),
-      );
+      return (failure: null, data: _parseRating(data as Map<String, dynamic>));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
@@ -369,8 +380,8 @@ class EventsRemoteSource {
           if (comment != null && comment.isNotEmpty) 'comment': comment,
         },
       );
-      final data = response.data!['data'] as Map<String, dynamic>? ??
-          response.data!;
+      final data =
+          response.data!['data'] as Map<String, dynamic>? ?? response.data!;
       return (failure: null, data: _parseRating(data));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
@@ -388,9 +399,8 @@ class EventsRemoteSource {
       }
     }
     final meta = _asStringKeyedMap(body['meta']);
-    final currentPage = _asInt(meta['current_page']) ??
-        _asInt(body['current_page']) ??
-        1;
+    final currentPage =
+        _asInt(meta['current_page']) ?? _asInt(body['current_page']) ?? 1;
     final lastPage =
         _asInt(meta['last_page']) ?? _asInt(body['last_page']) ?? currentPage;
     return PaginatedEvents(
@@ -412,9 +422,7 @@ class EventsRemoteSource {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/events/now-playing',
-        queryParameters: {
-          if (cityId != null) 'city_id': cityId,
-        },
+        queryParameters: {'city_id': ?cityId},
       );
       final body = response.data ?? const <String, dynamic>{};
       final data = body['data'] is Map<String, dynamic>
@@ -488,8 +496,9 @@ class EventsRemoteSource {
 
   Future<({Failure? failure, EventTicket? data})> ticket(int id) async {
     try {
-      final response =
-          await _client.dio.get<Map<String, dynamic>>('/events/$id/ticket');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$id/ticket',
+      );
       final body = response.data ?? const <String, dynamic>{};
       final data = body['data'] is Map
           ? Map<String, dynamic>.from(body['data'] as Map)
@@ -508,8 +517,7 @@ class EventsRemoteSource {
     final member = memberRaw is Map
         ? Map<String, dynamic>.from(memberRaw)
         : null;
-    final event =
-        eventRaw is Map ? Map<String, dynamic>.from(eventRaw) : null;
+    final event = eventRaw is Map ? Map<String, dynamic>.from(eventRaw) : null;
 
     return EventTicket(
       code: json['code'] as String? ?? '',
@@ -561,7 +569,7 @@ class EventsRemoteSource {
   }
 
   Future<({Failure? failure, ({double lat, double lng, String mapsUrl})? data})>
-      resolveMapsUrl(String url) async {
+  resolveMapsUrl(String url) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/maps/resolve',
@@ -586,11 +594,7 @@ class EventsRemoteSource {
       }
       return (
         failure: null,
-        data: (
-          lat: lat,
-          lng: lng,
-          mapsUrl: map['maps_url'] as String? ?? url,
-        ),
+        data: (lat: lat, lng: lng, mapsUrl: map['maps_url'] as String? ?? url),
       );
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
@@ -600,11 +604,33 @@ class EventsRemoteSource {
   static EventItem parseEvent(Map<String, dynamic> json) {
     final categoryRaw = json['category'];
     final cityRaw = json['city'];
+    final locationRaw = json['location'];
     final category = categoryRaw is Map
         ? Map<String, dynamic>.from(categoryRaw)
         : null;
-    final city =
-        cityRaw is Map ? Map<String, dynamic>.from(cityRaw) : null;
+    final city = cityRaw is Map ? Map<String, dynamic>.from(cityRaw) : null;
+    final location =
+        locationRaw is Map ? Map<String, dynamic>.from(locationRaw) : null;
+    final locationCity = location?['city'] is Map
+        ? Map<String, dynamic>.from(location!['city'] as Map)
+        : null;
+
+    final latitude =
+        _asNum(json['latitude'])?.toDouble() ??
+        _asNum(location?['latitude'])?.toDouble();
+    final longitude =
+        _asNum(json['longitude'])?.toDouble() ??
+        _asNum(location?['longitude'])?.toDouble();
+    final hasPlacePin =
+        _asBool(json['has_place_pin']) ||
+        _asBool(location?['has_place_pin']) ||
+        (latitude != null && longitude != null);
+
+    final venueFromLocation =
+        location?['venue_raw'] as String? ?? location?['venue'] as String?;
+    final venue = (json['venue'] as String?)?.trim().isNotEmpty == true
+        ? json['venue'] as String
+        : (venueFromLocation ?? '');
 
     return EventItem(
       id: _asInt(json['id']) ?? 0,
@@ -612,33 +638,17 @@ class EventsRemoteSource {
       description: json['description'] as String?,
       requirements: json['requirements'] as String?,
       expectedCost: json['expected_cost']?.toString(),
-      venue: json['venue'] as String? ?? '',
-      locationLabel: json['location_label'] as String? ??
-          (json['location'] is Map
-              ? (Map<String, dynamic>.from(json['location'] as Map)['label'] as String?)
-              : null),
-      latitude: _asNum(json['latitude'])?.toDouble() ??
-          (json['location'] is Map
-              ? _asNum(Map<String, dynamic>.from(json['location'] as Map)['latitude'])
-                  ?.toDouble()
-              : null),
-      longitude: _asNum(json['longitude'])?.toDouble() ??
-          (json['location'] is Map
-              ? _asNum(Map<String, dynamic>.from(json['location'] as Map)['longitude'])
-                  ?.toDouble()
-              : null),
-      mapsUrl: json['maps_url'] as String? ??
-          (json['location'] is Map
-              ? Map<String, dynamic>.from(json['location'] as Map)['maps_url'] as String?
-              : null),
-      mapsOpenUrl: json['maps_open_url'] as String? ??
-          (json['location'] is Map
-              ? Map<String, dynamic>.from(json['location'] as Map)['maps_open_url']
-                  as String?
-              : null),
-      hasPlacePin: _asBool(json['has_place_pin']) ||
-          (_asNum(json['latitude']) != null &&
-              _asNum(json['longitude']) != null),
+      venue: venue,
+      locationLabel:
+          json['location_label'] as String? ?? location?['label'] as String?,
+      latitude: latitude,
+      longitude: longitude,
+      mapsUrl:
+          json['maps_url'] as String? ?? location?['maps_url'] as String?,
+      mapsOpenUrl:
+          json['maps_open_url'] as String? ??
+          location?['maps_open_url'] as String?,
+      hasPlacePin: hasPlacePin,
       startsAt: json['starts_at'] is String
           ? DateTime.tryParse(json['starts_at'] as String)
           : null,
@@ -656,7 +666,10 @@ class EventsRemoteSource {
       readyForRatings: json['ready_for_ratings'] as bool? ?? false,
       isFavorited: _asBool(json['is_favorited']),
       categoryId: _asInt(json['category_id']) ?? _asInt(category?['id']),
-      cityId: _asInt(json['city_id']) ?? _asInt(city?['id']),
+      cityId:
+          _asInt(json['city_id']) ??
+          _asInt(city?['id']) ??
+          _asInt(locationCity?['id']),
       category: category != null
           ? EventCategory(
               id: _asInt(category['id']) ?? 0,
@@ -665,12 +678,18 @@ class EventsRemoteSource {
               nameAr: category['name_ar'] as String?,
             )
           : null,
-      city: city != null
+      city: (city ?? locationCity) != null
           ? EventCity(
-              id: _asInt(city['id']) ?? 0,
-              name: city['name'] as String? ?? '',
-              nameEn: city['name_en'] as String?,
-              nameAr: city['name_ar'] as String?,
+              id: _asInt((city ?? locationCity)!['id']) ?? 0,
+              name: (city ?? locationCity)!['name'] as String? ?? '',
+              nameEn: (city ?? locationCity)!['name_en'] as String?,
+              nameAr: (city ?? locationCity)!['name_ar'] as String?,
+              latitude: _asNum(
+                (city ?? locationCity)!['latitude'],
+              )?.toDouble(),
+              longitude: _asNum(
+                (city ?? locationCity)!['longitude'],
+              )?.toDouble(),
             )
           : null,
     );
@@ -701,10 +720,8 @@ class EventsRemoteSource {
     );
   }
 
-  Future<FormData> _formData(
-    EventDraft draft, {
-    String? methodOverride,
-  }) async {
+  Future<FormData> _formData(EventDraft draft, {String? methodOverride}) async {
+    // Always include venue (even empty) so the API can reverse-geocode when a pin is set.
     final map = <String, dynamic>{
       'title': draft.title,
       'category_id': draft.categoryId,
@@ -712,7 +729,7 @@ class EventsRemoteSource {
       'starts_at': draft.startsAt.toIso8601String(),
       'max_participants': draft.maxParticipants,
       'description': ?draft.description,
-      'venue': ?draft.venue,
+      'venue': draft.venue ?? '',
       if (draft.latitude != null) 'latitude': draft.latitude,
       if (draft.longitude != null) 'longitude': draft.longitude,
       'maps_url': ?draft.mapsUrl,

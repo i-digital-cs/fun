@@ -340,6 +340,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get venueTba => 'Venue TBA';
 
   @override
+  String get locationTba => 'Location TBA';
+
+  @override
   String get placeOnMap => 'Place on map';
 
   @override

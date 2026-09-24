@@ -2,11 +2,7 @@
 enum UpdateKind { none, soft, force }
 
 class AppUpdateInfo {
-  const AppUpdateInfo({
-    required this.kind,
-    this.message,
-    this.storeUrl,
-  });
+  const AppUpdateInfo({required this.kind, this.message, this.storeUrl});
 
   final UpdateKind kind;
   final String? message;

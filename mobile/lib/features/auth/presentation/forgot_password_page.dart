@@ -133,8 +133,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                   controller: _email,
                                   keyboardType: TextInputType.emailAddress,
                                   autocorrect: false,
-                                  decoration:
-                                      InputDecoration(labelText: l10n.email),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.email,
+                                  ),
                                   validator: (v) {
                                     if (v == null || v.trim().isEmpty) {
                                       return l10n.validationRequired;

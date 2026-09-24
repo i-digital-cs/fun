@@ -76,24 +76,23 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     }
 
     setState(() => _saving = true);
-    final result = await ref.read(profileRepositoryProvider).updateProfile(
+    final result = await ref
+        .read(profileRepositoryProvider)
+        .updateProfile(
           name: _name.text.trim(),
           email: _email.text.trim(),
           locale: _locale,
-          currentPassword:
-              changingPassword ? _currentPassword.text : null,
+          currentPassword: changingPassword ? _currentPassword.text : null,
           password: changingPassword ? _password.text : null,
-          passwordConfirmation:
-              changingPassword ? _passwordConfirm.text : null,
+          passwordConfirmation: changingPassword ? _passwordConfirm.text : null,
           photoPath: _photoPath,
           removePhoto: _removePhoto,
         );
     if (!mounted) return;
     if (result.failure != null) {
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
 
@@ -105,8 +104,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     if (!mounted) return;
     setState(() => _saving = false);
 
-    final needsVerify = result.emailChanged ||
-        (result.data?.needsEmailVerification ?? false);
+    final needsVerify =
+        result.emailChanged || (result.data?.needsEmailVerification ?? false);
     if (needsVerify) {
       context.go('/email/verify');
       return;
@@ -122,8 +121,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authControllerProvider);
-    final hasPassword =
-        auth is Authenticated ? auth.user.hasPassword : true;
+    final hasPassword = auth is Authenticated ? auth.user.hasPassword : true;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -149,10 +147,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     controller: _name,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: l10n.name),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty)
-                            ? l10n.validationRequired
-                            : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? l10n.validationRequired
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -193,8 +190,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     TextFormField(
                       controller: _currentPassword,
                       obscureText: true,
-                      decoration:
-                          InputDecoration(labelText: l10n.currentPassword),
+                      decoration: InputDecoration(
+                        labelText: l10n.currentPassword,
+                      ),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -207,8 +205,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                   TextFormField(
                     controller: _passwordConfirm,
                     obscureText: true,
-                    decoration:
-                        InputDecoration(labelText: l10n.passwordConfirmation),
+                    decoration: InputDecoration(
+                      labelText: l10n.passwordConfirmation,
+                    ),
                     validator: (v) {
                       if (_password.text.isEmpty) return null;
                       if (v != _password.text) {

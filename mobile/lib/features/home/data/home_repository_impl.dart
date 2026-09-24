@@ -21,6 +21,7 @@ class HomeRepositoryImpl implements HomeRepository {
       _remote.participations();
 
   @override
-  Future<({Failure? failure, List<SearchSuggestItem> data})> suggest(String q) =>
-      _suggest.suggest(q);
+  Future<({Failure? failure, List<SearchSuggestItem> data})> suggest(
+    String q,
+  ) => _suggest.suggest(q);
 }

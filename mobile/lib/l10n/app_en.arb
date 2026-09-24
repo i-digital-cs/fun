@@ -140,6 +140,7 @@
   "city": "City",
   "venue": "Venue",
   "venueTba": "Venue TBA",
+  "locationTba": "Location TBA",
   "placeOnMap": "Place on map",
   "placeOnMapHelp": "Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.",
   "placeTapHint": "Tap the map to drop or move the pin.",

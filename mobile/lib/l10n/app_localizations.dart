@@ -728,6 +728,12 @@ abstract class AppLocalizations {
   /// **'Venue TBA'**
   String get venueTba;
 
+  /// No description provided for @locationTba.
+  ///
+  /// In en, this message translates to:
+  /// **'Location TBA'**
+  String get locationTba;
+
   /// No description provided for @placeOnMap.
   ///
   /// In en, this message translates to:

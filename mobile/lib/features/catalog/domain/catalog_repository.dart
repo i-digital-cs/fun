@@ -27,10 +27,7 @@ class CategoryItem extends Equatable {
 }
 
 class CatalogBundle extends Equatable {
-  const CatalogBundle({
-    required this.cities,
-    required this.distancesKm,
-  });
+  const CatalogBundle({required this.cities, required this.distancesKm});
 
   final List<CityItem> cities;
   final List<int> distancesKm;

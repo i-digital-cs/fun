@@ -22,10 +22,9 @@ class IdentityRepositoryImpl implements IdentityRepository {
     required String idFrontPath,
     required String idBackPath,
     required String selfiePath,
-  }) =>
-      _remote.upload(
-        idFrontPath: idFrontPath,
-        idBackPath: idBackPath,
-        selfiePath: selfiePath,
-      );
+  }) => _remote.upload(
+    idFrontPath: idFrontPath,
+    idBackPath: idBackPath,
+    selfiePath: selfiePath,
+  );
 }

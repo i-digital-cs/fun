@@ -51,8 +51,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   Future<void> _loadCatalog() async {
     final citiesResult = await ref.read(catalogRepositoryProvider).catalog();
-    final categoriesResult =
-        await ref.read(catalogRepositoryProvider).categories();
+    final categoriesResult = await ref
+        .read(catalogRepositoryProvider)
+        .categories();
     if (!mounted) return;
     setState(() {
       _catalogLoaded = true;
@@ -81,7 +82,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   Future<void> _apply() async {
-    await ref.read(discoverControllerProvider.notifier).applyFilters(
+    await ref
+        .read(discoverControllerProvider.notifier)
+        .applyFilters(
           q: _search.text.trim().isEmpty ? null : _search.text.trim(),
           cityId: _draftCityId,
           categoryId: _draftCategoryId,
@@ -103,7 +106,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
         .cancelJoinRequest(eventId);
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -138,8 +142,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(discoverControllerProvider);
     final auth = ref.watch(authControllerProvider);
-    final canCreate =
-        auth is Authenticated && auth.user.canParticipate;
+    final canCreate = auth is Authenticated && auth.user.canParticipate;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -217,8 +220,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               setState(() => _draftCategoryId = id),
                           onDistanceChanged: (km) =>
                               setState(() => _draftDistanceKm = km),
-                          onWhenChanged: (v) =>
-                              setState(() => _draftWhen = v),
+                          onWhenChanged: (v) => setState(() => _draftWhen = v),
                           onApply: _apply,
                           onClear: _clear,
                         ),
@@ -246,9 +248,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                     if (state.isLoading && state.items.isEmpty)
                       const SliverFillRemaining(
                         hasScrollBody: false,
-                        child: Center(
-                          child: FunLoader(),
-                        ),
+                        child: Center(child: FunLoader()),
                       )
                     else if (state.error != null && state.items.isEmpty)
                       SliverFillRemaining(
@@ -309,18 +309,21 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               );
                             }
                             final event = state.items[index];
-                            final authed =
-                                ref.watch(authControllerProvider) is Authenticated;
+                            final authed = ref.watch(
+                              authControllerProvider,
+                            ) is Authenticated;
                             return EventCard(
                               event: event,
-                              onView: () =>
-                                  context.push('/events/${event.id}'),
+                              onView: () => context.push('/events/${event.id}'),
                               onFavorite: authed
                                   ? () => ref
-                                      .read(discoverControllerProvider.notifier)
-                                      .toggleFavorite(event.id)
+                                        .read(
+                                          discoverControllerProvider.notifier,
+                                        )
+                                        .toggleFavorite(event.id)
                                   : null,
-                              onCancelJoin: authed &&
+                              onCancelJoin:
+                                  authed &&
                                       event.joinAction == 'request_pending'
                                   ? () => _cancelJoin(event.id)
                                   : null,
@@ -421,10 +424,7 @@ class DiscoverFilterPanel extends StatelessWidget {
                 child: Text(l10n.allCategories),
               ),
               ...categories.map(
-                (c) => DropdownMenuItem<int?>(
-                  value: c.id,
-                  child: Text(c.name),
-                ),
+                (c) => DropdownMenuItem<int?>(value: c.id, child: Text(c.name)),
               ),
             ],
             onChanged: catalogLoaded ? onCategoryChanged : null,
@@ -435,10 +435,7 @@ class DiscoverFilterPanel extends StatelessWidget {
             value: when,
             decoration: InputDecoration(labelText: l10n.whenFilter),
             items: [
-              DropdownMenuItem<String?>(
-                value: null,
-                child: Text(l10n.whenAny),
-              ),
+              DropdownMenuItem<String?>(value: null, child: Text(l10n.whenAny)),
               DropdownMenuItem<String?>(
                 value: 'today',
                 child: Text(l10n.today),
@@ -460,15 +457,9 @@ class DiscoverFilterPanel extends StatelessWidget {
             value: allCities ? null : cityId,
             decoration: InputDecoration(labelText: l10n.city),
             items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: Text(l10n.allCities),
-              ),
+              DropdownMenuItem<int?>(value: null, child: Text(l10n.allCities)),
               ...cities.map(
-                (c) => DropdownMenuItem<int?>(
-                  value: c.id,
-                  child: Text(c.name),
-                ),
+                (c) => DropdownMenuItem<int?>(value: c.id, child: Text(c.name)),
               ),
             ],
             onChanged: catalogLoaded
@@ -610,10 +601,7 @@ class DiscoverEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 10),
             ],
-            TextButton(
-              onPressed: onShowAll,
-              child: Text(l10n.showAllEvents),
-            ),
+            TextButton(onPressed: onShowAll, child: Text(l10n.showAllEvents)),
             TextButton(
               onPressed: onChangeLocation,
               child: Text(l10n.changeLocation),

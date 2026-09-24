@@ -35,7 +35,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<String?> _authenticate() {
-    return ref.read(authControllerProvider.notifier).login(
+    return ref
+        .read(authControllerProvider.notifier)
+        .login(
           email: _email.text.trim(),
           password: _password.text,
           commitSession: false,
@@ -85,12 +87,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return;
       }
       final locale = ref.read(localeCodeProvider);
-      final error =
-          await ref.read(authControllerProvider.notifier).loginWithGoogle(
-                idToken: hasId ? idToken : null,
-                accessToken: hasAccess ? accessToken : null,
-                locale: locale,
-              );
+      final error = await ref
+          .read(authControllerProvider.notifier)
+          .loginWithGoogle(
+            idToken: hasId ? idToken : null,
+            accessToken: hasAccess ? accessToken : null,
+            locale: locale,
+          );
       if (!mounted) return;
       setState(() {
         _submitting = false;
@@ -184,8 +187,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                             l10n.accessFormSub,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: AppColors.muted
-                                                  .withValues(alpha: 0.95),
+                                              color: AppColors.muted.withValues(
+                                                alpha: 0.95,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -193,11 +197,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ),
                                     TextButton(
                                       onPressed: () async {
-                                        final next =
-                                            locale == 'ar' ? 'en' : 'ar';
+                                        final next = locale == 'ar'
+                                            ? 'en'
+                                            : 'ar';
                                         ref
-                                            .read(localeCodeProvider.notifier)
-                                            .state = next;
+                                                .read(
+                                                  localeCodeProvider.notifier,
+                                                )
+                                                .state =
+                                            next;
                                         await ref
                                             .read(sharedPreferencesProvider)
                                             .setString('locale', next);
@@ -214,8 +222,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   controller: _email,
                                   keyboardType: TextInputType.emailAddress,
                                   autocorrect: false,
-                                  decoration:
-                                      InputDecoration(labelText: l10n.email),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.email,
+                                  ),
                                   validator: (v) {
                                     if (v == null || v.trim().isEmpty) {
                                       return l10n.validationRequired;
@@ -230,8 +239,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 TextFormField(
                                   controller: _password,
                                   obscureText: true,
-                                  decoration:
-                                      InputDecoration(labelText: l10n.password),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.password,
+                                  ),
                                   validator: (v) {
                                     if (v == null || v.isEmpty) {
                                       return l10n.validationRequired;

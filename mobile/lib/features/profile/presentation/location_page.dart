@@ -54,16 +54,14 @@ class _LocationPageState extends ConsumerState<LocationPage> {
   Future<void> _save() async {
     if (_cityId == null || _distanceKm == null) return;
     setState(() => _saving = true);
-    final result = await ref.read(profileRepositoryProvider).updateLocation(
-          cityId: _cityId!,
-          distanceKm: _distanceKm!,
-        );
+    final result = await ref
+        .read(profileRepositoryProvider)
+        .updateLocation(cityId: _cityId!, distanceKm: _distanceKm!);
     if (!mounted) return;
     if (result.failure != null) {
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     await ref.read(authControllerProvider.notifier).refreshMe();
@@ -153,9 +151,7 @@ class LocationFormCard extends StatelessWidget {
             initialValue: cityId,
             decoration: InputDecoration(labelText: l10n.selectCity),
             items: cities
-                .map(
-                  (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
-                )
+                .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
                 .toList(),
             onChanged: onCityChanged,
           ),

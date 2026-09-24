@@ -10,7 +10,8 @@ class ApiClient {
     OnUnauthorized? onUnauthorized,
     String? locale,
     String? baseUrl,
-  })  : // ignore: prefer_initializing_formals — public named args for call sites
+  }) :
+        // ignore: prefer_initializing_formals
         _tokenStorage = tokenStorage,
         // ignore: prefer_initializing_formals
         _onUnauthorized = onUnauthorized {

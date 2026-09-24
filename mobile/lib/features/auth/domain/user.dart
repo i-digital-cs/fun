@@ -38,14 +38,15 @@ class User extends Equatable {
   final bool needsIdentityDocuments;
   final bool hasIdentityDocuments;
   final bool identityResubmitRequired;
+
   /// When non-null, API `can_participate` wins; else derived from status.
   final bool? canParticipateFlag;
   final bool hasPassword;
 
   factory User.fromJson(Map<String, dynamic> json) {
     final city = json['city'];
-    final emailVerified = json['email_verified'] as bool? ??
-        (json['email_verified_at'] != null);
+    final emailVerified =
+        json['email_verified'] as bool? ?? (json['email_verified_at'] != null);
     return User(
       id: json['id'] as int,
       publicId: json['public_id'] as String?,
@@ -149,23 +150,23 @@ class User extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        email,
-        status,
-        locale,
-        publicId,
-        platformRole,
-        cityId,
-        distanceKm,
-        cityName,
-        profileImagePath,
-        emailVerified,
-        needsEmailVerification,
-        needsIdentityDocuments,
-        hasIdentityDocuments,
-        identityResubmitRequired,
-        canParticipateFlag,
-        hasPassword,
-      ];
+    id,
+    name,
+    email,
+    status,
+    locale,
+    publicId,
+    platformRole,
+    cityId,
+    distanceKm,
+    cityName,
+    profileImagePath,
+    emailVerified,
+    needsEmailVerification,
+    needsIdentityDocuments,
+    hasIdentityDocuments,
+    identityResubmitRequired,
+    canParticipateFlag,
+    hasPassword,
+  ];
 }

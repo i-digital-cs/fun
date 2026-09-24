@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/utils/rtl.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
+import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -94,7 +95,9 @@ class NowPlayingCard extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accent.withValues(alpha: 0.35),
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.35,
+                                  ),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -184,19 +187,10 @@ class _BrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (logoUrl != null && logoUrl!.isNotEmpty) {
-      return SizedBox(
-        width: 42,
-        height: 42,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: AppNetworkImage(
-            url: logoUrl!,
-            logicalWidth: 42,
-            logicalHeight: 42,
-            maxCacheWidth: 84,
-            maxCacheHeight: 84,
-          ),
-        ),
+      return SiteBrandMark(
+        logoUrl: logoUrl,
+        size: 42,
+        borderRadius: 12,
       );
     }
     return Container(
@@ -248,7 +242,9 @@ class _RowItem extends StatelessWidget {
           child: Ink(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: live ? const Color(0xFFFFF7ED) : Colors.white.withValues(alpha: 0.75),
+              color: live
+                  ? const Color(0xFFFFF7ED)
+                  : Colors.white.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: live

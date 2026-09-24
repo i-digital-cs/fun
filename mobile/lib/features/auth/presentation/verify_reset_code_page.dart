@@ -53,10 +53,7 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
     if (_resetToken == null) return;
     context.go(
       '/reset-password',
-      extra: ResetPasswordArgs(
-        email: widget.email,
-        resetToken: _resetToken!,
-      ),
+      extra: ResetPasswordArgs(email: widget.email, resetToken: _resetToken!),
     );
   }
 
@@ -192,8 +189,9 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
                               GradientButton.indigo(
                                 label: l10n.verifyResetCode,
                                 isLoading: _submitting,
-                                onPressed:
-                                    _code.length == 4 ? _startTheater : null,
+                                onPressed: _code.length == 4
+                                    ? _startTheater
+                                    : null,
                               ),
                               const SizedBox(height: 8),
                               TextButton(
@@ -205,8 +203,7 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
                                     : Text(l10n.resendCode),
                               ),
                               TextButton(
-                                onPressed: () =>
-                                    context.go('/forgot-password'),
+                                onPressed: () => context.go('/forgot-password'),
                                 child: Text(l10n.back),
                               ),
                             ],

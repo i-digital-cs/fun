@@ -58,10 +58,7 @@ class ProfilePage extends ConsumerWidget {
             Text(
               user.name,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             Text(
               user.email,
@@ -76,7 +73,9 @@ class ProfilePage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

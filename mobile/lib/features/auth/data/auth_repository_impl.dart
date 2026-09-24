@@ -5,10 +5,7 @@ import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl({
-    required this._remote,
-    required this._tokenStorage,
-  });
+  AuthRepositoryImpl({required this._remote, required this._tokenStorage});
 
   final AuthRemoteSource _remote;
   final TokenStorage _tokenStorage;
@@ -115,8 +112,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String code,
   }) async {
-    final result =
-        await _remote.verifyResetCode(email: email, code: code);
+    final result = await _remote.verifyResetCode(email: email, code: code);
     if (result.failure != null || result.resetToken == null) {
       return (
         failure: result.failure ?? const ValidationFailure('Invalid code'),

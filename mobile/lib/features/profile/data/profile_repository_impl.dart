@@ -12,8 +12,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<({Failure? failure, User? data})> updateLocation({
     required int cityId,
     required int distanceKm,
-  }) =>
-      _remote.updateLocation(cityId: cityId, distanceKm: distanceKm);
+  }) => _remote.updateLocation(cityId: cityId, distanceKm: distanceKm);
 
   @override
   Future<({Failure? failure, User? data, bool emailChanged})> updateProfile({
@@ -25,15 +24,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String? passwordConfirmation,
     String? photoPath,
     bool removePhoto = false,
-  }) =>
-      _remote.updateProfile(
-        name: name,
-        email: email,
-        locale: locale,
-        currentPassword: currentPassword,
-        password: password,
-        passwordConfirmation: passwordConfirmation,
-        photoPath: photoPath,
-        removePhoto: removePhoto,
-      );
+  }) => _remote.updateProfile(
+    name: name,
+    email: email,
+    locale: locale,
+    currentPassword: currentPassword,
+    password: password,
+    passwordConfirmation: passwordConfirmation,
+    photoPath: photoPath,
+    removePhoto: removePhoto,
+  );
 }

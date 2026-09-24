@@ -283,15 +283,17 @@ class Event extends Model
 
     public function mapsOpenUrl(): ?string
     {
+        // Pin coordinates win over a pasted share link so "Open in maps"
+        // always matches the map marker guests see.
+        if ($this->hasPlacePin()) {
+            return app(\App\Support\MapsUrlParser::class)
+                ->googleMapsOpenUrl((float) $this->latitude, (float) $this->longitude);
+        }
+
         if (filled($this->maps_url)) {
             return $this->maps_url;
         }
 
-        if (! $this->hasPlacePin()) {
-            return null;
-        }
-
-        return app(\App\Support\MapsUrlParser::class)
-            ->openStreetMapUrl((float) $this->latitude, (float) $this->longitude);
+        return null;
     }
 }

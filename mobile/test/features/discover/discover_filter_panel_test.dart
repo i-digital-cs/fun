@@ -19,12 +19,8 @@ void main() {
             child: DiscoverFilterPanel(
               searchController: search,
               catalogLoaded: true,
-              cities: const [
-                CityItem(id: 1, name: 'Manama'),
-              ],
-              categories: const [
-                CategoryItem(id: 2, name: 'Outdoors'),
-              ],
+              cities: const [CityItem(id: 1, name: 'Manama')],
+              categories: const [CategoryItem(id: 2, name: 'Outdoors')],
               distances: const [10, 25, 50],
               allCities: true,
               cityId: null,

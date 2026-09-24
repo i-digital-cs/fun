@@ -78,7 +78,9 @@ class AuthRemoteSource {
     }
   }
 
-  Future<({Failure? failure, String? email})> forgotPassword(String email) async {
+  Future<({Failure? failure, String? email})> forgotPassword(
+    String email,
+  ) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/forgot-password',

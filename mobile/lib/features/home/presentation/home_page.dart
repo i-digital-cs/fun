@@ -17,6 +17,7 @@ import 'package:fun_mobile/features/home/presentation/widgets/home_sections.dart
 import 'package:fun_mobile/features/home/presentation/widgets/location_shortcut_card.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/participations_section.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/weather_card.dart';
+import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,10 +53,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _openDiscoverAll({String? q, int? categoryId}) async {
-    await ref.read(discoverControllerProvider.notifier).loadNationwide(
-          q: q,
-          categoryId: categoryId,
-        );
+    await ref
+        .read(discoverControllerProvider.notifier)
+        .loadNationwide(q: q, categoryId: categoryId);
     if (!mounted) return;
     context.go('/discover');
   }
@@ -80,7 +80,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         .cancelJoinRequest(eventId);
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -89,6 +90,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authControllerProvider);
     final nearby = ref.watch(homeNearbyControllerProvider);
+    final brand = ref.watch(siteBrandingProvider).maybeWhen(
+      data: (s) => s,
+      orElse: () => SiteBranding.fallback,
+    );
     final user = auth is Authenticated ? auth.user : null;
     final firstName = user?.firstName ?? '';
     final canParticipate = user?.canParticipate ?? false;
@@ -175,14 +180,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
                     child: ParticipationsSection(
-                      data: nearby.participations ??
-                          const HomeParticipations(),
+                      data: nearby.participations ?? const HomeParticipations(),
                       onDiscover: () => _openDiscoverAll(),
                       onManageAll: () => context.go('/my-events'),
                       onOpenEvent: (id) => context.push('/events/$id'),
                       onOpenChat: (id) => context.push('/events/$id/chat'),
-                      onOpenTicket: (id) =>
-                          context.push('/events/$id/ticket'),
+                      onOpenTicket: (id) => context.push('/events/$id/ticket'),
                     ),
                   ),
                 ),
@@ -205,14 +208,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                       final sideBySide = constraints.maxWidth >= 640;
                       final weather = WeatherCard(
                         weather: nearby.weather,
-                        onSetLocation: () =>
-                            context.push('/settings/location'),
+                        onSetLocation: () => context.push('/settings/location'),
                       );
                       final nowPlaying = nearby.nowPlaying == null
                           ? null
                           : NowPlayingCard(
                               feed: nearby.nowPlaying!,
-                              brand: l10n.appName,
+                              brand: brand.displayName,
+                              logoUrl: brand.logoUrl,
                               onOpenEvent: (e) =>
                                   context.push('/events/${e.id}'),
                               onDiscover: () => _openDiscoverAll(),
@@ -265,8 +268,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                               onTap: () => context.push('/settings/location'),
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 2,
+                                ),
                                 child: Row(
                                   children: [
                                     Flexible(
@@ -309,9 +313,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Center(
-                      child: FunLoader(),
-                    ),
+                    child: Center(child: FunLoader()),
                   ),
                 )
               else if (nearby.error != null && nearby.items.isEmpty)
@@ -361,11 +363,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                         onView: () => context.push('/events/${event.id}'),
                         onFavorite: authed
                             ? () => ref
-                                .read(homeNearbyControllerProvider.notifier)
-                                .toggleFavorite(event.id)
+                                  .read(homeNearbyControllerProvider.notifier)
+                                  .toggleFavorite(event.id)
                             : null,
-                        onCancelJoin: authed &&
-                                event.joinAction == 'request_pending'
+                        onCancelJoin:
+                            authed && event.joinAction == 'request_pending'
                             ? () => _cancelJoin(event.id)
                             : null,
                       );

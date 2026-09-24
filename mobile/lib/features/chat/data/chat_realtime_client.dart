@@ -10,7 +10,7 @@ import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 /// Laravel Reverb (Pusher protocol) client for private user chat toasts.
 class ChatRealtimeClient {
   ChatRealtimeClient({required TokenStorage tokenStorage})
-      : _tokenStorage = tokenStorage; // ignore: prefer_initializing_formals
+    : _tokenStorage = tokenStorage; // ignore: prefer_initializing_formals
 
   final TokenStorage _tokenStorage;
   final _messages = StreamController<ChatToastPayload>.broadcast();
@@ -75,14 +75,13 @@ class ChatRealtimeClient {
       final channel = client.privateChannel(
         'private-App.Models.User.$userId',
         authorizationDelegate:
-            EndpointAuthorizableChannelTokenAuthorizationDelegate
-                .forPrivateChannel(
-          authorizationEndpoint: authUri,
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ),
+            EndpointAuthorizableChannelTokenAuthorizationDelegate.forPrivateChannel(
+              authorizationEndpoint: authUri,
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            ),
       );
       _channel = channel;
 

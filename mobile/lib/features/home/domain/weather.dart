@@ -72,18 +72,18 @@ class WeatherSnapshot extends Equatable {
 
   @override
   List<Object?> get props => [
-        provider,
-        city,
-        localTime,
-        localDate,
-        temperature,
-        high,
-        low,
-        range,
-        condition,
-        label,
-        icon,
-        theme,
-        forecast,
-      ];
+    provider,
+    city,
+    localTime,
+    localDate,
+    temperature,
+    high,
+    low,
+    range,
+    condition,
+    label,
+    icon,
+    theme,
+    forecast,
+  ];
 }

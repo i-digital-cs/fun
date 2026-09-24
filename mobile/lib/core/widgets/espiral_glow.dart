@@ -47,16 +47,16 @@ class _EspiralGlowState extends State<EspiralGlow>
   }
 
   Color get _color => switch (widget.tone) {
-        EspiralTone.amber => const Color(0xFFFB923C),
-        EspiralTone.emerald => const Color(0xFF34D399),
-        EspiralTone.indigo => const Color(0xFF818CF8),
-      };
+    EspiralTone.amber => const Color(0xFFFB923C),
+    EspiralTone.emerald => const Color(0xFF34D399),
+    EspiralTone.indigo => const Color(0xFF818CF8),
+  };
 
   double get _scale => switch (widget.size) {
-        EspiralSize.sm => 0.42,
-        EspiralSize.md => 0.55,
-        EspiralSize.lg => 0.72,
-      };
+    EspiralSize.sm => 0.42,
+    EspiralSize.md => 0.55,
+    EspiralSize.lg => 0.72,
+  };
 
   double get _opacity =>
       widget.opacity ??

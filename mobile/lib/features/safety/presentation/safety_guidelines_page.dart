@@ -14,8 +14,7 @@ class SafetyGuidelinesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authControllerProvider);
-    final canParticipate =
-        auth is Authenticated && auth.user.canParticipate;
+    final canParticipate = auth is Authenticated && auth.user.canParticipate;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -60,11 +59,11 @@ class SafetyGuidelinesPage extends ConsumerWidget {
             action: canParticipate
                 ? null
                 : (auth is Authenticated && auth.user.needsIdentity
-                    ? TextButton(
-                        onPressed: () => context.push('/identity'),
-                        child: Text(l10n.verifyIdentity),
-                      )
-                    : null),
+                      ? TextButton(
+                          onPressed: () => context.push('/identity'),
+                          child: Text(l10n.verifyIdentity),
+                        )
+                      : null),
           ),
           const SizedBox(height: 12),
           _GuidelineCard(
@@ -116,11 +115,7 @@ class SafetyGuidelinesPage extends ConsumerWidget {
 }
 
 class _GuidelineCard extends StatelessWidget {
-  const _GuidelineCard({
-    required this.title,
-    required this.body,
-    this.action,
-  });
+  const _GuidelineCard({required this.title, required this.body, this.action});
 
   final String title;
   final String body;
@@ -148,10 +143,7 @@ class _GuidelineCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(

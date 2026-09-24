@@ -92,8 +92,7 @@ class EventsRepositoryImpl implements EventsRepository {
     int id, {
     required int stars,
     String? comment,
-  }) =>
-      _remote.rate(id, stars: stars, comment: comment);
+  }) => _remote.rate(id, stars: stars, comment: comment);
 
   @override
   Future<Result<NowPlayingFeed>> nowPlaying({int? cityId}) =>
@@ -112,6 +111,5 @@ class EventsRepositoryImpl implements EventsRepository {
   @override
   Future<Result<({double lat, double lng, String mapsUrl})>> resolveMapsUrl(
     String url,
-  ) =>
-      _remote.resolveMapsUrl(url);
+  ) => _remote.resolveMapsUrl(url);
 }

@@ -53,8 +53,9 @@ class _EventMembersPageState extends ConsumerState<EventMembersPage> {
       _loading = true;
       _error = null;
     });
-    final result =
-        await ref.read(eventsRepositoryProvider).members(widget.eventId);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .members(widget.eventId);
     if (!mounted) return;
     setState(() {
       _loading = false;
@@ -72,9 +73,8 @@ class _EventMembersPageState extends ConsumerState<EventMembersPage> {
     if (!mounted) return;
     setState(() => _acting = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     await _load();
@@ -118,19 +118,18 @@ class _EventMembersPageState extends ConsumerState<EventMembersPage> {
     );
     if (confirm != true || !mounted) return;
     setState(() => _acting = true);
-    final result =
-        await ref.read(safetyRepositoryProvider).block(member.userId);
+    final result = await ref
+        .read(safetyRepositoryProvider)
+        .block(member.userId);
     if (!mounted) return;
     setState(() => _acting = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.userBlocked)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
     await _load();
   }
 

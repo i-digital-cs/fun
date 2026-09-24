@@ -16,28 +16,17 @@ class ProfileRemoteSource {
     try {
       final response = await _client.dio.put<Map<String, dynamic>>(
         '/settings/location',
-        data: {
-          'city_id': cityId,
-          'distance_km': distanceKm,
-        },
+        data: {'city_id': cityId, 'distance_km': distanceKm},
       );
       final userJson = response.data!['user'] as Map<String, dynamic>;
-      return (
-        failure: null,
-        data: User.fromJson(userJson),
-      );
+      return (failure: null, data: User.fromJson(userJson));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
   }
 
   /// PUT /settings/profile — JSON when no photo; multipart POST+_method when photo/remove.
-  Future<
-      ({
-        Failure? failure,
-        User? data,
-        bool emailChanged,
-      })> updateProfile({
+  Future<({Failure? failure, User? data, bool emailChanged})> updateProfile({
     required String name,
     required String email,
     String? locale,

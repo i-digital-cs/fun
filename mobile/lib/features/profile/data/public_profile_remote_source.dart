@@ -9,7 +9,9 @@ class PublicProfileRemoteSource {
 
   final ApiClient _client;
 
-  Future<({Failure? failure, PublicProfile? data})> show(String publicId) async {
+  Future<({Failure? failure, PublicProfile? data})> show(
+    String publicId,
+  ) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/users/$publicId',

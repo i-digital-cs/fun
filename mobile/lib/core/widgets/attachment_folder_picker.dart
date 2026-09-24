@@ -32,10 +32,9 @@ class AttachmentFolderPicker extends StatelessWidget {
       return path!.split(RegExp(r'[\\/]')).last;
     }
     if (networkUrl != null && networkUrl!.isNotEmpty) {
-      return networkUrl!.split(RegExp(r'[\\/?#]')).lastWhere(
-            (s) => s.isNotEmpty,
-            orElse: () => 'image',
-          );
+      return networkUrl!
+          .split(RegExp(r'[\\/?#]'))
+          .lastWhere((s) => s.isNotEmpty, orElse: () => 'image');
     }
     return null;
   }
@@ -64,10 +63,7 @@ class AttachmentFolderPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final open = _hasFile;
-    final tag = [
-      ?_ext,
-      ?_sizeLabel,
-    ].join(' · ');
+    final tag = [?_ext, ?_sizeLabel].join(' · ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -141,8 +137,9 @@ class AttachmentFolderPicker extends StatelessWidget {
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.08),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.08,
+                                          ),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         ),
@@ -156,8 +153,9 @@ class AttachmentFolderPicker extends StatelessWidget {
                                         Icon(
                                           Icons.image_outlined,
                                           size: 16,
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.8),
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.8,
+                                          ),
                                         ),
                                         const SizedBox(width: 6),
                                         Expanded(
@@ -293,14 +291,14 @@ class AttachmentFolderPicker extends StatelessWidget {
                       child: path != null && path!.isNotEmpty
                           ? Image.file(File(path!), fit: BoxFit.cover)
                           : networkUrl != null
-                              ? Image.network(networkUrl!, fit: BoxFit.cover)
-                              : Container(
-                                  color: AppColors.primarySoft,
-                                  child: const Icon(
-                                    Icons.image_outlined,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
+                          ? Image.network(networkUrl!, fit: BoxFit.cover)
+                          : Container(
+                              color: AppColors.primarySoft,
+                              child: const Icon(
+                                Icons.image_outlined,
+                                color: AppColors.primary,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -314,9 +312,7 @@ class AttachmentFolderPicker extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  tag.isEmpty
-                      ? (_filename ?? '')
-                      : '${_filename ?? ''} ($tag)',
+                  tag.isEmpty ? (_filename ?? '') : '${_filename ?? ''} ($tag)',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

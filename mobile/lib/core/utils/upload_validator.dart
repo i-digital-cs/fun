@@ -3,9 +3,7 @@ import 'dart:io';
 /// Client-side upload checks (UX + resource protection).
 /// Server-side validation remains authoritative (SEC-UPLOAD-001).
 class UploadValidationResult {
-  const UploadValidationResult.ok()
-      : ok = true,
-        errorKey = null;
+  const UploadValidationResult.ok() : ok = true, errorKey = null;
 
   const UploadValidationResult.fail(this.errorKey) : ok = false;
 

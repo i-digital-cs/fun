@@ -10,6 +10,7 @@ class DiscoverFilters {
     this.when,
     this.perPage,
     this.page = 1,
+
     /// When true, send empty `city_id` so the API lists nationwide (Blade "All cities").
     /// When false and [cityId] is null, omit `city_id` (API may use the user's city).
     this.allCities = false,
@@ -19,6 +20,7 @@ class DiscoverFilters {
   final int? cityId;
   final int? categoryId;
   final int? distanceKm;
+
   /// API: `today` | `tomorrow` | `weekend`
   final String? when;
   final int? perPage;
@@ -121,7 +123,11 @@ abstract class EventsRepository {
 
   Future<Result<List<EventRating>>> ratings(int id);
   Future<Result<EventRating?>> myRating(int id);
-  Future<Result<EventRating>> rate(int id, {required int stars, String? comment});
+  Future<Result<EventRating>> rate(
+    int id, {
+    required int stars,
+    String? comment,
+  });
 
   Future<Result<NowPlayingFeed>> nowPlaying({int? cityId});
   Future<Result<PaginatedEvents>> favorites({int page = 1});

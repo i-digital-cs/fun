@@ -28,6 +28,7 @@ class AuthAccessTheater extends StatefulWidget {
   final List<String> digits;
   final Future<String?> Function() authenticate;
   final VoidCallback onSuccess;
+
   /// Called after shake; [error] is the auth failure message (shown on the form).
   final void Function(String? error) onCancel;
   final String? title;
@@ -47,10 +48,7 @@ class AuthAccessTheater extends StatefulWidget {
       case AuthDigitSource.password:
         // SEC-PRIV-001: never render password characters (shoulder surfing).
         final filled = password.isEmpty ? 0 : password.length.clamp(1, 4);
-        return List<String>.generate(
-          4,
-          (i) => i < filled ? '•' : '',
-        );
+        return List<String>.generate(4, (i) => i < filled ? '•' : '');
       case AuthDigitSource.email:
         final local = email.split('@').first;
         final padded = local.padRight(4, '•').substring(0, 4);
@@ -93,12 +91,13 @@ class _AuthAccessTheaterState extends State<AuthAccessTheater>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     );
-    _progress = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..addListener(() {
-        setState(() => _count = (_progress.value * 100).round());
-      });
+    _progress =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 2200),
+        )..addListener(() {
+          setState(() => _count = (_progress.value * 100).round());
+        });
     _pop = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 550),
@@ -177,10 +176,7 @@ class _AuthAccessTheaterState extends State<AuthAccessTheater>
 
     String? authError;
     final authFuture = widget.authenticate().then((e) => authError = e);
-    await Future.wait<void>([
-      _progress.forward(from: 0),
-      authFuture,
-    ]);
+    await Future.wait<void>([_progress.forward(from: 0), authFuture]);
     if (!mounted) return;
     _ringSpin.stop();
 
@@ -339,11 +335,11 @@ class _DigitsStage extends StatelessWidget {
   }
 
   double _tumble(int i) => switch (i) {
-        0 => 12,
-        1 => -28,
-        2 => 48,
-        _ => -18,
-      };
+    0 => 12,
+    1 => -28,
+    2 => 48,
+    _ => -18,
+  };
 }
 
 class _DigitTile extends StatelessWidget {

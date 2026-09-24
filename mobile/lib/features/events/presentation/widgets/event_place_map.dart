@@ -93,8 +93,7 @@ class _EventPlaceMapPickerState extends State<EventPlaceMapPicker> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.idigital.fun',
                   maxZoom: 19,
                 ),

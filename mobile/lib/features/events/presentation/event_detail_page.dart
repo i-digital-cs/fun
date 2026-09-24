@@ -47,28 +47,24 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
         context.push('/login');
         return;
       case EventDetailGate.needIdentity:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.notActiveAccount)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.notActiveAccount)));
         context.push('/identity');
         return;
       case EventDetailGate.none:
         break;
     }
     if (result.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error!)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.error!)));
       return;
     }
     if (result.successMessageKey == 'eventPublished') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.eventPublished)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.eventPublished)));
     } else if (result.successMessageKey == 'userBlocked') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.userBlocked)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
     }
   }
 
@@ -82,10 +78,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
 
   Future<void> _leave() async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showFunConfirm(
-      context,
-      message: l10n.confirmLeave,
-    );
+    final confirm = await showFunConfirm(context, message: l10n.confirmLeave);
     if (confirm != true || !mounted) return;
     await _handle(await _ctrl.leave());
   }
@@ -106,10 +99,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
 
   Future<void> _cancelEvent() async {
     final l10n = AppLocalizations.of(context);
-    final confirm = await showFunConfirm(
-      context,
-      message: l10n.confirmCancel,
-    );
+    final confirm = await showFunConfirm(context, message: l10n.confirmCancel);
     if (confirm != true || !mounted) return;
     await _handle(await _ctrl.cancelEvent());
   }
@@ -119,8 +109,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   }
 
   Future<void> _showRateSheet() async {
-    final detail =
-        ref.read(eventDetailControllerProvider(widget.eventId)).detail;
+    final detail = ref
+        .read(eventDetailControllerProvider(widget.eventId))
+        .detail;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -349,8 +340,10 @@ class EventDetailInfoCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final event = detail.event;
     final schedule = event.startsAt != null
-        ? DateFormat('EEEE, MMM d · h:mm a', locale)
-            .format(event.startsAt!.toLocal())
+        ? DateFormat(
+            'EEEE, MMM d · h:mm a',
+            locale,
+          ).format(event.startsAt!.toLocal())
         : null;
 
     return Container(
@@ -375,45 +368,50 @@ class EventDetailInfoCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             event.title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           if (schedule != null) ...[
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined,
-                    size: 16, color: AppColors.primary),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(schedule,
-                      style: const TextStyle(color: AppColors.muted)),
+                  child: Text(
+                    schedule,
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
                 ),
               ],
             ),
           ],
           const SizedBox(height: 6),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(Icons.location_on, size: 16, color: AppColors.muted),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  event.placeLine.isEmpty ? l10n.venueTba : event.placeLine,
+                  event.placeLine.isEmpty
+                      ? l10n.locationTba
+                      : event.placeLine,
                   style: const TextStyle(color: AppColors.muted),
                 ),
               ),
             ],
           ),
-          if (event.mapsOpenUrl != null && event.mapsOpenUrl!.isNotEmpty) ...[
+          if (event.openMapsUrl != null) ...[
             const SizedBox(height: 8),
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: () async {
-                  await launchSafeExternalUrl(event.mapsOpenUrl);
+                  await launchSafeExternalUrl(event.openMapsUrl);
                 },
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: Text(l10n.openInMaps),
@@ -429,7 +427,18 @@ class EventDetailInfoCard extends StatelessWidget {
               longitude: event.longitude!,
             ),
           ],
-          if (event.city != null) ...[
+          if (event.city != null &&
+              event.placeLine.isNotEmpty &&
+              !event.placeLine
+                  .toLowerCase()
+                  .contains(event.city!.name.toLowerCase())) ...[
+            const SizedBox(height: 4),
+            Text(
+              event.city!.name,
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+          ],
+          if (event.city != null && event.placeLine.isEmpty) ...[
             const SizedBox(height: 4),
             Text(
               event.city!.name,
@@ -440,16 +449,17 @@ class EventDetailInfoCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(event.description!, style: const TextStyle(height: 1.5)),
           ],
-          if (event.requirements != null &&
-              event.requirements!.isNotEmpty) ...[
+          if (event.requirements != null && event.requirements!.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
               l10n.requirements,
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
-            Text(event.requirements!,
-                style: const TextStyle(color: AppColors.muted, height: 1.4)),
+            Text(
+              event.requirements!,
+              style: const TextStyle(color: AppColors.muted, height: 1.4),
+            ),
           ],
           if (!event.isFree) ...[
             const SizedBox(height: 12),
@@ -484,8 +494,10 @@ class EventMembersProgress extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(l10n.members,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+              Text(
+                l10n.members,
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              ),
               const Spacer(),
               Text(
                 '${event.membersCount} / ${event.maxParticipants}',
@@ -571,10 +583,7 @@ class CreatorRatingSection extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               l10n.recentRatings,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             ...ratings.take(5).map((r) {
@@ -654,100 +663,87 @@ class EventJoinActions extends StatelessWidget {
 
     return switch (joinAction) {
       'request_to_join' => GradientButton(
-          label: l10n.requestToJoin,
-          isLoading: acting,
-          onPressed: onJoin,
-        ),
+        label: l10n.requestToJoin,
+        isLoading: acting,
+        onPressed: onJoin,
+      ),
       'request_pending' => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            JoinStatusBanner(
-              label: l10n.joinPending,
-              color: AppColors.muted,
-            ),
-            const SizedBox(height: 10),
-            CancelStopButton(
-              label: l10n.cancelJoin,
-              size: CancelStopSize.block,
-              onPressed: acting ? null : onCancelJoin,
-            ),
-          ],
-        ),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          JoinStatusBanner(label: l10n.joinPending, color: AppColors.muted),
+          const SizedBox(height: 10),
+          CancelStopButton(
+            label: l10n.cancelJoin,
+            size: CancelStopSize.block,
+            onPressed: acting ? null : onCancelJoin,
+          ),
+        ],
+      ),
       'joined' => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            JoinStatusBanner(
-              label: l10n.joined,
-              color: AppColors.success,
-            ),
-            if (onViewTicket != null) ...[
-              const SizedBox(height: 12),
-              GradientButton(
-                label: l10n.viewTicket,
-                onPressed: onViewTicket,
-                icon: Icons.confirmation_number_outlined,
-              ),
-            ],
-            const SizedBox(height: 12),
-            GradientButton.indigo(
-              label: l10n.chat,
-              onPressed: onChat,
-              icon: Icons.chat_bubble_outline,
-            ),
-            if (onMembers != null) ...[
-              const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: onMembers,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(l10n.viewMembers),
-              ),
-            ],
-            const SizedBox(height: 10),
-            CancelStopButton(
-              label: l10n.leaveEvent,
-              size: CancelStopSize.block,
-              onPressed: acting ? null : onLeave,
-            ),
-          ],
-        ),
-      'event_full' => JoinStatusBanner(
-          label: l10n.eventFull,
-          color: AppColors.accent,
-        ),
-      'request_rejected' => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            JoinStatusBanner(
-              label: l10n.requestRejected,
-              color: const Color(0xFFB45309),
-            ),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          JoinStatusBanner(label: l10n.joined, color: AppColors.success),
+          if (onViewTicket != null) ...[
             const SizedBox(height: 12),
             GradientButton(
-              label: l10n.requestToJoin,
-              isLoading: acting,
-              onPressed: onJoin,
+              label: l10n.viewTicket,
+              onPressed: onViewTicket,
+              icon: Icons.confirmation_number_outlined,
             ),
           ],
-        ),
-      _ => JoinStatusBanner(
-          label: l10n.notAvailable,
-          color: AppColors.muted,
-        ),
+          const SizedBox(height: 12),
+          GradientButton.indigo(
+            label: l10n.chat,
+            onPressed: onChat,
+            icon: Icons.chat_bubble_outline,
+          ),
+          if (onMembers != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: onMembers,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(l10n.viewMembers),
+            ),
+          ],
+          const SizedBox(height: 10),
+          CancelStopButton(
+            label: l10n.leaveEvent,
+            size: CancelStopSize.block,
+            onPressed: acting ? null : onLeave,
+          ),
+        ],
+      ),
+      'event_full' => JoinStatusBanner(
+        label: l10n.eventFull,
+        color: AppColors.accent,
+      ),
+      'request_rejected' => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          JoinStatusBanner(
+            label: l10n.requestRejected,
+            color: const Color(0xFFB45309),
+          ),
+          const SizedBox(height: 12),
+          GradientButton(
+            label: l10n.requestToJoin,
+            isLoading: acting,
+            onPressed: onJoin,
+          ),
+        ],
+      ),
+      _ => JoinStatusBanner(label: l10n.notAvailable, color: AppColors.muted),
     };
   }
 }
 
 class JoinStatusBanner extends StatelessWidget {
-  const JoinStatusBanner({
-    super.key,
-    required this.label,
-    required this.color,
-  });
+  const JoinStatusBanner({super.key, required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -764,10 +760,7 @@ class JoinStatusBanner extends StatelessWidget {
       child: Center(
         child: Text(
           label,
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800, color: color),
         ),
       ),
     );
@@ -825,10 +818,7 @@ class EventOwnerActions extends StatelessWidget {
             onPressed: onRequests,
           ),
           const SizedBox(height: 8),
-          GradientButton.indigo(
-            label: l10n.viewMembers,
-            onPressed: onMembers,
-          ),
+          GradientButton.indigo(label: l10n.viewMembers, onPressed: onMembers),
           if (onChat != null) ...[
             const SizedBox(height: 8),
             OutlinedButton(
@@ -866,10 +856,7 @@ class EventOwnerActions extends StatelessWidget {
             color: AppColors.success,
           ),
           const SizedBox(height: 8),
-          GradientButton.indigo(
-            label: l10n.viewMembers,
-            onPressed: onMembers,
-          ),
+          GradientButton.indigo(label: l10n.viewMembers, onPressed: onMembers),
           if (onChat != null) ...[
             const SizedBox(height: 8),
             OutlinedButton(
@@ -929,10 +916,7 @@ class EventMembersSheet extends StatelessWidget {
               title: Text(m.name),
               trailing: Text(
                 m.role,
-                style: const TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ),
           ),
@@ -980,17 +964,14 @@ class _RateEventSheetState extends ConsumerState<RateEventSheet> {
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
-    final result = await ref.read(eventsRepositoryProvider).rate(
-          widget.eventId,
-          stars: _stars,
-          comment: _comment.text.trim(),
-        );
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .rate(widget.eventId, stars: _stars, comment: _comment.text.trim());
     if (!mounted) return;
     setState(() => _submitting = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     Navigator.of(context).pop();

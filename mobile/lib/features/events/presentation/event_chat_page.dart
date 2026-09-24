@@ -59,10 +59,9 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     }
     _cancel?.cancel();
     _cancel = CancelToken();
-    final result = await ref.read(eventsRepositoryProvider).messages(
-          widget.eventId,
-          cancelToken: _cancel,
-        );
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .messages(widget.eventId, cancelToken: _cancel);
     if (!mounted || result.data == null && result.failure == null) return;
     final next = result.data ?? _messages;
     final grew = next.length > _messages.length;
@@ -96,9 +95,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     if (!mounted) return;
     setState(() => _sending = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     _text.clear();
@@ -109,8 +107,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     final l10n = AppLocalizations.of(context);
     final auth = ref.read(authControllerProvider);
     final currentId = auth is Authenticated ? auth.user.id : null;
-    final canParticipate =
-        auth is Authenticated && auth.user.canParticipate;
+    final canParticipate = auth is Authenticated && auth.user.canParticipate;
     if (!canParticipate) return;
     if (message.userId != null && message.userId == currentId) return;
 
@@ -164,17 +161,16 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
         }
       case 'block':
         if (message.userId != null) {
-          final result =
-              await ref.read(safetyRepositoryProvider).block(message.userId!);
+          final result = await ref
+              .read(safetyRepositoryProvider)
+              .block(message.userId!);
           if (!mounted) return;
           if (result.failure != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(result.failure!.message)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(result.failure!.message)));
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.userBlocked)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
           }
         }
     }
@@ -217,11 +213,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
               ),
             ),
           ),
-          ChatComposer(
-            controller: _text,
-            sending: _sending,
-            onSend: _send,
-          ),
+          ChatComposer(controller: _text, sending: _sending, onSend: _send),
         ],
       ),
     );
@@ -229,11 +221,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
 }
 
 class ChatBubble extends StatelessWidget {
-  const ChatBubble({
-    super.key,
-    required this.message,
-    this.onLongPress,
-  });
+  const ChatBubble({super.key, required this.message, this.onLongPress});
 
   final ChatMessage message;
   final VoidCallback? onLongPress;
@@ -370,7 +358,9 @@ class ChatComposer extends StatelessWidget {
               onSubmitted: (_) => onSend(),
               decoration: InputDecoration(
                 hintText: l10n.messageHint,
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
                 filled: true,
                 fillColor: _ink,
                 contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
@@ -392,7 +382,9 @@ class ChatComposer extends StatelessWidget {
               height: 48,
               decoration: const BoxDecoration(
                 color: _ink,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(12),
+                ),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
@@ -400,9 +392,9 @@ class ChatComposer extends StatelessWidget {
                   _ComposerIconButton(
                     icon: Icons.attach_file_rounded,
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.attachSoon)),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(l10n.attachSoon)));
                     },
                   ),
                   const SizedBox(width: 8),

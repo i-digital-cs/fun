@@ -11,8 +11,7 @@ class SafetyRepositoryImpl implements SafetyRepository {
   @override
   Future<({Failure? failure, BlocksPageResult? data})> listBlocks({
     int page = 1,
-  }) =>
-      _remote.listBlocks(page: page);
+  }) => _remote.listBlocks(page: page);
 
   @override
   Future<({Failure? failure, void data})> block(int userId) =>
@@ -28,11 +27,10 @@ class SafetyRepositoryImpl implements SafetyRepository {
     required int reportableId,
     required String reason,
     String? description,
-  }) =>
-      _remote.report(
-        reportableType: reportableType,
-        reportableId: reportableId,
-        reason: reason,
-        description: description,
-      );
+  }) => _remote.report(
+    reportableType: reportableType,
+    reportableId: reportableId,
+    reason: reason,
+    description: description,
+  );
 }

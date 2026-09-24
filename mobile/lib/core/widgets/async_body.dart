@@ -47,10 +47,7 @@ class AsyncBody extends StatelessWidget {
                 style: const TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: onRetry,
-                child: Text(l10n.retry),
-              ),
+              TextButton(onPressed: onRetry, child: Text(l10n.retry)),
             ],
           ),
         ),

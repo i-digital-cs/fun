@@ -79,15 +79,14 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
         _items = _items.where((e) => e.id != event.id).toList();
       } else {
         _items = _items
-            .map(
-              (e) => e.id == event.id ? e.copyWith(isFavorited: true) : e,
-            )
+            .map((e) => e.id == event.id ? e.copyWith(isFavorited: true) : e)
             .toList();
       }
     });
 
-    final result =
-        await ref.read(eventsRepositoryProvider).toggleFavorite(event.id);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .toggleFavorite(event.id);
     if (!mounted) return;
     setState(() => _toggling.remove(event.id));
     if (result.failure != null) {
@@ -96,16 +95,12 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
           _items = [event, ..._items];
         } else {
           _items = _items
-              .map(
-                (e) =>
-                    e.id == event.id ? e.copyWith(isFavorited: false) : e,
-              )
+              .map((e) => e.id == event.id ? e.copyWith(isFavorited: false) : e)
               .toList();
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     final favorited = result.data ?? false;
@@ -125,13 +120,13 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
       message: l10n.confirmCancelJoin,
     );
     if (confirm != true || !mounted) return;
-    final result =
-        await ref.read(eventsRepositoryProvider).cancelJoinRequest(event.id);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .cancelJoinRequest(event.id);
     if (!mounted) return;
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     final next = result.data ?? 'request_to_join';
@@ -189,10 +184,7 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage> {
                 return const Padding(
                   padding: EdgeInsets.all(16),
                   child: Center(
-                    child: FunLoader(
-                      size: FunLoaderSize.sm,
-                      showLabel: false,
-                    ),
+                    child: FunLoader(size: FunLoaderSize.sm, showLabel: false),
                   ),
                 );
               }

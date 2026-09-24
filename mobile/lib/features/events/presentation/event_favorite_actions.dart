@@ -14,10 +14,7 @@ Future<({List<EventItem> items, String? error})> toggleFavoriteInList({
   final previous = items[index].isFavorited;
   final optimistic = [
     for (var i = 0; i < items.length; i++)
-      if (i == index)
-        items[i].copyWith(isFavorited: !previous)
-      else
-        items[i],
+      if (i == index) items[i].copyWith(isFavorited: !previous) else items[i],
   ];
   onOptimistic?.call(optimistic);
 

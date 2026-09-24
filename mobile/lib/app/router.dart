@@ -11,6 +11,7 @@ import 'package:fun_mobile/features/auth/presentation/verify_reset_code_page.dar
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/utils/route_ids.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
+import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/features/events/presentation/create_event_page.dart';
 import 'package:fun_mobile/features/events/presentation/event_chat_page.dart';
@@ -50,10 +51,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final loc = state.matchedLocation;
       final isAuthRoute = loc == '/login' || loc == '/register';
-      final isPasswordResetRoute = loc == '/forgot-password' ||
+      final isPasswordResetRoute =
+          loc == '/forgot-password' ||
           loc == '/forgot-password/verify' ||
           loc == '/reset-password';
-      final isGuestBrowse = loc == '/discover' ||
+      final isGuestBrowse =
+          loc == '/discover' ||
           loc == '/safety/guidelines' ||
           loc.startsWith('/u/') ||
           _isGuestEventShow(loc);
@@ -82,8 +85,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return user.routeAfterAuth;
         }
 
-        final needsEmail =
-            user.needsEmailVerification || !user.emailVerified;
+        final needsEmail = user.needsEmailVerification || !user.emailVerified;
         if (needsEmail) {
           if (loc == '/email/verify') return null;
           return '/email/verify';
@@ -121,10 +123,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         builder: (context, state) => const _SplashPage(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
@@ -467,19 +466,42 @@ class _SplashPageState extends ConsumerState<_SplashPage> {
                   style: const TextStyle(color: AppColors.muted),
                 ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: _boot,
-                  child: Text(l10n.retry),
-                ),
+                TextButton(onPressed: _boot, child: Text(l10n.retry)),
               ],
             ),
           ),
         ),
       );
     }
-    return const Scaffold(
+    final brand = ref.watch(siteBrandingProvider).maybeWhen(
+      data: (s) => s,
+      orElse: () => SiteBranding.fallback,
+    );
+
+    return Scaffold(
       body: Center(
-        child: FunLoader(size: FunLoaderSize.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SiteBrandMark(
+              logoUrl: brand.logoUrl,
+              size: 72,
+              borderRadius: 18,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              brand.displayName,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 28),
+            const FunLoader(size: FunLoaderSize.lg),
+          ],
+        ),
       ),
     );
   }

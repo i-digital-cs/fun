@@ -8,11 +8,7 @@ import 'package:fun_mobile/l10n/app_localizations.dart';
 
 /// Standalone report form (Blade `safety/report` parity).
 class ReportPage extends ConsumerStatefulWidget {
-  const ReportPage({
-    super.key,
-    this.initialType = 'user',
-    this.initialId,
-  });
+  const ReportPage({super.key, this.initialType = 'user', this.initialId});
 
   final String initialType;
   final int? initialId;
@@ -48,25 +44,29 @@ class _ReportPageState extends ConsumerState<ReportPage> {
     final id = int.tryParse(_id.text.trim());
     if (id == null || id < 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).validationRequired)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).validationRequired),
+        ),
       );
       return;
     }
 
     setState(() => _submitting = true);
-    final result = await ref.read(safetyRepositoryProvider).report(
+    final result = await ref
+        .read(safetyRepositoryProvider)
+        .report(
           reportableType: _type,
           reportableId: id,
           reason: _reason,
-          description:
-              _details.text.trim().isEmpty ? null : _details.text.trim(),
+          description: _details.text.trim().isEmpty
+              ? null
+              : _details.text.trim(),
         );
     if (!mounted) return;
     setState(() => _submitting = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(

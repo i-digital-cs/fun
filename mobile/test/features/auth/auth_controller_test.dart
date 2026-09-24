@@ -30,16 +30,14 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<User>> login({
     required String email,
     required String password,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> loginWithGoogle({
     String? idToken,
     String? accessToken,
     String? locale,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> register({
@@ -48,8 +46,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirmation,
     required String locale,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> verifyEmail(String code) async =>
@@ -67,8 +64,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<String>> verifyResetCode({
     required String email,
     required String code,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> resetPassword({
@@ -76,8 +72,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String resetToken,
     required String password,
     required String passwordConfirmation,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 }
 
 void main() {
@@ -92,9 +87,7 @@ void main() {
   test('bootstrap without token → Unauthenticated', () async {
     final fake = _FakeAuthRepository();
     final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(fake),
-      ],
+      overrides: [authRepositoryProvider.overrideWithValue(fake)],
     );
     addTearDown(container.dispose);
 
@@ -105,9 +98,7 @@ void main() {
   test('bootstrap with token + me → Authenticated', () async {
     final fake = _FakeAuthRepository(hasTokenValue: true, meUser: sampleUser);
     final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(fake),
-      ],
+      overrides: [authRepositoryProvider.overrideWithValue(fake)],
     );
     addTearDown(container.dispose);
 
@@ -123,9 +114,7 @@ void main() {
       meFailure: const UnauthorizedFailure(),
     );
     final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(fake),
-      ],
+      overrides: [authRepositoryProvider.overrideWithValue(fake)],
     );
     addTearDown(container.dispose);
 

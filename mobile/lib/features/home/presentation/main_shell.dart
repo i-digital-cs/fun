@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
-import 'package:fun_mobile/core/widgets/app_network_image.dart';
+import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
@@ -60,18 +60,13 @@ class MainShell extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final user = auth is Authenticated ? auth.user : null;
     final unread = ref.watch(chatUnreadTotalProvider);
-    final exploreCats =
-        ref.watch(exploreCategoriesProvider).maybeWhen(
-              data: (c) => c,
-              orElse: () => const <CategoryItem>[],
-            );
+    final exploreCats = ref
+        .watch(exploreCategoriesProvider)
+        .maybeWhen(data: (c) => c, orElse: () => const <CategoryItem>[]);
 
     final content = Column(
       children: [
-        SafeArea(
-          bottom: false,
-          child: DashTopbar(compact: !wide),
-        ),
+        SafeArea(bottom: false, child: DashTopbar(compact: !wide)),
         Expanded(
           child: wide
               ? Row(
@@ -79,7 +74,9 @@ class MainShell extends ConsumerWidget {
                     SizedBox(
                       width: sidebarWidth,
                       child: _DashSidebar(
-                        brand: ref.watch(siteBrandingProvider).maybeWhen(
+                        brand: ref
+                            .watch(siteBrandingProvider)
+                            .maybeWhen(
                               data: (s) => s,
                               orElse: () => SiteBranding.fallback,
                             ),
@@ -187,8 +184,7 @@ class _DashSidebar extends StatelessWidget {
   final ValueChanged<int> onExploreCategory;
   final VoidCallback onHomeBrand;
 
-  bool _match(String prefix) =>
-      path == prefix || path.startsWith('$prefix/');
+  bool _match(String prefix) => path == prefix || path.startsWith('$prefix/');
 
   @override
   Widget build(BuildContext context) {
@@ -213,40 +209,11 @@ class _DashSidebar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: Row(
                     children: [
-                      if (brand.logoUrl != null && brand.logoUrl!.isNotEmpty)
-                        SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(13),
-                            child: AppNetworkImage(
-                              url: brand.logoUrl!,
-                              logicalWidth: 40,
-                              logicalHeight: 40,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        )
-                      else
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(13),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.2),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.celebration_outlined,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                      SiteBrandMark(
+                        logoUrl: brand.logoUrl,
+                        size: 40,
+                        borderRadius: 13,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(

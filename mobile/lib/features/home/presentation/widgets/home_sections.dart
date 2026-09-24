@@ -169,9 +169,7 @@ class HomeEmptyNearbyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.border.withValues(alpha: 0.7),
-        ),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
       ),
       child: Column(
         children: [
@@ -187,10 +185,7 @@ class HomeEmptyNearbyCard extends StatelessWidget {
             onPressed: onCreate,
           ),
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: onShowAll,
-            child: Text(l10n.showAllEvents),
-          ),
+          TextButton(onPressed: onShowAll, child: Text(l10n.showAllEvents)),
           TextButton(
             onPressed: onChangeLocation,
             child: Text(l10n.changeLocation),
@@ -242,79 +237,71 @@ class HomeStartingSoonCard extends StatelessWidget {
         children: [
           Text(
             l10n.startingSoon,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           if (items.isEmpty)
             Text(
               l10n.emptyNearby,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.muted,
-              ),
+              style: const TextStyle(fontSize: 11, color: AppColors.muted),
             )
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: items.length,
-              separatorBuilder: (_, _) => const Divider(
-                height: 1,
-                color: Color(0xFFF1F5F9),
-              ),
+              separatorBuilder: (_, _) =>
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
               itemBuilder: (context, index) {
                 final event = items[index];
                 return InkWell(
                   onTap: () => onTap(event.id),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: AppColors.primarySoft,
-                          borderRadius: BorderRadius.circular(10),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySoft,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            categoryEmoji(event.category?.name),
+                            style: const TextStyle(fontSize: 16),
+                          ),
                         ),
-                        child: Text(
-                          categoryEmoji(event.category?.name),
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              event.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                event.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _formatWhen(l10n, event.startsAt),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: AppColors.muted,
+                              const SizedBox(height: 2),
+                              Text(
+                                _formatWhen(l10n, event.startsAt),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.muted,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
+                );
               },
             ),
         ],
@@ -538,10 +525,7 @@ class HomeCreateBanner extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             l10n.ctaBody,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.muted,
-            ),
+            style: const TextStyle(fontSize: 12, color: AppColors.muted),
           ),
           const SizedBox(height: 16),
           GradientButton(

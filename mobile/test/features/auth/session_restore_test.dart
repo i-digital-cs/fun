@@ -7,23 +7,17 @@ import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({
-    this.hasTokenValue = false,
-    this.meUser,
-    this.meFailure,
-    this.tokenCleared = false,
-  });
+  _FakeAuthRepository({this.hasTokenValue = false, this.meFailure});
 
   bool hasTokenValue;
-  User? meUser;
   Failure? meFailure;
-  bool tokenCleared;
+  bool tokenCleared = false;
 
   @override
   Future<bool> hasToken() async => hasTokenValue && !tokenCleared;
 
   @override
-  Future<Result<User>> me() async => (failure: meFailure, data: meUser);
+  Future<Result<User>> me() async => (failure: meFailure, data: null);
 
   @override
   Future<Result<void>> logout() async {
@@ -36,16 +30,14 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<User>> login({
     required String email,
     required String password,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> loginWithGoogle({
     String? idToken,
     String? accessToken,
     String? locale,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> register({
@@ -54,8 +46,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirmation,
     required String locale,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> verifyEmail(String code) async =>
@@ -73,8 +64,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<String>> verifyResetCode({
     required String email,
     required String code,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> resetPassword({
@@ -82,8 +72,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String resetToken,
     required String password,
     required String passwordConfirmation,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 }
 
 void main() {
@@ -97,21 +86,26 @@ void main() {
     canParticipateFlag: true,
   );
 
-  test('bootstrap network failure keeps session restore failed (token kept)',
-      () async {
-    final fake = _FakeAuthRepository(
-      hasTokenValue: true,
-      meFailure: const NetworkFailure(),
-    );
-    final container = ProviderContainer(
-      overrides: [authRepositoryProvider.overrideWithValue(fake)],
-    );
-    addTearDown(container.dispose);
+  test(
+    'bootstrap network failure keeps session restore failed (token kept)',
+    () async {
+      final fake = _FakeAuthRepository(
+        hasTokenValue: true,
+        meFailure: const NetworkFailure(),
+      );
+      final container = ProviderContainer(
+        overrides: [authRepositoryProvider.overrideWithValue(fake)],
+      );
+      addTearDown(container.dispose);
 
-    await container.read(authControllerProvider.notifier).bootstrap();
-    expect(container.read(authControllerProvider), isA<AuthSessionRestoreFailed>());
-    expect(await fake.hasToken(), isTrue);
-  });
+      await container.read(authControllerProvider.notifier).bootstrap();
+      expect(
+        container.read(authControllerProvider),
+        isA<AuthSessionRestoreFailed>(),
+      );
+      expect(await fake.hasToken(), isTrue);
+    },
+  );
 
   test('bootstrap unauthorized → Unauthenticated', () async {
     final fake = _FakeAuthRepository(

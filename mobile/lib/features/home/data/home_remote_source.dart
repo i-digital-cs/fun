@@ -17,9 +17,7 @@ class HomeRemoteSource {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/weather',
-        queryParameters: {
-          if (cityId != null) 'city_id': cityId,
-        },
+        queryParameters: {'city_id': ?cityId},
       );
       final body = response.data ?? const <String, dynamic>{};
       final data = body['data'];
@@ -42,10 +40,12 @@ class HomeRemoteSource {
     }
   }
 
-  Future<({Failure? failure, HomeParticipations? data})> participations() async {
+  Future<({Failure? failure, HomeParticipations? data})>
+  participations() async {
     try {
-      final response = await _client.dio
-          .get<Map<String, dynamic>>('/home/participations');
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/home/participations',
+      );
       final body = response.data ?? const <String, dynamic>{};
       return (failure: null, data: _parseParticipations(body));
     } on DioException catch (e) {
@@ -57,8 +57,9 @@ class HomeRemoteSource {
 
   WeatherSnapshot _parseWeather(Map<String, dynamic> json) {
     final cityRaw = json['city'];
-    final cityMap =
-        cityRaw is Map ? Map<String, dynamic>.from(cityRaw) : <String, dynamic>{};
+    final cityMap = cityRaw is Map
+        ? Map<String, dynamic>.from(cityRaw)
+        : <String, dynamic>{};
     final forecastRaw = json['forecast'];
     final forecast = <WeatherForecastDay>[];
     if (forecastRaw is List) {

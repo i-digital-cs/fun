@@ -26,16 +26,14 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<User>> login({
     required String email,
     required String password,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> loginWithGoogle({
     String? idToken,
     String? accessToken,
     String? locale,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> register({
@@ -44,8 +42,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirmation,
     required String locale,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> verifyEmail(String code) async =>
@@ -63,8 +60,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<String>> verifyResetCode({
     required String email,
     required String code,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
   Future<Result<User>> resetPassword({
@@ -72,48 +68,54 @@ class _FakeAuthRepository implements AuthRepository {
     required String resetToken,
     required String password,
     required String passwordConfirmation,
-  }) async =>
-      (failure: const ValidationFailure('unused'), data: null);
+  }) async => (failure: const ValidationFailure('unused'), data: null);
 }
 
 void main() {
-  test('ARCH-GOD-DETAIL-001 join requires login when unauthenticated', () async {
-    final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
-      ],
-    );
-    addTearDown(container.dispose);
-    await container.read(authControllerProvider.notifier).bootstrap();
+  test(
+    'ARCH-GOD-DETAIL-001 join requires login when unauthenticated',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(authControllerProvider.notifier).bootstrap();
 
-    final result =
-        await container.read(eventDetailControllerProvider(42).notifier).join();
-    expect(result.gate, EventDetailGate.needLogin);
-  });
+      final result = await container
+          .read(eventDetailControllerProvider(42).notifier)
+          .join();
+      expect(result.gate, EventDetailGate.needLogin);
+    },
+  );
 
-  test('ARCH-GOD-DETAIL-001 join requires identity when !canParticipate',
-      () async {
-    final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(
-          _FakeAuthRepository(
-            hasTokenValue: true,
-            meUser: const User(
-              id: 1,
-              name: 'Pending',
-              email: 'p@example.com',
-              status: 'pending_documents',
-              locale: 'en',
+  test(
+    'ARCH-GOD-DETAIL-001 join requires identity when !canParticipate',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(
+            _FakeAuthRepository(
+              hasTokenValue: true,
+              meUser: const User(
+                id: 1,
+                name: 'Pending',
+                email: 'p@example.com',
+                status: 'pending_documents',
+                locale: 'en',
+              ),
             ),
           ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    await container.read(authControllerProvider.notifier).bootstrap();
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(authControllerProvider.notifier).bootstrap();
 
-    final result =
-        await container.read(eventDetailControllerProvider(42).notifier).join();
-    expect(result.gate, EventDetailGate.needIdentity);
-  });
+      final result = await container
+          .read(eventDetailControllerProvider(42).notifier)
+          .join();
+      expect(result.gate, EventDetailGate.needIdentity);
+    },
+  );
 }

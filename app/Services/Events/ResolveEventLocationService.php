@@ -50,8 +50,17 @@ class ResolveEventLocationService
             $lng = null;
         }
 
-        if ($lat !== null && $lng !== null && $mapsUrl === null) {
-            $mapsUrl = $this->parser->openStreetMapUrl($lat, $lng);
+        // When an explicit pin is present, keep maps_url aligned to those coords
+        // (a moved pin must not keep an older pasted Google link).
+        if ($lat !== null && $lng !== null) {
+            $fromUrl = $mapsUrl !== null ? $this->parser->parse($mapsUrl) : null;
+            $urlMatchesPin = $fromUrl !== null
+                && abs($fromUrl['latitude'] - $lat) < 0.00015
+                && abs($fromUrl['longitude'] - $lng) < 0.00015;
+
+            if (! $urlMatchesPin) {
+                $mapsUrl = $this->parser->openStreetMapUrl($lat, $lng);
+            }
         }
 
         $out = [

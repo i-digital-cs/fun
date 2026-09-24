@@ -41,16 +41,16 @@ class _FunLoaderState extends State<FunLoader>
   }
 
   double get _diameter => switch (widget.size) {
-        FunLoaderSize.sm => 10,
-        FunLoaderSize.lg => 40,
-        FunLoaderSize.md => 32,
-      };
+    FunLoaderSize.sm => 10,
+    FunLoaderSize.lg => 40,
+    FunLoaderSize.md => 32,
+  };
 
   double get _gap => switch (widget.size) {
-        FunLoaderSize.sm => 5,
-        FunLoaderSize.lg => 12,
-        FunLoaderSize.md => 9,
-      };
+    FunLoaderSize.sm => 5,
+    FunLoaderSize.lg => 12,
+    FunLoaderSize.md => 9,
+  };
 
   int get _count => widget.size == FunLoaderSize.sm ? 3 : 6;
 
@@ -105,14 +105,9 @@ class _FunLoaderState extends State<FunLoader>
             AnimatedBuilder(
               animation: _controller,
               builder: (context, child) {
-                final pulse = 0.4 +
-                    0.6 *
-                        (1 -
-                            (((_controller.value * 2) % 2) - 1).abs());
-                return Opacity(
-                  opacity: pulse.clamp(0.4, 1.0),
-                  child: child,
-                );
+                final pulse =
+                    0.4 + 0.6 * (1 - (((_controller.value * 2) % 2) - 1).abs());
+                return Opacity(opacity: pulse.clamp(0.4, 1.0), child: child);
               },
               child: Text(
                 label,
@@ -145,10 +140,7 @@ class _NeumorphCircle extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: const RadialGradient(
           center: Alignment(-0.4, -0.4),
-          colors: [
-            Color(0xFFF8FAFC),
-            Color(0xFFC7D2FE),
-          ],
+          colors: [Color(0xFFF8FAFC), Color(0xFFC7D2FE)],
         ),
         boxShadow: [
           BoxShadow(

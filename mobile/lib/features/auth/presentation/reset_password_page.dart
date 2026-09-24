@@ -11,10 +11,7 @@ import 'package:go_router/go_router.dart';
 
 /// In-memory navigation args — never put [resetToken] in URLs (SEC-RESET-001).
 class ResetPasswordArgs {
-  const ResetPasswordArgs({
-    required this.email,
-    required this.resetToken,
-  });
+  const ResetPasswordArgs({required this.email, required this.resetToken});
 
   final String email;
   final String resetToken;
@@ -63,7 +60,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   Future<String?> _authenticate() {
-    return ref.read(authControllerProvider.notifier).resetPassword(
+    return ref
+        .read(authControllerProvider.notifier)
+        .resetPassword(
           email: widget.email,
           resetToken: widget.resetToken,
           password: _password.text,

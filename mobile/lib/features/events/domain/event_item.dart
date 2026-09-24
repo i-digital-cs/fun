@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
 
 class EventCategory extends Equatable {
   const EventCategory({
@@ -23,15 +24,19 @@ class EventCity extends Equatable {
     required this.name,
     this.nameEn,
     this.nameAr,
+    this.latitude,
+    this.longitude,
   });
 
   final int id;
   final String name;
   final String? nameEn;
   final String? nameAr;
+  final double? latitude;
+  final double? longitude;
 
   @override
-  List<Object?> get props => [id, name, nameEn, nameAr];
+  List<Object?> get props => [id, name, nameEn, nameAr, latitude, longitude];
 }
 
 class EventItem extends Equatable {
@@ -100,12 +105,27 @@ class EventItem extends Equatable {
     if (label != null && label.isNotEmpty) return label;
     if (venue.trim().isNotEmpty) {
       final cityName = city?.name;
-      if (cityName != null && cityName.isNotEmpty && !venue.contains(cityName)) {
+      if (cityName != null &&
+          cityName.isNotEmpty &&
+          !venue.contains(cityName)) {
         return '$venue · $cityName';
       }
       return venue.trim();
     }
     return city?.name ?? '';
+  }
+
+  /// Prefer pin coordinates for external open so a moved pin always wins
+  /// over a stale pasted maps link.
+  String? get openMapsUrl {
+    if (hasPlacePin && latitude != null && longitude != null) {
+      return MapsUrlParser.googleOpenUrl(latitude!, longitude!);
+    }
+    final open = mapsOpenUrl?.trim();
+    if (open != null && open.isNotEmpty) return open;
+    final stored = mapsUrl?.trim();
+    if (stored != null && stored.isNotEmpty) return stored;
+    return null;
   }
 
   bool get isFree => costPerPerson == null || costPerPerson! <= 0;
@@ -119,8 +139,7 @@ class EventItem extends Equatable {
 
   bool get isDraft => status == 'draft';
   bool get isPublished => status == 'published';
-  bool get isOwnerActionable =>
-      status == 'draft' || status == 'published';
+  bool get isOwnerActionable => status == 'draft' || status == 'published';
 
   EventItem copyWith({
     String? joinAction,
@@ -163,35 +182,35 @@ class EventItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        venue,
-        description,
-        requirements,
-        expectedCost,
-        startsAt,
-        endsAt,
-        maxParticipants,
-        membersCount,
-        costPerPerson,
-        imageUrl,
-        status,
-        category,
-        city,
-        categoryId,
-        cityId,
-        distanceKm,
-        joinAction,
-        createdBy,
-        readyForRatings,
-        isFavorited,
-        latitude,
-        longitude,
-        mapsUrl,
-        mapsOpenUrl,
-        hasPlacePin,
-        locationLabel,
-      ];
+    id,
+    title,
+    venue,
+    description,
+    requirements,
+    expectedCost,
+    startsAt,
+    endsAt,
+    maxParticipants,
+    membersCount,
+    costPerPerson,
+    imageUrl,
+    status,
+    category,
+    city,
+    categoryId,
+    cityId,
+    distanceKm,
+    joinAction,
+    createdBy,
+    readyForRatings,
+    isFavorited,
+    latitude,
+    longitude,
+    mapsUrl,
+    mapsOpenUrl,
+    hasPlacePin,
+    locationLabel,
+  ];
 }
 
 class CreatorRating extends Equatable {
@@ -257,8 +276,14 @@ class EventDetail extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [event, joinAction, readyForRatings, canRate, myRating, creatorRating];
+  List<Object?> get props => [
+    event,
+    joinAction,
+    readyForRatings,
+    canRate,
+    myRating,
+    creatorRating,
+  ];
 }
 
 class PaginatedEvents extends Equatable {
@@ -298,8 +323,15 @@ class ChatMessage extends Equatable {
   final String? userName;
 
   @override
-  List<Object?> get props =>
-      [id, eventId, body, isSystem, createdAt, userId, userName];
+  List<Object?> get props => [
+    id,
+    eventId,
+    body,
+    isSystem,
+    createdAt,
+    userId,
+    userName,
+  ];
 }
 
 class JoinRequestItem extends Equatable {
@@ -381,8 +413,7 @@ class NowPlayingFeed {
   final List<EventItem> next;
   final List<EventItem> previous;
 
-  bool get hasAny =>
-      running != null || next.isNotEmpty || previous.isNotEmpty;
+  bool get hasAny => running != null || next.isNotEmpty || previous.isNotEmpty;
 }
 
 class EventTicketMember extends Equatable {
@@ -438,17 +469,17 @@ class EventTicket extends Equatable {
 
   @override
   List<Object?> get props => [
-        code,
-        role,
-        passLabel,
-        title,
-        dateLabel,
-        dateIso,
-        venueLine,
-        barcodeShadow,
-        member,
-        event,
-      ];
+    code,
+    role,
+    passLabel,
+    title,
+    dateLabel,
+    dateIso,
+    venueLine,
+    barcodeShadow,
+    member,
+    event,
+  ];
 }
 
 class HomeParticipationRow extends Equatable {

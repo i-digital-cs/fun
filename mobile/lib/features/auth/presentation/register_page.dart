@@ -53,7 +53,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<String?> _authenticate() {
     final locale = ref.read(localeCodeProvider);
-    return ref.read(authControllerProvider.notifier).register(
+    return ref
+        .read(authControllerProvider.notifier)
+        .register(
           name: _name.text.trim(),
           email: _email.text.trim(),
           password: _password.text,
@@ -93,12 +95,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         return;
       }
       final locale = ref.read(localeCodeProvider);
-      final error =
-          await ref.read(authControllerProvider.notifier).loginWithGoogle(
-                idToken: hasId ? idToken : null,
-                accessToken: hasAccess ? accessToken : null,
-                locale: locale,
-              );
+      final error = await ref
+          .read(authControllerProvider.notifier)
+          .loginWithGoogle(
+            idToken: hasId ? idToken : null,
+            accessToken: hasAccess ? accessToken : null,
+            locale: locale,
+          );
       if (!mounted) return;
       setState(() {
         _submitting = false;
@@ -183,20 +186,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 TextFormField(
                                   controller: _name,
                                   textCapitalization: TextCapitalization.words,
-                                  decoration:
-                                      InputDecoration(labelText: l10n.name),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.name,
+                                  ),
                                   validator: (v) =>
                                       (v == null || v.trim().isEmpty)
-                                          ? l10n.validationRequired
-                                          : null,
+                                      ? l10n.validationRequired
+                                      : null,
                                 ),
                                 const SizedBox(height: 14),
                                 TextFormField(
                                   controller: _email,
                                   keyboardType: TextInputType.emailAddress,
                                   autocorrect: false,
-                                  decoration:
-                                      InputDecoration(labelText: l10n.email),
+                                  decoration: InputDecoration(
+                                    labelText: l10n.email,
+                                  ),
                                   validator: (v) {
                                     if (v == null || v.trim().isEmpty) {
                                       return l10n.validationRequired;

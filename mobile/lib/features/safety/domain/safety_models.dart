@@ -1,10 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class BlockedUser extends Equatable {
-  const BlockedUser({
-    required this.userId,
-    required this.name,
-  });
+  const BlockedUser({required this.userId, required this.name});
 
   final int userId;
   final String name;

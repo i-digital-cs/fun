@@ -13,14 +13,20 @@ String categoryEmoji(String? name) {
   if (n.contains('chess') || n.contains('board') || n.contains('شطرنج')) {
     return '♟️';
   }
-  if (n.contains('cinema') || n.contains('film') || n.contains('movie') || n.contains('سينما')) {
+  if (n.contains('cinema') ||
+      n.contains('film') ||
+      n.contains('movie') ||
+      n.contains('سينما')) {
     return '🎬';
   }
   if (n.contains('social') || n.contains('اجتماع')) return '🤝';
   if (n.contains('outdoor') || n.contains('خارج')) return '🌳';
   if (n.contains('book') || n.contains('كتاب')) return '📚';
   if (n.contains('cycl') || n.contains('دراج')) return '🚴';
-  if (n.contains('play') || n.contains('game') || n.contains('gaming') || n.contains('لعب')) {
+  if (n.contains('play') ||
+      n.contains('game') ||
+      n.contains('gaming') ||
+      n.contains('لعب')) {
     return '🎮';
   }
   return '✨';

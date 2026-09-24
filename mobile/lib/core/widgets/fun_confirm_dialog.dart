@@ -284,10 +284,8 @@ class _TappingHandPainter extends CustomPainter {
     final tap = local < 0.4
         ? Curves.easeInOut.transform(local / 0.4)
         : local < 0.5
-            ? 1.0
-            : Curves.easeInOut.transform(
-                ((1.0 - local) / 0.5).clamp(0.0, 1.0),
-              );
+        ? 1.0
+        : Curves.easeInOut.transform(((1.0 - local) / 0.5).clamp(0.0, 1.0));
 
     // CSS: rotate(10deg) → rotate(50deg) with scale 0.4 / 0.6 / 0.8 / 1.0
     final scale = 0.4 + index * 0.2;

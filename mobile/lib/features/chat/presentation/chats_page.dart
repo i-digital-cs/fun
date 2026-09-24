@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -18,13 +20,15 @@ import 'package:go_router/go_router.dart';
 final chatUnreadTotalProvider = StateProvider<int>((ref) => 0);
 
 final chatsListProvider =
-    FutureProvider.autoDispose<({List<ChatThread> data, int unreadTotal})>((ref) async {
-  final result = await ref.watch(chatsRepositoryProvider).list();
-  if (result.failure != null) {
-    throw result.failure!;
-  }
-  return (data: result.data, unreadTotal: result.unreadTotal);
-});
+    FutureProvider.autoDispose<({List<ChatThread> data, int unreadTotal})>((
+      ref,
+    ) async {
+      final result = await ref.watch(chatsRepositoryProvider).list();
+      if (result.failure != null) {
+        throw result.failure!;
+      }
+      return (data: result.data, unreadTotal: result.unreadTotal);
+    });
 
 class ChatsPage extends ConsumerWidget {
   const ChatsPage({super.key});
@@ -39,7 +43,17 @@ class ChatsPage extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.chatsTitle)),
       body: async.when(
         loading: () => const Center(child: FunLoader()),
-        error: (error, _) => Center(child: Text(error.toString())),
+        error: (error, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              error is Failure
+                  ? failureUserMessage(error)
+                  : l10n.failedToLoadEvents,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
         data: (payload) {
           if (payload.data.isEmpty) {
             return Center(
@@ -95,13 +109,16 @@ class ChatsPage extends ConsumerWidget {
                             backgroundColor: unread
                                 ? AppColors.primary
                                 : AppColors.primary.withValues(alpha: 0.12),
-                            foregroundColor:
-                                unread ? Colors.white : AppColors.primary,
+                            foregroundColor: unread
+                                ? Colors.white
+                                : AppColors.primary,
                             child: Text(
                               chat.title.isNotEmpty
                                   ? chat.title.characters.first.toUpperCase()
                                   : '?',
-                              style: const TextStyle(fontWeight: FontWeight.w800),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -150,7 +167,9 @@ class ChatsPage extends ConsumerWidget {
                           ),
                           if (unread)
                             Container(
-                              margin: const EdgeInsetsDirectional.only(start: 8),
+                              margin: const EdgeInsetsDirectional.only(
+                                start: 8,
+                              ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 7,
                                 vertical: 3,
@@ -285,10 +304,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     });
   }
 
-  void _onRealtimeMessage(
-    ChatToastPayload payload, {
-    bool bumpUnread = true,
-  }) {
+  void _onRealtimeMessage(ChatToastPayload payload, {bool bumpUnread = true}) {
     if (!mounted) return;
 
     if (payload.messageId > 0) {
@@ -320,8 +336,13 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   }
 
   void _dismissToast(ChatToastPayload payload) {
-    setState(() => _toasts.removeWhere((t) => identical(t, payload) ||
-        (t.messageId != 0 && t.messageId == payload.messageId)));
+    setState(
+      () => _toasts.removeWhere(
+        (t) =>
+            identical(t, payload) ||
+            (t.messageId != 0 && t.messageId == payload.messageId),
+      ),
+    );
   }
 
   Future<void> _poll() async {

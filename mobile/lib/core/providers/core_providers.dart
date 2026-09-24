@@ -88,10 +88,10 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
 /// Active categories for sidebar explore rail (Blade `nav_explore`).
 final exploreCategoriesProvider =
     FutureProvider.autoDispose<List<CategoryItem>>((ref) async {
-  final result = await ref.watch(catalogRepositoryProvider).categories();
-  if (result.failure != null || result.data == null) return const [];
-  return result.data!.take(5).toList();
-});
+      final result = await ref.watch(catalogRepositoryProvider).categories();
+      if (result.failure != null || result.data == null) return const [];
+      return result.data!.take(5).toList();
+    });
 
 final profileRemoteSourceProvider = Provider<ProfileRemoteSource>((ref) {
   return ProfileRemoteSource(ref.watch(apiClientProvider));
@@ -106,9 +106,8 @@ final publicProfileRemoteSourceProvider = Provider<PublicProfileRemoteSource>(
 );
 
 final publicProfileRepositoryProvider = Provider<PublicProfileRepository>(
-  (ref) => PublicProfileRepositoryImpl(
-    ref.watch(publicProfileRemoteSourceProvider),
-  ),
+  (ref) =>
+      PublicProfileRepositoryImpl(ref.watch(publicProfileRemoteSourceProvider)),
 );
 
 final identityRemoteSourceProvider = Provider<IdentityRemoteSource>((ref) {

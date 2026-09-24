@@ -35,8 +35,9 @@ class _JoinRequestsPageState extends ConsumerState<JoinRequestsPage> {
       _loading = true;
       _error = null;
     });
-    final result =
-        await ref.read(eventsRepositoryProvider).joinRequests(widget.eventId);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .joinRequests(widget.eventId);
     if (!mounted) return;
     setState(() {
       _loading = false;
@@ -55,9 +56,8 @@ class _JoinRequestsPageState extends ConsumerState<JoinRequestsPage> {
     if (!mounted) return;
     setState(() => _processingId = null);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     await _load();
@@ -78,9 +78,8 @@ class _JoinRequestsPageState extends ConsumerState<JoinRequestsPage> {
     if (!mounted) return;
     setState(() => _processingId = null);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     await _load();

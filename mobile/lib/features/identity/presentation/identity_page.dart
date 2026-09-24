@@ -111,9 +111,8 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
   void _startTheater() {
     final l10n = AppLocalizations.of(context);
     if (_idFrontPath == null || _idBackPath == null || _selfiePath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.identityMissing)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.identityMissing)));
       return;
     }
     setState(() {
@@ -123,7 +122,9 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
   }
 
   Future<String?> _authenticateUpload() async {
-    final result = await ref.read(identityRepositoryProvider).upload(
+    final result = await ref
+        .read(identityRepositoryProvider)
+        .upload(
           idFrontPath: _idFrontPath!,
           idBackPath: _idBackPath!,
           selfiePath: _selfiePath!,
@@ -220,125 +221,129 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
                           _uploading = false;
                         });
                         if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text(error)));
                         }
                       },
                     )
                   : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.identitySub,
-                    style: const TextStyle(color: AppColors.muted, height: 1.4),
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Chip(
-                      label: Text(
-                        _chipLabel(l10n, chip),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                      backgroundColor: _chipColor(chip),
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                    ),
-                  ),
-                  if (status?.resubmitRequired == true) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.warning.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.warning_amber_rounded,
-                            color: AppColors.warning,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.identitySub,
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            height: 1.4,
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              l10n.resubmitRequired,
+                        ),
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Chip(
+                            label: Text(
+                              _chipLabel(l10n, chip),
                               style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.text,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
                               ),
+                            ),
+                            backgroundColor: _chipColor(chip),
+                            side: BorderSide.none,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                        ),
+                        if (status?.resubmitRequired == true) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.warning.withValues(
+                                  alpha: 0.45,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: AppColors.warning,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    l10n.resubmitRequired,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.text,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
-                  if (hasDocs) ...[
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        for (final doc in status!.documents)
-                          if (doc.uploaded)
-                            _DocumentThumb(
-                              label: _docLabel(l10n, doc.type),
-                              bytes: doc.id != null
-                                  ? _thumbBytes[doc.id!]
-                                  : null,
+                        if (hasDocs) ...[
+                          const SizedBox(height: 20),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              for (final doc in status!.documents)
+                                if (doc.uploaded)
+                                  _DocumentThumb(
+                                    label: _docLabel(l10n, doc.type),
+                                    bytes: doc.id != null
+                                        ? _thumbBytes[doc.id!]
+                                        : null,
+                                  ),
+                            ],
+                          ),
+                        ],
+                        if (canUpload) ...[
+                          const SizedBox(height: 20),
+                          AttachmentFolderPicker(
+                            label: l10n.idFront,
+                            path: _idFrontPath,
+                            onPick: () => _pick('front'),
+                            onClear: _idFrontPath == null
+                                ? null
+                                : () => setState(() => _idFrontPath = null),
+                          ),
+                          const SizedBox(height: 12),
+                          AttachmentFolderPicker(
+                            label: l10n.idBack,
+                            path: _idBackPath,
+                            onPick: () => _pick('back'),
+                            onClear: _idBackPath == null
+                                ? null
+                                : () => setState(() => _idBackPath = null),
+                          ),
+                          const SizedBox(height: 12),
+                          AttachmentFolderPicker(
+                            label: l10n.selfie,
+                            path: _selfiePath,
+                            onPick: () => _pick('selfie'),
+                            onClear: _selfiePath == null
+                                ? null
+                                : () => setState(() => _selfiePath = null),
+                          ),
+                        ],
+                        if (!canUpload && hasDocs) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.identitySubmitted,
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              height: 1.4,
                             ),
+                          ),
+                        ],
                       ],
                     ),
-                  ],
-                  if (canUpload) ...[
-                    const SizedBox(height: 20),
-                    AttachmentFolderPicker(
-                      label: l10n.idFront,
-                      path: _idFrontPath,
-                      onPick: () => _pick('front'),
-                      onClear: _idFrontPath == null
-                          ? null
-                          : () => setState(() => _idFrontPath = null),
-                    ),
-                    const SizedBox(height: 12),
-                    AttachmentFolderPicker(
-                      label: l10n.idBack,
-                      path: _idBackPath,
-                      onPick: () => _pick('back'),
-                      onClear: _idBackPath == null
-                          ? null
-                          : () => setState(() => _idBackPath = null),
-                    ),
-                    const SizedBox(height: 12),
-                    AttachmentFolderPicker(
-                      label: l10n.selfie,
-                      path: _selfiePath,
-                      onPick: () => _pick('selfie'),
-                      onClear: _selfiePath == null
-                          ? null
-                          : () => setState(() => _selfiePath = null),
-                    ),
-                  ],
-                  if (!canUpload && hasDocs) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.identitySubmitted,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
             ),
             if (!_theater && canUpload) ...[
               const SizedBox(height: 24),

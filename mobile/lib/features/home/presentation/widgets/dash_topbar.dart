@@ -74,8 +74,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
     setState(() => _suggesting = true);
     _portal.show();
     _debounce = Timer(const Duration(milliseconds: 280), () async {
-      final result =
-          await ref.read(homeRepositoryProvider).suggest(q);
+      final result = await ref.read(homeRepositoryProvider).suggest(q);
       if (!mounted || _search.text.trim() != q) return;
       setState(() {
         _lastQ = q;
@@ -90,9 +89,9 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
     final q = _search.text.trim();
     _portal.hide();
     _focus.unfocus();
-    await ref.read(discoverControllerProvider.notifier).loadNationwide(
-          q: q.isEmpty ? null : q,
-        );
+    await ref
+        .read(discoverControllerProvider.notifier)
+        .loadNationwide(q: q.isEmpty ? null : q);
     if (!mounted) return;
     context.go('/discover');
   }
@@ -198,8 +197,9 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                                 color: AppColors.muted,
                               ),
                               border: InputBorder.none,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(vertical: 10),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                              ),
                             ),
                             style: const TextStyle(
                               fontSize: 13,
@@ -228,39 +228,39 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                 button: true,
                 label: oppositeLabel,
                 child: InkWell(
-                onTap: _toggleLocale,
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  height: 32,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        oppositeGlyph,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.primary,
+                  onTap: _toggleLocale,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Container(
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          oppositeGlyph,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        oppositeLabel,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF475569),
+                        const SizedBox(width: 4),
+                        Text(
+                          oppositeLabel,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF475569),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
               ),
               const SizedBox(width: 8),
             ],
@@ -319,14 +319,8 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                 },
                 itemBuilder: (context) => [
                   PopupMenuItem(value: 'home', child: Text(l10n.navHome)),
-                  PopupMenuItem(
-                    value: 'profile',
-                    child: Text(l10n.navProfile),
-                  ),
-                  PopupMenuItem(
-                    value: 'location',
-                    child: Text(l10n.location),
-                  ),
+                  PopupMenuItem(value: 'profile', child: Text(l10n.navProfile)),
+                  PopupMenuItem(value: 'location', child: Text(l10n.location)),
                   PopupMenuItem(
                     value: 'identity',
                     child: Row(
@@ -453,10 +447,7 @@ class _SuggestPanel extends StatelessWidget {
             dense: true,
             title: Text(
               s.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
             subtitle: s.subtitle == null
                 ? null

@@ -27,9 +27,8 @@ class SafetyRemoteSource {
       }).toList();
       final body = response.data!;
       final meta = body['meta'] as Map<String, dynamic>?;
-      final currentPage = meta?['current_page'] as int? ??
-          body['current_page'] as int? ??
-          page;
+      final currentPage =
+          meta?['current_page'] as int? ?? body['current_page'] as int? ?? page;
       final lastPage =
           meta?['last_page'] as int? ?? body['last_page'] as int? ?? page;
       return (
@@ -76,7 +75,7 @@ class SafetyRemoteSource {
           'reportable_type': reportableType,
           'reportable_id': reportableId,
           'reason': reason,
-          if (description != null) 'description': description,
+          'description': ?description,
         },
       );
       return (failure: null, data: null);

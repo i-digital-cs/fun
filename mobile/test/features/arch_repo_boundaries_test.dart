@@ -11,8 +11,7 @@ import 'package:fun_mobile/features/home/domain/home_repository.dart';
 class _FakeChats implements ChatsRepository {
   @override
   Future<({Failure? failure, List<ChatThread> data, int unreadTotal})>
-      list() async =>
-          (failure: null, data: const <ChatThread>[], unreadTotal: 0);
+  list() async => (failure: null, data: const <ChatThread>[], unreadTotal: 0);
 
   @override
   Future<({Failure? failure, void data})> markRead(int eventId) async =>

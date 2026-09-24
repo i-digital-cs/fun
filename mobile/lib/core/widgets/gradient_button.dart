@@ -66,10 +66,7 @@ class GradientButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Center(
               child: isLoading
-                  ? const FunLoader(
-                      size: FunLoaderSize.sm,
-                      showLabel: false,
-                    )
+                  ? const FunLoader(size: FunLoaderSize.sm, showLabel: false)
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

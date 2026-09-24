@@ -47,16 +47,45 @@ void main() {
       expect(event.mapsOpenUrl, isNotNull);
     });
 
-    test('treats null cost as free', () {
+    test('parses nested location payload', () {
       final event = EventsRemoteSource.parseEvent({
-        'id': 1,
-        'title': 'Free meetup',
-        'venue': 'Park',
-        'max_participants': 5,
+        'id': 501,
+        'title': 'Title',
+        'venue': '',
+        'max_participants': 10,
         'members_count': 1,
-        'cost_per_person': null,
+        'location_label': 'Abd Al Aziz Al Seoud Street · Cairo',
+        'location': {
+          'label': 'Abd Al Aziz Al Seoud Street · Cairo',
+          'venue': 'Abd Al Aziz Al Seoud Street · Cairo',
+          'venue_raw': 'Abd Al Aziz Al Seoud Street · Cairo',
+          'latitude': 30.0265968,
+          'longitude': 31.2234449,
+          'maps_url':
+              'https://www.openstreetmap.org/?mlat=30.02&mlon=31.22',
+          'maps_open_url':
+              'https://www.openstreetmap.org/?mlat=30.02&mlon=31.22',
+          'has_place_pin': true,
+          'city': {
+            'id': 6,
+            'name': '6th of October',
+            'latitude': 29.9285,
+            'longitude': 30.9188,
+          },
+        },
+        'latitude': null,
+        'longitude': null,
+        'has_place_pin': true,
       });
-      expect(event.isFree, isTrue);
+
+      expect(event.hasPlacePin, isTrue);
+      expect(event.latitude, closeTo(30.0265968, 0.0001));
+      expect(event.longitude, closeTo(31.2234449, 0.0001));
+      expect(event.placeLine, contains('Abd Al Aziz'));
+      expect(event.venue, contains('Abd Al Aziz'));
+      expect(event.city?.id, 6);
+      expect(event.city?.latitude, closeTo(29.9285, 0.0001));
+      expect(event.mapsOpenUrl, isNotNull);
     });
   });
 }

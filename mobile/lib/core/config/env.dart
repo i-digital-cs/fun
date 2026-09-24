@@ -23,10 +23,7 @@ abstract final class Env {
     defaultValue: 'https://fun.idigital-cs.com/api',
   );
 
-  static const flavor = String.fromEnvironment(
-    'FLAVOR',
-    defaultValue: 'prod',
-  );
+  static const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'prod');
 
   /// Web OAuth client ID for Google Sign-In `serverClientId` (id_token).
   static const googleServerClientId = String.fromEnvironment(

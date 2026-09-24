@@ -74,10 +74,7 @@ class ParticipationsSection extends StatelessWidget {
                 ],
               ),
             ),
-            TextButton(
-              onPressed: onManageAll,
-              child: Text(l10n.manageAll),
-            ),
+            TextButton(onPressed: onManageAll, child: Text(l10n.manageAll)),
           ],
         ),
         const SizedBox(height: 10),
@@ -101,10 +98,7 @@ class ParticipationsSection extends StatelessWidget {
                   style: const TextStyle(color: AppColors.muted),
                 ),
                 const SizedBox(height: 12),
-                GradientButton(
-                  label: l10n.navDiscover,
-                  onPressed: onDiscover,
-                ),
+                GradientButton(label: l10n.navDiscover, onPressed: onDiscover),
               ],
             ),
           )

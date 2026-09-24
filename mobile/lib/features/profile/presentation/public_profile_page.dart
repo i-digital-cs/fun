@@ -38,8 +38,9 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
       _loading = true;
       _error = null;
     });
-    final result =
-        await ref.read(publicProfileRepositoryProvider).show(widget.publicId);
+    final result = await ref
+        .read(publicProfileRepositoryProvider)
+        .show(widget.publicId);
     if (!mounted) return;
     setState(() {
       _loading = false;
@@ -66,14 +67,12 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     if (!mounted) return;
     setState(() => _blocking = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.userBlocked)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
     if (context.canPop()) {
       context.pop();
     } else {
@@ -87,7 +86,8 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     final auth = ref.watch(authControllerProvider);
     final me = auth is Authenticated ? auth.user : null;
     final profile = _profile;
-    final isSelf = me != null &&
+    final isSelf =
+        me != null &&
         profile != null &&
         ((profile.id != null && profile.id == me.id) ||
             (me.publicId != null && me.publicId == profile.publicId));
@@ -108,118 +108,106 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
       body: _loading
           ? const Center(child: FunLoader())
           : _error != null
-              ? Center(child: Text(_error!))
-              : profile == null
-                  ? Center(child: Text(l10n.profileNotFound))
-                  : ListView(
-                      padding: const EdgeInsets.all(20),
-                      children: [
-                        PublicProfileCard(profile: profile),
-                        const SizedBox(height: 16),
-                        if (me == null)
-                          GradientButton.indigo(
-                            label: l10n.login,
-                            onPressed: () => context.go('/login'),
-                          )
-                        else if (isSelf)
-                          GradientButton.indigo(
-                            label: l10n.editProfile,
-                            onPressed: () => context.push('/settings/profile'),
-                          )
-                        else if (canAct && profile.id != null) ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: _blocking
-                                      ? null
-                                      : () => showReportSheet(
-                                            context,
-                                            reportableType: 'user',
-                                            reportableId: profile.id!,
-                                          ),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Text(l10n.report),
+          ? Center(child: Text(_error!))
+          : profile == null
+          ? Center(child: Text(l10n.profileNotFound))
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                PublicProfileCard(profile: profile),
+                const SizedBox(height: 16),
+                if (me == null)
+                  GradientButton.indigo(
+                    label: l10n.login,
+                    onPressed: () => context.go('/login'),
+                  )
+                else if (isSelf)
+                  GradientButton.indigo(
+                    label: l10n.editProfile,
+                    onPressed: () => context.push('/settings/profile'),
+                  )
+                else if (canAct && profile.id != null) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _blocking
+                              ? null
+                              : () => showReportSheet(
+                                  context,
+                                  reportableType: 'user',
+                                  reportableId: profile.id!,
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: _blocking
-                                      ? null
-                                      : () => _block(profile),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.danger,
-                                    side: const BorderSide(
-                                      color: AppColors.danger,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Text(l10n.blockUser),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (profile.hostedEvents.isNotEmpty) ...[
-                          const SizedBox(height: 24),
-                          Text(
-                            l10n.hostedEvents,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          ...profile.hostedEvents.map((event) {
-                            final locale =
-                                Localizations.localeOf(context).toString();
-                            final when = event.startsAt != null
-                                ? DateFormat('MMM d · h:mm a', locale)
-                                    .format(event.startsAt!.toLocal())
-                                : '';
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: ListTile(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: const BorderSide(
-                                    color: AppColors.borderSoft,
-                                  ),
-                                ),
-                                tileColor: AppColors.surface,
-                                title: Text(
-                                  event.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  [
-                                    if (when.isNotEmpty) when,
-                                    if (event.city != null) event.city,
-                                  ].join(' · '),
-                                ),
-                                onTap: () =>
-                                    context.push('/events/${event.id}'),
-                              ),
-                            );
-                          }),
-                        ],
-                      ],
+                          child: Text(l10n.report),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _blocking ? null : () => _block(profile),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.danger,
+                            side: const BorderSide(color: AppColors.danger),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(l10n.blockUser),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (profile.hostedEvents.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.hostedEvents,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...profile.hostedEvents.map((event) {
+                    final locale = Localizations.localeOf(context).toString();
+                    final when = event.startsAt != null
+                        ? DateFormat(
+                            'MMM d · h:mm a',
+                            locale,
+                          ).format(event.startsAt!.toLocal())
+                        : '';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: AppColors.borderSoft),
+                        ),
+                        tileColor: AppColors.surface,
+                        title: Text(
+                          event.title,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(
+                          [
+                            if (when.isNotEmpty) when,
+                            if (event.city != null) event.city,
+                          ].join(' · '),
+                        ),
+                        onTap: () => context.push('/events/${event.id}'),
+                      ),
+                    );
+                  }),
+                ],
+              ],
+            ),
     );
   }
 }

@@ -31,19 +31,19 @@ class PublicProfile extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        publicId,
-        name,
-        initials,
-        profileImagePath,
-        roleLabel,
-        cityName,
-        hostedEventsCount,
-        joinedEventsCount,
-        ratingAverage,
-        ratingCount,
-        hostedEvents,
-      ];
+    id,
+    publicId,
+    name,
+    initials,
+    profileImagePath,
+    roleLabel,
+    cityName,
+    hostedEventsCount,
+    joinedEventsCount,
+    ratingAverage,
+    ratingCount,
+    hostedEvents,
+  ];
 }
 
 class PublicHostedEvent extends Equatable {
@@ -64,6 +64,12 @@ class PublicHostedEvent extends Equatable {
   final int? maxParticipants;
 
   @override
-  List<Object?> get props =>
-      [id, title, startsAt, city, membersCount, maxParticipants];
+  List<Object?> get props => [
+    id,
+    title,
+    startsAt,
+    city,
+    membersCount,
+    maxParticipants,
+  ];
 }

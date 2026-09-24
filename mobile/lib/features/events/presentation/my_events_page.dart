@@ -44,8 +44,9 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
       });
     }
 
-    final mineFuture =
-        ref.read(eventsRepositoryProvider).mine(page: refresh ? 1 : _page);
+    final mineFuture = ref
+        .read(eventsRepositoryProvider)
+        .mine(page: refresh ? 1 : _page);
     final pendingFuture = refresh
         ? ref.read(homeRepositoryProvider).participations()
         : null;
@@ -89,13 +90,13 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
       message: l10n.confirmCancelJoin,
     );
     if (confirm != true || !mounted) return;
-    final result =
-        await ref.read(eventsRepositoryProvider).cancelJoinRequest(eventId);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .cancelJoinRequest(eventId);
     if (!mounted) return;
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     setState(() {
@@ -180,8 +181,7 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
                       for (final row in _pending) ...[
                         _PendingRequestCard(
                           row: row,
-                          onView: () =>
-                              context.push('/events/${row.event.id}'),
+                          onView: () => context.push('/events/${row.event.id}'),
                           onCancel: () => _cancelJoin(row.event.id),
                         ),
                         const SizedBox(height: 12),
@@ -211,11 +211,11 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
                         if (i > 0) const SizedBox(height: 16),
                         MyEventCardWrapper(
                           event: _items[i],
-                          onView: () =>
-                              context.push('/events/${_items[i].id}'),
+                          onView: () => context.push('/events/${_items[i].id}'),
                           onViewTicket: _items[i].joinAction == 'joined'
-                              ? () => context
-                                  .push('/events/${_items[i].id}/ticket')
+                              ? () => context.push(
+                                  '/events/${_items[i].id}/ticket',
+                                )
                               : null,
                         ),
                       ],
@@ -265,8 +265,10 @@ class _PendingRequestCard extends StatelessWidget {
     final event = row.event;
     final when = event.startsAt == null
         ? ''
-        : DateFormat('MMM d · h:mm a', locale)
-            .format(event.startsAt!.toLocal());
+        : DateFormat(
+            'MMM d · h:mm a',
+            locale,
+          ).format(event.startsAt!.toLocal());
     final city = event.city?.name;
 
     return Container(
@@ -274,7 +276,9 @@ class _PendingRequestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB).withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.9)),
+        border: Border.all(
+          color: const Color(0xFFFDE68A).withValues(alpha: 0.9),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,10 +314,7 @@ class _PendingRequestCard extends StatelessWidget {
           if (when.isNotEmpty || (city != null && city.isNotEmpty)) ...[
             const SizedBox(height: 6),
             Text(
-              [
-                if (when.isNotEmpty) when,
-                ?city,
-              ].join(' · '),
+              [if (when.isNotEmpty) when, ?city].join(' · '),
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.muted,
@@ -324,18 +325,12 @@ class _PendingRequestCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             l10n.pendingReviewNotice,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF92400E),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              OutlinedButton(
-                onPressed: onView,
-                child: Text(l10n.viewEvent),
-              ),
+              OutlinedButton(onPressed: onView, child: Text(l10n.viewEvent)),
               const SizedBox(width: 8),
               CancelStopButton(
                 label: l10n.cancelJoin,

@@ -111,7 +111,9 @@ class SiteRemoteSource {
 
   final ApiClient _client;
 
-  Future<({Failure? failure, SiteBranding? data})> fetch({String? locale}) async {
+  Future<({Failure? failure, SiteBranding? data})> fetch({
+    String? locale,
+  }) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/site',

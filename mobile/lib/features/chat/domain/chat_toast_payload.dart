@@ -20,7 +20,8 @@ class ChatToastPayload {
     final user = json['user'];
     final userMap = user is Map ? Map<String, dynamic>.from(user) : const {};
     final name = userMap['name'] as String? ?? '';
-    final initials = userMap['initials'] as String? ??
+    final initials =
+        userMap['initials'] as String? ??
         (name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase());
     final photo = userMap['profile_image_path'] as String?;
 

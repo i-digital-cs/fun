@@ -42,8 +42,9 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
     }
 
     final page = append ? _page + 1 : 1;
-    final result =
-        await ref.read(safetyRepositoryProvider).listBlocks(page: page);
+    final result = await ref
+        .read(safetyRepositoryProvider)
+        .listBlocks(page: page);
     if (!mounted) return;
 
     if (result.failure != null) {
@@ -61,9 +62,7 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
       _loadingMore = false;
       _page = pageData.currentPage;
       _hasMore = pageData.hasMore;
-      _blocks = append
-          ? [..._blocks, ...pageData.items]
-          : pageData.items;
+      _blocks = append ? [..._blocks, ...pageData.items] : pageData.items;
     });
   }
 
@@ -75,18 +74,17 @@ class _BlocksPageState extends ConsumerState<BlocksPage> {
     );
     if (confirm != true || !mounted) return;
 
-    final result =
-        await ref.read(safetyRepositoryProvider).unblock(user.userId);
+    final result = await ref
+        .read(safetyRepositoryProvider)
+        .unblock(user.userId);
     if (!mounted) return;
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.userUnblocked)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.userUnblocked)));
     await _load();
   }
 
@@ -181,16 +179,10 @@ class BlockedUserTile extends StatelessWidget {
           Expanded(
             child: Text(
               user.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
             ),
           ),
-          TextButton(
-            onPressed: onUnblock,
-            child: Text(l10n.unblock),
-          ),
+          TextButton(onPressed: onUnblock, child: Text(l10n.unblock)),
         ],
       ),
     );

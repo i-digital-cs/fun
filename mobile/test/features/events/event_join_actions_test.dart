@@ -33,7 +33,9 @@ void main() {
     expect(joined, isTrue);
   });
 
-  testWidgets('request_pending shows pending banner and cancel join', (tester) async {
+  testWidgets('request_pending shows pending banner and cancel join', (
+    tester,
+  ) async {
     var cancelled = false;
     await tester.pumpWidget(
       _wrap(

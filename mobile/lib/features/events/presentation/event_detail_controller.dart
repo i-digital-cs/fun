@@ -65,7 +65,7 @@ class EventDetailState {
 /// Loads detail + owns join/favorite/lifecycle mutations (ARCH-GOD-DETAIL-001).
 class EventDetailController extends StateNotifier<EventDetailState> {
   EventDetailController(this._ref, this.eventId)
-      : super(const EventDetailState(isLoading: true));
+    : super(const EventDetailState(isLoading: true));
 
   final Ref _ref;
   final int eventId;
@@ -78,9 +78,7 @@ class EventDetailController extends StateNotifier<EventDetailState> {
   bool get isOwner {
     final detail = state.detail;
     final userId = currentUserId;
-    return detail != null &&
-        userId != null &&
-        detail.event.createdBy == userId;
+    return detail != null && userId != null && detail.event.createdBy == userId;
   }
 
   bool get canEdit {
@@ -133,8 +131,9 @@ class EventDetailController extends StateNotifier<EventDetailState> {
       ),
     );
 
-    final result =
-        await _ref.read(eventsRepositoryProvider).toggleFavorite(eventId);
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .toggleFavorite(eventId);
     state = state.copyWith(favoriting: false);
 
     if (result.failure != null) {
@@ -171,35 +170,31 @@ class EventDetailController extends StateNotifier<EventDetailState> {
   }
 
   Future<EventDetailMutation> leave() => _mutate(() async {
-        final result = await _ref.read(eventsRepositoryProvider).leave(eventId);
-        return result.failure?.message;
-      });
+    final result = await _ref.read(eventsRepositoryProvider).leave(eventId);
+    return result.failure?.message;
+  });
 
   Future<EventDetailMutation> cancelJoinRequest() => _mutate(() async {
-        final result =
-            await _ref.read(eventsRepositoryProvider).cancelJoinRequest(eventId);
-        return result.failure?.message;
-      });
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .cancelJoinRequest(eventId);
+    return result.failure?.message;
+  });
 
-  Future<EventDetailMutation> publish() => _mutate(
-        () async {
-          final result =
-              await _ref.read(eventsRepositoryProvider).publish(eventId);
-          return result.failure?.message;
-        },
-        successMessageKey: 'eventPublished',
-      );
+  Future<EventDetailMutation> publish() => _mutate(() async {
+    final result = await _ref.read(eventsRepositoryProvider).publish(eventId);
+    return result.failure?.message;
+  }, successMessageKey: 'eventPublished');
 
   Future<EventDetailMutation> cancelEvent() => _mutate(() async {
-        final result = await _ref.read(eventsRepositoryProvider).cancel(eventId);
-        return result.failure?.message;
-      });
+    final result = await _ref.read(eventsRepositoryProvider).cancel(eventId);
+    return result.failure?.message;
+  });
 
   Future<EventDetailMutation> completeEvent() => _mutate(() async {
-        final result =
-            await _ref.read(eventsRepositoryProvider).complete(eventId);
-        return result.failure?.message;
-      });
+    final result = await _ref.read(eventsRepositoryProvider).complete(eventId);
+    return result.failure?.message;
+  });
 
   Future<EventDetailMutation> blockCreator() async {
     final creatorId = state.detail?.event.createdBy;
@@ -226,5 +221,5 @@ class EventDetailController extends StateNotifier<EventDetailState> {
 
 final eventDetailControllerProvider = StateNotifierProvider.autoDispose
     .family<EventDetailController, EventDetailState, int>((ref, eventId) {
-  return EventDetailController(ref, eventId);
-});
+      return EventDetailController(ref, eventId);
+    });

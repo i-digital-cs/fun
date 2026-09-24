@@ -4,10 +4,7 @@ import 'package:fun_mobile/features/auth/domain/user.dart';
 typedef Result<T> = ({Failure? failure, T? data});
 
 abstract class AuthRepository {
-  Future<Result<User>> login({
-    required String email,
-    required String password,
-  });
+  Future<Result<User>> login({required String email, required String password});
 
   Future<Result<User>> loginWithGoogle({
     String? idToken,

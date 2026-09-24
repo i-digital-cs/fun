@@ -5,11 +5,7 @@ import 'package:fun_mobile/l10n/app_localizations.dart';
 
 /// Brand glass weather panel — mirrors Blade `x-dashboard.weather-card`.
 class WeatherCard extends StatelessWidget {
-  const WeatherCard({
-    super.key,
-    this.weather,
-    this.onSetLocation,
-  });
+  const WeatherCard({super.key, this.weather, this.onSetLocation});
 
   final WeatherSnapshot? weather;
   final VoidCallback? onSetLocation;
@@ -17,20 +13,20 @@ class WeatherCard extends StatelessWidget {
   LinearGradient _themeGradient(String theme) {
     return switch (theme) {
       'rain' => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF312E81), Color(0xFF1E3A5F), Color(0xFF0F172A)],
-        ),
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF312E81), Color(0xFF1E3A5F), Color(0xFF0F172A)],
+      ),
       'cloudy' => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF64748B), Color(0xFF475569), Color(0xFF334155)],
-        ),
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF64748B), Color(0xFF475569), Color(0xFF334155)],
+      ),
       _ => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF97316), Color(0xFFF59E0B), Color(0xFF4F46E5)],
-        ),
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFF97316), Color(0xFFF59E0B), Color(0xFF4F46E5)],
+      ),
     };
   }
 
@@ -59,14 +55,15 @@ class WeatherCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.place_outlined, color: AppColors.primary, size: 28),
+            const Icon(
+              Icons.place_outlined,
+              color: AppColors.primary,
+              size: 28,
+            ),
             const SizedBox(height: 12),
             Text(
               l10n.weatherSetLocation,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
             Text(
@@ -105,11 +102,7 @@ class WeatherCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                _iconFor(snapshot.icon),
-                color: Colors.white,
-                size: 36,
-              ),
+              Icon(_iconFor(snapshot.icon), color: Colors.white, size: 36),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -198,11 +191,7 @@ class WeatherCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Icon(
-                          _iconFor(day.icon),
-                          size: 16,
-                          color: Colors.white,
-                        ),
+                        Icon(_iconFor(day.icon), size: 16, color: Colors.white),
                         if (day.high != null) ...[
                           const SizedBox(height: 2),
                           Text(

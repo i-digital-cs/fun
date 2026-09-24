@@ -7,6 +7,7 @@ import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
 import 'package:fun_mobile/features/events/presentation/create_event_controller.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -113,8 +114,13 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       initialTime: TimeOfDay.fromDateTime(initial),
     );
     if (time == null || !mounted) return;
-    final value =
-        DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final value = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
     if (isStart) {
       _ctrl.setStartsAt(value);
     } else {
@@ -147,8 +153,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   Future<void> _applyMapsUrl() async {
     await _ctrl.applyMapsUrl(_mapsUrl.text);
     if (!mounted) return;
-    final resolved =
-        ref.read(createEventControllerProvider(_controllerKey)).resolvedMapsUrl;
+    final resolved = ref
+        .read(createEventControllerProvider(_controllerKey))
+        .resolvedMapsUrl;
     if (resolved != null && resolved.isNotEmpty) {
       _mapsUrl.text = resolved;
     }
@@ -172,7 +179,13 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     }
     final maxP = int.tryParse(_maxParticipants.text.trim());
     if (maxP == null) return null;
-    final mapsUrl = _mapsUrl.text.trim();
+    // Pin coords are authoritative — keep maps_url in sync so "Open in maps"
+    // matches the map (pasted Google links must not win over a moved pin).
+    final lat = state.latitude;
+    final lng = state.longitude;
+    final mapsUrl = (lat != null && lng != null)
+        ? MapsUrlParser.openStreetMapUrl(lat, lng)
+        : _mapsUrl.text.trim();
     return EventDraft(
       title: _title.text.trim(),
       description: _description.text.trim().isEmpty
@@ -180,7 +193,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
           : _description.text.trim(),
       categoryId: state.categoryId!,
       cityId: state.cityId!,
-      venue: _venue.text.trim().isEmpty ? null : _venue.text.trim(),
+      venue: _venue.text.trim(),
       startsAt: state.startsAt!,
       endsAt: state.endsAt,
       maxParticipants: maxP,
@@ -192,8 +205,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
           : _expectedCost.text.trim(),
       costPerPerson: num.tryParse(_costPerPerson.text.trim()),
       imagePath: state.imagePath,
-      latitude: state.latitude,
-      longitude: state.longitude,
+      latitude: lat,
+      longitude: lng,
       mapsUrl: mapsUrl.isEmpty ? null : mapsUrl,
     );
   }
@@ -215,9 +228,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     final result = await _ctrl.submit(draft);
     if (!mounted) return;
     if (!result.ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error ?? 'Error')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.error ?? 'Error')));
       return;
     }
 
@@ -235,9 +247,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
         final pubError = await _ctrl.publish(event.id);
         if (!mounted) return;
         if (pubError != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(pubError)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(pubError)));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -259,9 +270,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: AppBar(
-        title: Text(_isEdit ? l10n.editEvent : l10n.createEvent),
-      ),
+      appBar: AppBar(title: Text(_isEdit ? l10n.editEvent : l10n.createEvent)),
       body: AsyncBody(
         isLoading: state.isLoading,
         error: state.error,
@@ -489,7 +498,9 @@ class CreateEventFormCard extends StatelessWidget {
           const SizedBox(height: 12),
           DateTimePickerField(
             label: l10n.startsAt,
-            value: startsAt != null ? dateFmt.format(startsAt!.toLocal()) : null,
+            value: startsAt != null
+                ? dateFmt.format(startsAt!.toLocal())
+                : null,
             onTap: onPickStart,
           ),
           const SizedBox(height: 12),
@@ -505,8 +516,12 @@ class CreateEventFormCard extends StatelessWidget {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(labelText: l10n.maxParticipants),
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return l10n.validationRequired;
-              if (int.tryParse(v.trim()) == null) return l10n.validationRequired;
+              if (v == null || v.trim().isEmpty) {
+                return l10n.validationRequired;
+              }
+              if (int.tryParse(v.trim()) == null) {
+                return l10n.validationRequired;
+              }
               return null;
             },
           ),

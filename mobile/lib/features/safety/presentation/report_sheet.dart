@@ -17,10 +17,8 @@ Future<void> showReportSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (context) => ReportSheet(
-      reportableType: reportableType,
-      reportableId: reportableId,
-    ),
+    builder: (context) =>
+        ReportSheet(reportableType: reportableType, reportableId: reportableId),
   );
 }
 
@@ -51,7 +49,9 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
-    final result = await ref.read(safetyRepositoryProvider).report(
+    final result = await ref
+        .read(safetyRepositoryProvider)
+        .report(
           reportableType: widget.reportableType,
           reportableId: widget.reportableId,
           reason: _reason,
@@ -62,9 +62,8 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     if (!mounted) return;
     setState(() => _submitting = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     Navigator.of(context).pop();
@@ -90,10 +89,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
         children: [
           Text(
             l10n.report,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(

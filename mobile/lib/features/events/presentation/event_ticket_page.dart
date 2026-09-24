@@ -48,17 +48,17 @@ class _EventTicketPageState extends ConsumerState<EventTicketPage>
       _loading = true;
       _error = null;
     });
-    final result =
-        await ref.read(eventsRepositoryProvider).ticket(widget.eventId);
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .ticket(widget.eventId);
     if (!mounted) return;
     if (result.failure != null) {
       setState(() {
         _loading = false;
         _error = result.failure!.message;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       if (context.canPop()) context.pop();
       return;
     }
@@ -135,8 +135,9 @@ class _EventTicketPageState extends ConsumerState<EventTicketPage>
                                     Text(
                                       '${ticket.dateLabel} · ${ticket.venueLine}',
                                       style: TextStyle(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.72),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.72,
+                                        ),
                                         fontSize: 13,
                                       ),
                                     ),
@@ -149,8 +150,9 @@ class _EventTicketPageState extends ConsumerState<EventTicketPage>
                                     context.push('/events/${widget.eventId}'),
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.white,
-                                  backgroundColor:
-                                      Colors.white.withValues(alpha: 0.12),
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   side: BorderSide(
                                     color: Colors.white.withValues(alpha: 0.25),
                                   ),
@@ -228,11 +230,7 @@ class _TicketStage extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment(-0.2, -1),
           end: Alignment(0.4, 1),
-          colors: [
-            Color(0xFF0B1224),
-            Color(0xFF151B33),
-            Color(0xFF1A1030),
-          ],
+          colors: [Color(0xFF0B1224), Color(0xFF151B33), Color(0xFF1A1030)],
         ),
         boxShadow: [
           BoxShadow(
@@ -576,14 +574,10 @@ class _TicketShellPainter extends CustomPainter {
 
     // Soft top fade
     final fade = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset.zero,
-        Offset(0, size.height),
-        const [
-          Color(0x88FFEE55),
-          Color(0x22000000),
-        ],
-      );
+      ..shader = ui.Gradient.linear(Offset.zero, Offset(0, size.height), const [
+        Color(0x88FFEE55),
+        Color(0x22000000),
+      ]);
     canvas.drawRect(Offset.zero & size, fade);
 
     // Animated color-burn band

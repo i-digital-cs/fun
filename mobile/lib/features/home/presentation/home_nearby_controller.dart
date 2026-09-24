@@ -135,8 +135,7 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
         final starts = e.startsAt;
         if (starts == null) return false;
         return !starts.isBefore(now) && !starts.isAfter(cutoff);
-      }).toList()
-        ..sort((a, b) => a.startsAt!.compareTo(b.startsAt!));
+      }).toList()..sort((a, b) => a.startsAt!.compareTo(b.startsAt!));
 
       state = state.copyWith(
         isLoading: false,
@@ -172,8 +171,9 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
 
   /// Returns error message on failure; otherwise updates local join_action.
   Future<String?> cancelJoinRequest(int eventId) async {
-    final result =
-        await _ref.read(eventsRepositoryProvider).cancelJoinRequest(eventId);
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .cancelJoinRequest(eventId);
     if (result.failure != null) return result.failure!.message;
     final next = result.data ?? 'request_to_join';
     state = state.copyWith(
@@ -188,5 +188,5 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
 
 final homeNearbyControllerProvider =
     StateNotifierProvider<HomeNearbyController, HomeNearbyState>((ref) {
-  return HomeNearbyController(ref);
-});
+      return HomeNearbyController(ref);
+    });
