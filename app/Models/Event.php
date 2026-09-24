@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EventMemberRole;
 use App\Enums\EventStatus;
+use App\Enums\UserSex;
 use App\Support\MediaDisk;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,7 @@ class Event extends Model
         'starts_at',
         'ends_at',
         'max_participants',
+        'sex',
         'requirements',
         'expected_cost',
         'cost_per_person',
@@ -138,7 +140,26 @@ class Event extends Model
             'latitude' => 'float',
             'longitude' => 'float',
             'status' => EventStatus::class,
+            'sex' => UserSex::class,
         ];
+    }
+
+    /**
+     * Whether this event’s audience allows the given user (mix = anyone).
+     */
+    public function allowsUserSex(?User $user): bool
+    {
+        $audience = $this->sex ?? UserSex::Mix;
+
+        if ($audience === UserSex::Mix) {
+            return true;
+        }
+
+        if ($user === null || $user->sex === null) {
+            return false;
+        }
+
+        return $user->sex === $audience;
     }
 
     public function creator(): BelongsTo

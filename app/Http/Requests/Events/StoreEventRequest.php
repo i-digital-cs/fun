@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Events;
 
+use App\Enums\UserSex;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,6 +30,7 @@ class StoreEventRequest extends FormRequest
             'starts_at' => ['required', 'date', 'after:now'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'max_participants' => ['required', 'integer', 'min:1', 'max:500'],
+            'sex' => ['required', Rule::enum(UserSex::class)],
             'requirements' => ['nullable', 'string', 'max:2000'],
             'expected_cost' => ['nullable', 'string', 'max:255'],
             'cost_per_person' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],

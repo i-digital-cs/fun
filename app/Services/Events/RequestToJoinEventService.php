@@ -35,6 +35,10 @@ class RequestToJoinEventService
             throw new DomainException(__('events.event_full'));
         }
 
+        if (! $event->allowsUserSex($user)) {
+            throw new DomainException(__('events.sex_mismatch'));
+        }
+
         $creator = $event->creator()->first();
 
         if ($creator !== null && $this->blocks->isBlockedEitherWay($user, $creator)) {

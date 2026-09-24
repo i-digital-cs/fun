@@ -54,6 +54,9 @@
                 <span class="event-3d__meta">{{ $schedule }}</span>
             @endif
             <span class="event-3d__text">{{ $event->locationLabel() }}</span>
+            @if ($event->sex)
+                <span class="event-3d__meta">{{ __('events.sex') }}: {{ __('ui.sex_'.$event->sex->value) }}</span>
+            @endif
 
             <div class="event-3d__members">
                 <div class="event-3d__members-row">
@@ -65,7 +68,7 @@
                 </div>
             </div>
 
-            @if (in_array($action, ['request_pending', 'joined', 'request_rejected', 'event_full'], true))
+            @if (in_array($action, ['request_pending', 'joined', 'request_rejected', 'event_full', 'sex_mismatch'], true))
                 <div class="event-3d__status">
                     @if ($action === 'request_pending')
                         <span class="block rounded-xl border border-slate-200/70 bg-white/80 px-3 py-1.5 text-center text-xs font-semibold text-slate-600">{{ __('events.request_pending') }}</span>
@@ -79,6 +82,8 @@
                         <span class="block rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-center text-xs font-semibold text-amber-700">{{ __('events.request_rejected') }}</span>
                     @elseif ($action === 'event_full')
                         <span class="block rounded-xl border border-slate-200/70 bg-white/80 px-3 py-1.5 text-center text-xs font-semibold text-slate-600">{{ __('events.event_full') }}</span>
+                    @elseif ($action === 'sex_mismatch')
+                        <span class="block rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-center text-xs font-semibold text-amber-800">{{ __('events.sex_mismatch') }}</span>
                     @endif
                 </div>
             @endif

@@ -32,6 +32,7 @@ class EventResource extends JsonResource
             'starts_at' => $this->starts_at?->toIso8601String(),
             'ends_at' => $this->ends_at?->toIso8601String(),
             'max_participants' => $this->max_participants,
+            'sex' => $this->sex?->value ?? 'mix',
             'members_count' => $membersCount,
             'remaining_capacity' => max(0, $this->max_participants - $membersCount),
             'is_full' => $membersCount >= $this->max_participants,

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\EventStatus;
+use App\Enums\UserSex;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
@@ -33,6 +34,7 @@ class EventFactory extends Factory
             'starts_at' => $startsAt,
             'ends_at' => (clone $startsAt)->addHours(2),
             'max_participants' => 10,
+            'sex' => UserSex::Mix,
             'requirements' => 'Bring water',
             'expected_cost' => 'Pitch booking shared',
             'cost_per_person' => 80,

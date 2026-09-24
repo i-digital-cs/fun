@@ -95,6 +95,19 @@
     <input id="max_participants" type="number" min="1" name="max_participants" value="{{ old('max_participants', $event?->max_participants ?? 10) }}" required class="{{ $inputClass }}">
 </div>
 <div>
+    <label class="{{ $labelClass }}" for="sex">{{ __('events.sex') }}</label>
+    <select id="sex" name="sex" required class="{{ $inputClass }}">
+        <option value="" disabled @selected(! in_array(old('sex', $event?->sex?->value), ['male', 'female', 'mix'], true))>{{ __('ui.sex_required') }}</option>
+        <option value="male" @selected(old('sex', $event?->sex?->value) === 'male')>{{ __('ui.sex_male') }}</option>
+        <option value="female" @selected(old('sex', $event?->sex?->value) === 'female')>{{ __('ui.sex_female') }}</option>
+        <option value="mix" @selected(old('sex', $event?->sex?->value ?? 'mix') === 'mix')>{{ __('ui.sex_mix') }}</option>
+    </select>
+    <p class="mt-1 text-xs text-slate-500">{{ __('events.sex_help') }}</p>
+    @error('sex')
+        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
+<div>
     <label class="{{ $labelClass }}" for="requirements">{{ __('events.requirements') }}</label>
     <textarea id="requirements" name="requirements" rows="3" class="{{ $inputClass }}">{{ old('requirements', $event?->requirements) }}</textarea>
 </div>

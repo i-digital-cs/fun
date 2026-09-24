@@ -53,7 +53,8 @@ class _EventCardState extends State<EventCard> {
     return action == 'request_pending' ||
         action == 'joined' ||
         action == 'request_rejected' ||
-        action == 'event_full';
+        action == 'event_full' ||
+        action == 'sex_mismatch';
   }
 
   @override
@@ -527,6 +528,12 @@ class _JoinStatusStrip extends StatelessWidget {
         Colors.white.withValues(alpha: 0.8),
         const Color(0xFF475569),
         const Color(0xFFE2E8F0),
+      ),
+      'sex_mismatch' => (
+        l10n.eventSexMismatch,
+        const Color(0xFFFFFBEB),
+        const Color(0xFFB45309),
+        const Color(0xFFFDE68A),
       ),
       _ => (
         l10n.requestPending,

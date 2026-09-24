@@ -447,6 +447,34 @@ class EventDetailInfoCard extends StatelessWidget {
               style: const TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ],
+          if (event.sex != null && event.sex!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Text(
+                  '${l10n.eventSex}: ${switch (event.sex) {
+                    'male' => l10n.sexMale,
+                    'female' => l10n.sexFemale,
+                    _ => l10n.sexMix,
+                  }}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (event.city != null && event.placeLine.isEmpty) ...[
             const SizedBox(height: 4),
             Text(
@@ -730,6 +758,10 @@ class EventJoinActions extends StatelessWidget {
       'event_full' => JoinStatusBanner(
         label: l10n.eventFull,
         color: AppColors.accent,
+      ),
+      'sex_mismatch' => JoinStatusBanner(
+        label: l10n.eventSexMismatch,
+        color: const Color(0xFFB45309),
       ),
       'request_rejected' => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

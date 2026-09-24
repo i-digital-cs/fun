@@ -45,6 +45,10 @@ class ResolveEventJoinActionService
             return EventJoinAction::EventFull;
         }
 
+        if (! $event->allowsUserSex($user)) {
+            return EventJoinAction::SexMismatch;
+        }
+
         return EventJoinAction::RequestToJoin;
     }
 
@@ -112,9 +116,14 @@ class ResolveEventJoinActionService
                 continue;
             }
 
-            $actions[$event->id] = $event->isFull()
-                ? EventJoinAction::EventFull
-                : EventJoinAction::RequestToJoin;
+            if ($event->isFull()) {
+                $actions[$event->id] = EventJoinAction::EventFull;
+                continue;
+            }
+
+            $actions[$event->id] = $event->allowsUserSex($user)
+                ? EventJoinAction::RequestToJoin
+                : EventJoinAction::SexMismatch;
         }
 
         return $actions;

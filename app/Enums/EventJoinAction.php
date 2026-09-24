@@ -9,5 +9,6 @@ enum EventJoinAction: string
     case Joined = 'joined';
     case RequestRejected = 'request_rejected';
     case EventFull = 'event_full';
+    case SexMismatch = 'sex_mismatch';
     case NotAvailable = 'not_available';
 }

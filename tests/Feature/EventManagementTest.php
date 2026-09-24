@@ -33,6 +33,7 @@ class EventManagementTest extends TestCase
             'starts_at' => now()->addDay()->toISOString(),
             'ends_at' => now()->addDay()->addHours(2)->toISOString(),
             'max_participants' => 10,
+            'sex' => 'mix',
             'requirements' => 'Bring water',
             'expected_cost' => 'Pitch shared',
             'cost_per_person' => 80,
@@ -41,7 +42,8 @@ class EventManagementTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.status', 'draft')
             ->assertJsonPath('data.members_count', 1)
-            ->assertJsonPath('data.max_participants', 10);
+            ->assertJsonPath('data.max_participants', 10)
+            ->assertJsonPath('data.sex', 'mix');
 
         $eventId = $response->json('data.id');
 
@@ -68,6 +70,7 @@ class EventManagementTest extends TestCase
             'maps_url' => 'https://www.google.com/maps?q=30.0444,31.2357',
             'starts_at' => now()->addDay()->toISOString(),
             'max_participants' => 8,
+            'sex' => 'mix',
         ]);
 
         $response->assertCreated()
@@ -100,6 +103,7 @@ class EventManagementTest extends TestCase
             'longitude' => 31.2357,
             'starts_at' => now()->addDay()->toISOString(),
             'max_participants' => 8,
+            'sex' => 'female',
         ]);
 
         $response->assertCreated()
@@ -177,6 +181,7 @@ class EventManagementTest extends TestCase
             'city_id' => $city->id,
             'starts_at' => now()->addDay()->toISOString(),
             'max_participants' => 5,
+            'sex' => 'male',
         ])->assertForbidden();
     }
 

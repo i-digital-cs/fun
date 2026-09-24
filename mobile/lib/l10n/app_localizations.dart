@@ -872,6 +872,24 @@ abstract class AppLocalizations {
   /// **'Max participants'**
   String get maxParticipants;
 
+  /// No description provided for @eventSex.
+  ///
+  /// In en, this message translates to:
+  /// **'Audience'**
+  String get eventSex;
+
+  /// No description provided for @eventSexHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Who this event is for: Male, Female, or Mix.'**
+  String get eventSexHelp;
+
+  /// No description provided for @eventSexMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This event is limited to a different audience than your profile sex.'**
+  String get eventSexMismatch;
+
   /// No description provided for @requirements.
   ///
   /// In en, this message translates to:

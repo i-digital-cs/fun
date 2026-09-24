@@ -140,6 +140,11 @@
             @endif
 
             <div class="flex flex-wrap items-center gap-2">
+                @if ($event->sex)
+                    <span class="rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-sm font-semibold text-indigo-700">
+                        {{ __('events.sex') }}: {{ __('ui.sex_'.$event->sex->value) }}
+                    </span>
+                @endif
                 @if ($event->expected_cost)
                     <span class="rounded-full border border-slate-200/70 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700">{{ __('events.expected_cost') }}: {{ $event->expected_cost }}</span>
                 @endif
@@ -169,6 +174,8 @@
                             @csrf
                             <x-ui.cancel-btn type="submit" :label="__('events.cancel_join')" />
                         </form>
+                    @elseif ($joinAction->value === 'sex_mismatch')
+                        <span class="inline-flex items-center rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-800">{{ __('events.sex_mismatch') }}</span>
                     @elseif ($joinAction->value === 'joined')
                         <span class="inline-flex items-center rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">{{ __('events.joined') }}</span>
                         <a href="{{ route('events.ticket', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.view_ticket') }}</a>

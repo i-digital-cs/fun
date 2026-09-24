@@ -332,6 +332,7 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 | starts_at | yes |
 | ends_at | no |
 | max_participants | yes |
+| **sex** (audience: `male` \| `female` \| `mix`) | **yes** |
 | requirements | no |
 | expected_cost | no |
 | cost_per_person | no |
@@ -1222,7 +1223,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
 6. **Favorites** — bookmark toggle + `/favorites` list (§2.7a)  
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
-8. **Create/edit** — all fields + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web)  
+8. **Create/edit** — all fields including **required sex/audience** (`male`/`female`/`mix`) + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web); join respects `sex_mismatch`  
 9. **Members** — promote / demote / transfer + report/block links  
 10. **Chat** — inbox `/chats` + thread list/post; Reverb toast (Flutter + web); Flutter poll fallback
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  

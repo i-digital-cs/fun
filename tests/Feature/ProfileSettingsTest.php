@@ -26,6 +26,7 @@ class ProfileSettingsTest extends TestCase
             ->put(route('settings.profile.update'), [
                 'name' => 'New Name',
                 'email' => 'member@example.com',
+                'sex' => $user->sex?->value ?? 'male',
                 'locale' => 'en',
                 'current_password' => 'Password1!',
                 'password' => 'Password2!',
@@ -51,6 +52,7 @@ class ProfileSettingsTest extends TestCase
             ->put(route('settings.profile.update'), [
                 'name' => $user->name,
                 'email' => 'new@example.com',
+                'sex' => $user->sex?->value ?? 'female',
                 'locale' => 'en',
             ])
             ->assertRedirect(route('verification.notice'));
@@ -71,6 +73,7 @@ class ProfileSettingsTest extends TestCase
             ->put(route('settings.profile.update'), [
                 'name' => $user->name,
                 'email' => $user->email,
+                'sex' => $user->sex?->value ?? 'mix',
                 'locale' => 'en',
                 'photo' => UploadedFile::fake()->image('avatar.jpg'),
             ])

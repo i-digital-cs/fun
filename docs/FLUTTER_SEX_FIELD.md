@@ -1,43 +1,45 @@
-# Flutter: Required user sex field
+# Flutter: Required sex (user + event audience)
 
 **Audience:** Flutter developer  
-**Status:** Backend + API + Flutter **shipped** (register, profile edit, `User` model, l10n, soft prompt on Profile when `needs_sex`).  
-**Parity:** Match web Blade (`auth/register.blade.php`, `profile/edit.blade.php`) and `docs/FLUTTER_WEB_PARITY.md` (§2.12, §2.15).  
-**Related rules:** `.cursor/rules/web-flutter-parity.mdc`, `mobile/docs/ENGINEERING_CONSTITUTION.md`
+**Status:** Backend + API **shipped** (user profile **and** event audience). Wire / verify Flutter against this contract.  
+**Parity:** Web Blade + `docs/FLUTTER_WEB_PARITY.md`  
+**Related:** `.cursor/rules/web-flutter-parity.mdc`, `mobile/docs/ENGINEERING_CONSTITUTION.md`
 
 ---
 
 ## Goal
 
-Every member must select **sex** with exactly three options:
+Sex uses the **same three API values** everywhere:
 
-| API value | EN label | AR label |
-|-----------|----------|----------|
+| API value | EN | AR |
+|-----------|----|----|
 | `male` | Male | ذكر |
 | `female` | Female | أنثى |
 | `mix` | Mix | مختلط |
 
-- **Email register:** `sex` is **required** (reject if missing / invalid).
-- **Profile settings:** `sex` is **required** on save.
-- **Google auth:** may create users with `sex: null` → API returns `needs_sex: true`. User must set sex on Profile (no hard nav gate required in v1 unless product asks). Soft prompt on Profile hub when `needsSex`.
+### 1) User profile sex (who the member is)
 
-Do **not** invent other values (`other`, `prefer_not_to_say`, etc.).
+| Surface | Rule |
+|---------|------|
+| Email **register** | `sex` **required** |
+| **Profile** settings | `sex` **required** on save |
+| Google auth | may leave `sex: null` → `needs_sex: true` until profile sets it |
+
+### 2) Event audience sex (who the event is for)
+
+| Surface | Rule |
+|---------|------|
+| **Create / edit event** | `sex` **required** (`male` / `female` / `mix`) |
+| Event API payloads | always include `sex` |
+| Join | if event is `male` or `female`, only users with matching profile `sex` may request to join; `mix` allows anyone. Mismatch → `join_action: "sex_mismatch"` |
+
+Do **not** invent other values.
 
 ---
 
-## API contract
-
-Base: `{APP_URL}/api` · header `Authorization: Bearer {token}` when authenticated · optional `Accept-Language: en|ar`.
-
-### Values
-
-```text
-sex ∈ { "male", "female", "mix" }
-```
+## API — user
 
 ### `POST /api/register`
-
-**Body (JSON):**
 
 ```json
 {
@@ -50,97 +52,109 @@ sex ∈ { "male", "female", "mix" }
 }
 ```
 
-| Field | Rules |
-|-------|--------|
-| `sex` | **required**, one of `male` \| `female` \| `mix` |
-
-**Success `201`:** Sanctum `token` + `user` including `sex`, `needs_sex`.
-
-**Validation fail `422`:** standard Laravel errors, e.g. `errors.sex`.
-
 ### `PUT /api/settings/profile`
 
-JSON or multipart (same as today for photo).
+Include `"sex": "female"` (required).
+
+### `GET /api/user`
+
+| Key | Type | Notes |
+|-----|------|--------|
+| `sex` | `string?` | `male` / `female` / `mix` |
+| `needs_sex` | `bool` | true when unset |
+
+---
+
+## API — events
+
+### `POST /api/events` / `PUT /api/events/{id}`
 
 ```json
 {
-  "name": "Sara",
-  "email": "sara@example.com",
-  "sex": "female",
-  "locale": "en"
+  "title": "Football night",
+  "category_id": 1,
+  "city_id": 1,
+  "starts_at": "2026-10-01T18:00:00+03:00",
+  "max_participants": 10,
+  "sex": "mix"
 }
 ```
 
 | Field | Rules |
 |-------|--------|
-| `sex` | **required**, `male` \| `female` \| `mix` |
+| `sex` | **required** on create; **required** when sent on update (`male` \| `female` \| `mix`) |
 
-Omit / invalid → `422`.
-
-### `GET /api/user` (and login / Google `user` payloads)
-
-Parse and keep:
-
-| Key | Type | Notes |
-|-----|------|-------|
-| `sex` | `string?` | `male` / `female` / `mix`, or `null` |
-| `needs_sex` | `bool` | `true` when sex not set (typical after Google) |
-
-Example fragment:
+### Event resource (list / detail)
 
 ```json
 {
-  "id": 12,
-  "name": "Sara",
-  "email": "sara@example.com",
-  "sex": "female",
-  "needs_sex": false,
-  "locale": "en",
-  "status": "active"
+  "id": 42,
+  "title": "Football night",
+  "sex": "male",
+  "join_action": "sex_mismatch",
+  "max_participants": 10
 }
 ```
 
+### Join actions (Bearer required for personalized `join_action`)
+
+| Value | Meaning |
+|-------|---------|
+| `request_to_join` | Can request |
+| `request_pending` | Pending |
+| `joined` | Member |
+| `request_rejected` | Rejected (can retry if still allowed) |
+| `event_full` | Full |
+| **`sex_mismatch`** | User sex does not match event audience (or user has no sex and event is not mix) |
+| `not_available` | Not published / etc. |
+
+`POST /api/events/{id}/join` returns **422** with message when sex mismatches (do not fake success).
+
 ---
 
-## Screens to update
+## Flutter screens
 
-### 1. Register — `/register`
+### Register `/register`
 
-**File:** `mobile/lib/features/auth/presentation/register_page.dart`
+- Required sex selector (Male / Female / Mix).
+- Pass `sex` on register API.
 
-- Add required selector (dropdown or segmented control) **before** password fields (match web order: name → email → sex → password → confirm).
-- Options: Male / Female / Mix (l10n).
-- Client validate: cannot submit theater / register without selection.
-- Pass `sex` through:
+### Profile `/settings/profile`
 
-`AuthController.register` → `AuthRepository.register` → `AuthRemoteSource.register` → body key `"sex"`.
+- Required sex selector; prefill from `user.sex`.
+- Send `sex` on update.
 
-### 2. Profile edit — `/settings/profile`
+### Create / edit event
 
-**File:** `mobile/lib/features/profile/presentation/profile_edit_page.dart`
+**Files:** `create_event_page.dart`, `EventDraft`, `events_remote_source.dart`
 
-- Same three options; preselect from `user.sex`.
-- If `user.sex == null` / `needsSex`, show empty + required error until chosen.
-- Include `"sex"` in `ProfileRepository.updateProfile` / remote PUT (and multipart FormData when photo is sent).
+- Required audience dropdown after max participants (match web `_form.blade.php`).
+- Default new draft to `mix` if you want a sensible default; still **required** (must be explicit in payload).
+- Prefill from `event.sex` when editing.
+- Form field → `EventDraft.sex` → multipart/JSON `"sex"`.
 
-### 3. Domain model
+### Event detail + cards
 
-**File:** `mobile/lib/features/auth/domain/user.dart`
+- Show audience chip: `Audience: Male|Female|Mix`.
+- Handle `join_action == sex_mismatch` with banner (no Join CTA) — same as web.
+
+### Domain
 
 ```dart
-final String? sex;       // male | female | mix
-final bool needsSex;     // from needs_sex, or true if sex null/empty
-```
+// User
+final String? sex;
+final bool needsSex;
 
-- `User.fromJson`: read `sex`, `needs_sex`.
-- `copyWith` / `props`: include both.
-- Do **not** put sex on public profile UI unless product asks (web public card does not show it).
+// EventItem
+final String? sex; // male | female | mix
+
+// EventDraft
+final String sex; // required
+```
 
 ---
 
-## L10n (EN + AR)
-
-Add to `mobile/lib/l10n/app_en.arb` and `app_ar.arb`, then `flutter gen-l10n`:
+## L10n
 
 | Key | EN | AR |
 |-----|----|----|
@@ -149,80 +163,66 @@ Add to `mobile/lib/l10n/app_en.arb` and `app_ar.arb`, then `flutter gen-l10n`:
 | `sexFemale` | Female | أنثى |
 | `sexMix` | Mix | مختلط |
 | `sexRequired` | Please select your sex. | يرجى اختيار الجنس. |
-| `sexPrompt` | Select your sex | اختر الجنس |
-| `sexPromptBody` | Add this on your profile to finish setting up your account. | أضفه في ملفك الشخصي لإكمال إعداد حسابك. |
+| `eventSex` | Audience | الجمهور |
+| `eventSexHelp` | Who this event is for: Male, Female, or Mix. | لمن هذه الفعالية: ذكر، أنثى، أو مختلط. |
+| `eventSexMismatch` | This event is limited to a different audience than your profile sex. | هذه الفعالية مخصصة لجمهور يختلف عن الجنس في ملفك. |
 
-Use logical layout (`EdgeInsetsDirectional`, etc.) — A11Y-RTL-001.
-
----
-
-## UX / design
-
-- Match existing auth/profile form chrome (rounded fields, indigo focus, canvas/surface).
-- Register CTA stays orange→amber gradient.
-- Prefer `DropdownButtonFormField` or equivalent already used on profile (locale).
-- Show server `422` field errors via existing failure / SnackBar mapping (`failureUserMessage`).
-
----
-
-## Optional (v1 nice-to-have)
-
-If `user.needsSex` after Google / restore:
-
-- Soft prompt on Profile hub (“Select your sex”) linking to `/settings/profile` — **done**
-- Banner on home — **not** a hard block of identity / join unless product requests a gate.
-
-Do **not** change `routeAfterAuth` order (deactivated → email verify → identity → home) unless explicitly asked.
+Then `flutter gen-l10n`.
 
 ---
 
 ## Files checklist
 
-| Layer | Path | Change |
-|-------|------|--------|
-| Domain | `features/auth/domain/user.dart` | `sex`, `needsSex` ✅ |
-| Auth API | `features/auth/data/auth_remote_source.dart` | send `sex` on register ✅ |
-| Auth repo | `features/auth/domain/auth_repository.dart` + impl | `sex` param ✅ |
-| Auth UI | `features/auth/presentation/auth_controller.dart` | pass `sex` ✅ |
-| Auth UI | `features/auth/presentation/register_page.dart` | selector + validate ✅ |
-| Profile API | `features/profile/data/profile_remote_source.dart` | send `sex` ✅ |
-| Profile repo | domain + impl | `sex` param ✅ |
-| Profile UI | `features/profile/presentation/profile_edit_page.dart` | selector + validate ✅ |
-| Profile hub | `features/profile/presentation/profile_page.dart` | soft prompt when `needsSex` ✅ |
-| L10n | `lib/l10n/app_en.arb`, `app_ar.arb` | keys above ✅ |
-| Tests | `test/features/auth/user_test.dart` + Fake `AuthRepository` | `sex` / `needs_sex` ✅ |
+| Area | Path |
+|------|------|
+| User model | `features/auth/domain/user.dart` |
+| Register / profile | auth + profile presentation + remotes |
+| Event model / draft | `features/events/domain/event_item.dart` |
+| Event API | `features/events/data/events_remote_source.dart` |
+| Create/edit UI | `features/events/presentation/create_event_page.dart` |
+| Detail join UI | `event_detail_page.dart` → `EventJoinActions` |
+| Cards | `widgets/event_card.dart` |
+| L10n | `app_en.arb` / `app_ar.arb` |
+| Tests | Fake repos + `event_join_actions_test.dart` for `sex_mismatch` |
 
 ---
 
 ## QA checklist
 
-- [x] Register without sex → client blocks; API alone → `422` on `sex`
-- [x] Register with `male` / `female` / `mix` → `201`, `user.sex` matches
-- [x] `GET /api/user` after login shows `sex` + `needs_sex: false`
-- [x] Profile save without sex → blocked / `422`
-- [x] Profile change sex → persists after `refreshMe`
-- [x] Google new user → `needs_sex: true` until profile sets sex
-- [x] EN + AR labels + RTL on register + profile
-- [x] Compared with web `/register` and `/settings/profile`
+**User**
+
+- [ ] Register without sex → blocked / `422`
+- [ ] Register + profile with each of male/female/mix
+- [ ] Google user `needs_sex` until profile sets sex
+
+**Event**
+
+- [ ] Create without sex → `422`
+- [ ] Create with `male` / `female` / `mix` → stored; list/detail show `sex`
+- [ ] Male user cannot join female-only event → `sex_mismatch` / 422
+- [ ] Mix event joinable by any sex (including unset user)
+- [ ] Edit event changes audience and persists
+- [ ] EN + AR + RTL on create + detail
 
 ---
 
 ## Out of scope
 
-- Admin `/admin/*`
-- Showing sex on public profile `/u/{publicId}`
-- Event audience gender (male-only / female-only / mix events) — separate feature if requested
-- Hard participation gate on `needs_sex` (unless product asks)
+- Admin-only UI (unless admin event edit form is updated separately)
+- Discover filter-by-sex (nice-to-have later)
+- Hard gate blocking home until `needs_sex` (unless product asks)
 
 ---
 
-## Web reference (source of truth for UX)
+## Web reference
 
-- Register: `resources/views/auth/register.blade.php`
-- Profile: `resources/views/profile/edit.blade.php`
-- Enum: `app/Enums/UserSex.php` (`male`, `female`, `mix`)
+- User register: `resources/views/auth/register.blade.php`
+- User profile: `resources/views/profile/edit.blade.php`
+- Event form: `resources/views/events/_form.blade.php`
+- Event show / cards: `sex` chip + `sex_mismatch` join state
+- Enum: `app/Enums/UserSex.php`
+- Join: `EventJoinAction::SexMismatch` = `sex_mismatch`
 
 ---
 
-*Created 2026-09-24 — handoff for Flutter parity with required user sex.*  
-*Updated 2026-09-24 — Flutter wiring verified; Profile soft prompt added.*
+*Updated 2026-09-24 — user sex + event audience sex.*

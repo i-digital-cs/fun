@@ -73,6 +73,7 @@ class UpdateEventService
                 'starts_at',
                 'ends_at',
                 'max_participants',
+                'sex',
                 'requirements',
                 'expected_cost',
                 'cost_per_person',

@@ -31,6 +31,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
   final _venue = TextEditingController();
   final _mapsUrl = TextEditingController();
   final _maxParticipants = TextEditingController(text: '10');
+  String? _sex = 'mix';
   final _requirements = TextEditingController();
   final _expectedCost = TextEditingController();
   final _costPerPerson = TextEditingController();
@@ -66,6 +67,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       _venue.text = event.venue;
       _mapsUrl.text = event.mapsUrl ?? '';
       _maxParticipants.text = event.maxParticipants.toString();
+      _sex = event.sex ?? 'mix';
       _requirements.text = event.requirements ?? '';
       _expectedCost.text = event.expectedCost ?? '';
       _costPerPerson.text = event.costPerPerson?.toString() ?? '';
@@ -179,6 +181,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     }
     final maxP = int.tryParse(_maxParticipants.text.trim());
     if (maxP == null) return null;
+    final sex = _sex;
+    if (sex == null || sex.isEmpty) return null;
     // Pin coords are authoritative — keep maps_url in sync so "Open in maps"
     // matches the map (pasted Google links must not win over a moved pin).
     final lat = state.latitude;
@@ -197,6 +201,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       startsAt: state.startsAt!,
       endsAt: state.endsAt,
       maxParticipants: maxP,
+      sex: sex,
       requirements: _requirements.text.trim().isEmpty
           ? null
           : _requirements.text.trim(),
@@ -286,6 +291,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 venueController: _venue,
                 mapsUrlController: _mapsUrl,
                 maxParticipantsController: _maxParticipants,
+                sex: _sex,
+                onSexChanged: (v) => setState(() => _sex = v),
                 requirementsController: _requirements,
                 expectedCostController: _expectedCost,
                 costPerPersonController: _costPerPerson,
@@ -332,6 +339,8 @@ class CreateEventFormCard extends StatelessWidget {
     required this.venueController,
     required this.mapsUrlController,
     required this.maxParticipantsController,
+    required this.sex,
+    required this.onSexChanged,
     required this.requirementsController,
     required this.expectedCostController,
     required this.costPerPersonController,
@@ -362,6 +371,8 @@ class CreateEventFormCard extends StatelessWidget {
   final TextEditingController venueController;
   final TextEditingController mapsUrlController;
   final TextEditingController maxParticipantsController;
+  final String? sex;
+  final ValueChanged<String?> onSexChanged;
   final TextEditingController requirementsController;
   final TextEditingController expectedCostController;
   final TextEditingController costPerPersonController;
@@ -524,6 +535,22 @@ class CreateEventFormCard extends StatelessWidget {
               }
               return null;
             },
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: sex,
+            decoration: InputDecoration(
+              labelText: l10n.eventSex,
+              helperText: l10n.eventSexHelp,
+            ),
+            items: [
+              DropdownMenuItem(value: 'male', child: Text(l10n.sexMale)),
+              DropdownMenuItem(value: 'female', child: Text(l10n.sexFemale)),
+              DropdownMenuItem(value: 'mix', child: Text(l10n.sexMix)),
+            ],
+            onChanged: onSexChanged,
+            validator: (v) =>
+                (v == null || v.isEmpty) ? l10n.sexRequired : null,
           ),
           const SizedBox(height: 12),
           TextFormField(

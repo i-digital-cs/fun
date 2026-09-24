@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -412,6 +411,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get maxParticipants => 'الحد الأقصى للمشاركين';
+
+  @override
+  String get eventSex => 'الجمهور';
+
+  @override
+  String get eventSexHelp => 'لمن هذه الفعالية: ذكر، أنثى، أو مختلط.';
+
+  @override
+  String get eventSexMismatch =>
+      'هذه الفعالية مخصصة لجمهور يختلف عن الجنس في ملفك.';
 
   @override
   String get requirements => 'المتطلبات';

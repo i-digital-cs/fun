@@ -69,6 +69,7 @@ class EventItem extends Equatable {
     this.mapsOpenUrl,
     this.hasPlacePin = false,
     this.locationLabel,
+    this.sex,
   });
 
   final int id;
@@ -99,6 +100,9 @@ class EventItem extends Equatable {
   final String? mapsOpenUrl;
   final bool hasPlacePin;
   final String? locationLabel;
+
+  /// Audience: `male` | `female` | `mix`.
+  final String? sex;
 
   String get placeLine {
     final label = locationLabel?.trim();
@@ -177,6 +181,7 @@ class EventItem extends Equatable {
       mapsOpenUrl: mapsOpenUrl,
       hasPlacePin: hasPlacePin,
       locationLabel: locationLabel,
+      sex: sex,
     );
   }
 
@@ -210,6 +215,7 @@ class EventItem extends Equatable {
     mapsOpenUrl,
     hasPlacePin,
     locationLabel,
+    sex,
   ];
 }
 
@@ -373,6 +379,7 @@ class EventDraft {
     required this.cityId,
     required this.startsAt,
     required this.maxParticipants,
+    required this.sex,
     this.description,
     this.venue,
     this.endsAt,
@@ -393,6 +400,9 @@ class EventDraft {
   final DateTime startsAt;
   final DateTime? endsAt;
   final int maxParticipants;
+
+  /// `male` | `female` | `mix`
+  final String sex;
   final String? requirements;
   final String? expectedCost;
   final num? costPerPerson;
