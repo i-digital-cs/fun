@@ -1,7 +1,7 @@
 # Flutter: Required user sex field
 
 **Audience:** Flutter developer  
-**Status:** Backend + API **shipped**. Wire / verify Flutter UI + models against this contract.  
+**Status:** Backend + API + Flutter **shipped** (register, profile edit, `User` model, l10n, soft prompt on Profile when `needs_sex`).  
 **Parity:** Match web Blade (`auth/register.blade.php`, `profile/edit.blade.php`) and `docs/FLUTTER_WEB_PARITY.md` (§2.12, §2.15).  
 **Related rules:** `.cursor/rules/web-flutter-parity.mdc`, `mobile/docs/ENGINEERING_CONSTITUTION.md`
 
@@ -19,7 +19,7 @@ Every member must select **sex** with exactly three options:
 
 - **Email register:** `sex` is **required** (reject if missing / invalid).
 - **Profile settings:** `sex` is **required** on save.
-- **Google auth:** may create users with `sex: null` → API returns `needs_sex: true`. User must set sex on Profile (no hard nav gate required in v1 unless product asks).
+- **Google auth:** may create users with `sex: null` → API returns `needs_sex: true`. User must set sex on Profile (no hard nav gate required in v1 unless product asks). Soft prompt on Profile hub when `needsSex`.
 
 Do **not** invent other values (`other`, `prefer_not_to_say`, etc.).
 
@@ -82,7 +82,7 @@ Omit / invalid → `422`.
 Parse and keep:
 
 | Key | Type | Notes |
-|-----|------|--------|
+|-----|------|-------|
 | `sex` | `string?` | `male` / `female` / `mix`, or `null` |
 | `needs_sex` | `bool` | `true` when sex not set (typical after Google) |
 
@@ -149,6 +149,8 @@ Add to `mobile/lib/l10n/app_en.arb` and `app_ar.arb`, then `flutter gen-l10n`:
 | `sexFemale` | Female | أنثى |
 | `sexMix` | Mix | مختلط |
 | `sexRequired` | Please select your sex. | يرجى اختيار الجنس. |
+| `sexPrompt` | Select your sex | اختر الجنس |
+| `sexPromptBody` | Add this on your profile to finish setting up your account. | أضفه في ملفك الشخصي لإكمال إعداد حسابك. |
 
 Use logical layout (`EdgeInsetsDirectional`, etc.) — A11Y-RTL-001.
 
@@ -167,7 +169,7 @@ Use logical layout (`EdgeInsetsDirectional`, etc.) — A11Y-RTL-001.
 
 If `user.needsSex` after Google / restore:
 
-- Soft prompt on Profile hub (“Select your sex”) linking to `/settings/profile`, **or**
+- Soft prompt on Profile hub (“Select your sex”) linking to `/settings/profile` — **done**
 - Banner on home — **not** a hard block of identity / join unless product requests a gate.
 
 Do **not** change `routeAfterAuth` order (deactivated → email verify → identity → home) unless explicitly asked.
@@ -178,29 +180,30 @@ Do **not** change `routeAfterAuth` order (deactivated → email verify → ident
 
 | Layer | Path | Change |
 |-------|------|--------|
-| Domain | `features/auth/domain/user.dart` | `sex`, `needsSex` |
-| Auth API | `features/auth/data/auth_remote_source.dart` | send `sex` on register |
-| Auth repo | `features/auth/domain/auth_repository.dart` + impl | `sex` param |
-| Auth UI | `features/auth/presentation/auth_controller.dart` | pass `sex` |
-| Auth UI | `features/auth/presentation/register_page.dart` | selector + validate |
-| Profile API | `features/profile/data/profile_remote_source.dart` | send `sex` |
-| Profile repo | domain + impl | `sex` param |
-| Profile UI | `features/profile/presentation/profile_edit_page.dart` | selector + validate |
-| L10n | `lib/l10n/app_en.arb`, `app_ar.arb` | keys above |
-| Tests | Fake `AuthRepository` in `test/` | add `sex` to `register(...)` |
+| Domain | `features/auth/domain/user.dart` | `sex`, `needsSex` ✅ |
+| Auth API | `features/auth/data/auth_remote_source.dart` | send `sex` on register ✅ |
+| Auth repo | `features/auth/domain/auth_repository.dart` + impl | `sex` param ✅ |
+| Auth UI | `features/auth/presentation/auth_controller.dart` | pass `sex` ✅ |
+| Auth UI | `features/auth/presentation/register_page.dart` | selector + validate ✅ |
+| Profile API | `features/profile/data/profile_remote_source.dart` | send `sex` ✅ |
+| Profile repo | domain + impl | `sex` param ✅ |
+| Profile UI | `features/profile/presentation/profile_edit_page.dart` | selector + validate ✅ |
+| Profile hub | `features/profile/presentation/profile_page.dart` | soft prompt when `needsSex` ✅ |
+| L10n | `lib/l10n/app_en.arb`, `app_ar.arb` | keys above ✅ |
+| Tests | `test/features/auth/user_test.dart` + Fake `AuthRepository` | `sex` / `needs_sex` ✅ |
 
 ---
 
 ## QA checklist
 
-- [ ] Register without sex → client blocks; API alone → `422` on `sex`
-- [ ] Register with `male` / `female` / `mix` → `201`, `user.sex` matches
-- [ ] `GET /api/user` after login shows `sex` + `needs_sex: false`
-- [ ] Profile save without sex → blocked / `422`
-- [ ] Profile change sex → persists after `refreshMe`
-- [ ] Google new user → `needs_sex: true` until profile sets sex
-- [ ] EN + AR labels + RTL on register + profile
-- [ ] Compared with web `/register` and `/settings/profile`
+- [x] Register without sex → client blocks; API alone → `422` on `sex`
+- [x] Register with `male` / `female` / `mix` → `201`, `user.sex` matches
+- [x] `GET /api/user` after login shows `sex` + `needs_sex: false`
+- [x] Profile save without sex → blocked / `422`
+- [x] Profile change sex → persists after `refreshMe`
+- [x] Google new user → `needs_sex: true` until profile sets sex
+- [x] EN + AR labels + RTL on register + profile
+- [x] Compared with web `/register` and `/settings/profile`
 
 ---
 
@@ -221,4 +224,5 @@ Do **not** change `routeAfterAuth` order (deactivated → email verify → ident
 
 ---
 
-*Created 2026-09-24 — handoff for Flutter parity with required user sex.*
+*Created 2026-09-24 — handoff for Flutter parity with required user sex.*  
+*Updated 2026-09-24 — Flutter wiring verified; Profile soft prompt added.*

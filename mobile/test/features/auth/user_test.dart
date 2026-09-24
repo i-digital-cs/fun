@@ -43,5 +43,43 @@ void main() {
       expect(pending.canParticipate, isFalse);
       expect(deactivated.isDeactivated, isTrue);
     });
+
+    test('fromJson parses sex and needs_sex', () {
+      final withSex = User.fromJson({
+        'id': 12,
+        'name': 'Sara',
+        'email': 'sara@example.com',
+        'status': 'active',
+        'locale': 'en',
+        'sex': 'female',
+        'needs_sex': false,
+      });
+      expect(withSex.sex, 'female');
+      expect(withSex.needsSex, isFalse);
+
+      final googleUnset = User.fromJson({
+        'id': 13,
+        'name': 'Google User',
+        'email': 'g@example.com',
+        'status': 'active',
+        'locale': 'en',
+        'sex': null,
+        'needs_sex': true,
+      });
+      expect(googleUnset.sex, isNull);
+      expect(googleUnset.needsSex, isTrue);
+    });
+
+    test('fromJson infers needsSex when sex missing and flag omitted', () {
+      final user = User.fromJson({
+        'id': 14,
+        'name': 'No Sex',
+        'email': 'n@example.com',
+        'status': 'active',
+        'locale': 'en',
+      });
+      expect(user.sex, isNull);
+      expect(user.needsSex, isTrue);
+    });
   });
 }

@@ -13,6 +13,8 @@
   "sexFemale": "Female",
   "sexMix": "Mix",
   "sexRequired": "Please select your sex.",
+  "sexPrompt": "Select your sex",
+  "sexPromptBody": "Add this on your profile to finish setting up your account.",
   "remember": "Remember me",
   "language": "Language",
   "noAccount": "Don't have an account?",
