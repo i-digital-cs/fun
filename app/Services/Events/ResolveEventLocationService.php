@@ -31,13 +31,18 @@ class ResolveEventLocationService
         $mapsUrl = $mapsUrl !== '' ? $mapsUrl : null;
         $venue = array_key_exists('venue', $data) ? trim((string) ($data['venue'] ?? '')) : null;
 
-        if (($lat === null || $lng === null) && $mapsUrl !== null) {
-            $parsed = $this->parser->parse($mapsUrl);
-            if ($parsed !== null) {
-                $lat = $parsed['latitude'];
-                $lng = $parsed['longitude'];
-                $mapsUrl = $parsed['maps_url'];
-            }
+        $hadExplicitPin = $lat !== null && $lng !== null;
+        $parsedFromLink = null;
+
+        if ($mapsUrl !== null) {
+            $parsedFromLink = $this->parser->parse($mapsUrl);
+        }
+
+        // Link fills missing pin; explicit pin always wins when both are present.
+        if (! $hadExplicitPin && $parsedFromLink !== null) {
+            $lat = $parsedFromLink['latitude'];
+            $lng = $parsedFromLink['longitude'];
+            $mapsUrl = $parsedFromLink['maps_url'];
         }
 
         if ($lat !== null && $lng !== null) {
@@ -50,8 +55,18 @@ class ResolveEventLocationService
             $lng = null;
         }
 
-        if ($lat !== null && $lng !== null && $mapsUrl === null) {
-            $mapsUrl = $this->parser->openStreetMapUrl($lat, $lng);
+        if ($lat !== null && $lng !== null) {
+            // Keep pasted link only when it matches the pin (~80m). Otherwise sync URL → pin.
+            if ($parsedFromLink !== null && $this->coordsMatch(
+                $lat,
+                $lng,
+                $parsedFromLink['latitude'],
+                $parsedFromLink['longitude']
+            )) {
+                $mapsUrl = $parsedFromLink['maps_url'];
+            } else {
+                $mapsUrl = $this->parser->openStreetMapUrl($lat, $lng);
+            }
         }
 
         $out = [
@@ -62,7 +77,25 @@ class ResolveEventLocationService
 
         // Only touch venue when the request included it (create/edit forms always do).
         if (array_key_exists('venue', $data)) {
-            $out['venue'] = $this->normalizeVenue((string) ($venue ?? ''), $lat, $lng, $cityId);
+            $pinMovedAwayFromLink = $hadExplicitPin
+                && $parsedFromLink !== null
+                && $lat !== null
+                && $lng !== null
+                && ! $this->coordsMatch(
+                    $lat,
+                    $lng,
+                    $parsedFromLink['latitude'],
+                    $parsedFromLink['longitude']
+                );
+
+            if ($pinMovedAwayFromLink) {
+                // Pin is authoritative — refresh the place name from the marker.
+                $out['venue'] = $this->reverseGeocode($lat, $lng)
+                    ?? $this->cityFallbackName($cityId)
+                    ?? $this->normalizeVenue((string) ($venue ?? ''), $lat, $lng, $cityId);
+            } else {
+                $out['venue'] = $this->normalizeVenue((string) ($venue ?? ''), $lat, $lng, $cityId);
+            }
         }
 
         return $out;
@@ -128,6 +161,12 @@ class ResolveEventLocationService
         $city = City::query()->find($cityId);
 
         return $city?->localizedName();
+    }
+
+    private function coordsMatch(float $latA, float $lngA, float $latB, float $lngB, float $toleranceDegrees = 0.0008): bool
+    {
+        return abs($latA - $latB) <= $toleranceDegrees
+            && abs($lngA - $lngB) <= $toleranceDegrees;
     }
 
     private function reverseGeocode(float $lat, float $lng): ?string

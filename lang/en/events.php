@@ -14,7 +14,7 @@ return [
     'venue' => 'Venue',
     'venue_placeholder' => 'Café name, park, building…',
     'place_on_map' => 'Place on map',
-    'place_on_map_help' => 'Tap the map to drop a pin, or paste a Google Maps / OpenStreetMap link. No Google API key needed.',
+    'place_on_map_help' => 'Tap the map to drop a pin (this is the meeting point). Pasting a Maps link moves the pin to that place. If you move the pin after pasting, the pin wins.',
     'place_clear' => 'Clear pin',
     'place_pinned' => 'Pin saved — guests can open this place in maps.',
     'place_from_link' => 'Location read from your maps link.',

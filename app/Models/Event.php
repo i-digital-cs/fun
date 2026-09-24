@@ -283,15 +283,13 @@ class Event extends Model
 
     public function mapsOpenUrl(): ?string
     {
-        if (filled($this->maps_url)) {
-            return $this->maps_url;
+        // Pin coords are the source of truth — never open a stale pasted link
+        // that no longer matches the map marker.
+        if ($this->hasPlacePin()) {
+            return app(\App\Support\MapsUrlParser::class)
+                ->googleMapsOpenUrl((float) $this->latitude, (float) $this->longitude);
         }
 
-        if (! $this->hasPlacePin()) {
-            return null;
-        }
-
-        return app(\App\Support\MapsUrlParser::class)
-            ->openStreetMapUrl((float) $this->latitude, (float) $this->longitude);
+        return filled($this->maps_url) ? $this->maps_url : null;
     }
 }

@@ -10,6 +10,7 @@ import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
 import 'package:fun_mobile/features/events/presentation/event_detail_controller.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
@@ -407,13 +408,21 @@ class EventDetailInfoCard extends StatelessWidget {
               ),
             ],
           ),
-          if (event.mapsOpenUrl != null && event.mapsOpenUrl!.isNotEmpty) ...[
+          if ((event.mapsOpenUrl != null && event.mapsOpenUrl!.isNotEmpty) ||
+              event.hasPlacePin) ...[
             const SizedBox(height: 8),
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: () async {
-                  await launchSafeExternalUrl(event.mapsOpenUrl);
+                  // Prefer pin coords so Open matches the map marker.
+                  final fromPin = event.latitude != null && event.longitude != null
+                      ? MapsUrlParser.googleOpenUrl(
+                          event.latitude!,
+                          event.longitude!,
+                        )
+                      : null;
+                  await launchSafeExternalUrl(fromPin ?? event.mapsOpenUrl);
                 },
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: Text(l10n.openInMaps),

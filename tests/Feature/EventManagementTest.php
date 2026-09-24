@@ -75,7 +75,45 @@ class EventManagementTest extends TestCase
             ->assertJsonPath('data.latitude', 30.0444)
             ->assertJsonPath('data.longitude', 31.2357);
 
-        $this->assertNotEmpty($response->json('data.maps_open_url'));
+        $openUrl = (string) $response->json('data.maps_open_url');
+        $this->assertNotEmpty($openUrl);
+        $this->assertStringContainsString('30.0444', $openUrl);
+        $this->assertStringContainsString('31.2357', $openUrl);
+    }
+
+    public function test_create_event_prefers_pin_over_mismatched_maps_link(): void
+    {
+        $user = User::factory()->active()->create();
+        $category = Category::factory()->create();
+        $city = City::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/events', [
+            'title' => 'Pin wins meetup',
+            'category_id' => $category->id,
+            'city_id' => $city->id,
+            'venue' => 'Venue',
+            // Link points to Alexandria; pin is Cairo — pin must win.
+            'maps_url' => 'https://www.google.com/maps?q=31.2001,29.9187',
+            'latitude' => 30.0444,
+            'longitude' => 31.2357,
+            'starts_at' => now()->addDay()->toISOString(),
+            'max_participants' => 8,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.has_place_pin', true)
+            ->assertJsonPath('data.latitude', 30.0444)
+            ->assertJsonPath('data.longitude', 31.2357);
+
+        $openUrl = (string) $response->json('data.maps_open_url');
+        $this->assertStringContainsString('30.0444', $openUrl);
+        $this->assertStringContainsString('31.2357', $openUrl);
+        $this->assertStringNotContainsString('31.2001', $openUrl);
+
+        $mapsUrl = (string) $response->json('data.maps_url');
+        $this->assertStringContainsString('30.0444', $mapsUrl);
     }
 
     public function test_owner_can_publish_and_public_list_shows_only_published(): void
