@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/site/presentation/widgets/site_brand_lockup.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +16,7 @@ class SafetyGuidelinesPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final auth = ref.watch(authControllerProvider);
     final canParticipate = auth is Authenticated && auth.user.canParticipate;
+    final brandName = ref.watch(siteDisplayNameProvider);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -26,7 +28,7 @@ class SafetyGuidelinesPage extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
           Text(
-            l10n.appName.toUpperCase(),
+            brandName.toUpperCase(),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,

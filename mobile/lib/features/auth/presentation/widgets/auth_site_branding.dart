@@ -15,8 +15,12 @@ class AuthSiteBranding extends ConsumerWidget {
     return branding.when(
       data: (site) =>
           _BrandRow(displayName: site.displayName, logoUrl: site.logoUrl),
-      loading: () => const _BrandRow(displayName: 'Fun'),
-      error: (_, _) => const _BrandRow(displayName: 'Fun'),
+      loading: () => _BrandRow(
+        displayName: SiteBranding.fallback.displayName,
+      ),
+      error: (_, _) => _BrandRow(
+        displayName: SiteBranding.fallback.displayName,
+      ),
     );
   }
 }

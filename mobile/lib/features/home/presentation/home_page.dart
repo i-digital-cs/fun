@@ -395,7 +395,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-                  child: HomeHowItWorksSection(brand: l10n.appName),
+                  child: HomeHowItWorksSection(brand: brand.displayName),
                 ),
               ),
               SliverToBoxAdapter(

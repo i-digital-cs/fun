@@ -7,6 +7,7 @@ import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/espiral_glow.dart';
 import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/features/home/domain/search_suggest_item.dart';
+import 'package:fun_mobile/features/site/presentation/widgets/site_brand_lockup.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -94,6 +95,13 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  SiteBrandLockup(
+                    markSize: 40,
+                    maxNameWidth: 200,
+                    dense: true,
+                    onDark: true,
+                  ),
+                  const SizedBox(height: 14),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,

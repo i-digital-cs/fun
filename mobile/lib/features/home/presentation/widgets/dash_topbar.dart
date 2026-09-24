@@ -11,6 +11,7 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/home/domain/search_suggest_item.dart';
+import 'package:fun_mobile/features/site/presentation/widgets/site_brand_lockup.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -129,6 +130,13 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
         padding: EdgeInsets.symmetric(horizontal: widget.compact ? 12 : 20),
         child: Row(
           children: [
+            SiteBrandLockup(
+              markSize: widget.compact ? 34 : 36,
+              maxNameWidth: widget.compact ? 96 : 160,
+              dense: widget.compact,
+              onTap: () => context.go('/home'),
+            ),
+            SizedBox(width: widget.compact ? 8 : 12),
             Expanded(
               child: OverlayPortal(
                 controller: _portal,
