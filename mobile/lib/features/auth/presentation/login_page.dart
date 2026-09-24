@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/config/env.dart';
@@ -100,6 +101,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         _error = error;
       });
       if (error == null) _goAfterAuth();
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        // 10 = DEVELOPER_ERROR (package / SHA-1 mismatch); 12500 = sign-in config.
+        _error = e.code == 'sign_in_failed' || e.code == '10'
+            ? AppLocalizations.of(context).googleSignInFailed
+            : (e.message?.isNotEmpty == true
+                ? e.message!
+                : AppLocalizations.of(context).googleSignInFailed);
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() {

@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// | FLAVOR | Typical API | Use |
 /// |--------|-------------|-----|
-/// | `prod` (default) | `https://www.funnity.com/api` | Store / daily device runs |
+/// | `prod` (default) | `https://funnity.com/api` | Store / daily device runs |
 /// | `dev` | Local or staging URL | Emulator against XAMPP / staging |
 ///
 /// Examples:
@@ -20,15 +20,17 @@ import 'package:flutter/foundation.dart';
 abstract final class Env {
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://www.funnity.com/api',
+    defaultValue: 'https://funnity.com/api',
   );
 
   static const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'prod');
 
-  /// Web OAuth client ID for Google Sign-In `serverClientId` (id_token).
+  /// Web OAuth client ID for Google Sign-In `serverClientId` (id_token audience).
+  /// Public client ID (not a secret). Override with `--dart-define` if needed.
   static const googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '',
+    defaultValue:
+        '702014926680-h8o7h7pih3ttuo1g2abf5aj4ekqeje97.apps.googleusercontent.com',
   );
 
   /// Optional Reverb overrides (prefer `/api/site` `broadcast` when unset).

@@ -39,7 +39,7 @@ class CoverOptimizationTest extends TestCase
     {
         $event = $this->makePublishedEvent(['title' => 'Cover Priority Event']);
 
-        $this->get(route('events.show', $event))
+        $this->get(event_show_url($event))
             ->assertOk()
             ->assertSee('fetchpriority="high"', false)
             ->assertSee('decoding="async"', false)

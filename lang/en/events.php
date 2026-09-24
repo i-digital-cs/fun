@@ -39,6 +39,7 @@ return [
     'created' => 'Event created as draft.',
     'updated' => 'Event updated.',
     'published' => 'Event published.',
+    'published_missing_description' => 'Event published. Tip: add a short description so search results and share previews look better.',
     'cancelled' => 'Event cancelled.',
     'completed' => 'Event marked as completed.',
     'status_draft' => 'Draft',

@@ -6,7 +6,7 @@
     <div class="mx-auto max-w-3xl space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ __('events.join_requests') }}</h1>
-            <a href="{{ route('events.show', $event) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">{{ $event->title }}</a>
+            <a href="{{ event_show_url($event) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">{{ $event->title }}</a>
         </div>
 
         <div class="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm">

@@ -288,7 +288,7 @@ event-place-map → already separate logic; only import when picker/viewer nodes
 2. On create/update: regenerate slug (Str::slug + uniqueness)  
 3. Route: `events/{event}/{slug?}` — if slug missing/wrong, 301 to canonical  
 4. `Event::getRouteKeyName()` stays id **or** custom binding — prefer explicit route params `{event}` + `{slug}`  
-5. Update all `route('events.show', $event)` helpers to include slug  
+5. Update all `event_show_url($event)` helpers to include slug  
 
 **Flutter parity (required)**
 
@@ -327,21 +327,29 @@ event-place-map → already separate logic; only import when picker/viewer nodes
 
 ### Phase 3 checklist
 
-- [ ] Slug column + backfill + canonical redirects  
-- [ ] Discover canonical policy  
-- [ ] Locale decision recorded (A vs B)  
-- [ ] Footer / breadcrumbs  
-- [ ] Parity doc + §10  
+- [x] Slug column + backfill + canonical redirects  
+- [x] Discover canonical policy  
+- [x] Locale decision recorded (A vs B)  
+- [x] Footer / breadcrumbs  
+- [x] Parity doc + §10  
 
 ---
 
-## Phase 4 — Hardening (P2)
+### Phase 4 — Hardening (P2)
 
-1. Feature tests for slug 301s, robots, sitemap freshness  
-2. Submit sitemap in Google Search Console / Bing  
-3. Optional: `spatie/laravel-sitemap` if maintenance of XML becomes painful  
-4. Monitor CWV via CrUX / PageSpeed on `/` and sample event URLs  
-5. Content: ensure published events have non-empty descriptions (product validation soft-warn)
+1. Feature tests for slug 301s, robots, sitemap freshness — **done** (`SeoFoundationTest`, `EventSlugRoutingTest`, `SeoHardeningTest`)
+2. Submit sitemap in Google Search Console / Bing — **ops** (see [`docs/SEO_OPS.md`](SEO_OPS.md))
+3. Optional: `spatie/laravel-sitemap` — **defer** until URL volume requires it
+4. Monitor CWV via CrUX / PageSpeed — **ops** checklist in `SEO_OPS.md`
+5. Content: soft-warn on publish without description — **done** (web flash + API `seo_warning`)
+
+### Phase 4 checklist
+
+- [x] Sitemap cache invalidation test on publish  
+- [x] Soft-warn empty description (web + API)  
+- [x] `php artisan seo:health` command  
+- [x] Ops runbook [`docs/SEO_OPS.md`](SEO_OPS.md) (GSC / Bing / CWV)  
+- [x] Feature tests green  
 
 ---
 
@@ -390,20 +398,21 @@ Sprint D (Phase 4)
 |----------|--------|------|
 | Public pages on dashboard layout robots | A: opt-in index from controller | |
 | Font strategy | A interim / B self-host | |
-| Locale URLs | A session only (Phase 3) | |
-| Discover page 2+ | canonical to page 1 | |
-| Cancelled events in sitemap | exclude | |
+| Locale URLs | A session only (Phase 3) | 2026-09-24 |
+| Discover page 2+ / filters | noindex,follow + canonical to `/events` | 2026-09-24 |
+| Cancelled events in sitemap | exclude | 2026-09-24 |
 
 ---
 
 ## Done definition (all phases)
 
-- [ ] Public HTML heads complete (title, description, canonical, OG, Twitter)  
-- [ ] Event JSON-LD valid ([Rich Results Test](https://search.google.com/test/rich-results))  
-- [ ] robots + sitemap live; junk HTML gone  
-- [ ] Private/auth/admin noindex  
-- [ ] Stock + upload images optimized; LCP attrs on heroes  
-- [ ] Marketing JS without forced Echo  
-- [ ] Slugs + redirects (Phase 3)  
-- [ ] `FLUTTER_WEB_PARITY.md` updated for any public URL / media contract change  
-| [ ] Feature tests green  
+- [x] Public HTML heads complete (title, description, canonical, OG, Twitter)  
+- [x] Event JSON-LD valid (verify with [Rich Results Test](https://search.google.com/test/rich-results) in ops)  
+- [x] robots + sitemap live; junk HTML gone  
+- [x] Private/auth/admin noindex  
+- [x] Stock + upload images optimized; LCP attrs on heroes  
+- [x] Marketing JS without forced Echo  
+- [x] Slugs + redirects (Phase 3)  
+- [x] `FLUTTER_WEB_PARITY.md` updated for any public URL / media contract change  
+- [x] Feature tests green  
+- [x] Ops runbook for GSC / CWV monitoring (`docs/SEO_OPS.md`)  

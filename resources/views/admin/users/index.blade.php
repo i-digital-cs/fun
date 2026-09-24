@@ -73,6 +73,13 @@
                     <p class="truncate text-xs text-slate-500">{{ $user->email }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                    @php($authMethod = $user->authMethod())
+                    <span @class([
+                        'rounded-full px-2.5 py-1',
+                        'bg-sky-50 text-sky-700' => $authMethod === 'google',
+                        'bg-slate-100 text-slate-600' => $authMethod === 'password',
+                        'bg-violet-50 text-violet-700' => $authMethod === 'both',
+                    ])>{{ $user->authMethodLabel() }}</span>
                     <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600">{{ $user->status->value }}</span>
                     @if ($user->city)
                         <span class="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">{{ $user->city->localizedName() }}</span>
@@ -144,7 +151,7 @@
                                             <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{{ $event->status->value }}</span>
                                         </td>
                                         <td class="px-3 py-2.5 text-end">
-                                            <a href="{{ route('events.show', $event) }}" class="text-xs font-bold text-indigo-600 no-underline hover:text-indigo-800">{{ __('admin.view') }}</a>
+                                            <a href="{{ event_show_url($event) }}" class="text-xs font-bold text-indigo-600 no-underline hover:text-indigo-800">{{ __('admin.view') }}</a>
                                         </td>
                                     </tr>
                                 @endforeach

@@ -2,7 +2,7 @@
 
 **Purpose:** Keep **zero intentional gap** between the Laravel Blade web app and the Flutter client — every member/public screen, gate, CTA, and data field.
 
-**Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · [`docs/FLUTTER_SEX_FIELD.md`](FLUTTER_SEX_FIELD.md) *(required sex: male/female/mix)* · [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
+**Also read:** [`DESIGN.md`](../DESIGN.md) · [`docs/FLUTTER_BEST_PRACTICES.md`](FLUTTER_BEST_PRACTICES.md) · [`docs/FLUTTER_SEX_FIELD.md`](FLUTTER_SEX_FIELD.md) *(required sex: male/female/mix)* · [`docs/GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md) · [`docs/SEO_OPS.md`](SEO_OPS.md) · [`docs/SEO_CWV_BUILD_PLAN.md`](SEO_CWV_BUILD_PLAN.md) · Postman [`docs/postman/`](postman/) · API `routes/api.php`
 
 **Rule:** Pixel-perfect desktop layout is not required. **Same information hierarchy, same actions, same join states, same brand tokens, same account gates** are required. If web can do it, Flutter must be able to do it via API (or an explicit “web-only” note — admin only).
 
@@ -51,7 +51,7 @@ For each screen:
 | Profile | `GET /api/users/{publicId}` (public) · `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
 | Catalog | `GET /api/cities` · `GET /api/categories` |
-| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting); covers: `image_url` (card) + `image_url_detail` |
+| Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting); covers: `image_url` (card) + `image_url_detail`; `slug` on event payloads |
 | Join | `POST .../join` · `POST .../join/cancel` (withdraw pending) · `POST .../leave` · requests accept/reject · members promote/demote/transfer |
 | Chat | `GET/POST /api/events/{id}/messages` |
 | Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
@@ -241,14 +241,14 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 
 ---
 
-### 2.4 Event detail `/events/{id}`
+### 2.4 Event detail `/events/{id}/{slug}`
 
 | | |
 |--|--|
-| **Route** | `events.show` |
+| **Route** | `events.show` → `/events/{id}/{slug}` (bare `/events/{id}` **301** to canonical) |
 | **Blade** | `events/show.blade.php` |
-| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant) |
-| **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, and **Event** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use detail `coverUrl()`. API payload adds optimized cover variants. |
+| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating`, `slug`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant) |
+| **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, **Event** + **BreadcrumbList** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use detail `coverUrl()`. |
 
 **Layout hierarchy (same as web):**
 
@@ -1175,7 +1175,7 @@ Use web admin at `https://www.funnity.com/admin`.
 | `/home` | `/dashboard` |
 | `/discover` | `/events` |
 | `/events/create` | `/events/create` |
-| `/events/:id` | `/events/{id}` |
+| `/events/:id` | `/events/{id}/{slug}` (web; bare id 301s) |
 | `/events/:id/ticket` | `/events/{id}/ticket` |
 | `/events/:id/edit` | `/events/{id}/edit` |
 | `/chats` | `/chats` |
@@ -1228,7 +1228,9 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  
-14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.
+14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
+15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; API adds `slug` for share text. Flutter GoRouter can stay `/events/:id`; optional: open/share canonical web URL using `slug`.  
+16. **Publish SEO soft-warn** — `POST /api/events/{id}/publish` may include `seo_warning: true` + `message` when description is empty (still publishes). Flutter can toast the message; non-blocking.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 
@@ -1266,4 +1268,4 @@ Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-24 — Phase 2 CWV (WebP covers, upload resize, JS split); Phase 1 web SEO; required user sex; official logo; event location_label + place pin.*
+*Last updated: 2026-09-24 — Phase 4 SEO ops (`seo:health`, publish soft-warn, SEO_OPS.md); Phase 3 slugs; Phase 2 CWV; Phase 1 SEO.*

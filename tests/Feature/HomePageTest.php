@@ -28,7 +28,8 @@ class HomePageTest extends TestCase
         $response->assertSee(__('home.all_activities'), false);
         $response->assertSee('Football', false);
         $response->assertSee(__('design.gather_title'), false);
-        $response->assertSee(__('home.trust_center'), false);
+        $response->assertSee(__('events.discover'), false);
+        $response->assertSee(__('home.safety_guidelines'), false);
     }
 
     public function test_home_header_locale_toggle_is_present(): void
@@ -124,7 +125,7 @@ class HomePageTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Evening Match Obour', false)
-            ->assertSee(__('dashboard.view_event'), false)
+            ->assertSee(__('events.view_event'), false)
             ->assertSee(__('dashboard.nearby_title'), false);
     }
 

@@ -219,7 +219,7 @@ class EventRatingTest extends TestCase
         ]);
 
         $this->actingAs($member)
-            ->get(route('events.show', $event))
+            ->get(event_show_url($event))
             ->assertOk()
             ->assertSee(__('ratings.title'))
             ->assertSee(__('ratings.submit'));

@@ -24,7 +24,7 @@
                                     {{ __('home.request_pending') }}
                                 </span>
                                 <h3 class="mt-2 font-extrabold tracking-tight text-slate-900">
-                                    <a href="{{ route('events.show', $event) }}" class="hover:text-indigo-700">{{ $event->title }}</a>
+                                    <a href="{{ event_show_url($event) }}" class="hover:text-indigo-700">{{ $event->title }}</a>
                                 </h3>
                                 <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
                                     <span class="font-medium text-indigo-600">
@@ -37,7 +37,7 @@
                                 <p class="mt-2 text-xs text-amber-800">{{ __('home.pending_review_notice') }}</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
-                                <a href="{{ route('events.show', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
+                                <a href="{{ event_show_url($event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
                                 <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot py-0" data-confirm="{{ __('ui.confirm_cancel_join') }}">
                                     @csrf
                                     <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
@@ -66,7 +66,7 @@
             <div class="space-y-3">
                 @foreach ($events as $event)
                     <div class="rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm transition hover:shadow-lg hover:shadow-indigo-600/10">
-                        <a href="{{ route('events.show', $event) }}" class="group block">
+                        <a href="{{ event_show_url($event) }}" class="group block">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
                                     <h3 class="font-extrabold tracking-tight text-slate-900 transition group-hover:text-indigo-700">{{ $event->title }}</h3>
@@ -89,7 +89,7 @@
                         </a>
                         <div class="mt-3 flex flex-wrap gap-2">
                             <a href="{{ route('events.ticket', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3 py-1.5 text-xs font-extrabold text-white shadow-md shadow-orange-500/25 transition hover:brightness-105">{{ __('events.view_ticket') }}</a>
-                            <a href="{{ route('events.show', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
+                            <a href="{{ event_show_url($event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
                         </div>
                     </div>
                 @endforeach

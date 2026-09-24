@@ -60,7 +60,7 @@
                         </div>
                         <div>
                             <h3 class="text-base font-semibold text-text">
-                                <a href="{{ route('events.show', $event) }}" class="hover:text-primary">{{ $event->title }}</a>
+                                <a href="{{ event_show_url($event) }}" class="hover:text-primary">{{ $event->title }}</a>
                             </h3>
                             <p class="mt-1 text-sm text-muted">{{ $event->locationLabel() }}</p>
                         </div>
@@ -78,7 +78,7 @@
                             <p class="text-xs text-muted">{{ __('home.host') }}</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('events.show', $event) }}" class="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:border-primary/40">
+                            <a href="{{ event_show_url($event) }}" class="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:border-primary/40">
                                 {{ __('events.view_event') }}
                             </a>
                             <a href="{{ route('events.chat', $event) }}" class="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white">
@@ -111,7 +111,7 @@
                         </div>
                         <div>
                             <h3 class="text-base font-semibold text-text">
-                                <a href="{{ route('events.show', $event) }}" class="hover:text-primary">{{ $event->title }}</a>
+                                <a href="{{ event_show_url($event) }}" class="hover:text-primary">{{ $event->title }}</a>
                             </h3>
                             <p class="mt-1 text-sm text-muted">{{ $event->locationLabel() }}</p>
                         </div>
@@ -124,7 +124,7 @@
                             <p class="truncate text-sm font-semibold text-text">{{ $event->creator?->name }}</p>
                             <p class="text-xs text-muted">{{ __('home.host') }}</p>
                         </div>
-                        <a href="{{ route('events.show', $event) }}" class="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:border-primary/40">
+                        <a href="{{ event_show_url($event) }}" class="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:border-primary/40">
                             {{ __('events.view_event') }}
                             <svg class="h-4 w-4 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>

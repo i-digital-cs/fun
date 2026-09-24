@@ -19,15 +19,25 @@ Create **three** clients (typical setup):
 | **Android** | Android | Flutter Android app |
 | **iOS** | iOS | Flutter iOS app |
 
-### Web client
+### Web client (production: funnity.com)
 
-- Authorized JavaScript origins (examples):
-  - `https://www.funnity.com`
-  - `http://localhost:8000` (local)
-- Authorized redirect URIs:
-  - `https://www.funnity.com/auth/google/callback`
-  - `http://localhost:8000/auth/google/callback`
-- Copy **Client ID** + **Client Secret** → `.env`:
+In Google Cloud Console → Credentials → your **Web** OAuth client, set:
+
+**Authorized JavaScript origins:**
+- `https://funnity.com`
+- `https://www.funnity.com` (if www is used)
+- `http://localhost:8000` (local only)
+
+**Authorized redirect URIs:**
+- `https://funnity.com/auth/google/callback`
+- `https://www.funnity.com/auth/google/callback` (if www is used)
+- `http://localhost:8000/auth/google/callback` (local only)
+
+OAuth consent screen → Authorized domains: `funnity.com`.
+
+Server `.env` must use lowercase `APP_URL=https://funnity.com` so the callback matches exactly.
+
+Copy **Client ID** + **Client Secret** → `.env`:
 
 ```env
 GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
@@ -37,8 +47,9 @@ GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 
 ### Android client (needs SHA-1)
 
-1. Get **package name** from Flutter `android/app/build.gradle` → `applicationId` (e.g. `com.idigital.fun`).
-2. Get **SHA-1** fingerprints:
+**Package / applicationId:** `com.funity.fun_mobile` (from `mobile/android/app/build.gradle.kts`).
+
+1. Get **SHA-1** fingerprints:
 
 **Debug keystore (dev):**
 ```bash
@@ -55,12 +66,14 @@ keytool -list -v -keystore /path/to/your-release.keystore -alias your-alias
 
 **Play App Signing:** also add the **App signing key certificate SHA-1** from Google Play Console → Setup → App integrity (required for store builds).
 
-3. Create OAuth client → Android → paste package name + SHA-1 (add both debug + release SHA-1 clients or one client with multiple certs if Console allows; usually create one Android client per SHA-1 or update as needed).
-4. Copy Android **Client ID** → `.env`:
+2. Create OAuth client → Android → package `com.funity.fun_mobile` + SHA-1 (debug and release/Play signing certs — often one Android client per SHA-1).
+3. Copy Android **Client ID** → server `.env` (optional but recommended):
 
 ```env
 GOOGLE_ANDROID_CLIENT_ID=xxxxx-android.apps.googleusercontent.com
 ```
+
+Then `php artisan config:clear`. Without this, tokens whose `aud` is only the Android client ID will fail verification (tokens with Web `serverClientId` audience still work via `GOOGLE_CLIENT_ID`).
 
 ### iOS client
 
@@ -143,7 +156,8 @@ Package: [`google_sign_in`](https://pub.dev/packages/google_sign_in).
 
 - [ ] OAuth consent screen published (or test users added while in Testing)
 - [ ] Web client ID + secret in `.env`
-- [ ] Redirect URI matches `APP_URL` exactly (http vs https, no trailing slash mismatch)
+- [ ] Redirect URI matches `APP_URL` exactly (http vs https, **lowercase** host, no trailing slash mismatch)
+- [ ] Production Web client includes `https://funnity.com/auth/google/callback` (and www if used)
 - [ ] Android client: correct `applicationId` + **debug SHA-1** + **release/Play SHA-1**
 - [ ] iOS client: correct bundle ID + URL scheme
 - [ ] Flutter `serverClientId` = **Web** client ID

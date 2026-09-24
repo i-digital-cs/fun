@@ -242,6 +242,16 @@ if (! function_exists('event_cover_filename')) {
     }
 }
 
+if (! function_exists('event_show_url')) {
+    /**
+     * Canonical public event URL: /events/{id}/{slug}.
+     */
+    function event_show_url(\App\Models\Event $event): string
+    {
+        return $event->showUrl();
+    }
+}
+
 if (! function_exists('user_initials')) {
     function user_initials(?string $name): string
     {

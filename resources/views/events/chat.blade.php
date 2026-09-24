@@ -7,11 +7,11 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <p class="text-sm text-slate-500">
-                    <a href="{{ route('events.show', $event) }}" class="font-medium text-indigo-600 hover:text-indigo-800">{{ $event->title }}</a>
+                    <a href="{{ event_show_url($event) }}" class="font-medium text-indigo-600 hover:text-indigo-800">{{ $event->title }}</a>
                 </p>
                 <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ __('chat.title') }}</h1>
             </div>
-            <a href="{{ route('events.show', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
+            <a href="{{ event_show_url($event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
         </div>
 
         <div

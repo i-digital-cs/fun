@@ -14,7 +14,7 @@
                 <h1 class="mt-1 text-xl font-extrabold tracking-tight text-white sm:text-2xl">{{ $ticket['title'] }}</h1>
                 <p class="mt-1 text-sm text-slate-300">{{ $ticket['date_label'] }} · {{ $ticket['venue_line'] }}</p>
             </div>
-            <a href="{{ route('events.show', $event) }}"
+            <a href="{{ event_show_url($event) }}"
                class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">
                 {{ __('events.view_event') }}
             </a>

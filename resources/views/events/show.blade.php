@@ -30,6 +30,12 @@
 @endphp
 
 <article class="mx-auto max-w-4xl space-y-6">
+    <x-ui.breadcrumbs :items="[
+        ['label' => site_display_name(), 'url' => route('home')],
+        ['label' => __('events.discover'), 'url' => route('events.index')],
+        ['label' => filled($event->title) ? $event->title : __('events.view_event')],
+    ]" />
+
     <div class="overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
         <div class="relative h-56 overflow-hidden sm:h-72 md:h-80">
             <x-events.cover-img

@@ -39,7 +39,7 @@ class SeoFoundationTest extends TestCase
             'description' => 'Casual 7-a-side for neighbors who want a fun game.',
         ]);
 
-        $response = $this->get(route('events.show', $event));
+        $response = $this->get(event_show_url($event));
 
         $response->assertOk();
         $response->assertSee('Friday Football Meetup', false);
@@ -47,8 +47,9 @@ class SeoFoundationTest extends TestCase
         $response->assertSee('property="og:title"', false);
         $response->assertSee('application/ld+json', false);
         $response->assertSee('"@type":"Event"', false);
+        $response->assertSee('"@type":"BreadcrumbList"', false);
         $response->assertSee('Friday Football Meetup', false);
-        $response->assertSee(route('events.show', $event), false);
+        $response->assertSee(event_show_url($event), false);
     }
 
     public function test_discover_page_is_indexable(): void
@@ -109,7 +110,7 @@ class SeoFoundationTest extends TestCase
         $response->assertSee(route('home'), false);
         $response->assertSee(route('events.index'), false);
         $response->assertSee(route('safety.guidelines'), false);
-        $response->assertSee(route('events.show', $event), false);
+        $response->assertSee(event_show_url($event), false);
         $response->assertDontSee('Sitemap Event', false);
     }
 

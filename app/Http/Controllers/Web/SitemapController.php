@@ -38,10 +38,10 @@ class SitemapController extends Controller
                 ->whereIn('status', [EventStatus::Published, EventStatus::Completed])
                 ->orderByDesc('updated_at')
                 ->limit(5000)
-                ->get(['id', 'updated_at'])
+                ->get(['id', 'slug', 'title', 'updated_at'])
                 ->each(function (Event $event) use (&$urls): void {
                     $urls[] = [
-                        'loc' => route('events.show', $event),
+                        'loc' => event_show_url($event),
                         'changefreq' => 'daily',
                         'priority' => '0.8',
                         'lastmod' => $event->updated_at?->toAtomString(),

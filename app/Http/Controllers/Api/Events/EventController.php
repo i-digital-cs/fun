@@ -147,7 +147,16 @@ class EventController extends Controller
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return new EventResource($event->loadCount('members'));
+        $payload = (new EventResource($event->loadCount('members')))->resolve();
+        $message = filled($event->description)
+            ? __('events.published')
+            : __('events.published_missing_description');
+
+        return response()->json([
+            'data' => $payload,
+            'message' => $message,
+            'seo_warning' => blank($event->description),
+        ]);
     }
 
     public function cancel(Event $event, TransitionEventStatusService $service): EventResource|JsonResponse

@@ -39,7 +39,7 @@
             <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700">
                 {{ __('admin.save_event') }}
             </button>
-            <a href="{{ route('events.show', $event) }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 no-underline hover:border-indigo-300">
+            <a href="{{ event_show_url($event) }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 no-underline hover:border-indigo-300">
                 {{ __('admin.view') }}
             </a>
         </div>

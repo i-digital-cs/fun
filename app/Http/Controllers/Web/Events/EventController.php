@@ -96,7 +96,10 @@ class EventController extends Controller
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
             'explicitCityFilter' => $explicitCityFilter,
-            'seo' => Seo::forDiscover(),
+            'seo' => Seo::forDiscover(
+                page: (int) $events->currentPage(),
+                hasFilters: $request->hasAny(['q', 'category_id', 'city_id', 'distance_km', 'when']),
+            ),
         ];
 
         if ($request->boolean('fragment') || $request->header('X-Fragment') === 'results') {
@@ -163,7 +166,7 @@ class EventController extends Controller
             return back()->withInput()->withErrors(['event' => $exception->getMessage()]);
         }
 
-        return redirect()->route('events.show', $event)
+        return redirect()->route('events.show', $event->showRoute())
             ->with('status', __('events.created'));
     }
 
@@ -172,8 +175,20 @@ class EventController extends Controller
         ResolveEventJoinActionService $joinActionService,
         CreatorRatingSummaryService $ratingSummary,
         ToggleEventFavoriteService $favorites,
-    ): View {
+        ?string $slug = null,
+    ): View|RedirectResponse {
         $this->authorize('view', $event);
+
+        if (blank($event->slug)) {
+            $event->forceFill([
+                'slug' => Event::uniqueSlug((string) $event->title, (int) $event->id),
+            ])->saveQuietly();
+        }
+
+        $canonicalSlug = $event->slug;
+        if ($slug !== $canonicalSlug) {
+            return redirect()->route('events.show', $event->showRoute(), 301);
+        }
 
         $event->load(['category', 'city', 'creator:id,public_id,name,profile_image_path'])->loadCount('members');
 
@@ -253,7 +268,7 @@ class EventController extends Controller
             return back()->withInput()->withErrors(['event' => $exception->getMessage()]);
         }
 
-        return redirect()->route('events.show', $event)
+        return redirect()->route('events.show', $event->showRoute())
             ->with('status', __('events.updated'));
     }
 
@@ -267,7 +282,11 @@ class EventController extends Controller
             return back()->withErrors(['event' => $exception->getMessage()]);
         }
 
-        return back()->with('status', __('events.published'));
+        $message = filled($event->fresh()->description)
+            ? __('events.published')
+            : __('events.published_missing_description');
+
+        return back()->with('status', $message);
     }
 
     public function cancel(Event $event, TransitionEventStatusService $service): RedirectResponse

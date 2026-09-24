@@ -53,13 +53,14 @@ flutter test
 # Local release smoke only (NOT for Play Store):
 flutter build apk --release -PallowDebugReleaseSigning=true \
   --dart-define=FLAVOR=prod \
-  --dart-define=API_BASE_URL=https://www.funnity.com/api
+  --dart-define=API_BASE_URL=https://funnity.com/api
 
 # Store release (requires android/key.properties + upload keystore):
+# GOOGLE_SERVER_CLIENT_ID defaults to the production Web client ID in Env;
+# pass --dart-define only to override.
 flutter build appbundle --release --obfuscate --split-debug-info=build/debug-info \
   --dart-define=FLAVOR=prod \
-  --dart-define=API_BASE_URL=https://www.funnity.com/api \
-  --dart-define=GOOGLE_SERVER_CLIENT_ID=YOUR_WEB_CLIENT_ID
+  --dart-define=API_BASE_URL=https://funnity.com/api
 ```
 
 Copy `android/key.properties.example` → `android/key.properties` and fill store paths/passwords.
@@ -86,4 +87,4 @@ Copy `android/key.properties.example` → `android/key.properties` and fill stor
 - Release builds that only work because `-PallowDebugReleaseSigning=true` was used
 - x86_64-only ABI filters in `defaultConfig`
 - Unobfuscated Play release without a reason
-- Empty `GOOGLE_SERVER_CLIENT_ID` if Google login is a production feature
+- Empty `GOOGLE_SERVER_CLIENT_ID` if Google login is a production feature and the Env default was cleared

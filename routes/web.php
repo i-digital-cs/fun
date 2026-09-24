@@ -52,8 +52,9 @@ Route::get('/search/suggest', SearchSuggestController::class)
     ->name('search.suggest');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
-Route::get('/events/{event}', [EventController::class, 'show'])
+Route::get('/events/{event}/{slug?}', [EventController::class, 'show'])
     ->whereNumber('event')
+    ->where('slug', '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$')
     ->name('events.show');
 
 Route::get('/u/{publicId}', [PublicProfileController::class, 'show'])

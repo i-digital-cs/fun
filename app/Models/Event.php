@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
@@ -24,6 +25,7 @@ class Event extends Model
         'category_id',
         'city_id',
         'title',
+        'slug',
         'description',
         'venue',
         'latitude',
@@ -38,6 +40,90 @@ class Event extends Model
         'image_path',
         'image_disk',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Event $event): void {
+            if (blank($event->slug)) {
+                $event->slug = static::uniqueSlug((string) $event->title);
+            }
+        });
+
+        static::created(function (Event $event): void {
+            // Re-resolve with id available so collisions append -{id}.
+            $slug = static::uniqueSlug((string) $event->title, (int) $event->id);
+            if ($slug !== $event->slug) {
+                $event->forceFill(['slug' => $slug])->saveQuietly();
+            }
+        });
+
+        static::updating(function (Event $event): void {
+            if ($event->isDirty('title') || blank($event->slug)) {
+                $event->slug = static::uniqueSlug((string) $event->title, (int) $event->id);
+            }
+        });
+    }
+
+    /**
+     * Route parameters for the public event show URL (`/events/{id}/{slug}`).
+     *
+     * @return array{event: int, slug: string}
+     */
+    public function showRoute(): array
+    {
+        return [
+            'event' => (int) $this->getKey(),
+            'slug' => $this->slug ?: static::uniqueSlug((string) $this->title, (int) $this->getKey()),
+        ];
+    }
+
+    public function showUrl(): string
+    {
+        return route('events.show', $this->showRoute());
+    }
+
+    public static function uniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title);
+        if ($base === '') {
+            $base = 'event';
+        }
+        $base = Str::limit($base, 140, '');
+
+        $slug = $base;
+        $query = static::query()->where('slug', $slug);
+        if ($ignoreId !== null) {
+            $query->whereKeyNot($ignoreId);
+        }
+
+        if (! $query->exists()) {
+            return $slug;
+        }
+
+        if ($ignoreId !== null) {
+            $withId = Str::limit($base, 130, '').'-'.$ignoreId;
+            $exists = static::query()
+                ->where('slug', $withId)
+                ->whereKeyNot($ignoreId)
+                ->exists();
+            if (! $exists) {
+                return $withId;
+            }
+        }
+
+        for ($i = 2; $i < 1000; $i++) {
+            $candidate = Str::limit($base, 130, '').'-'.$i;
+            $q = static::query()->where('slug', $candidate);
+            if ($ignoreId !== null) {
+                $q->whereKeyNot($ignoreId);
+            }
+            if (! $q->exists()) {
+                return $candidate;
+            }
+        }
+
+        return $base.'-'.Str::lower(Str::random(6));
+    }
 
     /**
      * @return array<string, string>

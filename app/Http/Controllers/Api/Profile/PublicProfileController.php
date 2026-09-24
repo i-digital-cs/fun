@@ -29,7 +29,7 @@ class PublicProfileController extends Controller
                 'category' => $event->category?->localizedName(),
                 'members_count' => $event->members_count,
                 'max_participants' => $event->max_participants,
-                'url' => route('events.show', $event),
+                'url' => event_show_url($event),
             ])
             ->values();
 

@@ -176,7 +176,7 @@ class EventMembershipController extends Controller
             return back()->withErrors(['members' => $exception->getMessage()]);
         }
 
-        return redirect()->route('events.show', $event)
+        return redirect()->to(event_show_url($event))
             ->with('status', __('events.left_event'));
     }
 
@@ -190,7 +190,7 @@ class EventMembershipController extends Controller
             return back()->withErrors(['join' => $exception->getMessage()]);
         }
 
-        return redirect()->route('events.show', $event)
+        return redirect()->to(event_show_url($event))
             ->with('status', __('events.join_request_cancelled'));
     }
 }

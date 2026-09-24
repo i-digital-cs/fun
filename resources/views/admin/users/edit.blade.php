@@ -32,6 +32,18 @@
         </div>
 
         <div>
+            <p class="mb-1.5 block text-sm font-semibold text-slate-700">{{ __('admin.auth_method') }}</p>
+            @php($authMethod = $user->authMethod())
+            <p @class([
+                'inline-flex rounded-full px-3 py-1.5 text-xs font-bold',
+                'bg-sky-50 text-sky-700' => $authMethod === 'google',
+                'bg-slate-100 text-slate-600' => $authMethod === 'password',
+                'bg-violet-50 text-violet-700' => $authMethod === 'both',
+            ])>{{ $user->authMethodLabel() }}</p>
+            <p class="mt-1.5 text-xs text-slate-500">{{ __('admin.auth_method_help') }}</p>
+        </div>
+
+        <div>
             <label for="status" class="mb-1.5 block text-sm font-semibold text-slate-700">{{ __('admin.status') }}</label>
             <select id="status" name="status" required
                     class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">

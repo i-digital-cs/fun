@@ -24,7 +24,7 @@ Flutter client for the Fun community activity platform.
 
 ## Run
 
-Uses the **online** API by default (`https://www.funnity.com/api`).
+Uses the **online** API by default (`https://funnity.com/api`).
 
 ```bash
 cd mobile
@@ -36,8 +36,9 @@ flutter run
 
 | Define | Default | Notes |
 |--------|---------|--------|
-| `API_BASE_URL` | `https://www.funnity.com/api` | Never leave localhost on release builds |
+| `API_BASE_URL` | `https://funnity.com/api` | Never leave localhost on release builds |
 | `FLAVOR` | `prod` | Use `dev` for local/staging |
+| `GOOGLE_SERVER_CLIENT_ID` | production Web client ID | Needed for Google `id_token`; override only if needed |
 
 ```bash
 # Production (same as defaults)

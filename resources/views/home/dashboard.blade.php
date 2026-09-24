@@ -238,7 +238,7 @@
                                     : $soonStarts->translatedFormat('D · M j · g:i A')))
                             : '';
                     @endphp
-                    <a href="{{ route('events.show', $soonEvent) }}"
+                    <a href="{{ event_show_url($soonEvent) }}"
                        class="flex items-center gap-2.5 border-b border-slate-100 py-2.5 last:border-b-0 no-underline hover:bg-slate-50">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-indigo-50 text-base">{{ category_emoji($soonCategory) }}</span>
                         <span>

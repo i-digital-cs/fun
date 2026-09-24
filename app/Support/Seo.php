@@ -142,14 +142,16 @@ class Seo
      *     jsonLd: array<string, mixed>|null
      * }
      */
-    public static function forDiscover(): array
+    public static function forDiscover(int $page = 1, bool $hasFilters = false): array
     {
+        $robots = ($page > 1 || $hasFilters) ? 'noindex,follow' : 'index,follow';
+
         return self::make(
             title: __('events.discover'),
             description: __('events.discover_subtitle'),
             image: site_logo_url() ?: asset('logo.svg'),
             url: route('events.index'),
-            robots: 'index,follow',
+            robots: $robots,
         );
     }
 
@@ -170,7 +172,7 @@ class Seo
         $description = filled($event->description)
             ? $event->description
             : __('events.discover_subtitle');
-        $url = route('events.show', $event);
+        $url = event_show_url($event);
         $image = $event->coverUrl('detail');
 
         $location = [
@@ -194,8 +196,7 @@ class Seo
             default => 'https://schema.org/EventScheduled',
         };
 
-        $jsonLd = [
-            '@context' => 'https://schema.org',
+        $eventSchema = [
             '@type' => 'Event',
             'name' => $title,
             'description' => self::truncateDescription($description, 500),
@@ -207,10 +208,10 @@ class Seo
         ];
 
         if ($event->starts_at !== null) {
-            $jsonLd['startDate'] = $event->starts_at->toIso8601String();
+            $eventSchema['startDate'] = $event->starts_at->toIso8601String();
         }
         if ($event->ends_at !== null) {
-            $jsonLd['endDate'] = $event->ends_at->toIso8601String();
+            $eventSchema['endDate'] = $event->ends_at->toIso8601String();
         }
 
         if ($event->creator !== null) {
@@ -221,8 +222,38 @@ class Seo
             if (filled($event->creator->public_id)) {
                 $organizer['url'] = route('users.public.show', $event->creator->public_id);
             }
-            $jsonLd['organizer'] = $organizer;
+            $eventSchema['organizer'] = $organizer;
         }
+
+        $jsonLd = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                $eventSchema,
+                [
+                    '@type' => 'BreadcrumbList',
+                    'itemListElement' => [
+                        [
+                            '@type' => 'ListItem',
+                            'position' => 1,
+                            'name' => site_display_name(),
+                            'item' => route('home'),
+                        ],
+                        [
+                            '@type' => 'ListItem',
+                            'position' => 2,
+                            'name' => __('events.discover'),
+                            'item' => route('events.index'),
+                        ],
+                        [
+                            '@type' => 'ListItem',
+                            'position' => 3,
+                            'name' => $title,
+                            'item' => $url,
+                        ],
+                    ],
+                ],
+            ],
+        ];
 
         $indexable = in_array($event->status, [EventStatus::Published, EventStatus::Completed], true);
 

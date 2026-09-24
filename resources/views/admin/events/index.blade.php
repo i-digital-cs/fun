@@ -27,7 +27,7 @@
             <div class="rounded-xl border border-border bg-surface p-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                        <a href="{{ route('events.show', $event) }}" class="font-semibold text-primary hover:underline">{{ $event->title }}</a>
+                        <a href="{{ event_show_url($event) }}" class="font-semibold text-primary hover:underline">{{ $event->title }}</a>
                         <p class="mt-1 text-sm text-muted">
                             {{ $event->status->value }} · {{ $event->members_count }}/{{ $event->max_participants }}
                             · {{ $event->creator?->name }}

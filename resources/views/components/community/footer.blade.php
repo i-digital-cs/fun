@@ -8,12 +8,14 @@
 <footer class="mt-14 border-t border-slate-200/70 bg-white/60 backdrop-blur">
     <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-6 sm:flex-row sm:px-6">
         <div class="flex items-center gap-2.5">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                </svg>
-            </span>
-            <span class="text-sm font-extrabold tracking-tight text-slate-900">{{ $brand }}</span>
+            <a href="{{ route('home') }}" class="flex items-center gap-2.5 no-underline">
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                </span>
+                <span class="text-sm font-extrabold tracking-tight text-slate-900">{{ $brand }}</span>
+            </a>
             <span class="hidden items-center gap-1 text-xs font-medium text-slate-400 sm:flex">
                 ·
                 <svg class="h-3 w-3 fill-rose-400 text-rose-400" viewBox="0 0 24 24" aria-hidden="true">
@@ -24,18 +26,13 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-slate-500">
+            <a href="{{ route('home') }}" class="transition hover:text-indigo-600">{{ __('ui.home') }}</a>
+            <a href="{{ route('events.index') }}" class="transition hover:text-indigo-600">{{ __('events.discover') }}</a>
             <a href="{{ route('safety.guidelines') }}" class="flex items-center gap-1 transition hover:text-emerald-600">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.06 14.54l-3.48-3.48 1.41-1.41 2.07 2.07 4.24-4.24 1.41 1.41-5.65 5.65z"/>
                 </svg>
                 {{ __('home.safety_guidelines') }}
-            </a>
-            <a href="{{ route('safety.guidelines') }}" class="flex items-center gap-1 transition hover:text-indigo-600">
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-                    <path stroke-linecap="round" d="M4 22v-7"/>
-                </svg>
-                {{ __('home.trust_center') }}
             </a>
             <span class="text-slate-300">|</span>
             <form method="POST" action="{{ route('locale.update') }}" class="inline-flex">

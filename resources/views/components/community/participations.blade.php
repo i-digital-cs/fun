@@ -204,7 +204,7 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-extrabold leading-snug tracking-tight text-slate-900 transition group-hover:text-indigo-700">
-                            <a href="{{ route('events.show', $event) }}">{{ $event->title }}</a>
+                            <a href="{{ event_show_url($event) }}">{{ $event->title }}</a>
                         </h3>
                         <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                             <svg class="h-4 w-4 shrink-0 text-indigo-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -285,7 +285,7 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-extrabold leading-snug tracking-tight text-slate-900 transition group-hover:text-indigo-700">
-                            <a href="{{ route('events.show', $event) }}">{{ $event->title }}</a>
+                            <a href="{{ event_show_url($event) }}">{{ $event->title }}</a>
                         </h3>
                         <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                             <svg class="h-4 w-4 shrink-0 text-indigo-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -312,7 +312,7 @@
                                 @csrf
                                 <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
                             </form>
-                            <a href="{{ route('events.show', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0">
+                            <a href="{{ event_show_url($event) }}" class="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0">
                                 {{ __('events.view_event') }}
                                 <svg class="h-3.5 w-3.5 rtl:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" d="M5 12h14M13 5l7 7-7 7"/>

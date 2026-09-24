@@ -44,7 +44,7 @@
         $hlSpots = $highlight->remainingCapacity();
         $hlImage = $highlight->coverUrl('card');
         $hlCoverEvent = $highlight;
-        $hlLink = route('events.show', $highlight);
+        $hlLink = event_show_url($highlight);
         $hlGoing = $highlight->acceptedMembersCount();
     } elseif ($user?->canParticipate()) {
         $hlLink = route('events.create');

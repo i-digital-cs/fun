@@ -24,7 +24,7 @@
 <div {{ $attributes->class(['event-3d']) }}>
     <article class="event-3d__card">
         <div class="event-3d__media">
-            <a href="{{ route('events.show', $event) }}" class="block h-full" tabindex="-1" aria-hidden="true">
+            <a href="{{ event_show_url($event) }}" class="block h-full" tabindex="-1" aria-hidden="true">
                 <x-events.cover-img :event="$event" size="card" class="h-full w-full object-cover" />
             </a>
             <div class="event-3d__media-fade" aria-hidden="true"></div>
@@ -48,7 +48,7 @@
 
         <div class="event-3d__body">
             <h3 class="event-3d__title">
-                <a href="{{ route('events.show', $event) }}">{{ $event->title }}</a>
+                <a href="{{ event_show_url($event) }}">{{ $event->title }}</a>
             </h3>
             @if ($schedule)
                 <span class="event-3d__meta">{{ $schedule }}</span>
@@ -90,7 +90,7 @@
                 <span class="event-3d__pill" title="{{ $priceLabel }}">{{ $isFree ? '✓' : __('events.currency_short') }}</span>
                 <span class="event-3d__pill" title="{{ $pct }}%">{{ $pct }}%</span>
             </div>
-            <a href="{{ route('events.show', $event) }}" class="event-3d__view">
+            <a href="{{ event_show_url($event) }}" class="event-3d__view">
                 {{ __('events.view_event') }}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="rtl:rotate-180" aria-hidden="true">
                     <path d="m9 18 6-6-6-6"></path>

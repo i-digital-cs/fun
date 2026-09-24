@@ -64,7 +64,7 @@ class SearchSuggestController extends Controller
                 $event->city?->localizedName(),
                 $event->starts_at?->timezone(config('app.timezone'))->translatedFormat('M j · g:i A'),
             ])->filter()->implode(' · '),
-            'url' => route('events.show', $event),
+            'url' => event_show_url($event),
             'meta' => $event->category?->localizedName(),
         ])->values();
 

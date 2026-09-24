@@ -141,7 +141,7 @@
                     </div>
                     <div class="space-y-1">
                         @foreach ($cell['events']->take(3) as $event)
-                            <a href="{{ route('events.show', $event) }}"
+                            <a href="{{ event_show_url($event) }}"
                                @class([
                                    'block truncate rounded-lg px-1.5 py-1 text-[10px] font-semibold no-underline leading-tight',
                                    $statusColors[$event->status->value] ?? 'bg-slate-100 text-slate-700',

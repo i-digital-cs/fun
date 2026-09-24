@@ -66,6 +66,44 @@ class User extends Authenticatable
         return $this->sex === null;
     }
 
+    public function hasGoogleLogin(): bool
+    {
+        return filled($this->google_id);
+    }
+
+    public function hasPasswordLogin(): bool
+    {
+        return $this->password !== null && $this->password !== '';
+    }
+
+    /**
+     * Admin label for how this account can sign in: google | password | both.
+     */
+    public function authMethod(): string
+    {
+        $google = $this->hasGoogleLogin();
+        $password = $this->hasPasswordLogin();
+
+        if ($google && $password) {
+            return 'both';
+        }
+
+        if ($google) {
+            return 'google';
+        }
+
+        return 'password';
+    }
+
+    public function authMethodLabel(): string
+    {
+        return match ($this->authMethod()) {
+            'google' => __('admin.auth_method_google'),
+            'both' => __('admin.auth_method_both'),
+            default => __('admin.auth_method_password'),
+        };
+    }
+
     protected static function booted(): void
     {
         static::creating(function (User $user): void {
