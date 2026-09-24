@@ -16,7 +16,7 @@
 ## Variables
 | Variable | Meaning |
 |----------|---------|
-| `baseUrl` | `https://fun.idigital-cs.com/api` |
+| `baseUrl` | `https://www.funnity.com/api` |
 | `token` | Sanctum Bearer token (auto from Login/Register) |
 | `locale` | `en` or `ar` (`Accept-Language`) |
 | `eventId` / `cityId` / `categoryId` / `userId` | Path IDs |

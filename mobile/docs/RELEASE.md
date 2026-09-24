@@ -53,12 +53,12 @@ flutter test
 # Local release smoke only (NOT for Play Store):
 flutter build apk --release -PallowDebugReleaseSigning=true \
   --dart-define=FLAVOR=prod \
-  --dart-define=API_BASE_URL=https://fun.idigital-cs.com/api
+  --dart-define=API_BASE_URL=https://www.funnity.com/api
 
 # Store release (requires android/key.properties + upload keystore):
 flutter build appbundle --release --obfuscate --split-debug-info=build/debug-info \
   --dart-define=FLAVOR=prod \
-  --dart-define=API_BASE_URL=https://fun.idigital-cs.com/api \
+  --dart-define=API_BASE_URL=https://www.funnity.com/api \
   --dart-define=GOOGLE_SERVER_CLIENT_ID=YOUR_WEB_CLIENT_ID
 ```
 

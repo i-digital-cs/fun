@@ -1,14 +1,14 @@
 {
   "info": {
     "_postman_id": "23fd213f-7876-4766-a0e7-4265240cb367",
-    "name": "Fun API — fun.idigital-cs.com",
-    "description": "Laravel Sanctum API for the Fun community events platform.\n\n1. Set `baseUrl` (default https://fun.idigital-cs.com/api).\n2. Run **Auth → Login** (token is saved automatically).\n3. Use Bearer `{{token}}` on protected routes.\n\nSeeded admin (if present): admin@example.com / password",
+    "name": "Fun API — www.funnity.com",
+    "description": "Laravel Sanctum API for the Fun community events platform.\n\n1. Set `baseUrl` (default https://www.funnity.com/api).\n2. Run **Auth → Login** (token is saved automatically).\n3. Use Bearer `{{token}}` on protected routes.\n\nSeeded admin (if present): admin@example.com / password",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://fun.idigital-cs.com/api"
+      "value": "https://www.funnity.com/api"
     },
     {
       "key": "token",

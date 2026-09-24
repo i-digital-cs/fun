@@ -20,7 +20,7 @@ If this file and Best Practices disagree on a stack choice, **this file wins for
 1. **Blade is the UI source of truth.** Do not invent a second visual language. Mirror member Blade screens (`resources/views/**`) adapted for mobile (bottom nav instead of desktop sidebar).
 2. **API is the business source of truth.** No business rules only in the client. Sanctum Bearer → `API_BASE_URL` (default production).
 3. **Member app only (V1).** No admin panel in Flutter.
-4. **Online API first.** Prefer `https://fun.idigital-cs.com/api`. Do not hardcode localhost for default builds.
+4. **Online API first.** Prefer `https://www.funnity.com/api`. Do not hardcode localhost for default builds.
 5. **EN + AR with RTL.** All user strings via l10n ARB files.
 
 Primary journeys (same as Blade / DESIGN.md):

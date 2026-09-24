@@ -24,7 +24,7 @@ Flutter client for the Fun community activity platform.
 
 ## Run
 
-Uses the **online** API by default (`https://fun.idigital-cs.com/api`).
+Uses the **online** API by default (`https://www.funnity.com/api`).
 
 ```bash
 cd mobile
@@ -36,7 +36,7 @@ flutter run
 
 | Define | Default | Notes |
 |--------|---------|--------|
-| `API_BASE_URL` | `https://fun.idigital-cs.com/api` | Never leave localhost on release builds |
+| `API_BASE_URL` | `https://www.funnity.com/api` | Never leave localhost on release builds |
 | `FLAVOR` | `prod` | Use `dev` for local/staging |
 
 ```bash

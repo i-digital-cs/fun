@@ -7,7 +7,7 @@ Use this to configure **Web Socialite**, **Flutter Google Sign-In**, and server 
 1. Open [Google Cloud Console](https://console.cloud.google.com/) → create/select a project.
 2. **APIs & Services → OAuth consent screen**
    - User type: External (or Internal for Workspace-only)
-   - App name, support email, authorized domains (`idigital-cs.com` if production)
+   - App name, support email, authorized domains (`funnity.com` if production)
    - Scopes: `email`, `profile`, `openid`
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID**
 
@@ -22,10 +22,10 @@ Create **three** clients (typical setup):
 ### Web client
 
 - Authorized JavaScript origins (examples):
-  - `https://fun.idigital-cs.com`
+  - `https://www.funnity.com`
   - `http://localhost:8000` (local)
 - Authorized redirect URIs:
-  - `https://fun.idigital-cs.com/auth/google/callback`
+  - `https://www.funnity.com/auth/google/callback`
   - `http://localhost:8000/auth/google/callback`
 - Copy **Client ID** + **Client Secret** → `.env`:
 

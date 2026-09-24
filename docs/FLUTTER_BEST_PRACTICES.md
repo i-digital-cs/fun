@@ -477,7 +477,7 @@ Android: product flavors + `--dart-define=API_BASE_URL=...` (or define-from-file
 
 ```bash
 flutter build apk --release --obfuscate --split-debug-info=./build/debug-symbols \
-  --dart-define=API_BASE_URL=https://fun.idigital-cs.com/api
+  --dart-define=API_BASE_URL=https://www.funnity.com/api
 
 flutter build appbundle --release ...
 flutter build ipa --release ...
@@ -591,7 +591,7 @@ Automate signed builds via Fastlane / GitHub Actions / Codemagic / Bitrise → P
 | Nav | `go_router` |
 | Images | `cached_network_image` |
 | Fonts | `google_fonts` (IBM Plex Sans) |
-| API | Sanctum Bearer → `https://fun.idigital-cs.com/api` |
+| API | Sanctum Bearer → `https://www.funnity.com/api` |
 | Design | Root `DESIGN.md` |
 | Roadmap | `ROADMAP.md` (Flutter tasks F2+) |
 

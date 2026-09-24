@@ -12,13 +12,13 @@ class RedirectPublicPrefixTest extends TestCase
     public function test_public_prefix_home_redirects_to_root(): void
     {
         $this->get('/public/')
-            ->assertRedirect('https://fun.idigital-cs.com');
+            ->assertRedirect('https://www.funnity.com');
     }
 
     public function test_public_prefix_events_redirects_to_events(): void
     {
         $this->get('/public/events')
-            ->assertRedirect('https://fun.idigital-cs.com/events');
+            ->assertRedirect('https://www.funnity.com/events');
     }
 
     public function test_clean_home_does_not_redirect(): void

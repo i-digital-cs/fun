@@ -173,7 +173,7 @@ class ResolveEventLocationService
     {
         try {
             $response = Http::withHeaders([
-                'User-Agent' => 'Funity/1.0 (https://fun.idigital-cs.com; event-place)',
+                'User-Agent' => 'Funity/1.0 (https://www.funnity.com; event-place)',
                 'Accept-Language' => app()->getLocale() === 'ar' ? 'ar,en' : 'en,ar',
             ])
                 ->timeout(6)

@@ -795,7 +795,7 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(BaseOptions(
     baseUrl: const String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'https://fun.idigital-cs.com/api',
+      defaultValue: 'https://www.funnity.com/api',
     ),
     headers: {'Accept': 'application/json'},
   ));
@@ -1154,7 +1154,7 @@ Documented for awareness; **not required** in member Flutter:
 
 - `/admin` dashboard, users, identity moderation, events, calendar, chat moderation, reports, cities, categories, settings, audit  
 
-Use web admin at `https://fun.idigital-cs.com/admin`.
+Use web admin at `https://www.funnity.com/admin`.
 
 ---
 
@@ -1230,7 +1230,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 
 ## 11. Reference URLs (local QA)
 
-Base: `https://fun.idigital-cs.com`
+Base: `https://www.funnity.com`
 
 | Page | URL |
 |------|-----|
@@ -1253,7 +1253,7 @@ Base: `https://fun.idigital-cs.com`
 | Blocks | `/settings/blocks` |
 | Report | `/report` |
 
-API base: `https://fun.idigital-cs.com/api`  
+API base: `https://www.funnity.com/api`  
 Public branding: `GET /api/site`
 
 ---

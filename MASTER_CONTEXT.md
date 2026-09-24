@@ -62,7 +62,7 @@ The platform facilitates:
 ## Mobile
 
 * Flutter client in `mobile/`
-* Consumes the Laravel Sanctum API (production default: `https://fun.idigital-cs.com/api`)
+* Consumes the Laravel Sanctum API (production default: `https://www.funnity.com/api`)
 * UI must mirror member Blade screens + `DESIGN.md` / `mobile/docs/DESIGN.md`
 * Flutter documentation (source of truth for the mobile app):
   * `mobile/ROADMAP.md` — Flutter phases & tasks (session continuity for mobile)

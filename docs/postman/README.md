@@ -45,7 +45,7 @@ See: [`FLUTTER_WEB_PARITY.md`](../FLUTTER_WEB_PARITY.md) §0.1–0.2 (full-proje
 ## Variables
 | Variable | Meaning |
 |----------|---------|
-| `baseUrl` | `https://fun.idigital-cs.com/api` |
+| `baseUrl` | `https://www.funnity.com/api` |
 | `token` | Sanctum Bearer token (auto from Login/Register/Reset/Google) |
 | `resetToken` | One-time password-reset token (auto from Verify reset code) |
 | `locale` | `en` or `ar` (`Accept-Language`) |

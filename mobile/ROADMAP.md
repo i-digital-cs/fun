@@ -6,7 +6,7 @@
 2. Read **this file** — continue first incomplete WP
 3. After each API wire: live smoke → mark done
 
-**API:** `../docs/postman/Fun_API.postman_collection.json` · `https://fun.idigital-cs.com/api`
+**API:** `../docs/postman/Fun_API.postman_collection.json` · `https://www.funnity.com/api`
 
 ---
 

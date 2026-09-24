@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// | FLAVOR | Typical API | Use |
 /// |--------|-------------|-----|
-/// | `prod` (default) | `https://fun.idigital-cs.com/api` | Store / daily device runs |
+/// | `prod` (default) | `https://www.funnity.com/api` | Store / daily device runs |
 /// | `dev` | Local or staging URL | Emulator against XAMPP / staging |
 ///
 /// Examples:
@@ -20,7 +20,7 @@ import 'package:flutter/foundation.dart';
 abstract final class Env {
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://fun.idigital-cs.com/api',
+    defaultValue: 'https://www.funnity.com/api',
   );
 
   static const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'prod');
