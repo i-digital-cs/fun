@@ -176,6 +176,18 @@ abstract class AppLocalizations {
   /// **'Please select your sex.'**
   String get sexRequired;
 
+  /// No description provided for @sexPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your sex'**
+  String get sexPrompt;
+
+  /// No description provided for @sexPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add this on your profile to finish setting up your account.'**
+  String get sexPromptBody;
+
   /// No description provided for @remember.
   ///
   /// In en, this message translates to:

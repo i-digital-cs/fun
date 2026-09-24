@@ -13,6 +13,8 @@
   "sexFemale": "أنثى",
   "sexMix": "مختلط",
   "sexRequired": "يرجى اختيار الجنس.",
+  "sexPrompt": "اختر الجنس",
+  "sexPromptBody": "أضفه في ملفك الشخصي لإكمال إعداد حسابك.",
   "remember": "تذكرني",
   "language": "اللغة",
   "noAccount": "ليس لديك حساب؟",

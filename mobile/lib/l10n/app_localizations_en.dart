@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -46,6 +47,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sexRequired => 'Please select your sex.';
+
+  @override
+  String get sexPrompt => 'Select your sex';
+
+  @override
+  String get sexPromptBody =>
+      'Add this on your profile to finish setting up your account.';
 
   @override
   String get remember => 'Remember me';
