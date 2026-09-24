@@ -169,15 +169,15 @@ Sitemap: {APP_URL}/sitemap.xml
 
 ### Phase 1 checklist
 
-- [ ] `x-seo.meta` component  
-- [ ] Layouts wired + public vs private robots rule  
-- [ ] Home / Discover / Show / Profile / Safety payloads  
-- [ ] Event JSON-LD  
-- [ ] robots.txt + sitemap  
-- [ ] Remove prototype HTML from `public/`  
-- [ ] Favicon links  
-- [ ] Feature tests  
-- [ ] Parity doc note  
+- [x] `x-seo.meta` component  
+- [x] Layouts wired + public vs private robots rule  
+- [x] Home / Discover / Show / Profile / Safety payloads  
+- [x] Event JSON-LD  
+- [x] robots.txt + sitemap  
+- [x] Remove prototype HTML from `public/`  
+- [x] Favicon links  
+- [x] Feature tests  
+- [x] Parity doc note  
 
 ---
 

@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\Profile\PublicProfileService;
+use App\Support\Seo;
 use Illuminate\View\View;
 
 class PublicProfileController extends Controller
@@ -28,6 +29,7 @@ class PublicProfileController extends Controller
             'profile' => $profile,
             'hostedEvents' => $hostedEvents,
             'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
+            'seo' => Seo::forPublicProfile($profile, $publicId),
         ]);
     }
 }

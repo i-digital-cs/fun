@@ -21,6 +21,7 @@ use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ToggleEventFavoriteService;
 use App\Services\Events\TransitionEventStatusService;
 use App\Services\Events\UpdateEventService;
+use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -95,6 +96,7 @@ class EventController extends Controller
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
             'explicitCityFilter' => $explicitCityFilter,
+            'seo' => Seo::forDiscover(),
         ];
 
         if ($request->boolean('fragment') || $request->header('X-Fragment') === 'results') {
@@ -218,6 +220,7 @@ class EventController extends Controller
                         ->where('starts_at', '>=', now()->subDay()),
                 ])
                 ->get(),
+            'seo' => Seo::forEvent($event),
         ]);
     }
 

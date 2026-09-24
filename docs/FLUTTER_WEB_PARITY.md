@@ -248,6 +248,7 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 | **Route** | `events.show` |
 | **Blade** | `events/show.blade.php` |
 | **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating` |
+| **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, and **Event** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use `coverUrl()`. API payload unchanged. |
 
 **Layout hierarchy (same as web):**
 
@@ -1226,8 +1227,9 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 10. **Chat** — inbox `/chats` + thread list/post; Reverb toast (Flutter + web); Flutter poll fallback
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
+13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs). Optional later: expose `slug` / share image variants on event API for in-app share sheets.
 
-**Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages.
+**Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 
 ---
 
@@ -1255,10 +1257,12 @@ Base: `https://www.funnity.com`
 | Safety | `/safety` |
 | Blocks | `/settings/blocks` |
 | Report | `/report` |
+| Robots | `/robots.txt` |
+| Sitemap | `/sitemap.xml` |
 
 API base: `https://www.funnity.com/api`  
 Public branding: `GET /api/site`
 
 ---
 
-*Last updated: 2026-09-24 — Required user sex (male/female/mix) on register + profile; Official Funity logo via site settings; event `location_label` + nested `location` on API; free place pin.*
+*Last updated: 2026-09-24 — Phase 1 web SEO (meta/OG/JSON-LD, robots, sitemap); required user sex; official logo; event location_label + place pin.*

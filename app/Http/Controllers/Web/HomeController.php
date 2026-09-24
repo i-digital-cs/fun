@@ -13,6 +13,7 @@ use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ToggleEventFavoriteService;
 use App\Services\Weather\OpenMeteoWeatherService;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -135,6 +136,10 @@ class HomeController extends Controller
             'highlight' => $highlight,
             'weather' => $weather,
             'nowPlaying' => $playback,
+            'seo' => Seo::forHome(
+                $cityName,
+                $highlight?->coverUrl(),
+            ),
         ]);
     }
 }

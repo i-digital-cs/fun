@@ -4,10 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', $appName ?? site_display_name())</title>
+    @php
+        $seo = $seo ?? [
+            'title' => trim($__env->yieldContent('title')) ?: null,
+            'description' => null,
+            'image' => null,
+            'url' => url()->current(),
+            'type' => 'website',
+            'robots' => 'noindex,nofollow',
+            'jsonLd' => null,
+        ];
+    @endphp
+    <x-seo.meta
+        :title="$seo['title'] ?? null"
+        :description="$seo['description'] ?? null"
+        :image="$seo['image'] ?? null"
+        :url="$seo['url'] ?? null"
+        :type="$seo['type'] ?? 'website'"
+        :robots="$seo['robots'] ?? 'noindex,nofollow'"
+        :json-ld="$seo['jsonLd'] ?? null"
+    />
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
 </head>
 <body class="bg-[#f5f7fb] text-slate-900 antialiased">
     <div class="flex min-h-screen">

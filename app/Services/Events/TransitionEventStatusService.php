@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Exceptions\DomainException;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TransitionEventStatusService
@@ -55,6 +56,8 @@ class TransitionEventStatusService
             }
 
             $locked->forceFill(['status' => $target])->save();
+
+            Cache::forget('seo.sitemap.xml');
 
             return $locked->refresh()->load(['category', 'city', 'members']);
         });
