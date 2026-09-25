@@ -144,4 +144,6 @@ return [
     'mail_join_request_body' => ':requester asked to join “:event”.',
     'mail_join_request_cta' => 'Review join requests',
     'mail_join_request_event_link' => 'Event page',
+    'notify_join_request_title' => 'New join request',
+    'notify_join_request_body' => ':requester asked to join “:event”.',
 ];

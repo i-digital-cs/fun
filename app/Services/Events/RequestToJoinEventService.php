@@ -5,23 +5,19 @@ namespace App\Services\Events;
 use App\Enums\EventStatus;
 use App\Enums\JoinRequestStatus;
 use App\Exceptions\DomainException;
-use App\Mail\JoinRequestReceivedMail;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
-use App\Services\Admin\SiteSettingsService;
+use App\Notifications\JoinRequestReceivedNotification;
 use App\Services\Safety\UserBlockService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class RequestToJoinEventService
 {
-    public function __construct(
-        private readonly UserBlockService $blocks,
-        private readonly SiteSettingsService $siteSettings,
-    ) {
+    public function __construct(private readonly UserBlockService $blocks)
+    {
     }
 
     public function request(User $user, Event $event, ?string $message = null): EventJoinRequest
@@ -97,18 +93,11 @@ class RequestToJoinEventService
             return;
         }
 
-        if (! filled($creator->email)) {
-            return;
-        }
-
         try {
-            Mail::to($creator->email)->send(new JoinRequestReceivedMail(
-                organizer: $creator,
+            $creator->notify(new JoinRequestReceivedNotification(
                 requester: $requester,
                 event: $event,
                 joinRequest: $joinRequest,
-                siteName: $this->siteSettings->displayName(),
-                logoUrl: $this->siteSettings->logoUrl(),
             ));
         } catch (Throwable $exception) {
             Log::warning('join_request_notify_failed', [

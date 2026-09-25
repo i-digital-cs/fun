@@ -5,16 +5,16 @@ namespace Tests\Feature;
 use App\Enums\EventMemberRole;
 use App\Enums\EventStatus;
 use App\Enums\JoinRequestStatus;
-use App\Mail\JoinRequestReceivedMail;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\EventMember;
 use App\Models\User;
+use App\Notifications\JoinRequestReceivedNotification;
 use App\Services\Events\ReviewJoinRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -38,7 +38,7 @@ class EventMembershipTest extends TestCase
 
     public function test_user_can_request_join_and_owner_can_accept(): void
     {
-        Mail::fake();
+        Notification::fake();
 
         $owner = User::factory()->active()->create();
         $applicant = User::factory()->active()->create();
@@ -49,10 +49,9 @@ class EventMembershipTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('join_request.status', 'pending');
 
-        Mail::assertSent(JoinRequestReceivedMail::class, function (JoinRequestReceivedMail $mail) use ($owner, $applicant, $event) {
-            return $mail->hasTo($owner->email)
-                && (int) $mail->requester->id === (int) $applicant->id
-                && (int) $mail->event->id === (int) $event->id;
+        Notification::assertSentTo($owner, JoinRequestReceivedNotification::class, function (JoinRequestReceivedNotification $notification) use ($applicant, $event) {
+            return (int) $notification->requester->id === (int) $applicant->id
+                && (int) $notification->event->id === (int) $event->id;
         });
 
         $joinRequest = EventJoinRequest::query()->firstOrFail();

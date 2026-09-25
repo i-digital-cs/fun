@@ -144,4 +144,6 @@ return [
     'mail_join_request_body' => 'طلب :requester الانضمام إلى «:event».',
     'mail_join_request_cta' => 'مراجعة طلبات الانضمام',
     'mail_join_request_event_link' => 'صفحة الفعالية',
+    'notify_join_request_title' => 'طلب انضمام جديد',
+    'notify_join_request_body' => 'طلب :requester الانضمام إلى «:event».',
 ];

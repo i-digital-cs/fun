@@ -27,6 +27,7 @@ use App\Http\Controllers\Web\Events\EventTicketController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Identity\IdentityDocumentController;
 use App\Http\Controllers\Web\LocaleController;
+use App\Http\Controllers\Web\Notifications\NotificationInboxController;
 use App\Http\Controllers\Web\RobotsController;
 use App\Http\Controllers\Web\SitemapController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
@@ -219,6 +220,12 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::get('/chats', [ChatInboxController::class, 'index'])->name('chats.index');
+
+        Route::get('/notifications', [NotificationInboxController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/read-all', [NotificationInboxController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::post('/notifications/{notification}/read', [NotificationInboxController::class, 'markRead'])
+            ->name('notifications.read');
     });
 
     Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {

@@ -53,6 +53,25 @@
             </button>
         </form>
 
+        <a href="{{ route('notifications.index') }}"
+           class="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-900"
+           aria-label="{{ __('notifications.title') }}">
+            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            @php
+                $notifyUnread = $user
+                    ? app(\App\Services\Notifications\NotificationInboxService::class)->unreadCount($user)
+                    : 0;
+            @endphp
+            <span data-notify-unread-dot
+                  @class([
+                      'absolute end-1 top-1 h-[7px] w-[7px] rounded-full border-2 border-white bg-orange-500',
+                      'hidden' => $notifyUnread < 1,
+                  ])
+                  @if ($notifyUnread < 1) hidden @endif></span>
+        </a>
+
         <a href="{{ route('chats.index') }}"
            class="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-900"
            aria-label="{{ __('chat.inbox_title') }}">
