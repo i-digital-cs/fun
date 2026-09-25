@@ -146,4 +146,6 @@ return [
     'mail_join_request_event_link' => 'Event page',
     'notify_join_request_title' => 'New join request',
     'notify_join_request_body' => ':requester asked to join “:event”.',
+    'notify_join_accepted_title' => 'You’re in!',
+    'notify_join_accepted_body' => 'Your request to join “:event” was accepted.',
 ];

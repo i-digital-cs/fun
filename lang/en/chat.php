@@ -25,4 +25,5 @@ return [
     'unread_count' => '{1} :count unread|[2,*] :count unread',
     'toast_new' => 'New message',
     'toast_just_now' => 'Just now',
+    'notify_new_message' => ':name sent a message',
 ];

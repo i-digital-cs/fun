@@ -64,13 +64,17 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
         .messages(widget.eventId, cancelToken: _cancel);
     if (!mounted || result.data == null && result.failure == null) return;
     final next = result.data ?? _messages;
-    final grew = next.length > _messages.length;
+    final chronological = List<ChatMessage>.from(next)
+      ..sort((a, b) => a.id.compareTo(b.id));
+    final grew = chronological.length > _messages.length;
+    final newestChanged = chronological.isNotEmpty &&
+        (_messages.isEmpty || chronological.last.id != _messages.last.id);
     setState(() {
       _loading = false;
       if (!silent) _error = result.failure?.message;
-      if (result.data != null) _messages = result.data!;
+      if (result.data != null) _messages = chronological;
     });
-    if (grew || !silent) _scrollToBottom();
+    if (grew || newestChanged || !silent) _scrollToBottom();
   }
 
   void _scrollToBottom() {

@@ -25,4 +25,5 @@ return [
     'unread_count' => '{1} :count غير مقروءة|[2,*] :count غير مقروءة',
     'toast_new' => 'رسالة جديدة',
     'toast_just_now' => 'الآن',
+    'notify_new_message' => 'أرسل :name رسالة',
 ];

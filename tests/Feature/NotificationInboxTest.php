@@ -2,14 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EventMemberRole;
 use App\Enums\EventStatus;
+use App\Enums\JoinRequestStatus;
+use App\Events\UserJoinAccepted;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\DeviceToken;
 use App\Models\Event;
+use App\Models\EventJoinRequest;
+use App\Models\EventMember;
 use App\Models\User;
+use App\Notifications\ChatMessagePushNotification;
+use App\Notifications\JoinRequestAcceptedNotification;
 use App\Notifications\JoinRequestReceivedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -75,6 +83,94 @@ class NotificationInboxTest extends TestCase
             ->assertJsonPath('data.unread_count', 0);
 
         $this->postJson('/api/notifications/read-all')->assertOk();
+    }
+
+    public function test_accept_join_notifies_applicant_internally_and_broadcasts(): void
+    {
+        Notification::fake();
+        EventFacade::fake([UserJoinAccepted::class]);
+
+        $owner = User::factory()->active()->create();
+        $applicant = User::factory()->active()->create();
+        $event = $this->publishedEvent($owner);
+
+        $joinRequest = EventJoinRequest::query()->create([
+            'event_id' => $event->id,
+            'user_id' => $applicant->id,
+            'status' => JoinRequestStatus::Pending,
+        ]);
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/events/{$event->id}/requests/{$joinRequest->id}/accept")
+            ->assertOk();
+
+        Notification::assertSentTo(
+            $applicant,
+            JoinRequestAcceptedNotification::class,
+            function (JoinRequestAcceptedNotification $notification) use ($event) {
+                $data = $notification->toArray($event->creator()->first() ?? $notification);
+
+                return ($data['type'] ?? null) === 'join_accepted'
+                    && (int) ($data['event_id'] ?? 0) === (int) $event->id;
+            }
+        );
+        EventFacade::assertDispatched(UserJoinAccepted::class);
+    }
+
+    public function test_accept_join_appears_in_applicant_inbox(): void
+    {
+        EventFacade::fake([UserJoinAccepted::class]);
+
+        $owner = User::factory()->active()->create();
+        $applicant = User::factory()->active()->create();
+        $event = $this->publishedEvent($owner);
+
+        $joinRequest = EventJoinRequest::query()->create([
+            'event_id' => $event->id,
+            'user_id' => $applicant->id,
+            'status' => JoinRequestStatus::Pending,
+        ]);
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/events/{$event->id}/requests/{$joinRequest->id}/accept")
+            ->assertOk();
+
+        $this->assertSame(1, $applicant->fresh()->unreadNotifications()->count());
+
+        Sanctum::actingAs($applicant);
+        $this->getJson('/api/notifications')
+            ->assertOk()
+            ->assertJsonPath('data.0.type', 'join_accepted')
+            ->assertJsonPath('data.0.event_id', $event->id);
+    }
+
+    public function test_chat_message_sends_fcm_notification_not_inbox(): void
+    {
+        Notification::fake();
+        EventFacade::fake([
+            \App\Events\EventMessagePosted::class,
+            \App\Events\UserChatMessageReceived::class,
+        ]);
+
+        $owner = User::factory()->active()->create();
+        $member = User::factory()->active()->create();
+        $event = $this->publishedEvent($owner);
+
+        EventMember::query()->create([
+            'event_id' => $event->id,
+            'user_id' => $member->id,
+            'role' => EventMemberRole::Member,
+        ]);
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/events/{$event->id}/messages", [
+            'body' => 'Hello team',
+        ])->assertCreated();
+
+        Notification::assertSentTo($member, ChatMessagePushNotification::class);
+        Notification::assertNotSentTo($owner, ChatMessagePushNotification::class);
+
+        $this->assertSame(0, $member->fresh()->notifications()->count());
     }
 
     public function test_device_token_register_and_forget(): void

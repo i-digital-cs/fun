@@ -5,7 +5,6 @@ namespace App\Notifications;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
-use App\Notifications\Channels\FcmChannel;
 use App\Services\Admin\SiteSettingsService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -27,7 +26,8 @@ class JoinRequestReceivedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', FcmChannel::class];
+        // Internal inbox + email (no FCM). Push is reserved for chat messages.
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -74,25 +74,6 @@ class JoinRequestReceivedNotification extends Notification
             'requester_name' => $this->requester->name,
             'url' => event_route('events.requests', $this->event),
             'api_path' => '/events/'.$this->event->id.'/requests',
-        ];
-    }
-
-    /**
-     * @return array{title: string, body: string, data: array<string, string>}
-     */
-    public function toFcm(object $notifiable): array
-    {
-        $payload = $this->toArray($notifiable);
-
-        return [
-            'title' => (string) $payload['title'],
-            'body' => (string) $payload['body'],
-            'data' => [
-                'type' => 'join_request',
-                'event_id' => (string) $this->event->id,
-                'join_request_id' => (string) $this->joinRequest->id,
-                'api_path' => (string) $payload['api_path'],
-            ],
         ];
     }
 }

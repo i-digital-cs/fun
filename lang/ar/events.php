@@ -146,4 +146,6 @@ return [
     'mail_join_request_event_link' => 'صفحة الفعالية',
     'notify_join_request_title' => 'طلب انضمام جديد',
     'notify_join_request_body' => 'طلب :requester الانضمام إلى «:event».',
+    'notify_join_accepted_title' => 'تم قبولك!',
+    'notify_join_accepted_body' => 'تم قبول طلب انضمامك إلى «:event».',
 ];

@@ -10,11 +10,13 @@ use App\Models\Event;
 use App\Models\EventMember;
 use App\Models\EventMessage;
 use App\Models\User;
+use App\Notifications\ChatMessagePushNotification;
 use App\Services\Safety\UserBlockService;
 use App\Support\ChatMessageSanitizer;
 use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PostEventMessageService
 {
@@ -86,23 +88,28 @@ class PostEventMessageService
 
     private function notifyOtherMembers(Event $event, EventMessage $message, User $sender): void
     {
-        $recipientIds = EventMember::query()
-            ->where('event_id', $event->id)
-            ->where('user_id', '!=', $sender->id)
-            ->pluck('user_id');
+        $recipients = User::query()
+            ->whereIn(
+                'id',
+                EventMember::query()
+                    ->where('event_id', $event->id)
+                    ->where('user_id', '!=', $sender->id)
+                    ->select('user_id')
+            )
+            ->get();
 
-        if ($recipientIds->isEmpty()) {
+        if ($recipients->isEmpty()) {
             return;
         }
 
         $chatUrl = event_route('events.chat', $event);
         $title = $event->title;
 
-        foreach ($recipientIds as $recipientId) {
+        foreach ($recipients as $recipient) {
             try {
                 broadcast(new UserChatMessageReceived(
                     $message,
-                    (int) $recipientId,
+                    (int) $recipient->id,
                     $title,
                     $chatUrl,
                 ));
@@ -110,7 +117,22 @@ class PostEventMessageService
                 Log::warning('User chat notification broadcast failed.', [
                     'event_id' => $event->id,
                     'message_id' => $message->id,
-                    'recipient_id' => $recipientId,
+                    'recipient_id' => $recipient->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+
+            try {
+                $recipient->notify(new ChatMessagePushNotification(
+                    event: $event,
+                    message: $message,
+                    sender: $sender,
+                ));
+            } catch (Throwable $exception) {
+                Log::warning('chat_message_fcm_failed', [
+                    'event_id' => $event->id,
+                    'message_id' => $message->id,
+                    'recipient_id' => $recipient->id,
                     'error' => $exception->getMessage(),
                 ]);
             }

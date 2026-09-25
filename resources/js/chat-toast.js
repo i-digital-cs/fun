@@ -23,6 +23,87 @@ function bumpChatBadge() {
     });
 }
 
+function bumpNotifyBadge() {
+    document.querySelectorAll('[data-notify-unread-dot]').forEach((el) => {
+        el.hidden = false;
+        el.classList.remove('hidden');
+    });
+}
+
+function showJoinAcceptedToast(payload, host) {
+    const eventTitle = payload.event_title || '';
+    const title = payload.title || 'You’re in!';
+    const body = payload.body || '';
+    const eventUrl = payload.event_url || `/events/${payload.event_id || ''}`;
+    const labelNew = host.dataset.labelJoinAccepted || title;
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+
+    const toast = document.createElement('div');
+    toast.className = 'chat-toast';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="chat-toast__header">
+            <span class="chat-toast__eyebrow">${escapeHtml(labelNew)}</span>
+            <button type="button" class="chat-toast__close" aria-label="Close">
+                <svg class="h-3 w-3" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                </svg>
+            </button>
+        </div>
+        <a href="${escapeHtml(eventUrl)}" class="chat-toast__body">
+            <div class="chat-toast__avatar-wrap">
+                <div class="chat-toast__avatar">✓</div>
+            </div>
+            <div class="chat-toast__copy">
+                <div class="chat-toast__name">${escapeHtml(title)}</div>
+                <div class="chat-toast__text">${escapeHtml(body)}</div>
+                <div class="chat-toast__meta">
+                    <span class="chat-toast__event">${escapeHtml(eventTitle)}</span>
+                    <span class="chat-toast__time">${escapeHtml(labelJustNow)}</span>
+                </div>
+            </div>
+        </a>
+    `;
+
+    const close = () => {
+        toast.classList.add('chat-toast--out');
+        window.setTimeout(() => toast.remove(), 220);
+    };
+
+    toast.querySelector('.chat-toast__close')?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+    });
+
+    host.appendChild(toast);
+    bumpNotifyBadge();
+
+    window.setTimeout(close, 7000);
+}
+
+export function initChatToasts() {
+    const host = document.getElementById('chat-toast-host');
+    if (!host || !window.Echo) {
+        return;
+    }
+
+    const userId = host.dataset.userId;
+    if (!userId) {
+        return;
+    }
+
+    const channel = window.Echo.private(`App.Models.User.${userId}`);
+
+    channel.listen('.chat.message', (payload) => {
+        showChatToast(payload || {}, host);
+    });
+
+    channel.listen('.join.accepted', (payload) => {
+        showJoinAcceptedToast(payload || {}, host);
+    });
+}
+
 function showChatToast(payload, host) {
     const eventId = Number(payload.event_id);
     if (currentChatEventId() === eventId) {
@@ -89,20 +170,4 @@ function showChatToast(payload, host) {
     bumpChatBadge();
 
     window.setTimeout(close, 7000);
-}
-
-export function initChatToasts() {
-    const host = document.getElementById('chat-toast-host');
-    if (!host || !window.Echo) {
-        return;
-    }
-
-    const userId = host.dataset.userId;
-    if (!userId) {
-        return;
-    }
-
-    window.Echo.private(`App.Models.User.${userId}`).listen('.chat.message', (payload) => {
-        showChatToast(payload || {}, host);
-    });
 }
