@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Build-time launcher label. In-app name always comes from Admin → Site settings (GET /api/site). -->
+    <string name="app_name">Funnity</string>
+</resources>

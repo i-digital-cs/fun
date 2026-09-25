@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "51496053622",
+    "project_id": "funnity-157aa",
+    "storage_bucket": "funnity-157aa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51496053622:android:1360cc01e8a997f00da857",
+        "android_client_info": {
+          "package_name": "com.funity.fun_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYZVVMrS68_quIkG0w8egcktOBMunYaDU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

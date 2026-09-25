@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,6 +10,9 @@ const kFunityMarkAsset = 'assets/branding/funity-mark.svg';
 
 /// Renders `GET /api/site` `logo_url` (SVG or raster) exclusively when present.
 /// Falls back to the official Funity mark asset — never a generic icon.
+///
+/// By default the logo is drawn **without** a white plate / shadow so
+/// transparent admin logos stay transparent.
 class SiteBrandMark extends StatefulWidget {
   const SiteBrandMark({
     super.key,
@@ -18,12 +20,16 @@ class SiteBrandMark extends StatefulWidget {
     this.size = 40,
     this.borderRadius = 13,
     this.fit = BoxFit.contain,
+    this.framed = false,
   });
 
   final String? logoUrl;
   final double size;
   final double borderRadius;
   final BoxFit fit;
+
+  /// When true, wraps the mark in a white rounded plate (legacy look).
+  final bool framed;
 
   static bool isSvgUrl(String? url) {
     if (url == null || url.isEmpty) return false;
@@ -120,10 +126,19 @@ class _SiteBrandMarkState extends State<SiteBrandMark> {
   @override
   Widget build(BuildContext context) {
     final url = widget.logoUrl?.trim();
-    return _BrandShell(
-      size: widget.size,
-      borderRadius: widget.borderRadius,
+    final child = SizedBox(
+      width: widget.size,
+      height: widget.size,
       child: _buildChild(url),
+    );
+
+    if (!widget.framed) {
+      return child;
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+      child: child,
     );
   }
 
@@ -156,40 +171,6 @@ class _SiteBrandMarkState extends State<SiteBrandMark> {
       logicalHeight: widget.size,
       fit: widget.fit,
       error: _OfficialMark(size: widget.size, fit: widget.fit),
-    );
-  }
-}
-
-class _BrandShell extends StatelessWidget {
-  const _BrandShell({
-    required this.size,
-    required this.borderRadius,
-    required this.child,
-  });
-
-  final double size;
-  final double borderRadius;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      padding: EdgeInsets.all(size * 0.08),
-      child: child,
     );
   }
 }
