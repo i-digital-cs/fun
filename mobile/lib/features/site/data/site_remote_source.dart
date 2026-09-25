@@ -43,14 +43,18 @@ class SiteAppUpdate extends Equatable {
 class SiteBroadcastConfig extends Equatable {
   const SiteBroadcastConfig({
     required this.enabled,
+    this.driver,
     this.key,
+    this.cluster,
     this.host,
     this.port,
     this.scheme,
   });
 
   final bool enabled;
+  final String? driver;
   final String? key;
+  final String? cluster;
   final String? host;
   final int? port;
   final String? scheme;
@@ -70,6 +74,7 @@ class SiteBroadcastConfig extends Equatable {
           : (fromApi?.scheme ?? 'http');
       return SiteBroadcastConfig(
         enabled: true,
+        driver: 'reverb',
         key: defineKey,
         host: defineHost,
         port: port,
@@ -79,12 +84,22 @@ class SiteBroadcastConfig extends Equatable {
     return fromApi ?? disabled;
   }
 
+  /// WebSocket host for Reverb or Pusher Channels (`ws-{cluster}.pusher.com`).
+  String? get wsHost {
+    if (host != null && host!.isNotEmpty) return host;
+    if (cluster != null && cluster!.isNotEmpty) {
+      return 'ws-$cluster.pusher.com';
+    }
+    return null;
+  }
+
   String get wsScheme => (scheme ?? 'https') == 'https' ? 'wss' : 'ws';
 
   int get wsPort => port ?? ((scheme ?? 'https') == 'https' ? 443 : 80);
 
   @override
-  List<Object?> get props => [enabled, key, host, port, scheme];
+  List<Object?> get props =>
+      [enabled, driver, key, cluster, host, port, scheme];
 }
 
 class SiteBranding extends Equatable {
@@ -165,7 +180,9 @@ class SiteRemoteSource {
         final b = Map<String, dynamic>.from(broadcastRaw);
         broadcast = SiteBroadcastConfig(
           enabled: b['enabled'] == true,
+          driver: b['driver'] as String?,
           key: b['key'] as String?,
+          cluster: b['cluster'] as String?,
           host: b['host'] as String?,
           port: (b['port'] as num?)?.toInt(),
           scheme: b['scheme'] as String?,

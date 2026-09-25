@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -107,6 +106,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatsYou => 'أنت';
+
+  @override
+  String get notificationsTitle => 'الإشعارات';
+
+  @override
+  String get notificationsEmptyTitle => 'لا إشعارات بعد';
+
+  @override
+  String get notificationsEmptyBody =>
+      'عندما يطلب أحد الانضمام لفعاليتك، سيظهر هنا.';
+
+  @override
+  String get notificationsMarkAllRead => 'تمييز الكل كمقروء';
+
+  @override
+  String get navNotifications => 'الإشعارات';
 
   @override
   String get openChat => 'فتح المحادثة';

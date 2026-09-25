@@ -12,6 +12,7 @@ import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/chat/domain/chat_thread.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
 import 'package:fun_mobile/features/chat/presentation/widgets/chat_toast_banner.dart';
+import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -223,6 +224,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
 
   ChatRealtimeClient? _realtime;
   StreamSubscription<ChatToastPayload>? _realtimeSub;
+  StreamSubscription<void>? _joinAcceptedSub;
   final List<ChatToastPayload> _toasts = [];
   final Set<int> _shownMessageIds = {};
 
@@ -251,6 +253,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   Future<void> _teardownRealtime() async {
     await _realtimeSub?.cancel();
     _realtimeSub = null;
+    await _joinAcceptedSub?.cancel();
+    _joinAcceptedSub = null;
     await _realtime?.dispose();
     _realtime = null;
     _usePollToasts = true;
@@ -282,6 +286,10 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     );
     _realtime = client;
     _realtimeSub = client.messages.listen(_onRealtimeMessage);
+    _joinAcceptedSub = client.joinAccepted.listen((_) {
+      if (!mounted) return;
+      ref.read(notificationUnreadTotalProvider.notifier).update((n) => n + 1);
+    });
 
     final started = await client.connect(userId: auth.user.id, config: config);
     if (!mounted) return;
@@ -353,6 +361,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       _lastSeenMessageIds.clear();
       _shownMessageIds.clear();
       ref.read(chatUnreadTotalProvider.notifier).state = 0;
+      ref.read(notificationUnreadTotalProvider.notifier).state = 0;
       return;
     }
 

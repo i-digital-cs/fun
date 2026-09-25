@@ -10,6 +10,7 @@ import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/dash_topbar.dart';
+import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -60,6 +61,7 @@ class MainShell extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final user = auth is Authenticated ? auth.user : null;
     final unread = ref.watch(chatUnreadTotalProvider);
+    final notifyUnread = ref.watch(notificationUnreadTotalProvider);
     final exploreCats = ref
         .watch(exploreCategoriesProvider)
         .maybeWhen(data: (c) => c, orElse: () => const <CategoryItem>[]);
@@ -85,6 +87,7 @@ class MainShell extends ConsumerWidget {
                         user: user,
                         isGuest: isGuest,
                         chatUnread: unread,
+                        notifyUnread: notifyUnread,
                         exploreCategories: exploreCats,
                         onBranch: (i) => _onBranchTap(context, ref, i),
                         onPush: (p) => _pushOrLogin(context, ref, p),
@@ -165,6 +168,7 @@ class _DashSidebar extends StatelessWidget {
     required this.user,
     required this.isGuest,
     required this.chatUnread,
+    required this.notifyUnread,
     required this.exploreCategories,
     required this.onBranch,
     required this.onPush,
@@ -178,6 +182,7 @@ class _DashSidebar extends StatelessWidget {
   final User? user;
   final bool isGuest;
   final int chatUnread;
+  final int notifyUnread;
   final List<CategoryItem> exploreCategories;
   final ValueChanged<int> onBranch;
   final ValueChanged<String> onPush;
@@ -260,6 +265,13 @@ class _DashSidebar extends StatelessWidget {
                       selected: _match('/chats'),
                       badge: chatUnread > 0,
                       onTap: () => onPush('/chats'),
+                    ),
+                    _SideItem(
+                      icon: Icons.notifications_outlined,
+                      label: l10n.navNotifications,
+                      selected: _match('/notifications'),
+                      badge: notifyUnread > 0,
+                      onTap: () => onPush('/notifications'),
                     ),
                     _SideItem(
                       icon: Icons.bookmark_outline,

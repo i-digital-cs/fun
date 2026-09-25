@@ -11,6 +11,7 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/home/domain/search_suggest_item.dart';
+import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
 import 'package:fun_mobile/features/site/presentation/widgets/site_brand_lockup.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -117,6 +118,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
     final user = auth is Authenticated ? auth.user : null;
     final locale = ref.watch(localeCodeProvider);
     final unread = ref.watch(chatUnreadTotalProvider);
+    final notifyUnread = ref.watch(notificationUnreadTotalProvider);
     final oppositeGlyph = locale == 'en' ? 'ع' : 'EN';
     final oppositeLabel = locale == 'en' ? 'AR' : 'EN';
 
@@ -272,6 +274,26 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
               ),
               const SizedBox(width: 8),
             ],
+            IconButton(
+              tooltip: l10n.notificationsTitle,
+              onPressed: () {
+                if (user == null) {
+                  context.push('/login');
+                  return;
+                }
+                context.push('/notifications');
+              },
+              icon: Badge(
+                isLabelVisible: notifyUnread > 0,
+                smallSize: 8,
+                backgroundColor: const Color(0xFFF97316),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  size: 20,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ),
             IconButton(
               tooltip: l10n.chatsTitle,
               onPressed: () {

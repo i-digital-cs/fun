@@ -455,7 +455,7 @@ Flutter: poll `GET /api/notifications` for join request / accept; same `POST ...
 | **Push** | `POST /api/device-tokens` `{token, platform: android\|ios\|web}` · `DELETE /api/device-tokens` `{token}` |
 | **Authz** | Authenticated + `account.active` |
 
-In-app list of database notifications (`join_request`, `join_accepted`). Unread badge on web topbar / community navbar. Flutter screen `/notifications` + shell badge.
+In-app list of database notifications (`join_request`, `join_accepted`). Unread badge on web topbar / community navbar **and Flutter topbar / sidebar** (`/notifications`, polled unread-count). Flutter: open inbox from bell; tap `join_request` → `/events/:id/requests`, `join_accepted` → event detail.
 
 **FCM push (outside app):** used for **chat messages** only (`ChatMessagePushNotification`). Register via `POST /api/device-tokens`; logout → `DELETE`. Payload `data.type=chat_message` + `event_id` / `api_path` (body does **not** include message text — privacy). Join request/accept stay in the internal inbox (no FCM).
 

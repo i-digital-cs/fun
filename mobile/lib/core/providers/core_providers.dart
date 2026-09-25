@@ -27,6 +27,9 @@ import 'package:fun_mobile/features/profile/domain/public_profile_repository.dar
 import 'package:fun_mobile/features/chat/data/chats_remote_source.dart';
 import 'package:fun_mobile/features/chat/data/chats_repository_impl.dart';
 import 'package:fun_mobile/features/chat/domain/chats_repository.dart';
+import 'package:fun_mobile/features/notifications/data/notifications_remote_source.dart';
+import 'package:fun_mobile/features/notifications/data/notifications_repository_impl.dart';
+import 'package:fun_mobile/features/notifications/domain/notifications_repository.dart';
 import 'package:fun_mobile/features/safety/data/safety_remote_source.dart';
 import 'package:fun_mobile/features/safety/data/safety_repository_impl.dart';
 import 'package:fun_mobile/features/safety/domain/safety_repository.dart';
@@ -147,4 +150,18 @@ final chatsRemoteSourceProvider = Provider<ChatsRemoteSource>((ref) {
 
 final chatsRepositoryProvider = Provider<ChatsRepository>((ref) {
   return ChatsRepositoryImpl(ref.watch(chatsRemoteSourceProvider));
+});
+
+final notificationsRemoteSourceProvider = Provider<NotificationsRemoteSource>((
+  ref,
+) {
+  return NotificationsRemoteSource(ref.watch(apiClientProvider));
+});
+
+final notificationsRepositoryProvider = Provider<NotificationsRepository>((
+  ref,
+) {
+  return NotificationsRepositoryImpl(
+    ref.watch(notificationsRemoteSourceProvider),
+  );
 });

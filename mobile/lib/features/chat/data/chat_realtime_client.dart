@@ -14,15 +14,20 @@ class ChatRealtimeClient {
 
   final TokenStorage _tokenStorage;
   final _messages = StreamController<ChatToastPayload>.broadcast();
+  final _joinAccepted = StreamController<void>.broadcast();
 
   PusherChannelsClient? _client;
   StreamSubscription<void>? _connectionSub;
   StreamSubscription<ChannelReadEvent>? _eventSub;
+  StreamSubscription<ChannelReadEvent>? _joinSub;
   PrivateChannel? _channel;
   int? _userId;
   bool _connected = false;
 
   Stream<ChatToastPayload> get messages => _messages.stream;
+
+  /// Fires when the server broadcasts `.join.accepted` to this user.
+  Stream<void> get joinAccepted => _joinAccepted.stream;
 
   bool get isConnected => _connected;
 
@@ -35,8 +40,8 @@ class ChatRealtimeClient {
     if (!config.enabled ||
         config.key == null ||
         config.key!.isEmpty ||
-        config.host == null ||
-        config.host!.isEmpty) {
+        config.wsHost == null ||
+        config.wsHost!.isEmpty) {
       return false;
     }
 
@@ -51,7 +56,7 @@ class ChatRealtimeClient {
     try {
       final options = PusherChannelsOptions.fromHost(
         scheme: config.wsScheme,
-        host: config.host!,
+        host: config.wsHost!,
         key: config.key!,
         port: config.wsPort,
         shouldSupplyMetadataQueries: true,
@@ -100,6 +105,13 @@ class ChatRealtimeClient {
         }
       });
 
+      // Join-accepted: bump notification badge via side-channel stream.
+      _joinSub = channel.bind('join.accepted').listen((event) {
+        if (!_joinAccepted.isClosed) {
+          _joinAccepted.add(null);
+        }
+      });
+
       unawaited(client.connect());
       return true;
     } catch (e, st) {
@@ -115,6 +127,8 @@ class ChatRealtimeClient {
     _connected = false;
     await _eventSub?.cancel();
     _eventSub = null;
+    await _joinSub?.cancel();
+    _joinSub = null;
     await _connectionSub?.cancel();
     _connectionSub = null;
     try {
@@ -131,6 +145,7 @@ class ChatRealtimeClient {
   Future<void> dispose() async {
     await disconnect();
     await _messages.close();
+    await _joinAccepted.close();
   }
 
   int? get userId => _userId;
