@@ -57,14 +57,34 @@ android {
                     // Local-only: flutter build/run --release -PallowDebugReleaseSigning=true
                     signingConfig = signingConfigs.getByName("debug")
                 }
-                else -> {
-                    throw GradleException(
-                        "Release signing is not configured. Add android/key.properties " +
-                            "(see android/key.properties.example) or pass " +
-                            "-PallowDebugReleaseSigning=true for local non-store testing only.",
-                    )
-                }
+                // Else: leave unset. Fail closed only when a *release* task runs
+                // (see afterEvaluate below) so assembleDebug / flutter run still work.
             }
+        }
+    }
+}
+
+// BUILD-001: fail closed for release packaging only — not during debug configure.
+afterEvaluate {
+    if (keystorePropertiesFile.exists() || allowDebugReleaseSigning) {
+        return@afterEvaluate
+    }
+    val releaseSigningMessage =
+        "Release signing is not configured. Add android/key.properties " +
+            "(see android/key.properties.example) or pass " +
+            "-PallowDebugReleaseSigning=true for local non-store testing only."
+    tasks.matching { task ->
+        val n = task.name
+        n.contains("Release", ignoreCase = true) &&
+            (
+                n.startsWith("assemble") ||
+                    n.startsWith("bundle") ||
+                    n.startsWith("package") ||
+                    n.startsWith("sign")
+                )
+    }.configureEach {
+        doFirst {
+            throw GradleException(releaseSigningMessage)
         }
     }
 }

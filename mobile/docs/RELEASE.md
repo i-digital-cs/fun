@@ -28,7 +28,7 @@ Source of Truth cross-links:
 |-----------|-------------------------|
 | `android/key.properties` exists | `signingConfigs.release` (upload/production keystore) |
 | No `key.properties`, but `-PallowDebugReleaseSigning=true` | `signingConfigs.debug` (**local only**) |
-| No `key.properties` and no opt-in | **Build fails** (`GradleException`) |
+| No `key.properties` and no opt-in | **Release tasks fail** (`GradleException`); debug/`flutter run` still work |
 
 `defaultConfig` must **not** set emulator-only `abiFilters`. Flutter’s default multi-ABI packaging applies so physical ARM devices remain supported.
 

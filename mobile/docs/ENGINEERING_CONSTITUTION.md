@@ -80,7 +80,8 @@ Implementation:
   mobile/android/key.properties.example (template; key.properties gitignored)
 
 Verification:
-  - Without key.properties: release-related Gradle evaluation fails closed
+  - Without key.properties: release packaging tasks (assemble/bundle/package/sign *Release*) fail closed
+  - Debug / flutter run (assembleDebug) must not require key.properties
   - With -PallowDebugReleaseSigning=true: release may use debug keystore (local)
   - Grep: no abiFilters in defaultConfig; no unconditional release→debug signing
 
