@@ -8,8 +8,11 @@ use App\Exceptions\DomainException;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
+use App\Notifications\JoinRequestReceivedNotification;
 use App\Services\Safety\UserBlockService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RequestToJoinEventService
 {
@@ -45,7 +48,7 @@ class RequestToJoinEventService
             throw new DomainException(__('safety.blocked_cannot_join'));
         }
 
-        return DB::transaction(function () use ($user, $event, $message) {
+        $joinRequest = DB::transaction(function () use ($user, $event, $message) {
             $existing = EventJoinRequest::query()
                 ->where('event_id', $event->id)
                 ->where('user_id', $user->id)
@@ -74,5 +77,34 @@ class RequestToJoinEventService
                 'message' => $message,
             ]);
         });
+
+        $this->notifyOrganizer($user, $event, $joinRequest, $creator);
+
+        return $joinRequest;
+    }
+
+    private function notifyOrganizer(
+        User $requester,
+        Event $event,
+        EventJoinRequest $joinRequest,
+        ?User $creator,
+    ): void {
+        if ($creator === null || (int) $creator->id === (int) $requester->id) {
+            return;
+        }
+
+        try {
+            $creator->notify(new JoinRequestReceivedNotification(
+                requester: $requester,
+                event: $event,
+                joinRequest: $joinRequest,
+            ));
+        } catch (Throwable $exception) {
+            Log::warning('join_request_notify_failed', [
+                'event_id' => $event->id,
+                'join_request_id' => $joinRequest->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

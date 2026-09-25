@@ -5,7 +5,7 @@
 @section('content')
     <div class="mx-auto max-w-2xl rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm sm:p-8">
         <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ __('events.edit_event') }}</h1>
-        <form method="POST" action="{{ route('events.update', $event) }}" enctype="multipart/form-data" class="mt-6 space-y-4">
+        <form method="POST" action="{{ event_route('events.update', $event) }}" enctype="multipart/form-data" class="mt-6 space-y-4">
             @csrf
             @method('PUT')
             @include('events._form', ['event' => $event])

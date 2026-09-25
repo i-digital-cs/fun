@@ -11,8 +11,10 @@ use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\EventMember;
 use App\Models\User;
+use App\Notifications\JoinRequestReceivedNotification;
 use App\Services\Events\ReviewJoinRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -36,6 +38,8 @@ class EventMembershipTest extends TestCase
 
     public function test_user_can_request_join_and_owner_can_accept(): void
     {
+        Notification::fake();
+
         $owner = User::factory()->active()->create();
         $applicant = User::factory()->active()->create();
         $event = $this->publishedEvent($owner, 5);
@@ -44,6 +48,11 @@ class EventMembershipTest extends TestCase
         $this->postJson("/api/events/{$event->id}/join")
             ->assertCreated()
             ->assertJsonPath('join_request.status', 'pending');
+
+        Notification::assertSentTo($owner, JoinRequestReceivedNotification::class, function (JoinRequestReceivedNotification $notification) use ($applicant, $event) {
+            return (int) $notification->requester->id === (int) $applicant->id
+                && (int) $notification->event->id === (int) $event->id;
+        });
 
         $joinRequest = EventJoinRequest::query()->firstOrFail();
 

@@ -27,6 +27,7 @@ use App\Http\Controllers\Web\Events\EventTicketController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Identity\IdentityDocumentController;
 use App\Http\Controllers\Web\LocaleController;
+use App\Http\Controllers\Web\Notifications\NotificationInboxController;
 use App\Http\Controllers\Web\RobotsController;
 use App\Http\Controllers\Web\SitemapController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\Web\Safety\BlockController;
 use App\Http\Controllers\Web\Safety\ReportController;
 use App\Http\Controllers\Web\Safety\SafetyGuidelinesController;
 use App\Http\Controllers\Web\SearchSuggestController;
+use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -52,10 +54,8 @@ Route::get('/search/suggest', SearchSuggestController::class)
     ->name('search.suggest');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
-Route::get('/events/{event}/{slug?}', [EventController::class, 'show'])
-    ->whereNumber('event')
-    ->where('slug', '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$')
-    ->name('events.show');
+// events.show is registered AFTER /events/{event}/edit|chat|ticket|… so those paths
+// are not captured as optional {slug} (which previously 301'd back to the event page).
 
 Route::get('/u/{publicId}', [PublicProfileController::class, 'show'])
     ->where('publicId', \App\Support\UserPublicId::routePattern())
@@ -138,82 +138,94 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/my-events', [EventController::class, 'mine'])->name('events.mine');
         Route::get('/favorites', [EventFavoriteController::class, 'index'])->name('events.favorites');
-        Route::post('/events/{event}/favorite', [EventFavoriteController::class, 'toggle'])
-            ->whereNumber('event')
-            ->middleware('throttle:joins')
-            ->name('events.favorite.toggle');
         Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
         Route::post('/events', [EventController::class, 'store'])
             ->middleware('throttle:uploads')
             ->name('events.store');
-        Route::get('/events/{event}/edit', [EventController::class, 'edit'])
-            ->whereNumber('event')
-            ->name('events.edit');
-        Route::put('/events/{event}', [EventController::class, 'update'])
-            ->whereNumber('event')
-            ->middleware('throttle:uploads')
-            ->name('events.update');
-        Route::post('/events/{event}/publish', [EventController::class, 'publish'])
-            ->whereNumber('event')
-            ->name('events.publish');
-        Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])
-            ->whereNumber('event')
-            ->name('events.cancel');
-        Route::post('/events/{event}/complete', [EventController::class, 'complete'])
-            ->whereNumber('event')
-            ->name('events.complete');
 
-        Route::post('/events/{event}/join', [EventMembershipController::class, 'join'])
-            ->whereNumber('event')
-            ->middleware('throttle:joins')
-            ->name('events.join');
-        Route::post('/events/{event}/join/cancel', [EventMembershipController::class, 'cancelJoinRequest'])
-            ->whereNumber('event')
-            ->middleware('throttle:joins')
-            ->name('events.join.cancel');
-        Route::get('/events/{event}/requests', [EventMembershipController::class, 'requests'])
-            ->whereNumber('event')
-            ->name('events.requests');
-        Route::post('/events/{event}/requests/{joinRequest}/accept', [EventMembershipController::class, 'accept'])
-            ->whereNumber('event')
-            ->name('events.requests.accept');
-        Route::post('/events/{event}/requests/{joinRequest}/reject', [EventMembershipController::class, 'reject'])
-            ->whereNumber('event')
-            ->name('events.requests.reject');
-        Route::get('/events/{event}/members', [EventMembershipController::class, 'members'])
-            ->whereNumber('event')
-            ->name('events.members');
-        Route::post('/events/{event}/members/{user}/promote', [EventMembershipController::class, 'promote'])
-            ->whereNumber('event')
-            ->name('events.members.promote');
-        Route::post('/events/{event}/members/{user}/demote', [EventMembershipController::class, 'demote'])
-            ->whereNumber('event')
-            ->name('events.members.demote');
-        Route::post('/events/{event}/transfer', [EventMembershipController::class, 'transfer'])
-            ->whereNumber('event')
-            ->name('events.transfer');
-        Route::post('/events/{event}/leave', [EventMembershipController::class, 'leave'])
-            ->whereNumber('event')
-            ->name('events.leave');
+        // Member event actions — always /events/{id}/{slug}/…
+        Route::middleware('event.slug')->group(function () {
+            $slug = '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$';
+
+            Route::post('/events/{event}/{slug}/favorite', [EventFavoriteController::class, 'toggle'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->middleware('throttle:joins')
+                ->name('events.favorite.toggle');
+            Route::get('/events/{event}/{slug}/edit', [EventController::class, 'edit'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.edit');
+            Route::put('/events/{event}/{slug}', [EventController::class, 'update'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->middleware('throttle:uploads')
+                ->name('events.update');
+            Route::post('/events/{event}/{slug}/publish', [EventController::class, 'publish'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.publish');
+            Route::post('/events/{event}/{slug}/cancel', [EventController::class, 'cancel'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.cancel');
+            Route::post('/events/{event}/{slug}/complete', [EventController::class, 'complete'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.complete');
+
+            Route::post('/events/{event}/{slug}/join', [EventMembershipController::class, 'join'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->middleware('throttle:joins')
+                ->name('events.join');
+            Route::post('/events/{event}/{slug}/join/cancel', [EventMembershipController::class, 'cancelJoinRequest'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->middleware('throttle:joins')
+                ->name('events.join.cancel');
+            Route::get('/events/{event}/{slug}/requests', [EventMembershipController::class, 'requests'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.requests');
+            Route::post('/events/{event}/{slug}/requests/{joinRequest}/accept', [EventMembershipController::class, 'accept'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.requests.accept');
+            Route::post('/events/{event}/{slug}/requests/{joinRequest}/reject', [EventMembershipController::class, 'reject'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.requests.reject');
+            Route::get('/events/{event}/{slug}/members', [EventMembershipController::class, 'members'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.members');
+            Route::post('/events/{event}/{slug}/members/{user}/promote', [EventMembershipController::class, 'promote'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.members.promote');
+            Route::post('/events/{event}/{slug}/members/{user}/demote', [EventMembershipController::class, 'demote'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.members.demote');
+            Route::post('/events/{event}/{slug}/transfer', [EventMembershipController::class, 'transfer'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.transfer');
+            Route::post('/events/{event}/{slug}/leave', [EventMembershipController::class, 'leave'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.leave');
+
+            Route::get('/events/{event}/{slug}/chat', [EventChatController::class, 'show'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.chat');
+            Route::post('/events/{event}/{slug}/chat', [EventChatController::class, 'store'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->middleware('throttle:messages')
+                ->name('events.chat.store');
+
+            Route::get('/events/{event}/{slug}/ticket', [EventTicketController::class, 'show'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->name('events.ticket');
+
+            Route::post('/events/{event}/{slug}/ratings', [EventRatingController::class, 'store'])
+                ->whereNumber('event')->where('slug', $slug)
+                ->middleware('throttle:ratings')
+                ->name('events.ratings.store');
+        });
 
         Route::get('/chats', [ChatInboxController::class, 'index'])->name('chats.index');
 
-        Route::get('/events/{event}/chat', [EventChatController::class, 'show'])
-            ->whereNumber('event')
-            ->name('events.chat');
-        Route::post('/events/{event}/chat', [EventChatController::class, 'store'])
-            ->whereNumber('event')
-            ->middleware('throttle:messages')
-            ->name('events.chat.store');
-
-        Route::get('/events/{event}/ticket', [EventTicketController::class, 'show'])
-            ->whereNumber('event')
-            ->name('events.ticket');
-
-        Route::post('/events/{event}/ratings', [EventRatingController::class, 'store'])
-            ->whereNumber('event')
-            ->middleware('throttle:ratings')
-            ->name('events.ratings.store');
+        Route::get('/notifications', [NotificationInboxController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/read-all', [NotificationInboxController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::post('/notifications/{notification}/read', [NotificationInboxController::class, 'markRead'])
+            ->name('notifications.read');
     });
 
     Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {
@@ -291,3 +303,26 @@ Route::middleware('auth')->group(function () {
     });
     });
 });
+
+// Legacy /events/{id}/action → /events/{id}/{slug}/action (before show, so "edit" is not treated as a slug).
+Route::get('/events/{event}/edit', function (Event $event) {
+    return redirect()->to(event_route('events.edit', $event), 301);
+})->whereNumber('event');
+Route::get('/events/{event}/chat', function (Event $event) {
+    return redirect()->to(event_route('events.chat', $event), 301);
+})->whereNumber('event');
+Route::get('/events/{event}/ticket', function (Event $event) {
+    return redirect()->to(event_route('events.ticket', $event), 301);
+})->whereNumber('event');
+Route::get('/events/{event}/members', function (Event $event) {
+    return redirect()->to(event_route('events.members', $event), 301);
+})->whereNumber('event');
+Route::get('/events/{event}/requests', function (Event $event) {
+    return redirect()->to(event_route('events.requests', $event), 301);
+})->whereNumber('event');
+
+// Public event show — last among /events/{id}/… GET patterns.
+Route::get('/events/{event}/{slug?}', [EventController::class, 'show'])
+    ->whereNumber('event')
+    ->where('slug', '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$')
+    ->name('events.show');

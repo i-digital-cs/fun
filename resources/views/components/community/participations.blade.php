@@ -252,10 +252,10 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <a href="{{ route('events.ticket', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-md shadow-orange-500/25 transition hover:brightness-105">
+                            <a href="{{ event_route('events.ticket', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3.5 py-2.5 text-xs font-extrabold text-white shadow-md shadow-orange-500/25 transition hover:brightness-105">
                                 {{ __('events.view_ticket') }}
                             </a>
-                            <a href="{{ route('events.chat', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/25 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-600/35 active:translate-y-0">
+                            <a href="{{ event_route('events.chat', $event) }}" class="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/25 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-600/35 active:translate-y-0">
                                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
                                 </svg>
@@ -308,7 +308,7 @@
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot py-0" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                            <form method="POST" action="{{ event_route('events.join.cancel', $event) }}" class="cancel-btn-slot py-0" data-confirm="{{ __('ui.confirm_cancel_join') }}">
                                 @csrf
                                 <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
                             </form>

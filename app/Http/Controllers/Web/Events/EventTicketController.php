@@ -10,7 +10,7 @@ use Illuminate\View\View;
 
 class EventTicketController extends Controller
 {
-    public function show(Event $event, BuildEventTicketService $tickets): View
+    public function show(Event $event, string $slug, BuildEventTicketService $tickets): View
     {
         $this->authorize('viewTicket', $event);
 

@@ -137,4 +137,13 @@ return [
     'favorited' => 'تمت الإضافة إلى المفضلة.',
     'unfavorited' => 'تمت الإزالة من المفضلة.',
     'favorite_requires_active' => 'أكمل التحقق من الهوية لإضافة فعاليات إلى المفضلة.',
+    'mail_greeting' => 'مرحباً :name،',
+    'mail_thanks' => 'شكراً',
+    'mail_join_request_subject' => '[:app] طلب انضمام جديد — :event',
+    'mail_join_request_heading' => 'طلب انضمام جديد',
+    'mail_join_request_body' => 'طلب :requester الانضمام إلى «:event».',
+    'mail_join_request_cta' => 'مراجعة طلبات الانضمام',
+    'mail_join_request_event_link' => 'صفحة الفعالية',
+    'notify_join_request_title' => 'طلب انضمام جديد',
+    'notify_join_request_body' => 'طلب :requester الانضمام إلى «:event».',
 ];

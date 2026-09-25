@@ -62,7 +62,7 @@ class EventChatTest extends TestCase
 
         $this->getJson("/api/events/{$event->id}/messages")->assertForbidden();
         $this->postJson("/api/events/{$event->id}/messages", ['body' => 'Hi'])->assertForbidden();
-        $this->get(route('events.chat', $event))->assertForbidden();
+        $this->get(event_route('events.chat', $event))->assertForbidden();
     }
 
     public function test_pending_user_cannot_use_chat(): void
@@ -146,7 +146,7 @@ class EventChatTest extends TestCase
         ]);
 
         $this->actingAs($owner)
-            ->get(route('events.chat', $event))
+            ->get(event_route('events.chat', $event))
             ->assertOk()
             ->assertSee(__('chat.title'))
             ->assertSee('Kickoff at eight')

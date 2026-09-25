@@ -49,7 +49,7 @@ class SeoHardeningTest extends TestCase
         $this->assertTrue(Cache::has('seo.sitemap.xml'));
 
         $this->actingAs($owner)
-            ->post(route('events.publish', $draft))
+            ->post(event_route('events.publish', $draft))
             ->assertRedirect();
 
         $this->assertFalse(Cache::has('seo.sitemap.xml'));
@@ -76,7 +76,7 @@ class SeoHardeningTest extends TestCase
 
         $this->actingAs($owner)
             ->from(event_show_url($event))
-            ->post(route('events.publish', $event))
+            ->post(event_route('events.publish', $event))
             ->assertRedirect()
             ->assertSessionHas('status', __('events.published_missing_description'));
     }

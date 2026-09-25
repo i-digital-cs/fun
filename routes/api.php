@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\Events\EventRatingController as ApiEventRatingContr
 use App\Http\Controllers\Api\Events\EventTicketController as ApiEventTicketController;
 use App\Http\Controllers\Api\HomeParticipationsController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
+use App\Http\Controllers\Api\Notifications\DeviceTokenController as ApiDeviceTokenController;
+use App\Http\Controllers\Api\Notifications\NotificationInboxController as ApiNotificationInboxController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
 use App\Http\Controllers\Api\Profile\ProfileController as ApiProfileController;
 use App\Http\Controllers\Api\Profile\PublicProfileController as ApiPublicProfileController;
@@ -126,6 +128,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/chats', [ApiChatInboxController::class, 'index']);
         Route::post('/events/{event}/messages/read', [ApiChatInboxController::class, 'markRead'])
             ->whereNumber('event');
+
+        Route::get('/notifications', [ApiNotificationInboxController::class, 'index']);
+        Route::get('/notifications/unread-count', [ApiNotificationInboxController::class, 'unreadCount']);
+        Route::post('/notifications/read-all', [ApiNotificationInboxController::class, 'markAllRead']);
+        Route::post('/notifications/{notification}/read', [ApiNotificationInboxController::class, 'markRead']);
+        Route::post('/device-tokens', [ApiDeviceTokenController::class, 'store'])
+            ->middleware('throttle:60,1');
+        Route::delete('/device-tokens', [ApiDeviceTokenController::class, 'destroy'])
+            ->middleware('throttle:60,1');
 
         Route::get('/events/{event}/messages', [ApiEventChatController::class, 'index']);
         Route::post('/events/{event}/messages', [ApiEventChatController::class, 'store'])

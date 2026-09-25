@@ -35,7 +35,7 @@ class EventFavoriteTest extends TestCase
         $event = $this->publishedEvent();
 
         $this->actingAs($user)
-            ->post(route('events.favorite.toggle', $event))
+            ->post(event_route('events.favorite.toggle', $event))
             ->assertRedirect();
 
         $this->assertDatabaseHas('event_favorites', [
@@ -44,7 +44,7 @@ class EventFavoriteTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->post(route('events.favorite.toggle', $event))
+            ->post(event_route('events.favorite.toggle', $event))
             ->assertRedirect();
 
         $this->assertDatabaseMissing('event_favorites', [

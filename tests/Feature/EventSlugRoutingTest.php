@@ -51,6 +51,28 @@ class EventSlugRoutingTest extends TestCase
             ->assertSee('Breadcrumb', false);
     }
 
+    public function test_reserved_action_paths_are_not_captured_as_slugs(): void
+    {
+        $host = User::factory()->active()->create();
+        $event = $this->makePublishedEvent([
+            'title' => 'Action Path Event',
+            'created_by' => $host->id,
+        ])->fresh();
+
+        $this->get('/events/'.$event->id.'/edit')
+            ->assertRedirect(event_route('events.edit', $event));
+
+        $this->get(event_route('events.edit', $event))
+            ->assertRedirect(route('login'));
+
+        $this->actingAs($host)
+            ->get(event_route('events.edit', $event))
+            ->assertOk();
+
+        $this->assertStringContainsString('/'.$event->slug.'/', event_route('events.chat', $event));
+        $this->assertStringContainsString('/'.$event->slug.'/', event_route('events.ticket', $event));
+    }
+
     public function test_discover_with_filters_is_noindex_with_clean_canonical(): void
     {
         $this->get(route('events.index', ['q' => 'padel']))

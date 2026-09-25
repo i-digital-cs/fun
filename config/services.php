@@ -55,4 +55,15 @@ return [
         'forecast_days' => (int) env('WEATHER_FORECAST_DAYS', 5),
     ],
 
+    /*
+    | Firebase Cloud Messaging (HTTP v1)
+    | Place the service-account JSON on the server (outside public/) and point
+    | FIREBASE_CREDENTIALS at its absolute path. Without these, in-app DB
+    | notifications still work; push is skipped and logged.
+    */
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];

@@ -48,7 +48,7 @@ class EventTicketTest extends TestCase
             ->value('ticket_code');
 
         $this->actingAs($member)
-            ->get(route('events.ticket', $event))
+            ->get(event_route('events.ticket', $event))
             ->assertOk()
             ->assertSee('Sunset Meetup', false)
             ->assertSee(__('events.ticket_word'), false)
@@ -64,7 +64,7 @@ class EventTicketTest extends TestCase
         $event = $this->publishedEventWithMember($member);
 
         $this->actingAs($outsider)
-            ->get(route('events.ticket', $event))
+            ->get(event_route('events.ticket', $event))
             ->assertForbidden();
 
         Sanctum::actingAs($outsider);

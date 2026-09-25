@@ -81,7 +81,7 @@
                             <a href="{{ event_show_url($event) }}" class="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:border-primary/40">
                                 {{ __('events.view_event') }}
                             </a>
-                            <a href="{{ route('events.chat', $event) }}" class="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white">
+                            <a href="{{ event_route('events.chat', $event) }}" class="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white">
                                 {{ __('home.open_chat') }}
                             </a>
                         </div>

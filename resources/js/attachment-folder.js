@@ -61,7 +61,16 @@ function renderFileCards(root, fileInfos) {
         return;
     }
 
+    // Revoke previous blob: URLs first, then create fresh ones for this render.
     revokePreviews(root);
+    fileInfos.forEach((info) => {
+        if (info.file && isImageFile(info.file)) {
+            info.previewUrl = URL.createObjectURL(info.file);
+            root._attachmentObjectUrls = root._attachmentObjectUrls || [];
+            root._attachmentObjectUrls.push(info.previewUrl);
+        }
+    });
+
     const palette = ['file-1', 'file-2', 'file-3', 'file-4', 'file-5'];
     const max = 5;
     const slice = fileInfos.slice(0, max);
@@ -172,16 +181,14 @@ function bindFolder(root) {
 
     input.addEventListener('change', () => {
         const files = Array.from(input.files || []);
-        revokePreviews(root);
-        const infos = files.map((file) => {
-            const info = { name: file.name, size: file.size, previewUrl: null };
-            if (isImageFile(file)) {
-                info.previewUrl = URL.createObjectURL(file);
-                root._attachmentObjectUrls = root._attachmentObjectUrls || [];
-                root._attachmentObjectUrls.push(info.previewUrl);
-            }
-            return info;
-        });
+        // Pass File objects; renderFileCards creates blob URLs AFTER revoking old ones
+        // (creating before revoke left broken previews).
+        const infos = files.map((file) => ({
+            name: file.name,
+            size: file.size,
+            file: isImageFile(file) ? file : null,
+            previewUrl: null,
+        }));
         renderFileCards(root, infos);
         openFolder();
     });

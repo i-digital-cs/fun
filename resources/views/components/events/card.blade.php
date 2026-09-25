@@ -72,7 +72,7 @@
                 <div class="event-3d__status">
                     @if ($action === 'request_pending')
                         <span class="block rounded-xl border border-slate-200/70 bg-white/80 px-3 py-1.5 text-center text-xs font-semibold text-slate-600">{{ __('events.request_pending') }}</span>
-                        <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot mt-1.5 py-0.5" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                        <form method="POST" action="{{ event_route('events.join.cancel', $event) }}" class="cancel-btn-slot mt-1.5 py-0.5" data-confirm="{{ __('ui.confirm_cancel_join') }}">
                             @csrf
                             <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
                         </form>

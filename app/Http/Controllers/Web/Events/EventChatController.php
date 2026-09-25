@@ -18,6 +18,7 @@ class EventChatController extends Controller
 {
     public function show(
         Event $event,
+        string $slug,
         ListEventMessagesService $listService,
         MarkEventChatReadService $readService,
     ): View {
@@ -38,6 +39,7 @@ class EventChatController extends Controller
     public function store(
         StoreEventMessageRequest $request,
         Event $event,
+        string $slug,
         PostEventMessageService $service,
     ): RedirectResponse|JsonResponse {
         $this->authorize('chat', $event);
@@ -68,6 +70,6 @@ class EventChatController extends Controller
             ], 201);
         }
 
-        return redirect()->route('events.chat', $event);
+        return redirect()->to(event_route('events.chat', $event));
     }
 }

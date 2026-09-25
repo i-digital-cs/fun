@@ -163,6 +163,11 @@ class User extends Authenticatable
         return $this->hasMany(EventMember::class);
     }
 
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
     public function eventFavorites(): HasMany
     {
         return $this->hasMany(EventFavorite::class);

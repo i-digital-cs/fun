@@ -95,7 +95,7 @@ class PostEventMessageService
             return;
         }
 
-        $chatUrl = route('events.chat', $event);
+        $chatUrl = event_route('events.chat', $event);
         $title = $event->title;
 
         foreach ($recipientIds as $recipientId) {

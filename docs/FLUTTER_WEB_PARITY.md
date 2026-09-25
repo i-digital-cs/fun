@@ -57,6 +57,7 @@ For each screen:
 | Ratings | `GET .../ratings` · `GET .../ratings/me` · `POST .../ratings` |
 | Identity | `GET/POST /api/identity` · `GET /api/identity/documents/{id}` |
 | Safety | `POST /api/reports` (`description` not `details`) · `GET /api/blocks` · block/unblock user |
+| Notifications | `GET /api/notifications` · `GET /api/notifications/unread-count` · `POST /api/notifications/{id}/read` · `POST /api/notifications/read-all` · `POST/DELETE /api/device-tokens` (FCM) |
 
 **Auth header:** Send `Authorization: Bearer {token}` on **all** authenticated calls **and** on public `GET /api/events` / `GET /api/events/{id}` so `join_action` is personalized.
 
@@ -99,7 +100,7 @@ For each screen:
 
 **Profile** tab: **Profile settings** + links to location / identity / blocks.
 
-**Topbar:** live search → suggestions via `GET /search/suggest` (wifi **Searching** while typed query awaits API); Enter / See all → Discover; locale; avatar menu (Profile · Location · Identity · Blocks · Logout).
+**Topbar:** live search → suggestions via `GET /search/suggest` (wifi **Searching** while typed query awaits API); Enter / See all → Discover; locale; **notifications bell** → `/notifications` (orange unread dot); avatar menu (Profile · Location · Identity · Blocks · Logout).
 *(Topbar chat icon → `/chats` with unread dot when messages arrive.)*
 
 ---
@@ -245,7 +246,7 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 
 | | |
 |--|--|
-| **Route** | `events.show` → `/events/{id}/{slug}` (bare `/events/{id}` **301** to canonical) |
+| **Route** | `events.show` → `/events/{id}/{slug}` (bare `/events/{id}` **301** to canonical). Member actions: `/events/{id}/{slug}/edit|chat|ticket|members|requests|…` via `event_route()` |
 | **Blade** | `events/show.blade.php` |
 | **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating`, `slug`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant) |
 | **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, **Event** + **BreadcrumbList** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use detail `coverUrl()`. |
@@ -431,10 +432,28 @@ Bookmark UI (web CSS `.ui-bookmark`) on Discover / dashboard / home cards and ev
 | | |
 |--|--|
 | **Blade** | `events/requests.blade.php` |
-| **API** | `GET .../requests`, `POST .../accept`, `POST .../reject` |
+| **API** | `GET .../requests`, `POST .../accept`, `POST .../reject` · join via `POST /api/events/{id}/join` (web `events.join`) |
 | **Authz** | Owner / can review |
 
 List pending requesters with Accept / Reject.
+
+**Organizer notify (web + API, same service):** when someone requests to join, the event **creator** receives `JoinRequestReceivedNotification` via **mail + database inbox + FCM** (FCM skipped until `FIREBASE_*` is configured). CTA / deep link → event requests. Failures are logged and do **not** block the join. Flutter: poll `GET /api/notifications` (and register FCM via `POST /api/device-tokens`); same `POST .../join` triggers the notify.
+
+---
+
+### 2.8a Notifications inbox `/notifications` *(required)*
+
+| | |
+|--|--|
+| **Blade** | `notifications/index.blade.php` |
+| **Web** | `GET /notifications` · mark-read · mark-all-read |
+| **API** | `GET /api/notifications` · `GET /api/notifications/unread-count` · `POST /api/notifications/{id}/read` · `POST /api/notifications/read-all` |
+| **Push** | `POST /api/device-tokens` `{token, platform: android\|ios\|web}` · `DELETE /api/device-tokens` `{token}` |
+| **Authz** | Authenticated + `account.active` |
+
+In-app list of database notifications (first type: `join_request`). Unread badge on web topbar / community navbar. Flutter screen `/notifications` + shell badge; on login register device token; on logout delete token. Push payload `data.type=join_request` + `event_id` / `api_path` for deep link to requests.
+
+**Firebase (server):** set `FIREBASE_PROJECT_ID` + `FIREBASE_CREDENTIALS` (absolute path to service-account JSON). Without them, mail + in-app still work; FCM is no-op (logged).
 
 ---
 
@@ -1180,6 +1199,7 @@ Use web admin at `https://www.funnity.com/admin`.
 | `/events/:id/ticket` | `/events/{id}/ticket` |
 | `/events/:id/edit` | `/events/{id}/edit` |
 | `/chats` | `/chats` |
+| `/notifications` | `/notifications` |
 | `/events/:id/chat` | `/events/{id}/chat` |
 | `/events/:id/requests` | `/events/{id}/requests` |
 | `/events/:id/members` | `/events/{id}/members` |
@@ -1230,8 +1250,9 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  
 14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
-15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; API adds `slug` for share text. Flutter GoRouter can stay `/events/:id`; optional: open/share canonical web URL using `slug`.  
+15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; **all member web actions** use `/events/{id}/{slug}/…` (edit, chat, ticket, members, requests, join, …) via `event_route()` / `event_show_url()`. Legacy `/events/{id}/edit|chat|…` **301** to the slug form. API stays `/api/events/{id}/…` (Flutter GoRouter can stay `/events/:id`).  
 16. **Publish SEO soft-warn** — `POST /api/events/{id}/publish` may include `seo_warning: true` + `message` when description is empty (still publishes). Flutter can toast the message; non-blocking.
+17. **Notifications + join-request organizer notify** — mail + DB inbox + FCM on `POST .../join` (web `/notifications`, API `/api/notifications` + `/api/device-tokens`). Flutter: inbox screen, unread badge, register FCM token after login (see §2.8a).
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 
@@ -1254,6 +1275,7 @@ Base: `https://www.funnity.com`
 | Create | `/events/create` |
 | My events | `/my-events` |
 | Favorites | `/favorites` |
+| Notifications | `/notifications` |
 | Event ticket | `/events/{id}/ticket` |
 | Profile | `/settings/profile` |
 | Location | `/settings/location` |

@@ -18,7 +18,7 @@
             id="event-chat"
             class="event-chat flex min-h-[28rem] flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm"
             data-event-id="{{ $event->id }}"
-            data-post-url="{{ route('events.chat.store', $event) }}"
+            data-post-url="{{ event_route('events.chat.store', $event) }}"
             data-channel="events.{{ $event->id }}.chat"
             data-user-id="{{ auth()->id() }}"
             data-csrf="{{ csrf_token() }}"
@@ -50,7 +50,7 @@
             </div>
 
             {{-- Uiverse.io by dorian_8749 — chat composer --}}
-            <form id="chat-form" method="POST" action="{{ route('events.chat.store', $event) }}" class="event-chat__composer">
+            <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" class="event-chat__composer">
                 @csrf
                 <div class="chat-composer">
                     <div class="chat-composer__shell">

@@ -25,6 +25,7 @@ class EventMembershipController extends Controller
     public function join(
         Request $request,
         Event $event,
+        string $slug,
         RequestToJoinEventService $service,
     ): RedirectResponse {
         $this->authorize('join', $event);
@@ -42,7 +43,7 @@ class EventMembershipController extends Controller
         return back()->with('status', __('events.join_requested'));
     }
 
-    public function requests(Event $event, UserBlockService $blocks): View
+    public function requests(Event $event, string $slug, UserBlockService $blocks): View
     {
         $this->authorize('reviewJoinRequests', $event);
 
@@ -63,6 +64,7 @@ class EventMembershipController extends Controller
 
     public function accept(
         Event $event,
+        string $slug,
         EventJoinRequest $joinRequest,
         ReviewJoinRequestService $service,
     ): RedirectResponse {
@@ -80,6 +82,7 @@ class EventMembershipController extends Controller
 
     public function reject(
         Event $event,
+        string $slug,
         EventJoinRequest $joinRequest,
         ReviewJoinRequestService $service,
     ): RedirectResponse {
@@ -95,7 +98,7 @@ class EventMembershipController extends Controller
         return back()->with('status', __('events.join_rejected'));
     }
 
-    public function members(Event $event, ResolveEventJoinActionService $joinActionService): View
+    public function members(Event $event, string $slug, ResolveEventJoinActionService $joinActionService): View
     {
         $this->authorize('view', $event);
 
@@ -114,6 +117,7 @@ class EventMembershipController extends Controller
 
     public function promote(
         Event $event,
+        string $slug,
         User $user,
         PromoteEventMemberService $service,
     ): RedirectResponse {
@@ -130,6 +134,7 @@ class EventMembershipController extends Controller
 
     public function demote(
         Event $event,
+        string $slug,
         User $user,
         PromoteEventMemberService $service,
     ): RedirectResponse {
@@ -147,6 +152,7 @@ class EventMembershipController extends Controller
     public function transfer(
         Request $request,
         Event $event,
+        string $slug,
         TransferEventOwnershipService $service,
     ): RedirectResponse {
         $this->authorize('manageMembers', $event);
@@ -166,7 +172,7 @@ class EventMembershipController extends Controller
         return back()->with('status', __('events.ownership_transferred'));
     }
 
-    public function leave(Event $event, LeaveEventService $service): RedirectResponse
+    public function leave(Event $event, string $slug, LeaveEventService $service): RedirectResponse
     {
         $this->authorize('leave', $event);
 
@@ -180,7 +186,7 @@ class EventMembershipController extends Controller
             ->with('status', __('events.left_event'));
     }
 
-    public function cancelJoinRequest(Event $event, CancelJoinRequestService $service): RedirectResponse
+    public function cancelJoinRequest(Event $event, string $slug, CancelJoinRequestService $service): RedirectResponse
     {
         $this->authorize('cancelJoinRequest', $event);
 
