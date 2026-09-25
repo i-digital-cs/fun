@@ -81,8 +81,10 @@ class _EventCardState extends State<EventCard> {
     final showJoinStatus = _showsJoinStatus(action);
     final showCancel =
         action == 'request_pending' && widget.onCancelJoin != null;
-    final cardHeight =
-        360.0 + (showCancel ? 78.0 : (showJoinStatus ? 40.0 : 0.0));
+    final hasAudience = event.sex != null && event.sex!.isNotEmpty;
+    final cardHeight = 360.0 +
+        (hasAudience ? 18.0 : 0.0) +
+        (showCancel ? 78.0 : (showJoinStatus ? 40.0 : 0.0));
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -366,6 +368,22 @@ class _EventCardState extends State<EventCard> {
                                 .withValues(alpha: 0.75),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      if (hasAudience) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          '${l10n.eventSex}: ${switch (event.sex) {
+                            'male' => l10n.sexMale,
+                            'female' => l10n.sexFemale,
+                            _ => l10n.sexMix,
+                          }}',
+                          style: TextStyle(
+                            color: const Color(0xFF4F46E5)
+                                .withValues(alpha: 0.85),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],

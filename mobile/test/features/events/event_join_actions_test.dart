@@ -90,4 +90,27 @@ void main() {
 
     expect(find.text('Event full'), findsOneWidget);
   });
+
+  testWidgets('sex_mismatch shows banner and no Join CTA', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        EventJoinActions(
+          joinAction: 'sex_mismatch',
+          acting: false,
+          onJoin: () {},
+          onLeave: () {},
+          onCancelJoin: () {},
+          onChat: () {},
+        ),
+      ),
+    );
+
+    expect(
+      find.text(
+        'This event is limited to a different audience than your profile sex.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Request to join'), findsNothing);
+  });
 }

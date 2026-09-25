@@ -538,6 +538,7 @@ class CreateEventFormCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
+            key: ValueKey('event-sex-$sex'),
             initialValue: sex,
             decoration: InputDecoration(
               labelText: l10n.eventSex,
@@ -550,7 +551,7 @@ class CreateEventFormCard extends StatelessWidget {
             ],
             onChanged: onSexChanged,
             validator: (v) =>
-                (v == null || v.isEmpty) ? l10n.sexRequired : null,
+                (v == null || v.isEmpty) ? l10n.eventSexHelp : null,
           ),
           const SizedBox(height: 12),
           TextFormField(
