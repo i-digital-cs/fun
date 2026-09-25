@@ -27,35 +27,70 @@ class SiteBrandingController extends Controller
             'display_name' => $settings->displayName(),
             'logo_url' => $settings->logoUrl(),
             'app' => $settings->appUpdatePayload($locale),
-            // Public Reverb client options only (never secret / app id).
+            // Public client options only (never secret / app id).
             'broadcast' => $this->broadcastClientConfig(),
         ]);
     }
 
     /**
-     * @return array{enabled: bool, key: ?string, host: ?string, port: ?int, scheme: ?string}|null
+     * @return array{
+     *     enabled: bool,
+     *     driver: ?string,
+     *     key: ?string,
+     *     cluster: ?string,
+     *     host: ?string,
+     *     port: ?int,
+     *     scheme: ?string
+     * }
      */
-    private function broadcastClientConfig(): ?array
+    private function broadcastClientConfig(): array
     {
         $driver = (string) config('broadcasting.default');
-        if ($driver !== 'reverb') {
-            return ['enabled' => false, 'key' => null, 'host' => null, 'port' => null, 'scheme' => null];
+
+        if ($driver === 'pusher') {
+            $key = config('broadcasting.connections.pusher.key');
+            $cluster = config('broadcasting.connections.pusher.options.cluster');
+            $enabled = is_string($key) && $key !== '';
+
+            return [
+                'enabled' => $enabled,
+                'driver' => 'pusher',
+                'key' => $enabled ? $key : null,
+                'cluster' => $enabled ? (is_string($cluster) && $cluster !== '' ? $cluster : 'mt1') : null,
+                'host' => null,
+                'port' => null,
+                'scheme' => $enabled ? 'https' : null,
+            ];
         }
 
-        $key = config('broadcasting.connections.reverb.key');
-        $host = config('broadcasting.connections.reverb.options.host');
-        $port = config('broadcasting.connections.reverb.options.port');
-        $scheme = config('broadcasting.connections.reverb.options.scheme');
+        if ($driver === 'reverb') {
+            $key = config('broadcasting.connections.reverb.key');
+            $host = config('broadcasting.connections.reverb.options.host');
+            $port = config('broadcasting.connections.reverb.options.port');
+            $scheme = config('broadcasting.connections.reverb.options.scheme');
 
-        $enabled = is_string($key) && $key !== ''
-            && is_string($host) && $host !== '';
+            $enabled = is_string($key) && $key !== ''
+                && is_string($host) && $host !== '';
+
+            return [
+                'enabled' => $enabled,
+                'driver' => 'reverb',
+                'key' => $enabled ? $key : null,
+                'cluster' => null,
+                'host' => $enabled ? $host : null,
+                'port' => $enabled ? (int) ($port ?: 80) : null,
+                'scheme' => $enabled ? (string) ($scheme ?: 'https') : null,
+            ];
+        }
 
         return [
-            'enabled' => $enabled,
-            'key' => $enabled ? $key : null,
-            'host' => $enabled ? $host : null,
-            'port' => $enabled ? (int) ($port ?: 80) : null,
-            'scheme' => $enabled ? (string) ($scheme ?: 'https') : null,
+            'enabled' => false,
+            'driver' => null,
+            'key' => null,
+            'cluster' => null,
+            'host' => null,
+            'port' => null,
+            'scheme' => null,
         ];
     }
 }
