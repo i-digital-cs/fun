@@ -6,6 +6,12 @@ plugins {
 
 import java.util.Properties
 
+// Apply Google Services only when google-services.json is present
+// (see mobile/docs/FIREBASE_PUSH.md). Keeps debug builds working without Firebase.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 // BUILD-001: Production release signing + ARM ABIs (see mobile/docs/RELEASE.md).
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()

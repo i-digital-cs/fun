@@ -457,7 +457,7 @@ Flutter: poll `GET /api/notifications` for join request / accept; same `POST ...
 
 In-app list of database notifications (`join_request`, `join_accepted`). Unread badge on web topbar / community navbar **and Flutter topbar / sidebar** (`/notifications`, polled unread-count). Flutter: open inbox from bell; tap `join_request` → `/events/:id/requests`, `join_accepted` → event detail.
 
-**FCM push (outside app):** used for **chat messages** only (`ChatMessagePushNotification`). Register via `POST /api/device-tokens`; logout → `DELETE`. Payload `data.type=chat_message` + `event_id` / `api_path` (body does **not** include message text — privacy). Join request/accept stay in the internal inbox (no FCM).
+**FCM push (outside app):** join request, join accept, and chat messages (`JoinRequestReceivedNotification`, `JoinRequestAcceptedNotification`, `ChatMessagePushNotification`). Flutter registers via `POST /api/device-tokens` after login (requires `google-services.json` — see `mobile/docs/FIREBASE_PUSH.md`). Logout → `DELETE`. Chat push body does **not** include message text (privacy). Inbox still stores join request/accept.
 
 **Firebase (server):** set `FIREBASE_PROJECT_ID` + `FIREBASE_CREDENTIALS`. Without them, mail + in-app still work; chat FCM is no-op (logged).
 

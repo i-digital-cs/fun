@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Event;
 use App\Models\User;
+use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -22,8 +23,7 @@ class JoinRequestAcceptedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        // Internal inbox only (no FCM) — join lifecycle stays in-app.
-        return ['database'];
+        return ['database', FcmChannel::class];
     }
 
     /**
@@ -43,6 +43,24 @@ class JoinRequestAcceptedNotification extends Notification
             'accepter_name' => $this->accepter->name,
             'url' => event_show_url($this->event),
             'api_path' => '/events/'.$this->event->id,
+        ];
+    }
+
+    /**
+     * @return array{title: string, body: string, data: array<string, string>}
+     */
+    public function toFcm(object $notifiable): array
+    {
+        $payload = $this->toArray($notifiable);
+
+        return [
+            'title' => (string) $payload['title'],
+            'body' => (string) $payload['body'],
+            'data' => [
+                'type' => 'join_accepted',
+                'event_id' => (string) $this->event->id,
+                'api_path' => (string) $payload['api_path'],
+            ],
         ];
     }
 }
