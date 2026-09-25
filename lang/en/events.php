@@ -137,4 +137,11 @@ return [
     'favorited' => 'Added to favorites.',
     'unfavorited' => 'Removed from favorites.',
     'favorite_requires_active' => 'Complete identity verification to favorite events.',
+    'mail_greeting' => 'Hi :name,',
+    'mail_thanks' => 'Thanks',
+    'mail_join_request_subject' => '[:app] New join request — :event',
+    'mail_join_request_heading' => 'New join request',
+    'mail_join_request_body' => ':requester asked to join “:event”.',
+    'mail_join_request_cta' => 'Review join requests',
+    'mail_join_request_event_link' => 'Event page',
 ];

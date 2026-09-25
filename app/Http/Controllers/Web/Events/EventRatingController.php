@@ -14,6 +14,7 @@ class EventRatingController extends Controller
     public function store(
         StoreEventRatingRequest $request,
         Event $event,
+        string $slug,
         RateEventCreatorService $service,
     ): RedirectResponse {
         $this->authorize('rate', $event);

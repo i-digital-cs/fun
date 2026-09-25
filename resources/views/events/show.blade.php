@@ -161,7 +161,7 @@
             <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-5">
                 @auth
                     @if ($joinAction->value === 'request_to_join' || $joinAction->value === 'request_rejected')
-                        <form method="POST" action="{{ route('events.join', $event) }}">
+                        <form method="POST" action="{{ event_route('events.join', $event) }}">
                             @csrf
                             <button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:shadow-xl hover:shadow-orange-500/45 hover:brightness-105">{{ __('events.request_to_join') }}</button>
                         </form>
@@ -170,7 +170,7 @@
                         @endif
                     @elseif ($joinAction->value === 'request_pending')
                         <span class="inline-flex items-center rounded-xl border border-slate-200/70 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-500">{{ __('events.request_pending') }}</span>
-                        <form method="POST" action="{{ route('events.join.cancel', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_cancel_join') }}">
+                        <form method="POST" action="{{ event_route('events.join.cancel', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_cancel_join') }}">
                             @csrf
                             <x-ui.cancel-btn type="submit" :label="__('events.cancel_join')" />
                         </form>
@@ -178,11 +178,11 @@
                         <span class="inline-flex items-center rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-800">{{ __('events.sex_mismatch') }}</span>
                     @elseif ($joinAction->value === 'joined')
                         <span class="inline-flex items-center rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700">{{ __('events.joined') }}</span>
-                        <a href="{{ route('events.ticket', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.view_ticket') }}</a>
-                        <a href="{{ route('events.chat', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition hover:brightness-105">{{ __('chat.open_chat') }}</a>
-                        <a href="{{ route('events.members', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.members') }}</a>
+                        <a href="{{ event_route('events.ticket', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.view_ticket') }}</a>
+                        <a href="{{ event_route('events.chat', $event) }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition hover:brightness-105">{{ __('chat.open_chat') }}</a>
+                        <a href="{{ event_route('events.members', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.members') }}</a>
                         @unless($event->isOwnedBy(auth()->user()))
-                            <form method="POST" action="{{ route('events.leave', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_leave_event') }}">
+                            <form method="POST" action="{{ event_route('events.leave', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_leave_event') }}">
                                 @csrf
                                 <x-ui.cancel-btn type="submit" :label="__('events.leave_event')" />
                             </form>
@@ -192,23 +192,23 @@
                     @endif
 
                     @can('reviewJoinRequests', $event)
-                        <a href="{{ route('events.requests', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.join_requests') }}</a>
-                        <a href="{{ route('events.members', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.manage_members') }}</a>
+                        <a href="{{ event_route('events.requests', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.join_requests') }}</a>
+                        <a href="{{ event_route('events.members', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.manage_members') }}</a>
                     @endcan
 
                     @can('update', $event)
-                        <a href="{{ route('events.edit', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.edit_event') }}</a>
+                        <a href="{{ event_route('events.edit', $event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.edit_event') }}</a>
                         @if ($event->status->value === 'draft')
-                            <form method="POST" action="{{ route('events.publish', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.publish') }}</button></form>
+                            <form method="POST" action="{{ event_route('events.publish', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-105">{{ __('events.publish') }}</button></form>
                         @endif
                         @if (in_array($event->status->value, ['draft', 'published'], true))
-                            <form method="POST" action="{{ route('events.cancel', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_cancel_event') }}">
+                            <form method="POST" action="{{ event_route('events.cancel', $event) }}" class="cancel-btn-slot" data-confirm="{{ __('ui.confirm_cancel_event') }}">
                                 @csrf
                                 <x-ui.cancel-btn type="submit" :label="__('events.cancel')" />
                             </form>
                         @endif
                         @if ($event->status->value === 'published')
-                            <form method="POST" action="{{ route('events.complete', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105">{{ __('events.complete') }}</button></form>
+                            <form method="POST" action="{{ event_route('events.complete', $event) }}">@csrf<button class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105">{{ __('events.complete') }}</button></form>
                         @endif
                     @endcan
                 @else
@@ -275,7 +275,7 @@
             @if ($userRating)
                 <p class="mt-1 text-sm text-slate-500">{{ __('ratings.your_rating') }}: {{ $userRating->stars }}/5</p>
             @endif
-            <form method="POST" action="{{ route('events.ratings.store', $event) }}" class="mt-4 space-y-4">
+            <form method="POST" action="{{ event_route('events.ratings.store', $event) }}" class="mt-4 space-y-4">
                 @csrf
                 <div>
                     <label for="stars" class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('ratings.stars') }}</label>

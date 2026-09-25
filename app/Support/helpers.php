@@ -252,6 +252,18 @@ if (! function_exists('event_show_url')) {
     }
 }
 
+if (! function_exists('event_route')) {
+    /**
+     * Named member event route under /events/{id}/{slug}/….
+     *
+     * @param  array<string, mixed>  $parameters
+     */
+    function event_route(string $name, \App\Models\Event $event, array $parameters = []): string
+    {
+        return route($name, array_merge($event->showRoute(), $parameters));
+    }
+}
+
 if (! function_exists('user_initials')) {
     function user_initials(?string $name): string
     {

@@ -245,7 +245,7 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 
 | | |
 |--|--|
-| **Route** | `events.show` → `/events/{id}/{slug}` (bare `/events/{id}` **301** to canonical) |
+| **Route** | `events.show` → `/events/{id}/{slug}` (bare `/events/{id}` **301** to canonical). Member actions: `/events/{id}/{slug}/edit|chat|ticket|members|requests|…` via `event_route()` |
 | **Blade** | `events/show.blade.php` |
 | **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating`, `slug`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant) |
 | **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, **Event** + **BreadcrumbList** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use detail `coverUrl()`. |
@@ -431,10 +431,12 @@ Bookmark UI (web CSS `.ui-bookmark`) on Discover / dashboard / home cards and ev
 | | |
 |--|--|
 | **Blade** | `events/requests.blade.php` |
-| **API** | `GET .../requests`, `POST .../accept`, `POST .../reject` |
+| **API** | `GET .../requests`, `POST .../accept`, `POST .../reject` · join via `POST /api/events/{id}/join` (web `events.join`) |
 | **Authz** | Owner / can review |
 
 List pending requesters with Accept / Reject.
+
+**Organizer notify (web + API, same service):** when someone requests to join, the event **creator** is emailed (`JoinRequestReceivedMail`) with a CTA to `/events/{id}/requests`. Mail failures are logged and do **not** block the join. Flutter does not need a new endpoint — same `POST .../join` triggers the email. Future: in-app / push inbox (not shipped yet).
 
 ---
 
@@ -1230,8 +1232,9 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  
 14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
-15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; API adds `slug` for share text. Flutter GoRouter can stay `/events/:id`; optional: open/share canonical web URL using `slug`.  
+15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; **all member web actions** use `/events/{id}/{slug}/…` (edit, chat, ticket, members, requests, join, …) via `event_route()` / `event_show_url()`. Legacy `/events/{id}/edit|chat|…` **301** to the slug form. API stays `/api/events/{id}/…` (Flutter GoRouter can stay `/events/:id`).  
 16. **Publish SEO soft-warn** — `POST /api/events/{id}/publish` may include `seo_warning: true` + `message` when description is empty (still publishes). Flutter can toast the message; non-blocking.
+17. **Join-request organizer notify** — email to creator on `POST .../join` (done). Flutter: no extra API; optional later in-app/push when a notifications channel exists.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 

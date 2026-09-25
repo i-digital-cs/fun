@@ -239,7 +239,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function edit(Event $event): View
+    public function edit(Event $event, string $slug): View
     {
         $this->authorize('update', $event);
 
@@ -253,6 +253,7 @@ class EventController extends Controller
     public function update(
         UpdateEventRequest $request,
         Event $event,
+        string $slug,
         UpdateEventService $service,
     ): RedirectResponse {
         $this->authorize('update', $event);
@@ -272,7 +273,7 @@ class EventController extends Controller
             ->with('status', __('events.updated'));
     }
 
-    public function publish(Event $event, TransitionEventStatusService $service): RedirectResponse
+    public function publish(Event $event, string $slug, TransitionEventStatusService $service): RedirectResponse
     {
         $this->authorize('publish', $event);
 
@@ -289,7 +290,7 @@ class EventController extends Controller
         return back()->with('status', $message);
     }
 
-    public function cancel(Event $event, TransitionEventStatusService $service): RedirectResponse
+    public function cancel(Event $event, string $slug, TransitionEventStatusService $service): RedirectResponse
     {
         $this->authorize('cancel', $event);
 
@@ -302,7 +303,7 @@ class EventController extends Controller
         return back()->with('status', __('events.cancelled'));
     }
 
-    public function complete(Event $event, TransitionEventStatusService $service): RedirectResponse
+    public function complete(Event $event, string $slug, TransitionEventStatusService $service): RedirectResponse
     {
         $this->authorize('complete', $event);
 

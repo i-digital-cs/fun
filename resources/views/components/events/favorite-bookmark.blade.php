@@ -9,7 +9,7 @@
         @php($inputId = 'favorite-'.$event->id.'-'.$idSuffix)
         <form
             method="POST"
-            action="{{ route('events.favorite.toggle', $event) }}"
+            action="{{ event_route('events.favorite.toggle', $event) }}"
             class="ui-bookmark"
             title="{{ $favorited ? __('events.unfavorite') : __('events.favorite') }}"
             onclick="event.stopPropagation()"

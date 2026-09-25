@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'account.active' => EnsureAccountIsActive::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'verified.email' => EnsureEmailIsVerified::class,
+            'event.slug' => \App\Http\Middleware\EnsureEventSlugMatches::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

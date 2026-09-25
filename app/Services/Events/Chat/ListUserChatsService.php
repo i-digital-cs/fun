@@ -85,7 +85,7 @@ class ListUserChatsService
                     'event_id' => $event->id,
                     'title' => $event->title,
                     'city' => $event->city?->localizedName(),
-                    'chat_url' => route('events.chat', $event),
+                    'chat_url' => event_route('events.chat', $event),
                     'unread_count' => $unread,
                     'last_message' => $last === null ? null : [
                         'id' => $last->id,

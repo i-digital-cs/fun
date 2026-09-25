@@ -28,19 +28,19 @@
                                     <div class="flex flex-wrap gap-3">
                                         @can('manageMembers', $event)
                                             @if ($member->role->value === 'member')
-                                                <form method="POST" action="{{ route('events.members.promote', [$event, $member->user_id]) }}">
+                                                <form method="POST" action="{{ event_route('events.members.promote', $event, ['user' => $member->user_id]) }}">
                                                     @csrf
                                                     <button class="rounded-lg px-2 py-1 font-medium text-indigo-600 transition hover:bg-indigo-50">{{ __('events.promote') }}</button>
                                                 </form>
                                             @endif
                                             @if ($member->role->value === 'admin')
-                                                <form method="POST" action="{{ route('events.members.demote', [$event, $member->user_id]) }}">
+                                                <form method="POST" action="{{ event_route('events.members.demote', $event, ['user' => $member->user_id]) }}">
                                                     @csrf
                                                     <button class="rounded-lg px-2 py-1 font-medium text-slate-500 transition hover:bg-slate-50">{{ __('events.demote') }}</button>
                                                 </form>
                                             @endif
                                             @if ($member->role->value !== 'owner')
-                                                <form method="POST" action="{{ route('events.transfer', $event) }}">
+                                                <form method="POST" action="{{ event_route('events.transfer', $event) }}">
                                                     @csrf
                                                     <input type="hidden" name="user_id" value="{{ $member->user_id }}">
                                                     <button class="rounded-lg px-2 py-1 font-medium text-orange-600 transition hover:bg-orange-50">{{ __('events.transfer_ownership') }}</button>

@@ -51,6 +51,7 @@ class EventFavoriteController extends Controller
     public function toggle(
         Request $request,
         Event $event,
+        string $slug,
         ToggleEventFavoriteService $service,
     ): RedirectResponse {
         $this->authorize('view', $event);
