@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -400,6 +399,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get venueTba => 'المكان غير محدد';
 
   @override
+  String get venueHint => 'اسم المقهى، الحديقة، المبنى…';
+
+  @override
+  String get venueSuggestHelp =>
+      'ابدأ بكتابة اسم المكان — اختر اقتراحًا لوضع الدبوس.';
+
+  @override
   String get locationTba => 'الموقع غير محدد';
 
   @override
@@ -407,7 +413,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get placeOnMapHelp =>
-      'الصق رابط مشاركة من خرائط جوجل أو OpenStreetMap. بدون مفتاح Google — نقرأ الإحداثيات من الرابط.';
+      'اكتب اسم المكان، أو اضغط على الخريطة، أو الصق رابط خرائط. الدبوس هو نقطة اللقاء.';
 
   @override
   String get placeTapHint => 'اضغط على الخريطة لوضع الدبوس أو تحريكه.';
@@ -426,10 +432,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get placePinned =>
-      'تم حفظ الدبوس — يمكن للضيوف فتح الموقع في الخرائط.';
+      'تم حفظ الدبوس — يمكن للضيوف فتح الموقع في خرائط جوجل.';
 
   @override
   String get placeFromLink => 'تم قراءة الموقع من رابط الخرائط.';
+
+  @override
+  String get placeFromSuggest => 'تم تعيين الموقع من بحث المكان.';
 
   @override
   String get placeCleared => 'تم مسح دبوس الخريطة.';
@@ -1002,7 +1011,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get googleSignInFailed =>
-      'فشل تسجيل الدخول عبر Google. تأكد من إعداد Google لهذا التطبيق.';
+      'فشل تسجيل الدخول عبر Google. أضف SHA-1 لهذا الجهاز في Firebase (إعدادات المشروع → تطبيق Android)، فعّل تسجيل Google، ثم أعد البناء.';
 
   @override
   String get loadMore => 'تحميل المزيد';

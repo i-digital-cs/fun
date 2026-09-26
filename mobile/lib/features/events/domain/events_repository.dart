@@ -1,5 +1,6 @@
 import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
 
 class DiscoverFilters {
   const DiscoverFilters({
@@ -136,4 +137,8 @@ abstract class EventsRepository {
   Future<Result<({double lat, double lng, String mapsUrl})>> resolveMapsUrl(
     String url,
   );
+  Future<Result<List<PlaceSuggestion>>> suggestPlaces(
+    String query, {
+    int? cityId,
+  });
 }

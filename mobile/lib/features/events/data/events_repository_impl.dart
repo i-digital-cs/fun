@@ -2,6 +2,7 @@ import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/events/data/events_remote_source.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
+import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
 
 class EventsRepositoryImpl implements EventsRepository {
   EventsRepositoryImpl(this._remote);
@@ -112,4 +113,10 @@ class EventsRepositoryImpl implements EventsRepository {
   Future<Result<({double lat, double lng, String mapsUrl})>> resolveMapsUrl(
     String url,
   ) => _remote.resolveMapsUrl(url);
+
+  @override
+  Future<Result<List<PlaceSuggestion>>> suggestPlaces(
+    String query, {
+    int? cityId,
+  }) => _remote.suggestPlaces(query, cityId: cityId);
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,7 +64,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _error = null;
     });
     try {
-      final googleUser = await GoogleSignInHelper.client().signIn();
+      final googleUser = await GoogleSignInHelper.signIn();
       if (googleUser == null) {
         if (!mounted) return;
         setState(() => _submitting = false);
@@ -105,11 +106,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           AppLocalizations.of(context).googleSignInFailed,
         );
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = AppLocalizations.of(context).googleSignInFailed;
+        _error = kDebugMode
+            ? '${AppLocalizations.of(context).googleSignInFailed} ($e)'
+            : AppLocalizations.of(context).googleSignInFailed;
       });
     }
   }

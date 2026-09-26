@@ -119,18 +119,19 @@
 
             @if ($event->hasPlacePin())
                 @php($googleMapsUrl = app(\App\Support\MapsUrlParser::class)->googleMapsOpenUrl((float) $event->latitude, (float) $event->longitude))
-                <div
-                    class="overflow-hidden rounded-2xl border border-slate-200/80"
-                    role="link"
-                    tabindex="0"
+                <a
+                    href="{{ $googleMapsUrl }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="block overflow-hidden rounded-2xl border border-slate-200/80 no-underline"
                     aria-label="{{ __('events.open_in_maps') }}"
                     data-event-place-viewer
                     data-lat="{{ $event->latitude }}"
                     data-lng="{{ $event->longitude }}"
                     data-maps-open-url="{{ $googleMapsUrl }}"
                 >
-                    <div data-place-map class="h-52 cursor-pointer bg-slate-100 sm:h-64"></div>
-                </div>
+                    <div data-place-map class="pointer-events-none h-52 bg-slate-100 sm:h-64"></div>
+                </a>
             @endif
 
             @if (filled($event->description))

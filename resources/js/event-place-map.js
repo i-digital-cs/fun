@@ -1,6 +1,7 @@
 /**
  * Free place picker: OpenStreetMap tiles via Leaflet CDN (no Google API key).
  * Paste Google Maps / OSM share links — coords are parsed client-side when possible.
+ * Venue typing uses /api/places/suggest (Photon / Nominatim on the server).
  */
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
@@ -67,6 +68,10 @@ function osmUrl(lat, lng) {
     return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 }
 
+function googleMapsUrl(lat, lng) {
+    return `https://www.google.com/maps?q=${lat},${lng}`;
+}
+
 function cityCentersFromSelect(select) {
     const map = {};
     if (!select) return map;
@@ -80,6 +85,23 @@ function cityCentersFromSelect(select) {
     return map;
 }
 
+function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), wait);
+    };
+}
+
+function authHeaders() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    return {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+    };
+}
+
 async function initPicker(root) {
     const mapEl = root.querySelector('[data-place-map]');
     const latInput = root.querySelector('[data-place-lat]');
@@ -87,6 +109,11 @@ async function initPicker(root) {
     const urlInput = root.querySelector('[data-place-url]');
     const statusEl = root.querySelector('[data-place-status]');
     const clearBtn = root.querySelector('[data-place-clear]');
+    const venueInput = document.getElementById('venue') || root.querySelector('[data-place-venue]');
+    const suggestPanel =
+        venueInput?.closest('[data-place-venue-wrap]')?.querySelector('[data-place-suggest]')
+        || document.querySelector('[data-place-suggest]')
+        || root.querySelector('[data-place-suggest]');
     const citySelect = document.getElementById('city_id');
     if (!mapEl || !latInput || !lngInput) return;
 
@@ -109,6 +136,12 @@ async function initPicker(root) {
 
     const setStatus = (text) => {
         if (statusEl) statusEl.textContent = text || '';
+    };
+
+    const hideSuggest = () => {
+        if (!suggestPanel) return;
+        suggestPanel.hidden = true;
+        suggestPanel.innerHTML = '';
     };
 
     const placeMarker = (lat, lng, { writeUrl = true, zoom = true } = {}) => {
@@ -148,21 +181,18 @@ async function initPicker(root) {
             return;
         }
 
-        if (!raw.trim() || !/^https?:\/\//i.test(raw.trim()) && !/maps\.|goo\.gl|openstreetmap/i.test(raw)) {
+        if (!raw.trim() || (!/^https?:\/\//i.test(raw.trim()) && !/maps\.|goo\.gl|openstreetmap/i.test(raw))) {
             return;
         }
 
         setStatus(root.dataset.statusResolving || '…');
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.content;
             const res = await fetch('/api/maps/resolve', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+                    ...authHeaders(),
                 },
                 body: JSON.stringify({ url: raw.trim() }),
             });
@@ -181,6 +211,71 @@ async function initPicker(root) {
     urlInput?.addEventListener('change', applyUrl);
     urlInput?.addEventListener('paste', () => setTimeout(applyUrl, 50));
 
+    const renderSuggest = (items) => {
+        if (!suggestPanel) return;
+        if (!items.length) {
+            hideSuggest();
+            return;
+        }
+        suggestPanel.innerHTML = items
+            .map(
+                (item, index) => `
+            <button
+                type="button"
+                class="block w-full px-3 py-2.5 text-start text-sm text-slate-800 hover:bg-indigo-50"
+                data-suggest-index="${index}"
+            >
+                <span class="font-medium">${escapeHtml(item.label)}</span>
+            </button>`
+            )
+            .join('');
+        suggestPanel.hidden = false;
+        suggestPanel.querySelectorAll('[data-suggest-index]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const item = items[Number(btn.dataset.suggestIndex)];
+                if (!item) return;
+                if (venueInput) venueInput.value = item.label;
+                placeMarker(item.latitude, item.longitude);
+                setStatus(root.dataset.statusFromSuggest || root.dataset.statusPinned || '');
+                hideSuggest();
+            });
+        });
+    };
+
+    const fetchSuggest = debounce(async () => {
+        if (!venueInput || !suggestPanel) return;
+        const q = venueInput.value.trim();
+        if (q.length < 2) {
+            hideSuggest();
+            return;
+        }
+        try {
+            const url = new URL('/api/places/suggest', window.location.origin);
+            url.searchParams.set('q', q);
+            url.searchParams.set('limit', '8');
+            if (citySelect?.value) url.searchParams.set('city_id', citySelect.value);
+            const res = await fetch(url.toString(), {
+                credentials: 'same-origin',
+                headers: authHeaders(),
+            });
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || !Array.isArray(body?.data)) {
+                hideSuggest();
+                return;
+            }
+            renderSuggest(body.data);
+        } catch {
+            hideSuggest();
+        }
+    }, 320);
+
+    venueInput?.addEventListener('input', fetchSuggest);
+    venueInput?.addEventListener('focus', fetchSuggest);
+    venueInput?.addEventListener('blur', () => {
+        // Allow click on suggestion before hide.
+        setTimeout(hideSuggest, 180);
+    });
+
     clearBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         latInput.value = '';
@@ -190,6 +285,7 @@ async function initPicker(root) {
             map.removeLayer(marker);
             marker = null;
         }
+        hideSuggest();
         setStatus(root.dataset.statusCleared || '');
     });
 
@@ -203,17 +299,27 @@ async function initPicker(root) {
     setTimeout(() => map.invalidateSize(), 100);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+}
+
 async function initViewer(root) {
     const mapEl = root.querySelector('[data-place-map]');
     const lat = Number(root.dataset.lat);
     const lng = Number(root.dataset.lng);
     if (!mapEl || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
+    // Clicks go to the wrapping <a href="Google Maps"> — Leaflet must not capture them.
+    mapEl.style.pointerEvents = 'none';
+
     loadCss(LEAFLET_CSS);
     const L = await loadScript(LEAFLET_JS);
     if (!L) return;
 
-    // Preview only — open Google Maps via the wrapping <a> (or fallback click).
     const map = L.map(mapEl, {
         scrollWheelZoom: false,
         dragging: false,
@@ -228,28 +334,19 @@ async function initViewer(root) {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
     }).addTo(map);
-    L.marker([lat, lng]).addTo(map);
+    L.marker([lat, lng], { interactive: false }).addTo(map);
     setTimeout(() => map.invalidateSize(), 100);
 
-    const openUrl =
-        root.dataset.mapsOpenUrl ||
-        `https://www.google.com/maps?q=${lat},${lng}`;
-
-    const openGoogleMaps = (event) => {
-        // Ignore clicks on Leaflet attribution / external links inside the map.
-        if (event.target.closest('a')) return;
-        event.preventDefault();
-        window.open(openUrl, '_blank', 'noopener,noreferrer');
-    };
-
-    root.style.cursor = 'pointer';
-    root.addEventListener('click', openGoogleMaps);
-    root.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
+    // Fallback if root is not an <a> (older markup).
+    if (root.tagName !== 'A') {
+        const openUrl = root.dataset.mapsOpenUrl || googleMapsUrl(lat, lng);
+        root.style.cursor = 'pointer';
+        root.addEventListener('click', (event) => {
+            if (event.target.closest('a')) return;
             event.preventDefault();
             window.open(openUrl, '_blank', 'noopener,noreferrer');
-        }
-    });
+        });
+    }
 }
 
 export function initEventPlaceMaps() {

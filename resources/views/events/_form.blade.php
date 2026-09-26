@@ -34,7 +34,24 @@
 </div>
 <div>
     <label class="{{ $labelClass }}" for="venue">{{ __('events.venue') }}</label>
-    <input id="venue" name="venue" value="{{ old('venue', $event?->venue) }}" class="{{ $inputClass }}" placeholder="{{ __('events.venue_placeholder') }}">
+    <div class="relative" data-place-venue-wrap>
+        <input
+            id="venue"
+            name="venue"
+            value="{{ old('venue', $event?->venue) }}"
+            class="{{ $inputClass }}"
+            placeholder="{{ __('events.venue_placeholder') }}"
+            data-place-venue
+            autocomplete="off"
+        >
+        <div
+            data-place-suggest
+            hidden
+            class="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg fancy-scroll"
+            role="listbox"
+        ></div>
+    </div>
+    <p class="mt-1 text-xs text-slate-500">{{ __('events.venue_suggest_help') }}</p>
 </div>
 @php($placeLat = old('latitude', $event?->latitude))
 @php($placeLng = old('longitude', $event?->longitude))
@@ -48,6 +65,7 @@
     data-default-lng="{{ $defaultLng }}"
     data-status-pinned="{{ __('events.place_pinned') }}"
     data-status-from-link="{{ __('events.place_from_link') }}"
+    data-status-from-suggest="{{ __('events.place_from_suggest') }}"
     data-status-cleared="{{ __('events.place_cleared') }}"
     data-status-resolving="{{ __('events.place_resolving') }}"
     data-status-unresolved="{{ __('events.maps_url_unresolved') }}"

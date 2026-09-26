@@ -6,6 +6,11 @@ Future<bool> launchSafeExternalUrl(String? raw) async {
   final uri = Uri.tryParse(raw.trim());
   if (uri == null) return false;
   if (uri.scheme != 'http' && uri.scheme != 'https') return false;
-  if (!await canLaunchUrl(uri)) return false;
-  return launchUrl(uri, mode: LaunchMode.externalApplication);
+  // Do not gate on canLaunchUrl — on Android 11+ it often returns false for
+  // https unless <queries> lists VIEW intents, which silently blocked Maps.
+  try {
+    return await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    return false;
+  }
 }

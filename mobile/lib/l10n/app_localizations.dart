@@ -848,6 +848,18 @@ abstract class AppLocalizations {
   /// **'Venue TBA'**
   String get venueTba;
 
+  /// No description provided for @venueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Café name, park, building…'**
+  String get venueHint;
+
+  /// No description provided for @venueSuggestHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start typing a place — pick a suggestion to drop the pin.'**
+  String get venueSuggestHelp;
+
   /// No description provided for @locationTba.
   ///
   /// In en, this message translates to:
@@ -863,7 +875,7 @@ abstract class AppLocalizations {
   /// No description provided for @placeOnMapHelp.
   ///
   /// In en, this message translates to:
-  /// **'Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.'**
+  /// **'Type a place name, tap the map, or paste a Maps link. The pin is the meeting point.'**
   String get placeOnMapHelp;
 
   /// No description provided for @placeTapHint.
@@ -899,7 +911,7 @@ abstract class AppLocalizations {
   /// No description provided for @placePinned.
   ///
   /// In en, this message translates to:
-  /// **'Pin saved — guests can open this place in maps.'**
+  /// **'Pin saved — guests open this place in Google Maps.'**
   String get placePinned;
 
   /// No description provided for @placeFromLink.
@@ -907,6 +919,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location read from your maps link.'**
   String get placeFromLink;
+
+  /// No description provided for @placeFromSuggest.
+  ///
+  /// In en, this message translates to:
+  /// **'Location set from place search.'**
+  String get placeFromSuggest;
 
   /// No description provided for @placeCleared.
   ///
@@ -1985,7 +2003,7 @@ abstract class AppLocalizations {
   /// No description provided for @googleSignInFailed.
   ///
   /// In en, this message translates to:
-  /// **'Google sign-in failed. Check that Google is configured for this app.'**
+  /// **'Google sign-in failed. Add this PC\'s SHA-1 in Firebase (Project settings → Android app), enable Google sign-in, then rebuild.'**
   String get googleSignInFailed;
 
   /// No description provided for @loadMore.

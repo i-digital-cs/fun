@@ -339,7 +339,7 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 | cost_per_person | no |
 | image (jpeg/png/webp) | no |
 
-**Place on map (free):** Web create/edit uses **Leaflet + OpenStreetMap tiles** (CDN, no credentials). Tap map to drop/drag pin, or paste a Maps share link. Short Google links are resolved via `POST /api/maps/resolve` (follows redirects, no Google API key). Placeholder venue text (`Venue` / `المكان`) is replaced with a free Nominatim reverse-geocode label (or city name). Flutter create/edit accepts the same `maps_url` (+ optional lat/lng); detail exposes `maps_open_url` / **Open in maps** via `url_launcher`.
+**Place on map (free):** Web create/edit uses **Leaflet + OpenStreetMap tiles** (CDN, no credentials). **Type a venue** → `GET /api/places/suggest` (Photon, Nominatim fallback) drops the pin. Tap map to drop/drag pin, or paste a Maps share link. Short Google links are resolved via `POST /api/maps/resolve` (follows redirects, no Google API key). Placeholder venue text (`Venue` / `المكان`) is replaced with a free Nominatim reverse-geocode label (or city name). Flutter create/edit matches (venue autocomplete + pin + link). Detail **Open in maps** / map tap opens **Google Maps** (`https://www.google.com/maps?q={lat},{lng}`) — web wraps preview in `<a>`; Flutter uses `url_launcher` + Android VIEW `<queries>`.
 
 **API location fields (every event):**
 
@@ -354,7 +354,7 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
     "latitude": 30.0266,
     "longitude": 31.2234,
     "maps_url": "https://www.openstreetmap.org/…",
-    "maps_open_url": "https://www.openstreetmap.org/…",
+    "maps_open_url": "https://www.google.com/maps?q=30.0444,31.2357",
     "has_place_pin": true,
     "city": { "id": 1, "name": "Cairo", "latitude": 30.04, "longitude": 31.23 }
   },
@@ -1256,11 +1256,11 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
 6. **Favorites** — bookmark toggle + `/favorites` list (§2.7a)  
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
-8. **Create/edit** — all fields including **required sex/audience** (`male`/`female`/`mix`) + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web); join respects `sex_mismatch`  
+8. **Create/edit** — all fields including **required sex/audience** (`male`/`female`/`mix`) + image + free place pin + **place text suggest** (`GET /api/places/suggest`); join respects `sex_mismatch`  
 9. **Members** — promote / demote / transfer + report/block links  
 10. **Chat** — inbox `/chats` + thread list/post; web + Flutter share layout (Recent/Unread, cards, avatars, indigo mine bubbles, in-bubble time); live `events.{id}.chat` + user-channel toasts (Pusher/Reverb); Flutter poll fallback; avatars → public profile; View Event CTA
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
-12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
+12. **Event place** — pin picker / Maps share link / place autocomplete without Google credentials (web+Flutter+API); open → Google Maps  
 13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  
 14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
 15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; **all member web actions** use `/events/{id}/{slug}/…` (edit, chat, ticket, members, requests, join, …) via `event_route()` / `event_show_url()`. Legacy `/events/{id}/edit|chat|…` **301** to the slug form. API stays `/api/events/{id}/…` (Flutter GoRouter can stay `/events/:id`).  

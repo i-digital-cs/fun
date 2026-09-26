@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -402,6 +401,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get venueTba => 'Venue TBA';
 
   @override
+  String get venueHint => 'Café name, park, building…';
+
+  @override
+  String get venueSuggestHelp =>
+      'Start typing a place — pick a suggestion to drop the pin.';
+
+  @override
   String get locationTba => 'Location TBA';
 
   @override
@@ -409,7 +415,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get placeOnMapHelp =>
-      'Paste a Google Maps or OpenStreetMap share link. No Google API key needed — the app reads coordinates from the URL.';
+      'Type a place name, tap the map, or paste a Maps link. The pin is the meeting point.';
 
   @override
   String get placeTapHint => 'Tap the map to drop or move the pin.';
@@ -427,10 +433,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get placeClear => 'Clear pin';
 
   @override
-  String get placePinned => 'Pin saved — guests can open this place in maps.';
+  String get placePinned =>
+      'Pin saved — guests open this place in Google Maps.';
 
   @override
   String get placeFromLink => 'Location read from your maps link.';
+
+  @override
+  String get placeFromSuggest => 'Location set from place search.';
 
   @override
   String get placeCleared => 'Map pin cleared.';
@@ -1010,7 +1020,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleSignInFailed =>
-      'Google sign-in failed. Check that Google is configured for this app.';
+      'Google sign-in failed. Add this PC\'s SHA-1 in Firebase (Project settings → Android app), enable Google sign-in, then rebuild.';
 
   @override
   String get loadMore => 'Load more';

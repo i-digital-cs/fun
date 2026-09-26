@@ -4,6 +4,7 @@ import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
+import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
 
 class EventsRemoteSource {
   EventsRemoteSource(this._client);
@@ -596,6 +597,38 @@ class EventsRemoteSource {
         failure: null,
         data: (lat: lat, lng: lng, mapsUrl: map['maps_url'] as String? ?? url),
       );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<PlaceSuggestion>? data})> suggestPlaces(
+    String query, {
+    int? cityId,
+  }) async {
+    final q = query.trim();
+    if (q.length < 2) {
+      return (failure: null, data: const <PlaceSuggestion>[]);
+    }
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/places/suggest',
+        queryParameters: {
+          'q': q,
+          'limit': 8,
+          if (cityId != null) 'city_id': cityId,
+        },
+      );
+      final raw = response.data?['data'];
+      if (raw is! List) {
+        return (failure: null, data: const <PlaceSuggestion>[]);
+      }
+      final list = raw
+          .whereType<Map>()
+          .map((e) => PlaceSuggestion.fromJson(Map<String, dynamic>.from(e)))
+          .where((s) => s.label.isNotEmpty)
+          .toList();
+      return (failure: null, data: list);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }

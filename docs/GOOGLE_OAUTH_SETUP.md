@@ -63,11 +63,14 @@ keytool -list -v \
   -storepass android -keypass android
 ```
 
-Server debug SHA-1 currently registered on Firebase app `funnity-157aa`:
+Server debug SHA fingerprints currently registered on Firebase app `funnity-157aa`:
 ```text
-26:1A:5B:7E:A0:20:DC:35:6D:12:77:70:8B:6D:BE:65:22:BE:C1:C2
+SHA-1:   26:1A:5B:7E:A0:20:DC:35:6D:12:77:70:8B:6D:BE:65:22:BE:C1:C2
+SHA-256: 77:90:B9:9B:08:BC:8E:D4:54:8B:E7:CC:D4:57:67:9E:72:D5:AE:08:34:E9:11:FE:A6:16:C5:15:E4:95:71:3C
 ```
-(If your machine’s `~/.android/debug.keystore` differs, use **your** SHA-1 instead.)
+
+**Important:** Google Sign-In uses the SHA of the machine that **built** the APK.  
+If you run `flutter run` / build on your PC, that PC’s `~/.android/debug.keystore` SHA-1 must also be added in Firebase (you can register multiple). After adding, wait 5–10 minutes, download a fresh `google-services.json`, then rebuild.
 
 **Release keystore (Play / production):**
 ```bash

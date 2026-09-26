@@ -28,7 +28,7 @@ class ResolveMapsUrlController
                 'latitude' => $parsed['latitude'],
                 'longitude' => $parsed['longitude'],
                 'maps_url' => $parsed['maps_url'],
-                'maps_open_url' => $parser->openStreetMapUrl(
+                'maps_open_url' => $parser->googleMapsOpenUrl(
                     $parsed['latitude'],
                     $parsed['longitude']
                 ),

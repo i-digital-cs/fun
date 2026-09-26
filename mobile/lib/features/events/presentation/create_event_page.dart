@@ -8,6 +8,7 @@ import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
+import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
 import 'package:fun_mobile/features/events/presentation/create_event_controller.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_place_map.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -92,6 +93,7 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       CreatePlaceStatus.none => null,
       CreatePlaceStatus.pinned => l10n.placePinned,
       CreatePlaceStatus.fromLink => l10n.placeFromLink,
+      CreatePlaceStatus.fromSuggest => l10n.placeFromSuggest,
       CreatePlaceStatus.resolving => l10n.placeResolving,
       CreatePlaceStatus.unresolved => l10n.mapsUrlUnresolved,
       CreatePlaceStatus.cleared => l10n.placeCleared,
@@ -316,6 +318,16 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 onMapsUrlChanged: _applyMapsUrl,
                 onClearPlace: _clearPlace,
                 onPinChanged: _onMapPin,
+                onSuggestVenue: (q) => _ctrl.suggestPlaces(q),
+                onVenueSuggestionSelected: (s) {
+                  _venue.text = s.label;
+                  final next = _ctrl.applySuggestion(
+                    label: s.label,
+                    lat: s.latitude,
+                    lng: s.longitude,
+                  );
+                  _mapsUrl.text = next;
+                },
               ),
               const SizedBox(height: 24),
               GradientButton(
@@ -360,6 +372,8 @@ class CreateEventFormCard extends StatelessWidget {
     required this.onMapsUrlChanged,
     required this.onClearPlace,
     required this.onPinChanged,
+    required this.onSuggestVenue,
+    required this.onVenueSuggestionSelected,
     this.onClearImage,
     this.latitude,
     this.longitude,
@@ -393,6 +407,8 @@ class CreateEventFormCard extends StatelessWidget {
   final VoidCallback onMapsUrlChanged;
   final VoidCallback onClearPlace;
   final void Function(double lat, double lng) onPinChanged;
+  final Future<List<PlaceSuggestion>> Function(String query) onSuggestVenue;
+  final ValueChanged<PlaceSuggestion> onVenueSuggestionSelected;
   final double? latitude;
   final double? longitude;
   final String? placeStatus;
@@ -447,9 +463,15 @@ class CreateEventFormCard extends StatelessWidget {
             validator: (v) => v == null ? l10n.validationRequired : null,
           ),
           const SizedBox(height: 12),
-          TextFormField(
+          _VenueSuggestField(
             controller: venueController,
-            decoration: InputDecoration(labelText: l10n.venue),
+            onSuggest: onSuggestVenue,
+            onSelected: onVenueSuggestionSelected,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.venueSuggestHelp,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(height: 12),
           Text(
@@ -616,6 +638,91 @@ class DateTimePickerField extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _VenueSuggestField extends StatefulWidget {
+  const _VenueSuggestField({
+    required this.controller,
+    required this.onSuggest,
+    required this.onSelected,
+  });
+
+  final TextEditingController controller;
+  final Future<List<PlaceSuggestion>> Function(String query) onSuggest;
+  final ValueChanged<PlaceSuggestion> onSelected;
+
+  @override
+  State<_VenueSuggestField> createState() => _VenueSuggestFieldState();
+}
+
+class _VenueSuggestFieldState extends State<_VenueSuggestField> {
+  final _focus = FocusNode();
+  int _requestId = 0;
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return RawAutocomplete<PlaceSuggestion>(
+      textEditingController: widget.controller,
+      focusNode: _focus,
+      optionsBuilder: (textEditingValue) async {
+        final q = textEditingValue.text.trim();
+        if (q.length < 2) return const Iterable<PlaceSuggestion>.empty();
+        final id = ++_requestId;
+        final results = await widget.onSuggest(q);
+        if (id != _requestId) {
+          return const Iterable<PlaceSuggestion>.empty();
+        }
+        return results;
+      },
+      displayStringForOption: (option) => option.label,
+      onSelected: widget.onSelected,
+      fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
+        return TextFormField(
+          controller: textController,
+          focusNode: focusNode,
+          decoration: InputDecoration(
+            labelText: l10n.venue,
+            hintText: l10n.venueHint,
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: AlignmentDirectional.topStart,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(12),
+            color: AppColors.surface,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 240, maxWidth: 480),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (context, index) {
+                  final option = options.elementAt(index);
+                  return ListTile(
+                    dense: true,
+                    title: Text(option.label, maxLines: 2),
+                    leading: const Icon(Icons.place_outlined, size: 20),
+                    onTap: () => onSelected(option),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

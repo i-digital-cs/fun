@@ -4,12 +4,14 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
+import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
 
 /// Place pin status keys mapped to l10n by the page (ARCH-GOD-CREATE-001).
 enum CreatePlaceStatus {
   none,
   pinned,
   fromLink,
+  fromSuggest,
   resolving,
   unresolved,
   cleared,
@@ -229,6 +231,33 @@ class CreateEventController extends StateNotifier<CreateEventState> {
       resolvedMapsUrl: result.data!.mapsUrl,
       placeStatus: CreatePlaceStatus.fromLink,
     );
+  }
+
+  Future<List<PlaceSuggestion>> suggestPlaces(String query) async {
+    final cityId = state.cityId;
+    final result = await _ref
+        .read(eventsRepositoryProvider)
+        .suggestPlaces(query, cityId: cityId);
+    if (result.failure != null || result.data == null) {
+      return const [];
+    }
+    return result.data!;
+  }
+
+  /// Apply a place suggestion: set pin + OSM maps_url.
+  String applySuggestion({
+    required String label,
+    required double lat,
+    required double lng,
+  }) {
+    final nextUrl = MapsUrlParser.openStreetMapUrl(lat, lng);
+    state = state.copyWith(
+      latitude: lat,
+      longitude: lng,
+      placeStatus: CreatePlaceStatus.fromSuggest,
+      resolvedMapsUrl: nextUrl,
+    );
+    return nextUrl;
   }
 
   void clearPlace() {

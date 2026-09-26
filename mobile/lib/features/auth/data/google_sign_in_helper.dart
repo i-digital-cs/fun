@@ -10,10 +10,23 @@ class GoogleSignInHelper {
   static GoogleSignIn client() {
     final serverClientId = Env.googleServerClientId.trim();
     return GoogleSignIn(
-      scopes: const ['email', 'profile'],
-      // Web client ID → backend verifies `aud` against GOOGLE_CLIENT_ID.
+      scopes: const ['email', 'profile', 'openid'],
+      // Must be the Firebase/Web client from the SAME Google Cloud project as
+      // the Android OAuth client (google-services.json client_type 3).
       serverClientId: serverClientId.isEmpty ? null : serverClientId,
     );
+  }
+
+  /// Interactive sign-in. Clears any stale Google session first so a previous
+  /// wrong `serverClientId` / SHA config does not keep failing silently.
+  static Future<GoogleSignInAccount?> signIn() async {
+    final google = client();
+    try {
+      await google.signOut();
+    } catch (_) {
+      // Ignore — first run or Play Services unavailable.
+    }
+    return google.signIn();
   }
 
   /// Human-readable error for [PlatformException] from `google_sign_in`.
@@ -26,16 +39,26 @@ class GoogleSignInHelper {
         code == 'sign_in_failed' ||
         details.contains('apiexception: 10') ||
         details.contains('developer_error')) {
-      return fallback;
+      // Always include a concrete hint — this is the #1 real-world failure.
+      return '$fallback (error 10: add this device build SHA-1 in Firebase)';
     }
 
     if (code == 'network_error') {
       return e.message?.isNotEmpty == true ? e.message! : fallback;
     }
 
-    if (kDebugMode) {
-      return '${e.message ?? fallback} ($code)';
+    if (code == 'sign_in_canceled' || code == '12501') {
+      return fallback;
     }
-    return e.message?.isNotEmpty == true ? e.message! : fallback;
+
+    // Surface Google/Play error codes so we can diagnose without a debugger.
+    final detail = e.message?.trim();
+    if (detail != null && detail.isNotEmpty) {
+      return '$detail ($code)';
+    }
+    if (kDebugMode) {
+      return '$fallback ($code)';
+    }
+    return fallback;
   }
 }
