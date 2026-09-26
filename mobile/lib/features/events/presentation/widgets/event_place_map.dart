@@ -137,23 +137,26 @@ class _EventPlaceMapPickerState extends State<EventPlaceMapPicker> {
 }
 
 /// Read-only OSM preview — Blade `data-event-place-viewer`.
+/// Tap opens Google Maps when [onTap] is provided.
 class EventPlaceMapViewer extends StatelessWidget {
   const EventPlaceMapViewer({
     super.key,
     required this.latitude,
     required this.longitude,
     this.height = 200,
+    this.onTap,
   });
 
   final double latitude;
   final double longitude;
   final double height;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final point = LatLng(latitude, longitude);
 
-    return ClipRRect(
+    final map = ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: SizedBox(
         height: height,
@@ -190,6 +193,17 @@ class EventPlaceMapViewer extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+
+    if (onTap == null) return map;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: map,
       ),
     );
   }

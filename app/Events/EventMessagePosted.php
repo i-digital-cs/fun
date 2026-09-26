@@ -17,7 +17,7 @@ class EventMessagePosted implements ShouldBroadcastNow
 
     public function __construct(public EventMessage $message)
     {
-        $this->message->loadMissing('user:id,name,profile_image_path');
+        $this->message->loadMissing('user:id,name,public_id,profile_image_path');
     }
 
     /**
@@ -49,6 +49,7 @@ class EventMessagePosted implements ShouldBroadcastNow
             'user' => [
                 'id' => $this->message->user?->id,
                 'name' => $this->message->user?->name,
+                'public_id' => $this->message->user?->public_id,
                 'initials' => user_initials($this->message->user?->name),
                 'profile_image_path' => $this->message->user?->profile_image_path,
             ],

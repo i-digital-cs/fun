@@ -43,6 +43,17 @@ Then check the API / DB: `device_tokens` should have a row for your user.
 | Join accepted | Applicant | inbox + **FCM** |
 | Chat message | Other members | Pusher toast + **FCM** (no message body text) |
 
-## 5. Without `google-services.json`
+## 5. Foreground vs background
+
+| App state | What the user sees |
+|-----------|--------------------|
+| **Open (foreground)** | No system tray banner. Unread badge increments; Pusher in-app toast still works. |
+| **Background / killed** | OS shows the FCM notification (Android: Funnity white status icon + indigo tint). |
+
+## 6. Android notification icon
+
+Android **requires** a white-on-transparent status icon (`ic_stat_funity`). Your full-color app logo cannot appear in the status bar; it can appear as the **large/expanded** image only if the site logo URL is PNG/JPEG/WebP (SVG is skipped).
+
+## 7. Without `google-services.json`
 
 The app still runs. In-app inbox works. Outside push is skipped (debug log: “Firebase not configured”).

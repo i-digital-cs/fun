@@ -80,6 +80,7 @@ class EventManagementTest extends TestCase
 
         $openUrl = (string) $response->json('data.maps_open_url');
         $this->assertNotEmpty($openUrl);
+        $this->assertStringContainsString('google.com/maps', $openUrl);
         $this->assertStringContainsString('30.0444', $openUrl);
         $this->assertStringContainsString('31.2357', $openUrl);
     }
@@ -112,6 +113,7 @@ class EventManagementTest extends TestCase
             ->assertJsonPath('data.longitude', 31.2357);
 
         $openUrl = (string) $response->json('data.maps_open_url');
+        $this->assertStringContainsString('google.com/maps', $openUrl);
         $this->assertStringContainsString('30.0444', $openUrl);
         $this->assertStringContainsString('31.2357', $openUrl);
         $this->assertStringNotContainsString('31.2001', $openUrl);

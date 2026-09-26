@@ -413,14 +413,7 @@ class EventDetailInfoCard extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
                 onPressed: () async {
-                  // Prefer pin coords so Open matches the map marker.
-                  final fromPin = event.latitude != null && event.longitude != null
-                      ? MapsUrlParser.googleOpenUrl(
-                          event.latitude!,
-                          event.longitude!,
-                        )
-                      : null;
-                  await launchSafeExternalUrl(fromPin ?? event.mapsOpenUrl);
+                  await launchSafeExternalUrl(event.openMapsUrl);
                 },
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: Text(l10n.openInMaps),
@@ -434,6 +427,12 @@ class EventDetailInfoCard extends StatelessWidget {
             EventPlaceMapViewer(
               latitude: event.latitude!,
               longitude: event.longitude!,
+              onTap: () => launchSafeExternalUrl(
+                MapsUrlParser.googleOpenUrl(
+                  event.latitude!,
+                  event.longitude!,
+                ),
+              ),
             ),
           ],
           if (event.city != null &&

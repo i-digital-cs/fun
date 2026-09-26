@@ -6,6 +6,7 @@ use App\Enums\EventMemberRole;
 use App\Enums\EventStatus;
 use App\Enums\UserSex;
 use App\Support\MediaDisk;
+use App\Support\MapsUrlParser;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -421,13 +422,22 @@ class Event extends Model
 
     public function mapsOpenUrl(): ?string
     {
-        // Pin coords are the source of truth — never open a stale pasted link
-        // that no longer matches the map marker.
+        // Always open Google Maps when we have coordinates (pin or parsable link).
         if ($this->hasPlacePin()) {
-            return app(\App\Support\MapsUrlParser::class)
+            return app(MapsUrlParser::class)
                 ->googleMapsOpenUrl((float) $this->latitude, (float) $this->longitude);
         }
 
-        return filled($this->maps_url) ? $this->maps_url : null;
+        if (! filled($this->maps_url)) {
+            return null;
+        }
+
+        $parser = app(MapsUrlParser::class);
+        $parsed = $parser->parse((string) $this->maps_url);
+        if ($parsed !== null) {
+            return $parser->googleMapsOpenUrl($parsed['latitude'], $parsed['longitude']);
+        }
+
+        return (string) $this->maps_url;
     }
 }

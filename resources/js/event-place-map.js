@@ -213,13 +213,43 @@ async function initViewer(root) {
     const L = await loadScript(LEAFLET_JS);
     if (!L) return;
 
-    const map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 15);
+    // Preview only — open Google Maps via the wrapping <a> (or fallback click).
+    const map = L.map(mapEl, {
+        scrollWheelZoom: false,
+        dragging: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+        tap: false,
+        touchZoom: false,
+        zoomControl: false,
+    }).setView([lat, lng], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
     }).addTo(map);
     L.marker([lat, lng]).addTo(map);
     setTimeout(() => map.invalidateSize(), 100);
+
+    const openUrl =
+        root.dataset.mapsOpenUrl ||
+        `https://www.google.com/maps?q=${lat},${lng}`;
+
+    const openGoogleMaps = (event) => {
+        // Ignore clicks on Leaflet attribution / external links inside the map.
+        if (event.target.closest('a')) return;
+        event.preventDefault();
+        window.open(openUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    root.style.cursor = 'pointer';
+    root.addEventListener('click', openGoogleMaps);
+    root.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            window.open(openUrl, '_blank', 'noopener,noreferrer');
+        }
+    });
 }
 
 export function initEventPlaceMaps() {

@@ -119,16 +119,28 @@ class EventItem extends Equatable {
     return city?.name ?? '';
   }
 
-  /// Prefer pin coordinates for external open so a moved pin always wins
-  /// over a stale pasted maps link.
+  /// Prefer pin coordinates → Google Maps; otherwise rewrite parsable links
+  /// to Google Maps so Open never lands on OSM by accident.
   String? get openMapsUrl {
     if (hasPlacePin && latitude != null && longitude != null) {
       return MapsUrlParser.googleOpenUrl(latitude!, longitude!);
     }
     final open = mapsOpenUrl?.trim();
-    if (open != null && open.isNotEmpty) return open;
+    if (open != null && open.isNotEmpty) {
+      final parsed = MapsUrlParser.parse(open);
+      if (parsed != null) {
+        return MapsUrlParser.googleOpenUrl(parsed.lat, parsed.lng);
+      }
+      return open;
+    }
     final stored = mapsUrl?.trim();
-    if (stored != null && stored.isNotEmpty) return stored;
+    if (stored != null && stored.isNotEmpty) {
+      final parsed = MapsUrlParser.parse(stored);
+      if (parsed != null) {
+        return MapsUrlParser.googleOpenUrl(parsed.lat, parsed.lng);
+      }
+      return stored;
+    }
     return null;
   }
 
@@ -318,6 +330,8 @@ class ChatMessage extends Equatable {
     this.createdAt,
     this.userId,
     this.userName,
+    this.userPublicId,
+    this.userProfileImagePath,
   });
 
   final int id;
@@ -327,6 +341,28 @@ class ChatMessage extends Equatable {
   final DateTime? createdAt;
   final int? userId;
   final String? userName;
+  final String? userPublicId;
+  final String? userProfileImagePath;
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    final rawUser = json['user'];
+    final user = rawUser is Map
+        ? Map<String, dynamic>.from(rawUser)
+        : null;
+    return ChatMessage(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      eventId: (json['event_id'] as num?)?.toInt() ?? 0,
+      body: json['body'] as String? ?? '',
+      isSystem: json['is_system'] as bool? ?? false,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String)
+          : null,
+      userId: (user?['id'] as num?)?.toInt(),
+      userName: user?['name'] as String?,
+      userPublicId: user?['public_id'] as String?,
+      userProfileImagePath: user?['profile_image_path'] as String?,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -337,6 +373,8 @@ class ChatMessage extends Equatable {
     createdAt,
     userId,
     userName,
+    userPublicId,
+    userProfileImagePath,
   ];
 }
 

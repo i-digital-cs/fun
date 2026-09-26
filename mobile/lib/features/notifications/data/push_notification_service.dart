@@ -16,9 +16,14 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     await Firebase.initializeApp();
   } catch (_) {}
+  // Notification-payload messages are shown by the OS when backgrounded.
 }
 
 /// Registers FCM tokens with the API and keeps them in sync with auth.
+///
+/// When the app is **open (foreground)**: no system tray banner — only the
+/// in-app inbox badge is bumped. When backgrounded/killed: OS / FCM shows
+/// the tray notification (with `ic_stat_funity` branding on Android).
 class PushNotificationService {
   PushNotificationService(this._ref);
 
@@ -48,8 +53,18 @@ class PushNotificationService {
       return;
     }
 
+    // App open → suppress OS banners; inbox badge only.
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+            alert: false,
+            badge: true,
+            sound: false,
+          );
+    }
+
     _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
-      // In-app inbox poll will pick it up; bump badge immediately.
+      // Do NOT show a system notification while the app is open.
       _ref.read(notificationUnreadTotalProvider.notifier).update((n) => n + 1);
     });
   }
@@ -65,14 +80,6 @@ class PushNotificationService {
 
     final messaging = FirebaseMessaging.instance;
     await messaging.requestPermission(alert: true, badge: true, sound: true);
-
-    if (Platform.isIOS) {
-      await messaging.setForegroundNotificationPresentationOptions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-    }
 
     final token = await messaging.getToken();
     if (token == null || token.isEmpty) return;

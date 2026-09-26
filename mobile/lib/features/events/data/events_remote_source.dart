@@ -707,18 +707,7 @@ class EventsRemoteSource {
   }
 
   ChatMessage _parseMessage(Map<String, dynamic> json) {
-    final user = json['user'];
-    return ChatMessage(
-      id: json['id'] as int,
-      eventId: json['event_id'] as int? ?? 0,
-      body: json['body'] as String? ?? '',
-      isSystem: json['is_system'] as bool? ?? false,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'] as String)
-          : null,
-      userId: user is Map ? user['id'] as int? : null,
-      userName: user is Map ? user['name'] as String? : null,
-    );
+    return ChatMessage.fromJson(json);
   }
 
   Future<FormData> _formData(EventDraft draft, {String? methodOverride}) async {

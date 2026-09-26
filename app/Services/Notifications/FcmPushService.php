@@ -55,6 +55,22 @@ class FcmPushService
         }
 
         try {
+            $data = array_map('strval', $payload['data'] ?? []);
+            $data['title'] = (string) ($payload['title'] ?? '');
+            $data['body'] = (string) ($payload['body'] ?? '');
+
+            $androidNotification = [
+                'icon' => 'ic_stat_funity',
+                'color' => '#4F46E5',
+                'channel_id' => 'funnity_alerts',
+            ];
+
+            $logoUrl = app(\App\Services\Admin\SiteSettingsService::class)->logoUrl();
+            // FCM image must be a bitmap URL (PNG/JPEG/WebP) — skip SVG.
+            if (is_string($logoUrl) && $logoUrl !== '' && ! str_ends_with(strtolower(parse_url($logoUrl, PHP_URL_PATH) ?: ''), '.svg')) {
+                $androidNotification['image'] = $logoUrl;
+            }
+
             $response = Http::withToken($accessToken)
                 ->timeout(10)
                 ->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
@@ -64,7 +80,21 @@ class FcmPushService
                             'title' => $payload['title'],
                             'body' => $payload['body'],
                         ],
-                        'data' => array_map('strval', $payload['data'] ?? []),
+                        'data' => $data,
+                        'android' => [
+                            'priority' => 'HIGH',
+                            'notification' => $androidNotification,
+                        ],
+                        'apns' => [
+                            'headers' => [
+                                'apns-priority' => '10',
+                            ],
+                            'payload' => [
+                                'aps' => [
+                                    'sound' => 'default',
+                                ],
+                            ],
+                        ],
                     ],
                 ]);
 

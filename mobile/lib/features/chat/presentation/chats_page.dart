@@ -225,6 +225,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   ChatRealtimeClient? _realtime;
   StreamSubscription<ChatToastPayload>? _realtimeSub;
   StreamSubscription<void>? _joinAcceptedSub;
+  StreamSubscription<void>? _joinRequestedSub;
   final List<ChatToastPayload> _toasts = [];
   final Set<int> _shownMessageIds = {};
 
@@ -255,7 +256,10 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _realtimeSub = null;
     await _joinAcceptedSub?.cancel();
     _joinAcceptedSub = null;
-    await _realtime?.dispose();
+    await _joinRequestedSub?.cancel();
+    _joinRequestedSub = null;
+    // Shared client — disconnect sockets but do not dispose the provider instance.
+    await _realtime?.disconnect();
     _realtime = null;
     _usePollToasts = true;
   }
@@ -276,20 +280,28 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       return;
     }
 
-    if (_realtime?.userId == auth.user.id && _realtime?.isConnected == true) {
+    final client = ref.read(chatRealtimeClientProvider);
+    if (_realtime?.userId == auth.user.id && client.isConnected) {
+      _realtime = client;
       return;
     }
 
-    await _teardownRealtime();
-    final client = ChatRealtimeClient(
-      tokenStorage: ref.read(tokenStorageProvider),
-    );
+    await _realtimeSub?.cancel();
+    _realtimeSub = null;
+    await _joinAcceptedSub?.cancel();
+    _joinAcceptedSub = null;
+    await _joinRequestedSub?.cancel();
+    _joinRequestedSub = null;
+
     _realtime = client;
     _realtimeSub = client.messages.listen(_onRealtimeMessage);
-    _joinAcceptedSub = client.joinAccepted.listen((_) {
+    void bumpNotify() {
       if (!mounted) return;
       ref.read(notificationUnreadTotalProvider.notifier).update((n) => n + 1);
-    });
+    }
+
+    _joinAcceptedSub = client.joinAccepted.listen((_) => bumpNotify());
+    _joinRequestedSub = client.joinRequested.listen((_) => bumpNotify());
 
     final started = await client.connect(userId: auth.user.id, config: config);
     if (!mounted) return;

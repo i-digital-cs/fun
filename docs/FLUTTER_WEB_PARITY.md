@@ -366,7 +366,7 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 }
 ```
 
-**Open in maps:** always derived from **pin** `latitude`/`longitude` (not a stale pasted `maps_url`). If the user pastes a link then moves the pin, the pin wins and `maps_url` is rewritten to match.
+**Open in maps:** always opens **Google Maps** (`https://www.google.com/maps?q=lat,lng`) from pin coords (or a parsable stored link rewritten to Google). Tapping the in-app OSM preview (web + Flutter) also opens Google Maps. If the user pastes a link then moves the pin, the pin wins and `maps_url` is rewritten to match.
 
 CTA: orange create/save. After create → show or edit draft + publish.
 
@@ -437,11 +437,11 @@ Bookmark UI (web CSS `.ui-bookmark`) on Discover / dashboard / home cards and ev
 
 List pending requesters with Accept / Reject.
 
-**Organizer notify (web + API, same service):** when someone requests to join, the event **creator** receives `JoinRequestReceivedNotification` via **mail + database inbox** (no FCM). CTA → event requests. Failures are logged and do **not** block the join.
+**Organizer notify (web + API, same service):** when someone requests to join, the event **creator** receives `JoinRequestReceivedNotification` via **mail + database inbox + FCM** (when a device token exists) **+ realtime** Pusher `join.requested` on private `App.Models.User.{creator}` (web toast + notify badge; Flutter notify badge). CTA → event requests. Failures are logged and do **not** block the join.
 
-**Applicant notify on accept:** `JoinRequestAcceptedNotification` → **database inbox** + realtime Pusher event `join.accepted` on private `App.Models.User.{id}` (web toast + notify badge). No FCM for join lifecycle.
+**Applicant notify on accept:** `JoinRequestAcceptedNotification` → **database inbox + FCM** + realtime Pusher event `join.accepted` on private `App.Models.User.{id}` (web toast + notify badge).
 
-Flutter: poll `GET /api/notifications` for join request / accept; same `POST .../join` and accept endpoints trigger notifies.
+Flutter: poll `GET /api/notifications` for join request / accept as fallback; same `POST .../join` and accept endpoints trigger notifies + live badge bumps.
 
 ---
 
@@ -459,7 +459,11 @@ In-app list of database notifications (`join_request`, `join_accepted`). Unread 
 
 **FCM push (outside app):** join request, join accept, and chat messages (`JoinRequestReceivedNotification`, `JoinRequestAcceptedNotification`, `ChatMessagePushNotification`). Flutter registers via `POST /api/device-tokens` after login (requires `google-services.json` — see `mobile/docs/FIREBASE_PUSH.md`). Logout → `DELETE`. Chat push body does **not** include message text (privacy). Inbox still stores join request/accept.
 
-**Firebase (server):** set `FIREBASE_PROJECT_ID` + `FIREBASE_CREDENTIALS`. Without them, mail + in-app still work; chat FCM is no-op (logged).
+**Foreground vs background (Flutter):** when the app is **open**, FCM still arrives but **no system tray banner** is shown (`onMessage` only bumps the in-app unread badge; iOS `setForegroundNotificationPresentationOptions(alert: false)`). When the app is **backgrounded / killed**, the OS shows the tray notification. In-app Pusher toasts still work while open.
+
+**Android tray branding:** status-bar icon is `ic_stat_funity` (white silhouette — Android requirement) tinted indigo (`#4F46E5`); channel `funnity_alerts`. Server FCM sets `android.notification.icon` / `color` / `channel_id`. Expanded large image uses site logo URL only when it is a bitmap (PNG/JPEG/WebP), not SVG.
+
+**Firebase (server):** set `FIREBASE_PROJECT_ID` + `FIREBASE_CREDENTIALS`. Without them, mail + in-app still work; FCM is no-op (logged).
 
 ---
 
@@ -480,14 +484,16 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 |--|--|
 | **Blade** | `events/chat.blade.php` |
 | **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` |
-| **Toast** | Web + Flutter: private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). **Also:** `.join.accepted` toast for the applicant. **Transport:** production uses **Pusher Channels** (`BROADCAST_CONNECTION=pusher`); Reverb remains an optional VPS alternative. Flutter: `GET /api/site` → `broadcast` (`enabled`, `driver`=`pusher`|`reverb`, `key`, `cluster` for Pusher, `host`/`port`/`scheme` for Reverb) + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). **FCM:** other members get outside-app push on new messages (no message body in push). SEC-PRIV-002: Flutter toasts never echo message body. |
+| **Toast** | Web + Flutter: private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). **Also:** `.join.requested` (organizer toast + notify badge) and `.join.accepted` (applicant toast + notify badge). **Transport:** production uses **Pusher Channels** (`BROADCAST_CONNECTION=pusher`); Reverb remains an optional VPS alternative. Flutter: `GET /api/site` → `broadcast` (`enabled`, `driver`=`pusher`|`reverb`, `key`, `cluster` for Pusher, `host`/`port`/`scheme` for Reverb) + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). **FCM:** other members get outside-app push on new messages (no message body in push). SEC-PRIV-002: Flutter toasts never echo message body. |
 | **Unread** | `event_chat_reads.last_read_message_id`; mark on open thread / `POST /api/events/{id}/messages/read` |
 | **API** | `GET /api/events/{id}/messages` (page 1 = **newest first** for pagination), `POST .../messages` |
 | **Access** | Joined members only |
 
 **Must:** message list (author, time, body), dark Uiverse-style composer (textarea + attach affordance + Chat chip + send plane), report message link, link back to event.  
 **Display order:** chat UI must show **oldest → newest** (web reverses the API page; Flutter sorts by `id` ascending) with newest at the **bottom** near the composer.  
-Web and Flutter use Pusher (or Reverb) for live toasts; Flutter keeps a poll fallback when realtime is unavailable. Composer visual matches web (`ChatComposer` dark bar).
+**Realtime thread (web + Flutter):** both subscribe to private `events.{id}.chat` / `.message.posted` (web Echo; Flutter `ChatRealtimeClient.subscribeEventChat`). Flutter keeps a slow poll (60s) as safety net when the socket is live, and 8s poll when realtime is unavailable.  
+**Flutter thread UI:** mine/theirs bubbles, profile photo (or initial) — tap avatar/name → `/u/{publicId}`; AppBar **View Event** → `/events/{id}`. Message API includes `user.public_id` + `user.profile_image_path`.  
+Composer visual matches web (`ChatComposer` dark bar). User-channel Pusher toasts remain for inbox (suppressed while viewing that event’s chat).
 
 ---
 
@@ -1252,7 +1258,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
 8. **Create/edit** — all fields including **required sex/audience** (`male`/`female`/`mix`) + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web); join respects `sex_mismatch`  
 9. **Members** — promote / demote / transfer + report/block links  
-10. **Chat** — inbox `/chats` + thread list/post; Pusher (or Reverb) toast (Flutter + web); Flutter poll fallback
+10. **Chat** — inbox `/chats` + thread list/post; Flutter + web: live `events.{id}.chat` + user-channel toasts (Pusher/Reverb); Flutter poll fallback; avatars → public profile; View Event CTA
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  

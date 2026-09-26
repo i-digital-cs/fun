@@ -2,26 +2,36 @@ import 'dart:async';
 
 import 'package:dart_pusher_channels/dart_pusher_channels.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/config/env.dart';
+import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/storage/token_storage.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
+import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 
-/// Laravel Reverb (Pusher protocol) client for private user chat toasts.
+/// Laravel Pusher/Reverb client for private user toasts + event chat threads.
 class ChatRealtimeClient {
   ChatRealtimeClient({required TokenStorage tokenStorage})
-    : _tokenStorage = tokenStorage; // ignore: prefer_initializing_formals
+    : _tokenStorage = tokenStorage;
 
   final TokenStorage _tokenStorage;
   final _messages = StreamController<ChatToastPayload>.broadcast();
   final _joinAccepted = StreamController<void>.broadcast();
+  final _joinRequested = StreamController<void>.broadcast();
+  final _threadPosted = StreamController<ChatMessage>.broadcast();
 
   PusherChannelsClient? _client;
   StreamSubscription<void>? _connectionSub;
   StreamSubscription<ChannelReadEvent>? _eventSub;
   StreamSubscription<ChannelReadEvent>? _joinSub;
-  PrivateChannel? _channel;
+  StreamSubscription<ChannelReadEvent>? _joinRequestedSub;
+  StreamSubscription<ChannelReadEvent>? _threadSub;
+  PrivateChannel? _userChannel;
+  PrivateChannel? _eventChannel;
+  String? _authToken;
   int? _userId;
+  int? _subscribedEventId;
   bool _connected = false;
 
   Stream<ChatToastPayload> get messages => _messages.stream;
@@ -29,7 +39,17 @@ class ChatRealtimeClient {
   /// Fires when the server broadcasts `.join.accepted` to this user.
   Stream<void> get joinAccepted => _joinAccepted.stream;
 
+  /// Fires when the server broadcasts `.join.requested` (organizer).
+  Stream<void> get joinRequested => _joinRequested.stream;
+
+  /// Live `.message.posted` payloads for the currently subscribed event thread.
+  Stream<ChatMessage> get threadPosted => _threadPosted.stream;
+
   bool get isConnected => _connected;
+
+  int? get userId => _userId;
+
+  int? get subscribedEventId => _subscribedEventId;
 
   Future<bool> connect({
     required int userId,
@@ -51,6 +71,7 @@ class ChatRealtimeClient {
     }
 
     _userId = userId;
+    _authToken = token;
     final authUri = Uri.parse('${Env.apiBaseUrl}/broadcasting/auth');
 
     try {
@@ -70,7 +91,6 @@ class ChatRealtimeClient {
           if (kDebugMode) {
             debugPrint('ChatRealtime: $exception');
           }
-          // Soft reconnect; poll fallback covers gaps.
           Future<void>.delayed(const Duration(seconds: 2), refresh);
         },
         minimumReconnectDelayDuration: const Duration(seconds: 2),
@@ -88,11 +108,15 @@ class ChatRealtimeClient {
               },
             ),
       );
-      _channel = channel;
+      _userChannel = channel;
 
       _connectionSub = client.onConnectionEstablished.listen((_) {
         _connected = true;
         channel.subscribeIfNotUnsubscribed();
+        final eventId = _subscribedEventId;
+        if (eventId != null) {
+          unawaited(_attachEventChannel(eventId));
+        }
       });
 
       _eventSub = channel.bind('chat.message').listen((event) {
@@ -105,10 +129,15 @@ class ChatRealtimeClient {
         }
       });
 
-      // Join-accepted: bump notification badge via side-channel stream.
       _joinSub = channel.bind('join.accepted').listen((event) {
         if (!_joinAccepted.isClosed) {
           _joinAccepted.add(null);
+        }
+      });
+
+      _joinRequestedSub = channel.bind('join.requested').listen((event) {
+        if (!_joinRequested.isClosed) {
+          _joinRequested.add(null);
         }
       });
 
@@ -123,30 +152,111 @@ class ChatRealtimeClient {
     }
   }
 
+  /// Join `private-events.{id}.chat` for live thread appends (web Echo parity).
+  Future<void> subscribeEventChat(int eventId) async {
+    if (_subscribedEventId == eventId && _eventChannel != null) {
+      return;
+    }
+    await unsubscribeEventChat();
+    _subscribedEventId = eventId;
+    if (_client == null || !_connected) {
+      return;
+    }
+    await _attachEventChannel(eventId);
+  }
+
+  Future<void> unsubscribeEventChat() async {
+    await _threadSub?.cancel();
+    _threadSub = null;
+    try {
+      _eventChannel?.unsubscribe();
+    } catch (_) {}
+    _eventChannel = null;
+    _subscribedEventId = null;
+  }
+
+  Future<void> _attachEventChannel(int eventId) async {
+    final client = _client;
+    final token = _authToken;
+    if (client == null || token == null || token.isEmpty) return;
+
+    await _threadSub?.cancel();
+    _threadSub = null;
+    try {
+      _eventChannel?.unsubscribe();
+    } catch (_) {}
+    _eventChannel = null;
+
+    final authUri = Uri.parse('${Env.apiBaseUrl}/broadcasting/auth');
+    final channel = client.privateChannel(
+      'private-events.$eventId.chat',
+      authorizationDelegate:
+          EndpointAuthorizableChannelTokenAuthorizationDelegate.forPrivateChannel(
+            authorizationEndpoint: authUri,
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          ),
+    );
+    _eventChannel = channel;
+    channel.subscribeIfNotUnsubscribed();
+
+    _threadSub = channel.bind('message.posted').listen((event) {
+      final data = event.tryGetDataAsMap();
+      if (data == null) return;
+      try {
+        final message = ChatMessage.fromJson(Map<String, dynamic>.from(data));
+        if (message.id <= 0) return;
+        if (!_threadPosted.isClosed) {
+          _threadPosted.add(message);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('ChatRealtime thread parse failed: $e');
+        }
+      }
+    });
+  }
+
   Future<void> disconnect() async {
     _connected = false;
+    await unsubscribeEventChat();
     await _eventSub?.cancel();
     _eventSub = null;
     await _joinSub?.cancel();
     _joinSub = null;
+    await _joinRequestedSub?.cancel();
+    _joinRequestedSub = null;
     await _connectionSub?.cancel();
     _connectionSub = null;
     try {
-      _channel?.unsubscribe();
+      _userChannel?.unsubscribe();
     } catch (_) {}
-    _channel = null;
+    _userChannel = null;
     try {
       _client?.dispose();
     } catch (_) {}
     _client = null;
     _userId = null;
+    _authToken = null;
   }
 
   Future<void> dispose() async {
     await disconnect();
     await _messages.close();
     await _joinAccepted.close();
+    await _joinRequested.close();
+    await _threadPosted.close();
   }
-
-  int? get userId => _userId;
 }
+
+final chatRealtimeClientProvider = Provider<ChatRealtimeClient>((ref) {
+  final client = ChatRealtimeClient(
+    tokenStorage: ref.watch(tokenStorageProvider),
+  );
+  ref.onDispose(() {
+    unawaited(client.dispose());
+  });
+  return client;
+});

@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
+import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class EventChatPage extends ConsumerStatefulWidget {
@@ -26,18 +30,22 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   String? _error;
   bool _loading = true;
   bool _sending = false;
+  String? _eventTitle;
   final _text = TextEditingController();
   final _scroll = ScrollController();
   Timer? _poll;
   CancelToken? _cancel;
+  StreamSubscription<ChatMessage>? _threadSub;
+  ChatRealtimeClient? _realtime;
 
   @override
   void initState() {
     super.initState();
     _load();
-    // Polling retained (product latency); CancelToken + dispose stop overlapping work.
-    _poll = Timer.periodic(const Duration(seconds: 8), (_) {
-      if (!_sending) _load(silent: true);
+    _loadEventMeta();
+    _startPoll(const Duration(seconds: 8));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_subscribeLive());
     });
   }
 
@@ -45,9 +53,77 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   void dispose() {
     _poll?.cancel();
     _cancel?.cancel();
+    unawaited(_threadSub?.cancel());
+    unawaited(_realtime?.unsubscribeEventChat() ?? Future<void>.value());
     _text.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  void _startPoll(Duration interval) {
+    _poll?.cancel();
+    _poll = Timer.periodic(interval, (_) {
+      if (!_sending) _load(silent: true);
+    });
+  }
+
+  Future<void> _loadEventMeta() async {
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .show(widget.eventId);
+    if (!mounted || result.data == null) return;
+    setState(() => _eventTitle = result.data!.event.title);
+  }
+
+  Future<void> _subscribeLive() async {
+    final auth = ref.read(authControllerProvider);
+    if (auth is! Authenticated) return;
+
+    final branding = await ref.read(siteBrandingProvider.future);
+    final config = branding.broadcast;
+    if (!config.enabled) return;
+
+    final client = ref.read(chatRealtimeClientProvider);
+    _realtime = client;
+    if (!client.isConnected || client.userId != auth.user.id) {
+      final started = await client.connect(
+        userId: auth.user.id,
+        config: config,
+      );
+      if (!started) return;
+      // Wait briefly for socket
+      for (var i = 0; i < 20 && !client.isConnected; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      }
+    }
+
+    await client.subscribeEventChat(widget.eventId);
+    await _threadSub?.cancel();
+    _threadSub = client.threadPosted.listen(_onLiveMessage);
+
+    if (!mounted) return;
+    if (client.isConnected) {
+      // Live socket — keep a slow sync as safety net.
+      _startPoll(const Duration(seconds: 60));
+    }
+  }
+
+  void _onLiveMessage(ChatMessage message) {
+    if (!mounted) return;
+    if (message.eventId != 0 && message.eventId != widget.eventId) return;
+    if (_messages.any((m) => m.id == message.id)) return;
+
+    final auth = ref.read(authControllerProvider);
+    final currentId = auth is Authenticated ? auth.user.id : null;
+    // Own posts are appended after POST; skip duplicate from echo if any.
+    if (currentId != null && message.userId == currentId) {
+      if (_messages.any((m) => m.id == message.id)) return;
+    }
+
+    setState(() {
+      _messages = [..._messages, message]..sort((a, b) => a.id.compareTo(b.id));
+    });
+    _scrollToBottom();
   }
 
   Future<void> _load({bool silent = false}) async {
@@ -67,7 +143,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     final chronological = List<ChatMessage>.from(next)
       ..sort((a, b) => a.id.compareTo(b.id));
     final grew = chronological.length > _messages.length;
-    final newestChanged = chronological.isNotEmpty &&
+    final newestChanged =
+        chronological.isNotEmpty &&
         (_messages.isEmpty || chronological.last.id != _messages.last.id);
     setState(() {
       _loading = false;
@@ -99,12 +176,27 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     if (!mounted) return;
     setState(() => _sending = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     _text.clear();
-    await _load();
+    final posted = result.data;
+    if (posted != null && !_messages.any((m) => m.id == posted.id)) {
+      setState(() {
+        _messages = [..._messages, posted]..sort((a, b) => a.id.compareTo(b.id));
+      });
+      _scrollToBottom();
+    } else {
+      await _load();
+    }
+  }
+
+  void _openProfile(ChatMessage message) {
+    final publicId = message.userPublicId;
+    if (publicId == null || publicId.isEmpty) return;
+    context.push('/u/$publicId');
   }
 
   Future<void> _onMessageActions(ChatMessage message) async {
@@ -170,11 +262,13 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
               .block(message.userId!);
           if (!mounted) return;
           if (result.failure != null) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(result.failure!.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(result.failure!.message)),
+            );
           } else {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
           }
         }
     }
@@ -183,10 +277,39 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final auth = ref.watch(authControllerProvider);
+    final currentId = auth is Authenticated ? auth.user.id : null;
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: AppBar(title: Text(l10n.chat)),
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.chat, style: const TextStyle(fontSize: 17)),
+            if (_eventTitle != null)
+              Text(
+                _eventTitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.muted,
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => context.push('/events/${widget.eventId}'),
+            icon: const Icon(Icons.event_outlined, size: 18),
+            label: Text(l10n.viewEvent),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
@@ -203,12 +326,18 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
               ),
               child: ListView.builder(
                 controller: _scroll,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final message = _messages[index];
+                  final mine =
+                      currentId != null && message.userId == currentId;
                   return ChatBubble(
                     message: message,
+                    isMine: mine,
+                    onAvatarTap: message.isSystem
+                        ? null
+                        : () => _openProfile(message),
                     onLongPress: message.isSystem
                         ? null
                         : () => _onMessageActions(message),
@@ -225,10 +354,18 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
 }
 
 class ChatBubble extends StatelessWidget {
-  const ChatBubble({super.key, required this.message, this.onLongPress});
+  const ChatBubble({
+    super.key,
+    required this.message,
+    required this.isMine,
+    this.onLongPress,
+    this.onAvatarTap,
+  });
 
   final ChatMessage message;
+  final bool isMine;
   final VoidCallback? onLongPress;
+  final VoidCallback? onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -253,68 +390,157 @@ class ChatBubble extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    final bubble = Flexible(
       child: InkWell(
         onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primarySoft,
-              child: Text(
-                (message.userName?.isNotEmpty ?? false)
-                    ? message.userName![0].toUpperCase()
-                    : '?',
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          decoration: BoxDecoration(
+            color: isMine ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(18),
+              topRight: const Radius.circular(18),
+              bottomLeft: Radius.circular(isMine ? 18 : 4),
+              bottomRight: Radius.circular(isMine ? 4 : 18),
+            ),
+            border: isMine
+                ? null
+                : Border.all(color: AppColors.borderSoft),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isMine && message.userName != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: GestureDetector(
+                    onTap: onAvatarTap,
+                    child: Text(
+                      message.userName!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              Text(
+                message.body,
+                style: TextStyle(
+                  height: 1.4,
+                  color: isMine ? Colors.white : AppColors.text,
+                ),
+              ),
+              if (time.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isMine
+                            ? Colors.white.withValues(alpha: 0.75)
+                            : AppColors.muted,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final avatar = _ChatAvatar(
+      name: message.userName,
+      imageUrl: message.userProfileImagePath,
+      onTap: onAvatarTap,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        mainAxisAlignment:
+            isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: isMine
+            ? [bubble, const SizedBox(width: 8), avatar]
+            : [avatar, const SizedBox(width: 8), bubble],
+      ),
+    );
+  }
+}
+
+class _ChatAvatar extends StatelessWidget {
+  const _ChatAvatar({this.name, this.imageUrl, this.onTap});
+
+  final String? name;
+  final String? imageUrl;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = (name?.trim().isNotEmpty ?? false)
+        ? name!.trim()[0].toUpperCase()
+        : '?';
+    final hasPhoto = imageUrl != null && imageUrl!.isNotEmpty;
+
+    final child = CircleAvatar(
+      radius: 16,
+      backgroundColor: AppColors.primarySoft,
+      child: ClipOval(
+        child: hasPhoto
+            ? SizedBox(
+                width: 32,
+                height: 32,
+                child: AppNetworkImage(
+                  url: imageUrl!,
+                  logicalWidth: 32,
+                  logicalHeight: 32,
+                  maxCacheWidth: 96,
+                  maxCacheHeight: 96,
+                  placeholder: Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  error: Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : Text(
+                initial,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderSoft),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (message.userName != null)
-                      Text(
-                        message.userName!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    Text(message.body, style: const TextStyle(height: 1.4)),
-                    if (time.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          time,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
+    );
+
+    if (onTap == null) return child;
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: child,
     );
   }
 }
@@ -396,9 +622,9 @@ class ChatComposer extends StatelessWidget {
                   _ComposerIconButton(
                     icon: Icons.attach_file_rounded,
                     onPressed: () {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(l10n.attachSoon)));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.attachSoon)),
+                      );
                     },
                   ),
                   const SizedBox(width: 8),

@@ -69,7 +69,7 @@ class PostEventMessageService
             'is_system' => false,
         ]);
 
-        $message->load('user:id,name,profile_image_path');
+        $message->load('user:id,name,public_id,profile_image_path');
 
         try {
             broadcast(new EventMessagePosted($message))->toOthers();

@@ -23,6 +23,8 @@ class EventMessageResource extends JsonResource
             'user' => [
                 'id' => $this->user?->id,
                 'name' => $this->user?->name,
+                'public_id' => $this->user?->public_id,
+                'profile_image_path' => $this->user?->profile_image_path,
             ],
         ];
     }

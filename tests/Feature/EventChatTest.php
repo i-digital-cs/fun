@@ -43,7 +43,13 @@ class EventChatTest extends TestCase
         ])
             ->assertCreated()
             ->assertJsonPath('data.body', 'Hello team x')
-            ->assertJsonPath('data.user.id', $owner->id);
+            ->assertJsonPath('data.user.id', $owner->id)
+            ->assertJsonPath('data.user.public_id', $owner->public_id)
+            ->assertJsonStructure([
+                'data' => [
+                    'user' => ['id', 'name', 'public_id', 'profile_image_path'],
+                ],
+            ]);
 
         EventFacade::assertDispatched(EventMessagePosted::class);
 

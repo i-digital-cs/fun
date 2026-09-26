@@ -30,14 +30,16 @@ function bumpNotifyBadge() {
     });
 }
 
-function showJoinAcceptedToast(payload, host) {
-    const eventTitle = payload.event_title || '';
-    const title = payload.title || 'You’re in!';
-    const body = payload.body || '';
-    const eventUrl = payload.event_url || `/events/${payload.event_id || ''}`;
-    const labelNew = host.dataset.labelJoinAccepted || title;
-    const labelJustNow = host.dataset.labelJustNow || 'Just now';
-
+function showNotifyToast({
+    host,
+    labelNew,
+    labelJustNow,
+    title,
+    body,
+    eventTitle,
+    eventUrl,
+    avatarHtml,
+}) {
     const toast = document.createElement('div');
     toast.className = 'chat-toast';
     toast.setAttribute('role', 'alert');
@@ -52,7 +54,7 @@ function showJoinAcceptedToast(payload, host) {
         </div>
         <a href="${escapeHtml(eventUrl)}" class="chat-toast__body">
             <div class="chat-toast__avatar-wrap">
-                <div class="chat-toast__avatar">✓</div>
+                ${avatarHtml}
             </div>
             <div class="chat-toast__copy">
                 <div class="chat-toast__name">${escapeHtml(title)}</div>
@@ -82,6 +84,49 @@ function showJoinAcceptedToast(payload, host) {
     window.setTimeout(close, 7000);
 }
 
+function showJoinAcceptedToast(payload, host) {
+    const eventTitle = payload.event_title || '';
+    const title = payload.title || 'You’re in!';
+    const body = payload.body || '';
+    const eventUrl = payload.event_url || `/events/${payload.event_id || ''}`;
+    const labelNew = host.dataset.labelJoinAccepted || title;
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+
+    showNotifyToast({
+        host,
+        labelNew,
+        labelJustNow,
+        title,
+        body,
+        eventTitle,
+        eventUrl,
+        avatarHtml: '<div class="chat-toast__avatar">✓</div>',
+    });
+}
+
+function showJoinRequestedToast(payload, host) {
+    const eventTitle = payload.event_title || '';
+    const title = payload.title || 'New join request';
+    const body = payload.body || '';
+    const eventUrl = payload.event_url || `/events/${payload.event_id || ''}/requests`;
+    const labelNew = host.dataset.labelJoinRequested || title;
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+    const requester = payload.requester || {};
+    const name = requester.name || '';
+    const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+
+    showNotifyToast({
+        host,
+        labelNew,
+        labelJustNow,
+        title,
+        body,
+        eventTitle,
+        eventUrl,
+        avatarHtml: `<div class="chat-toast__avatar">${escapeHtml(initials)}</div>`,
+    });
+}
+
 export function initChatToasts() {
     const host = document.getElementById('chat-toast-host');
     if (!host || !window.Echo) {
@@ -101,6 +146,10 @@ export function initChatToasts() {
 
     channel.listen('.join.accepted', (payload) => {
         showJoinAcceptedToast(payload || {}, host);
+    });
+
+    channel.listen('.join.requested', (payload) => {
+        showJoinRequestedToast(payload || {}, host);
     });
 }
 

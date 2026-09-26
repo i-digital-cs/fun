@@ -24,7 +24,7 @@ class ListEventMessagesService
         $blockedIds = $this->blocks->blockedUserIdsFor($user);
 
         return EventMessage::query()
-            ->with(['user:id,name'])
+            ->with(['user:id,name,public_id,profile_image_path'])
             ->where('event_id', $event->id)
             ->when($blockedIds !== [], fn ($q) => $q->whereNotIn('user_id', $blockedIds))
             ->orderByDesc('id')

@@ -6,6 +6,7 @@ use App\Enums\EventMemberRole;
 use App\Enums\EventStatus;
 use App\Enums\JoinRequestStatus;
 use App\Events\UserJoinAccepted;
+use App\Events\UserJoinRequested;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\DeviceToken;
@@ -40,6 +41,7 @@ class NotificationInboxTest extends TestCase
     public function test_join_request_notifies_owner_via_notification(): void
     {
         Notification::fake();
+        EventFacade::fake([UserJoinRequested::class]);
 
         $owner = User::factory()->active()->create();
         $applicant = User::factory()->active()->create();
@@ -49,6 +51,7 @@ class NotificationInboxTest extends TestCase
         $this->postJson("/api/events/{$event->id}/join")->assertCreated();
 
         Notification::assertSentTo($owner, JoinRequestReceivedNotification::class);
+        EventFacade::assertDispatched(UserJoinRequested::class);
     }
 
     public function test_join_request_appears_in_web_and_api_inbox(): void

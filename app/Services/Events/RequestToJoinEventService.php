@@ -4,12 +4,14 @@ namespace App\Services\Events;
 
 use App\Enums\EventStatus;
 use App\Enums\JoinRequestStatus;
+use App\Events\UserJoinRequested;
 use App\Exceptions\DomainException;
 use App\Models\Event;
 use App\Models\EventJoinRequest;
 use App\Models\User;
 use App\Notifications\JoinRequestReceivedNotification;
 use App\Services\Safety\UserBlockService;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -101,6 +103,21 @@ class RequestToJoinEventService
             ));
         } catch (Throwable $exception) {
             Log::warning('join_request_notify_failed', [
+                'event_id' => $event->id,
+                'join_request_id' => $joinRequest->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        try {
+            broadcast(new UserJoinRequested(
+                event: $event,
+                creator: $creator,
+                requester: $requester,
+                joinRequest: $joinRequest,
+            ));
+        } catch (BroadcastException $exception) {
+            Log::warning('join_requested_broadcast_failed', [
                 'event_id' => $event->id,
                 'join_request_id' => $joinRequest->id,
                 'error' => $exception->getMessage(),
