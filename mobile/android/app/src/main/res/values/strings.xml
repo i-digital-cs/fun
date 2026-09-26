@@ -3,6 +3,6 @@
     <!-- Build-time launcher label. In-app name always comes from Admin → Site settings (GET /api/site). -->
     <string name="app_name">Funnity</string>
     <!-- Web OAuth client ID — used by google_sign_in when google-services.json
-         oauth_client[] is empty. Must match Laravel GOOGLE_CLIENT_ID. -->
-    <string name="default_web_client_id">702014926680-h8o7h7pih3ttuo1g2abf5aj4ekqeje97.apps.googleusercontent.com</string>
+         Must match google-services.json client_type 3 and Laravel GOOGLE_FIREBASE_WEB_CLIENT_ID. -->
+    <string name="default_web_client_id">51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com</string>
 </resources>

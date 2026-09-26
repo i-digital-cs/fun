@@ -26,11 +26,12 @@ abstract final class Env {
   static const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'prod');
 
   /// Web OAuth client ID for Google Sign-In `serverClientId` (id_token audience).
-  /// Public client ID (not a secret). Override with `--dart-define` if needed.
+  /// Must match an entry in Laravel `services.google.client_ids`
+  /// (prefer the Firebase auto Web client from `google-services.json` client_type 3).
   static const googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
     defaultValue:
-        '702014926680-h8o7h7pih3ttuo1g2abf5aj4ekqeje97.apps.googleusercontent.com',
+        '51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com',
   );
 
   /// Optional Reverb overrides (prefer `/api/site` `broadcast` when unset).

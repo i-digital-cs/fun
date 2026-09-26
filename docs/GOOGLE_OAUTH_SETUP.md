@@ -185,7 +185,8 @@ Package: [`google_sign_in`](https://pub.dev/packages/google_sign_in).
 - [ ] Production Web client includes `https://funnity.com/auth/google/callback` (and www if used)
 - [ ] Android client: correct `applicationId` + **debug SHA-1** + **release/Play SHA-1**
 - [ ] iOS client: correct bundle ID + URL scheme
-- [ ] Flutter `serverClientId` = **Web** client ID
+- [ ] Flutter `serverClientId` = Firebase **Web** client from `google-services.json` (`client_type: 3`) — not a mismatched older project ID
+- [ ] Laravel `.env` lists all token audiences: `GOOGLE_CLIENT_ID` (Socialite) + `GOOGLE_FIREBASE_WEB_CLIENT_ID` + `GOOGLE_ANDROID_CLIENT_ID`
 - [ ] `POST /api/auth/google` returns token (test in Postman with a real `id_token`)
 - [ ] New Google user lands on identity upload (pending documents)
 

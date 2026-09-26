@@ -42,6 +42,7 @@ return [
         // All OAuth client IDs that may appear as `aud` on Flutter/web ID tokens.
         'client_ids' => array_values(array_filter([
             env('GOOGLE_CLIENT_ID'),
+            env('GOOGLE_FIREBASE_WEB_CLIENT_ID'),
             env('GOOGLE_ANDROID_CLIENT_ID'),
             env('GOOGLE_IOS_CLIENT_ID'),
         ])),

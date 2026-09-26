@@ -9,7 +9,7 @@ void main() {
     expect(Env.usesLocalApi, isFalse);
     expect(
       Env.googleServerClientId,
-      '702014926680-h8o7h7pih3ttuo1g2abf5aj4ekqeje97.apps.googleusercontent.com',
+      '51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com',
     );
   });
 }

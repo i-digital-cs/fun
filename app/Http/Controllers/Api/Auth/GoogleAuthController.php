@@ -54,7 +54,9 @@ class GoogleAuthController extends Controller
             }
         } catch (DomainException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            report($exception);
+
             return response()->json(['message' => __('auth.google_invalid_token')], 422);
         }
 
