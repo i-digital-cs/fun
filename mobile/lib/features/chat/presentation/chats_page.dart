@@ -137,79 +137,97 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
           }
 
           final rows = _filtered(payload.data);
+          final unreadTotal = payload.data
+              .where((c) => c.unreadCount > 0)
+              .fold<int>(0, (sum, c) => sum + c.unreadCount);
 
           return Column(
             children: [
-              Container(
-                width: double.infinity,
-                color: AppColors.primary,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Column(
                   children: [
+                    _ChatSegmentBar(
+                      recentLabel: l10n.chatsFilterRecent,
+                      unreadLabel: l10n.chatsFilterUnread,
+                      unreadCount: unreadTotal,
+                      selected: _filter,
+                      onChanged: (next) => setState(() => _filter = next),
+                    ),
                     if (_showSearch) ...[
+                      const SizedBox(height: 12),
                       TextField(
                         controller: _search,
                         onChanged: (_) => setState(() {}),
                         autofocus: true,
-                        style: const TextStyle(color: Colors.white),
-                        cursorColor: Colors.white,
+                        textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: l10n.searchChatsHint,
-                          hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.65),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: _search.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: l10n.search,
+                                  onPressed: () {
+                                    _search.clear();
+                                    setState(() {});
+                                  },
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
                           filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.14),
+                          fillColor: AppColors.surface,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 12,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
+                            borderSide: const BorderSide(
+                              color: AppColors.borderSoft,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderSoft,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
                     ],
-                    Row(
-                      children: [
-                        _FilterChip(
-                          label: l10n.chatsFilterRecent,
-                          selected: _filter == _ChatFilter.recent,
-                          onTap: () =>
-                              setState(() => _filter = _ChatFilter.recent),
-                        ),
-                        const SizedBox(width: 12),
-                        _FilterChip(
-                          label: l10n.chatsFilterUnread,
-                          selected: _filter == _ChatFilter.unread,
-                          onTap: () =>
-                              setState(() => _filter = _ChatFilter.unread),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
               Expanded(
                 child: rows.isEmpty
                     ? Center(
-                        child: Text(
-                          l10n.chatsNoResults,
-                          style: const TextStyle(color: AppColors.muted),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(
+                            _filter == _ChatFilter.unread &&
+                                    _search.text.trim().isEmpty
+                                ? l10n.chatsNoUnread
+                                : l10n.chatsNoResults,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: AppColors.muted),
+                          ),
                         ),
                       )
                     : RefreshIndicator(
                         onRefresh: () async =>
                             ref.invalidate(chatsListProvider),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
                           itemCount: rows.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 6),
                           itemBuilder: (context, index) {
                             final chat = rows[index];
                             return _ChatCard(
@@ -230,38 +248,115 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+class _ChatSegmentBar extends StatelessWidget {
+  const _ChatSegmentBar({
+    required this.recentLabel,
+    required this.unreadLabel,
+    required this.unreadCount,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final String recentLabel;
+  final String unreadLabel;
+  final int unreadCount;
+  final _ChatFilter selected;
+  final ValueChanged<_ChatFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderSoft),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SegmentTab(
+              label: recentLabel,
+              selected: selected == _ChatFilter.recent,
+              onTap: () => onChanged(_ChatFilter.recent),
+            ),
+          ),
+          Expanded(
+            child: _SegmentTab(
+              label: unreadLabel,
+              selected: selected == _ChatFilter.unread,
+              badge: unreadCount > 0 ? unreadCount : null,
+              onTap: () => onChanged(_ChatFilter.unread),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentTab extends StatelessWidget {
+  const _SegmentTab({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.badge,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final int? badge;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? Colors.white : Colors.transparent,
-      borderRadius: BorderRadius.circular(999),
+      color: selected ? AppColors.surface : Colors.transparent,
+      elevation: selected ? 1 : 0,
+      shadowColor: AppColors.primary.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(11),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: Colors.white),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? AppColors.text : Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+        borderRadius: BorderRadius.circular(11),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? AppColors.primaryInk : AppColors.muted,
+                ),
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: 6),
+                Container(
+                  constraints: const BoxConstraints(minWidth: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    badge! > 99 ? '99+' : '$badge',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: selected ? Colors.white : AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -307,110 +402,121 @@ class _ChatCard extends StatelessWidget {
     final eventWhen = _eventWhen(context);
     final hasImage = chat.imageUrl != null && chat.imageUrl!.isNotEmpty;
 
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            _EventAvatar(
-              title: chat.title,
-              imageUrl: hasImage ? chat.imageUrl : null,
-              unread: unread,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          chat.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight:
-                                unread ? FontWeight.w800 : FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      if (messageTime.isNotEmpty)
-                        Text(
-                          messageTime,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: unread
-                                ? AppColors.primary
-                                : AppColors.muted,
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (eventWhen.isNotEmpty || chat.city != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      [
-                        if (eventWhen.isNotEmpty) eventWhen,
-                        if (chat.city != null) chat.city!,
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          preview,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: unread ? AppColors.text : AppColors.muted,
-                            fontWeight:
-                                unread ? FontWeight.w600 : FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                      if (unread) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
+    return Material(
+      color: unread
+          ? AppColors.primarySoft.withValues(alpha: 0.35)
+          : AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              _EventAvatar(
+                title: chat.title,
+                imageUrl: hasImage ? chat.imageUrl : null,
+                unread: unread,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
                           child: Text(
-                            chat.unreadCount > 99
-                                ? '99+'
-                                : '${chat.unreadCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
+                            chat.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight:
+                                  unread ? FontWeight.w800 : FontWeight.w600,
+                              color: AppColors.text,
                             ),
                           ),
                         ),
+                        if (messageTime.isNotEmpty)
+                          Text(
+                            messageTime,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: unread
+                                  ? AppColors.primary
+                                  : AppColors.muted,
+                            ),
+                          ),
                       ],
+                    ),
+                    if (eventWhen.isNotEmpty || chat.city != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        [
+                          if (eventWhen.isNotEmpty) eventWhen,
+                          if (chat.city != null) chat.city!,
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
-                  ),
-                ],
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            preview,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color:
+                                  unread ? AppColors.text : AppColors.muted,
+                              fontWeight:
+                                  unread ? FontWeight.w600 : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        if (unread) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            constraints: const BoxConstraints(minWidth: 22),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              chat.unreadCount > 99
+                                  ? '99+'
+                                  : '${chat.unreadCount}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -497,9 +603,9 @@ class _EventAvatar extends StatelessWidget {
               width: 14,
               height: 14,
               decoration: BoxDecoration(
-                color: AppColors.success,
+                color: AppColors.primary,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.canvas, width: 2.5),
+                border: Border.all(color: AppColors.surface, width: 2.5),
               ),
             ),
           ),

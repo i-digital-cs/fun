@@ -314,6 +314,12 @@ abstract class AppLocalizations {
   /// **'No chats match your search'**
   String get chatsNoResults;
 
+  /// No description provided for @chatsNoUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up — no unread chats'**
+  String get chatsNoUnread;
+
   /// No description provided for @searchChatsHint.
   ///
   /// In en, this message translates to:

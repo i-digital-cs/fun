@@ -120,6 +120,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsNoResults => 'No chats match your search';
 
   @override
+  String get chatsNoUnread => 'You\'re all caught up — no unread chats';
+
+  @override
   String get searchChatsHint => 'Search chats…';
 
   @override

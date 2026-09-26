@@ -36,6 +36,7 @@
   "chatsFilterRecent": "الأحدث",
   "chatsFilterUnread": "غير مقروء",
   "chatsNoResults": "لا محادثات تطابق بحثك",
+  "chatsNoUnread": "لا توجد محادثات غير مقروءة",
   "searchChatsHint": "ابحث في المحادثات…",
   "copyMessage": "نسخ الرسالة",
   "messageCopied": "تم نسخ الرسالة",

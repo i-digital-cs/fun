@@ -118,6 +118,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsNoResults => 'لا محادثات تطابق بحثك';
 
   @override
+  String get chatsNoUnread => 'لا توجد محادثات غير مقروءة';
+
+  @override
   String get searchChatsHint => 'ابحث في المحادثات…';
 
   @override

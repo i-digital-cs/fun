@@ -36,6 +36,7 @@
   "chatsFilterRecent": "Recent",
   "chatsFilterUnread": "Unread",
   "chatsNoResults": "No chats match your search",
+  "chatsNoUnread": "You're all caught up — no unread chats",
   "searchChatsHint": "Search chats…",
   "copyMessage": "Copy message",
   "messageCopied": "Message copied",
