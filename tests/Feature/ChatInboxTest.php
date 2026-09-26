@@ -73,7 +73,9 @@ class ChatInboxTest extends TestCase
         $this->get(route('chats.index'))
             ->assertOk()
             ->assertSee('Inbox Event')
-            ->assertSee('Hello member');
+            ->assertSee('Hello member')
+            ->assertSee(__('chat.inbox_recent'))
+            ->assertSee(__('chat.inbox_unread'));
     }
 
     public function test_opening_messages_marks_chat_read(): void

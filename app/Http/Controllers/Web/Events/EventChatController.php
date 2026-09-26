@@ -65,6 +65,9 @@ class EventChatController extends Controller
                     'user' => [
                         'id' => $message->user?->id,
                         'name' => $message->user?->name,
+                        'public_id' => $message->user?->public_id,
+                        'initials' => user_initials($message->user?->name),
+                        'profile_image_path' => $message->user?->profile_image_path,
                     ],
                 ],
             ], 201);

@@ -278,3 +278,39 @@ if (! function_exists('user_initials')) {
             ->implode('');
     }
 }
+
+if (! function_exists('chat_relative_time')) {
+    /**
+     * Compact relative time matching Flutter chat inbox (now / Nm / Nh / Nd / M j).
+     */
+    function chat_relative_time(?\DateTimeInterface $at): string
+    {
+        if ($at === null) {
+            return '';
+        }
+
+        $local = \Illuminate\Support\Carbon::instance(
+            $at instanceof \Illuminate\Support\Carbon ? $at : \Illuminate\Support\Carbon::parse($at)
+        )->timezone(config('app.timezone'));
+
+        $seconds = abs(now()->getTimestamp() - $local->getTimestamp());
+
+        if ($seconds < 60) {
+            return 'now';
+        }
+
+        if ($seconds < 3600) {
+            return (int) floor($seconds / 60).'m';
+        }
+
+        if ($seconds < 86400) {
+            return (int) floor($seconds / 3600).'h';
+        }
+
+        if ($seconds < 604800) {
+            return (int) floor($seconds / 86400).'d';
+        }
+
+        return $local->translatedFormat('M j');
+    }
+}

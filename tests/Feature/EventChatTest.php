@@ -121,7 +121,7 @@ class EventChatTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonPath('message', __('chat.duplicate'));
 
-        $this->assertSame(1, EventMessage::query()->count());
+        $this->assertSame(1, EventMessage::query()->where('event_id', $event->id)->count());
     }
 
     public function test_event_chat_channel_authorizer(): void
@@ -141,7 +141,10 @@ class EventChatTest extends TestCase
 
     public function test_web_chat_page_renders_for_member(): void
     {
-        $owner = User::factory()->active()->create();
+        $owner = User::factory()->active()->create([
+            'name' => 'Chat Owner',
+            'profile_image_path' => 'https://example.com/avatar.jpg',
+        ]);
         $event = $this->publishedEventFor($owner);
 
         EventMessage::query()->create([
@@ -156,7 +159,28 @@ class EventChatTest extends TestCase
             ->assertOk()
             ->assertSee(__('chat.title'))
             ->assertSee('Kickoff at eight')
-            ->assertSee(__('chat.send'));
+            ->assertSee(__('chat.send'))
+            ->assertSee('chat-row--mine', false)
+            ->assertSee('https://example.com/avatar.jpg');
+    }
+
+    public function test_web_chat_json_post_includes_avatar_fields(): void
+    {
+        EventFacade::fake([EventMessagePosted::class, \App\Events\UserChatMessageReceived::class]);
+
+        $owner = User::factory()->active()->create([
+            'profile_image_path' => 'https://example.com/me.jpg',
+        ]);
+        $event = $this->publishedEventFor($owner);
+
+        $this->actingAs($owner)
+            ->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class)
+            ->postJson(event_route('events.chat.store', $event), ['body' => 'Hello web'])
+            ->assertCreated()
+            ->assertJsonPath('data.body', 'Hello web')
+            ->assertJsonPath('data.user.id', $owner->id)
+            ->assertJsonPath('data.user.public_id', $owner->public_id)
+            ->assertJsonPath('data.user.profile_image_path', 'https://example.com/me.jpg');
     }
 
     public function test_idor_cannot_post_to_another_event_by_swapping_id(): void

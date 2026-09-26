@@ -483,7 +483,7 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 | | |
 |--|--|
 | **Blade** | `events/chat.blade.php` |
-| **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` — list shows **event cover image**, **event date/time**, last-message relative time, search, unread filter. Payload: `image_url`, `starts_at`. Thread: long-press → **copy message**. |
+| **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` — **same arrangement on web + Flutter:** event cover, event date/time, compact relative last-message time (`now`/`Nm`/`Nh`/`Nd`), **Recent \| Unread** segment, search (icon toggle), separate tinted cards, unread badge beside preview. Payload: `image_url`, `starts_at`. Thread: long-press → **copy message** (Flutter); web report link in bubble footer. |
 | **Toast** | Web + Flutter: private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). **Also:** `.join.requested` (organizer toast + notify badge) and `.join.accepted` (applicant toast + notify badge). **Transport:** production uses **Pusher Channels** (`BROADCAST_CONNECTION=pusher`); Reverb remains an optional VPS alternative. Flutter: `GET /api/site` → `broadcast` (`enabled`, `driver`=`pusher`|`reverb`, `key`, `cluster` for Pusher, `host`/`port`/`scheme` for Reverb) + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). **FCM:** other members get outside-app push on new messages (no message body in push). SEC-PRIV-002: Flutter toasts never echo message body. |
 | **Unread** | `event_chat_reads.last_read_message_id`; mark on open thread / `POST /api/events/{id}/messages/read` |
 | **API** | `GET /api/events/{id}/messages` (page 1 = **newest first** for pagination), `POST .../messages` |
@@ -492,8 +492,8 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 **Must:** message list (author, time, body), dark Uiverse-style composer (textarea + attach affordance + Chat chip + send plane), report message link, link back to event.  
 **Display order:** chat UI must show **oldest → newest** (web reverses the API page; Flutter sorts by `id` ascending) with newest at the **bottom** near the composer.  
 **Realtime thread (web + Flutter):** both subscribe to private `events.{id}.chat` / `.message.posted` (web Echo; Flutter `ChatRealtimeClient.subscribeEventChat`). Flutter keeps a slow poll (60s) as safety net when the socket is live, and 8s poll when realtime is unavailable.  
-**Flutter thread UI:** mine/theirs bubbles, profile photo (or initial) — tap avatar/name → `/u/{publicId}`; AppBar **View Event** → `/events/{id}`. Message API includes `user.public_id` + `user.profile_image_path`.  
-Composer visual matches web (`ChatComposer` dark bar). User-channel Pusher toasts remain for inbox (suppressed while viewing that event’s chat).
+**Thread UI (web + Flutter parity):** mine/theirs row with **avatar** (photo or initial) — tap avatar/name → `/u/{publicId}`; **solid indigo** mine bubbles + white text; time **inside** bubble (`g:i A`); author only on theirs; system messages centered italic; AppBar/header **Chat** + event subtitle + **View Event**. Web `POST` JSON + Echo payload include `user.public_id` + `user.profile_image_path`.  
+Composer visual matches across platforms (`ChatComposer` dark bar). User-channel Pusher toasts remain for inbox (suppressed while viewing that event’s chat).
 
 ---
 
@@ -1258,7 +1258,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
 8. **Create/edit** — all fields including **required sex/audience** (`male`/`female`/`mix`) + image + free place pin (`maps_url` / lat·lng; OSM Leaflet on web); join respects `sex_mismatch`  
 9. **Members** — promote / demote / transfer + report/block links  
-10. **Chat** — inbox `/chats` + thread list/post; Flutter + web: live `events.{id}.chat` + user-channel toasts (Pusher/Reverb); Flutter poll fallback; avatars → public profile; View Event CTA
+10. **Chat** — inbox `/chats` + thread list/post; web + Flutter share layout (Recent/Unread, cards, avatars, indigo mine bubbles, in-bubble time); live `events.{id}.chat` + user-channel toasts (Pusher/Reverb); Flutter poll fallback; avatars → public profile; View Event CTA
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link without Google credentials (web+Flutter+API)  
 13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  

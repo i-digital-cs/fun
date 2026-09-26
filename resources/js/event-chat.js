@@ -13,31 +13,108 @@ function autosize(textarea) {
     textarea.style.height = `${next}px`;
 }
 
-function appendMessage(container, message, emptyEl, currentUserId) {
+function formatChatTime(iso) {
+    if (!iso) {
+        return '';
+    }
+
+    return new Date(iso).toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+}
+
+function initialsFromName(name) {
+    const parts = String(name || '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2);
+
+    if (parts.length === 0) {
+        return '?';
+    }
+
+    return parts.map((part) => part.charAt(0).toUpperCase()).join('');
+}
+
+function avatarHtml(user, profileBase) {
+    const name = user?.name ?? '';
+    const photo = user?.profile_image_path ?? '';
+    const publicId = user?.public_id ?? '';
+    const initials = user?.initials || initialsFromName(name);
+    const inner = photo
+        ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" />`
+        : `<span>${escapeHtml(initials)}</span>`;
+
+    if (publicId && profileBase) {
+        const href = `${profileBase.replace(/\/$/, '')}/${encodeURIComponent(publicId)}`;
+        return `<a href="${escapeHtml(href)}" class="chat-row__avatar" title="${escapeHtml(name)}">${inner}</a>`;
+    }
+
+    return `<span class="chat-row__avatar" aria-hidden="true">${inner}</span>`;
+}
+
+function appendMessage(container, message, emptyEl, currentUserId, options = {}) {
     if (container.querySelector(`[data-message-id="${message.id}"]`)) {
         return;
     }
 
     emptyEl?.remove();
 
-    const time = message.created_at
-        ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : '';
+    const time = formatChatTime(message.created_at);
     const mine = Number(message.user?.id) === Number(currentUserId);
+    const isSystem = Boolean(message.is_system);
+    const reportUrl = options.reportUrl || '';
+    const reportLabel = options.reportLabel || 'Report';
+    const profileBase = options.profileBase || '/u';
 
     const el = document.createElement('div');
-    el.className = `chat-message ${mine ? 'chat-message--mine' : 'chat-message--theirs'}`;
     el.dataset.messageId = String(message.id);
     el.dataset.mine = mine ? '1' : '0';
-    el.innerHTML = `
-        <div class="chat-message__meta">
-            <p class="chat-message__author">${escapeHtml(message.user?.name ?? '')}</p>
-            <div class="chat-message__meta-end">
+
+    if (isSystem) {
+        el.className = 'chat-row chat-row--system';
+        el.dataset.system = '1';
+        el.innerHTML = `<p class="chat-row__system-text">${escapeHtml(message.body ?? '')}</p>`;
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+        return;
+    }
+
+    el.className = `chat-row ${mine ? 'chat-row--mine' : 'chat-row--theirs'}`;
+
+    const author = !mine && message.user?.name
+        ? (
+            message.user?.public_id
+                ? `<a href="${escapeHtml(`${profileBase.replace(/\/$/, '')}/${encodeURIComponent(message.user.public_id)}`)}" class="chat-message__author">${escapeHtml(message.user.name)}</a>`
+                : `<p class="chat-message__author">${escapeHtml(message.user.name)}</p>`
+        )
+        : '';
+
+    let report = '';
+    if (!mine && reportUrl) {
+        const url = new URL(reportUrl, window.location.origin);
+        url.searchParams.set('reportable_type', 'message');
+        url.searchParams.set('reportable_id', String(message.id));
+        report = `<a href="${escapeHtml(url.pathname + url.search)}" class="chat-message__report">${escapeHtml(reportLabel)}</a>`;
+    }
+
+    const bubble = `
+        <div class="chat-message ${mine ? 'chat-message--mine' : 'chat-message--theirs'}">
+            ${author}
+            <p class="chat-message__body">${escapeHtml(message.body ?? '')}</p>
+            <div class="chat-message__footer">
+                ${report}
                 <time class="chat-message__time">${escapeHtml(time)}</time>
             </div>
         </div>
-        <p class="chat-message__body">${escapeHtml(message.body ?? '')}</p>
     `;
+
+    const avatar = avatarHtml(message.user, profileBase);
+    el.innerHTML = mine ? `${bubble}${avatar}` : `${avatar}${bubble}`;
+
     container.appendChild(el);
     container.scrollTop = container.scrollHeight;
 }
@@ -59,6 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const postUrl = root.dataset.postUrl;
     const csrf = root.dataset.csrf;
     const currentUserId = Number(root.dataset.userId);
+    const appendOptions = {
+        reportUrl: root.dataset.reportUrl || '',
+        reportLabel: root.dataset.reportLabel || 'Report',
+        profileBase: '/u',
+    };
 
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
@@ -85,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Number(payload.user?.id) === currentUserId) {
                 return;
             }
-            appendMessage(messagesEl, payload, emptyEl, currentUserId);
+            appendMessage(messagesEl, payload, emptyEl, currentUserId, appendOptions);
         });
     } else if (statusEl) {
         statusEl.textContent = statusEl.dataset.fallback || 'Live updates unavailable.';
@@ -115,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             );
 
-            appendMessage(messagesEl, response.data.data, emptyEl, currentUserId);
+            appendMessage(messagesEl, response.data.data, emptyEl, currentUserId, appendOptions);
             bodyInput.value = '';
             autosize(bodyInput);
             if (statusEl && !statusEl.dataset.fallbackActive) {

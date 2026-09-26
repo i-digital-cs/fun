@@ -6,10 +6,10 @@
     <div class="mx-auto flex max-w-3xl flex-col gap-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <p class="text-sm text-slate-500">
+                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ __('chat.title') }}</h1>
+                <p class="mt-1 text-sm text-slate-500">
                     <a href="{{ event_show_url($event) }}" class="font-medium text-indigo-600 hover:text-indigo-800">{{ $event->title }}</a>
                 </p>
-                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ __('chat.title') }}</h1>
             </div>
             <a href="{{ event_show_url($event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
         </div>
@@ -22,30 +22,91 @@
             data-channel="events.{{ $event->id }}.chat"
             data-user-id="{{ auth()->id() }}"
             data-csrf="{{ csrf_token() }}"
+            data-report-url="{{ route('reports.create') }}"
+            data-report-label="{{ __('safety.report') }}"
         >
-            <div id="chat-messages" class="event-chat__messages fancy-scroll flex-1 space-y-3 overflow-y-auto p-5" role="log" aria-live="polite">
+            <div id="chat-messages" class="event-chat__messages fancy-scroll flex-1 overflow-y-auto p-4 sm:p-5" role="log" aria-live="polite">
                 @forelse ($messages as $message)
-                    @php($mine = (int) $message->user_id === (int) auth()->id())
-                    <div
-                        class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}"
-                        data-message-id="{{ $message->id }}"
-                        data-mine="{{ $mine ? '1' : '0' }}"
-                    >
-                        <div class="chat-message__meta">
-                            <p class="chat-message__author">{{ $message->user?->name }}</p>
-                            <div class="chat-message__meta-end">
-                                @if (! $mine)
-                                    <a href="{{ route('reports.create', ['reportable_type' => 'message', 'reportable_id' => $message->id]) }}" class="chat-message__report">{{ __('safety.report') }}</a>
-                                @endif
-                                <time class="chat-message__time" datetime="{{ $message->created_at?->toIso8601String() }}">
-                                    {{ $message->created_at?->timezone(config('app.timezone'))->format('H:i') }}
-                                </time>
-                            </div>
+                    @php
+                        $mine = (int) $message->user_id === (int) auth()->id();
+                        $isSystem = (bool) ($message->is_system ?? false);
+                        $user = $message->user;
+                        $photo = $user?->profile_image_path;
+                        $initials = user_initials($user?->name);
+                        $profileUrl = filled($user?->public_id) ? route('users.public.show', $user->public_id) : null;
+                        $timeLabel = $message->created_at?->timezone(config('app.timezone'))->format('g:i A');
+                    @endphp
+
+                    @if ($isSystem)
+                        <div class="chat-row chat-row--system" data-message-id="{{ $message->id }}" data-mine="0" data-system="1">
+                            <p class="chat-row__system-text">{{ $message->body }}</p>
                         </div>
-                        <p class="chat-message__body">{{ $message->body }}</p>
-                    </div>
+                    @else
+                        <div
+                            class="chat-row {{ $mine ? 'chat-row--mine' : 'chat-row--theirs' }}"
+                            data-message-id="{{ $message->id }}"
+                            data-mine="{{ $mine ? '1' : '0' }}"
+                        >
+                            @unless ($mine)
+                                @if ($profileUrl)
+                                    <a href="{{ $profileUrl }}" class="chat-row__avatar" title="{{ $user?->name }}">
+                                        @if (filled($photo))
+                                            <img src="{{ $photo }}" alt="" loading="lazy" />
+                                        @else
+                                            <span>{{ $initials }}</span>
+                                        @endif
+                                    </a>
+                                @else
+                                    <span class="chat-row__avatar" aria-hidden="true">
+                                        @if (filled($photo))
+                                            <img src="{{ $photo }}" alt="" loading="lazy" />
+                                        @else
+                                            <span>{{ $initials }}</span>
+                                        @endif
+                                    </span>
+                                @endif
+                            @endunless
+
+                            <div class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}">
+                                @unless ($mine)
+                                    @if ($profileUrl)
+                                        <a href="{{ $profileUrl }}" class="chat-message__author">{{ $user?->name }}</a>
+                                    @else
+                                        <p class="chat-message__author">{{ $user?->name }}</p>
+                                    @endif
+                                @endunless
+                                <p class="chat-message__body">{{ $message->body }}</p>
+                                <div class="chat-message__footer">
+                                    @if (! $mine)
+                                        <a href="{{ route('reports.create', ['reportable_type' => 'message', 'reportable_id' => $message->id]) }}" class="chat-message__report">{{ __('safety.report') }}</a>
+                                    @endif
+                                    <time class="chat-message__time" datetime="{{ $message->created_at?->toIso8601String() }}">{{ $timeLabel }}</time>
+                                </div>
+                            </div>
+
+                            @if ($mine)
+                                @if ($profileUrl)
+                                    <a href="{{ $profileUrl }}" class="chat-row__avatar" title="{{ $user?->name }}">
+                                        @if (filled($photo))
+                                            <img src="{{ $photo }}" alt="" loading="lazy" />
+                                        @else
+                                            <span>{{ $initials }}</span>
+                                        @endif
+                                    </a>
+                                @else
+                                    <span class="chat-row__avatar" aria-hidden="true">
+                                        @if (filled($photo))
+                                            <img src="{{ $photo }}" alt="" loading="lazy" />
+                                        @else
+                                            <span>{{ $initials }}</span>
+                                        @endif
+                                    </span>
+                                @endif
+                            @endif
+                        </div>
+                    @endif
                 @empty
-                    <p id="chat-empty" class="text-center text-sm text-slate-500">{{ __('chat.empty_thread') }}</p>
+                    <p id="chat-empty" class="py-8 text-center text-sm text-slate-500">{{ __('chat.empty_thread') }}</p>
                 @endforelse
             </div>
 
