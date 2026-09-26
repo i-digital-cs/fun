@@ -57,7 +57,18 @@ class ChatInboxTest extends TestCase
             ->assertJsonPath('meta.unread_total', 1)
             ->assertJsonPath('data.0.event_id', $event->id)
             ->assertJsonPath('data.0.title', 'Inbox Event')
-            ->assertJsonPath('data.0.last_message.body', 'Hello member');
+            ->assertJsonPath('data.0.last_message.body', 'Hello member')
+            ->assertJsonStructure([
+                'data' => [
+                    [
+                        'event_id',
+                        'title',
+                        'image_url',
+                        'starts_at',
+                        'last_message' => ['id', 'body', 'created_at'],
+                    ],
+                ],
+            ]);
 
         $this->get(route('chats.index'))
             ->assertOk()

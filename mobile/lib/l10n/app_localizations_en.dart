@@ -111,6 +111,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsYou => 'You';
 
   @override
+  String get chatsFilterRecent => 'Recent';
+
+  @override
+  String get chatsFilterUnread => 'Unread';
+
+  @override
+  String get chatsNoResults => 'No chats match your search';
+
+  @override
+  String get searchChatsHint => 'Search chats…';
+
+  @override
+  String get copyMessage => 'Copy message';
+
+  @override
+  String get messageCopied => 'Message copied';
+
+  @override
   String get notificationsTitle => 'Notifications';
 
   @override
@@ -264,6 +282,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loading => 'Loading…';
+
+  @override
+  String get splashTagline => 'Meet nearby. Join for real.';
 
   @override
   String get comingSoon => 'Coming soon';

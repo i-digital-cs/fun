@@ -28,7 +28,7 @@ class ListUserChatsService
         $events = Event::query()
             ->whereIn('id', $eventIds)
             ->whereIn('status', [EventStatus::Published, EventStatus::Completed])
-            ->with(['city:id,name_en,name_ar'])
+            ->with(['city:id,name_en,name_ar', 'category:id,slug,name_en,name_ar'])
             ->get()
             ->keyBy('id');
 
@@ -85,6 +85,8 @@ class ListUserChatsService
                     'event_id' => $event->id,
                     'title' => $event->title,
                     'city' => $event->city?->localizedName(),
+                    'image_url' => $event->coverUrl('card'),
+                    'starts_at' => $event->starts_at?->toIso8601String(),
                     'chat_url' => event_route('events.chat', $event),
                     'unread_count' => $unread,
                     'last_message' => $last === null ? null : [

@@ -21,6 +21,7 @@ return [
     'inbox_empty_title' => 'No chats yet',
     'inbox_empty_body' => 'Join an event to start chatting with other members.',
     'inbox_no_messages' => 'No messages yet',
+    'inbox_search' => 'Search chats…',
     'you' => 'You',
     'unread_count' => '{1} :count unread|[2,*] :count unread',
     'toast_new' => 'New message',

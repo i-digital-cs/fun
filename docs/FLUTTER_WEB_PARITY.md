@@ -28,7 +28,7 @@ For each screen:
 | **Shell (logged in)** | `layouts/dashboard` — sidebar + topbar + mobile 5-tab | Same IA: Home · Discover · Create · My Events · Profile |
 | **Shell (guest auth)** | `layouts/app` + ambient + glass | Ambient + glass cards; brand from API |
 | **Branding** | Admin display name + logo | `GET /api/site` → name + logo on auth/identity/home |
-| **App version** | Admin min / latest / force update | `GET /api/site` → `app` payload; splash force/soft update |
+| **App version** | Admin min / latest / force update | `GET /api/site` → `app` payload; animated splash (`SplashPage`) with site logo + force/soft update |
 | **Auth** | Login/register + cinema + email code + forgot/reset | Same flows via Auth API (§2A) |
 | **Gates** | email verified → identity → active | Same order using `/api/user` flags |
 | **Discover / events** | Filters, rich cards, join states | Same filters + `join_action` (send **Bearer** on event GETs) |
@@ -483,7 +483,7 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 | | |
 |--|--|
 | **Blade** | `events/chat.blade.php` |
-| **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` |
+| **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` — list shows **event cover image**, **event date/time**, last-message relative time, search, unread filter. Payload: `image_url`, `starts_at`. Thread: long-press → **copy message**. |
 | **Toast** | Web + Flutter: private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). **Also:** `.join.requested` (organizer toast + notify badge) and `.join.accepted` (applicant toast + notify badge). **Transport:** production uses **Pusher Channels** (`BROADCAST_CONNECTION=pusher`); Reverb remains an optional VPS alternative. Flutter: `GET /api/site` → `broadcast` (`enabled`, `driver`=`pusher`|`reverb`, `key`, `cluster` for Pusher, `host`/`port`/`scheme` for Reverb) + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). **FCM:** other members get outside-app push on new messages (no message body in push). SEC-PRIV-002: Flutter toasts never echo message body. |
 | **Unread** | `event_chat_reads.last_read_message_id`; mark on open thread / `POST /api/events/{id}/messages/read` |
 | **API** | `GET /api/events/{id}/messages` (page 1 = **newest first** for pagination), `POST .../messages` |

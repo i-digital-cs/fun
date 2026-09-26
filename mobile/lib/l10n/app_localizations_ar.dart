@@ -109,6 +109,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsYou => 'أنت';
 
   @override
+  String get chatsFilterRecent => 'الأحدث';
+
+  @override
+  String get chatsFilterUnread => 'غير مقروء';
+
+  @override
+  String get chatsNoResults => 'لا محادثات تطابق بحثك';
+
+  @override
+  String get searchChatsHint => 'ابحث في المحادثات…';
+
+  @override
+  String get copyMessage => 'نسخ الرسالة';
+
+  @override
+  String get messageCopied => 'تم نسخ الرسالة';
+
+  @override
   String get notificationsTitle => 'الإشعارات';
 
   @override
@@ -262,6 +280,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get loading => 'جارٍ التحميل…';
+
+  @override
+  String get splashTagline => 'التقِ بالقرب. انضم فعلياً.';
 
   @override
   String get comingSoon => 'قريباً';

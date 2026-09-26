@@ -21,6 +21,7 @@ return [
     'inbox_empty_title' => 'لا محادثات بعد',
     'inbox_empty_body' => 'انضم إلى فعالية لبدء المحادثة مع الأعضاء.',
     'inbox_no_messages' => 'لا رسائل بعد',
+    'inbox_search' => 'ابحث في المحادثات…',
     'you' => 'أنت',
     'unread_count' => '{1} :count غير مقروءة|[2,*] :count غير مقروءة',
     'toast_new' => 'رسالة جديدة',

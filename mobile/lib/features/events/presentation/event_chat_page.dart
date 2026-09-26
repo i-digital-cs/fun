@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
@@ -204,8 +205,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     final auth = ref.read(authControllerProvider);
     final currentId = auth is Authenticated ? auth.user.id : null;
     final canParticipate = auth is Authenticated && auth.user.canParticipate;
-    if (!canParticipate) return;
-    if (message.userId != null && message.userId == currentId) return;
+    final isMine = message.userId != null && message.userId == currentId;
 
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -218,22 +218,29 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.flag_outlined),
-              title: Text(l10n.reportMessage),
-              onTap: () => Navigator.pop(ctx, 'report_message'),
+              leading: const Icon(Icons.copy_outlined),
+              title: Text(l10n.copyMessage),
+              onTap: () => Navigator.pop(ctx, 'copy'),
             ),
-            if (message.userId != null)
+            if (canParticipate && !isMine) ...[
               ListTile(
-                leading: const Icon(Icons.person_off_outlined),
-                title: Text(l10n.report),
-                onTap: () => Navigator.pop(ctx, 'report_user'),
+                leading: const Icon(Icons.flag_outlined),
+                title: Text(l10n.reportMessage),
+                onTap: () => Navigator.pop(ctx, 'report_message'),
               ),
-            if (message.userId != null)
-              ListTile(
-                leading: const Icon(Icons.block_outlined),
-                title: Text(l10n.blockUser),
-                onTap: () => Navigator.pop(ctx, 'block'),
-              ),
+              if (message.userId != null)
+                ListTile(
+                  leading: const Icon(Icons.person_off_outlined),
+                  title: Text(l10n.report),
+                  onTap: () => Navigator.pop(ctx, 'report_user'),
+                ),
+              if (message.userId != null)
+                ListTile(
+                  leading: const Icon(Icons.block_outlined),
+                  title: Text(l10n.blockUser),
+                  onTap: () => Navigator.pop(ctx, 'block'),
+                ),
+            ],
           ],
         ),
       ),
@@ -241,6 +248,12 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     if (!mounted || action == null) return;
 
     switch (action) {
+      case 'copy':
+        await Clipboard.setData(ClipboardData(text: message.body));
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.messageCopied)),
+        );
       case 'report_message':
         await showReportSheet(
           context,

@@ -8,10 +8,7 @@ import 'package:fun_mobile/features/auth/presentation/register_page.dart';
 import 'package:fun_mobile/features/auth/presentation/reset_password_page.dart';
 import 'package:fun_mobile/features/auth/presentation/verify_email_page.dart';
 import 'package:fun_mobile/features/auth/presentation/verify_reset_code_page.dart';
-import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/utils/route_ids.dart';
-import 'package:fun_mobile/core/widgets/fun_loader.dart';
-import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/features/events/presentation/create_event_page.dart';
 import 'package:fun_mobile/features/events/presentation/event_chat_page.dart';
@@ -33,9 +30,7 @@ import 'package:fun_mobile/features/notifications/presentation/notifications_pag
 import 'package:fun_mobile/features/safety/presentation/blocks_page.dart';
 import 'package:fun_mobile/features/safety/presentation/report_page.dart';
 import 'package:fun_mobile/features/safety/presentation/safety_guidelines_page.dart';
-import 'package:fun_mobile/features/site/data/site_remote_source.dart';
-import 'package:fun_mobile/features/site/data/app_update_service.dart';
-import 'package:fun_mobile/features/site/domain/app_update.dart';
+import 'package:fun_mobile/features/splash/presentation/splash_page.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -122,7 +117,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => const _SplashPage(),
+        builder: (context, state) => const SplashPage(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
@@ -387,130 +382,4 @@ class _InvalidRoutePage extends StatelessWidget {
   }
 }
 
-class _SplashPage extends ConsumerStatefulWidget {
-  const _SplashPage();
 
-  @override
-  ConsumerState<_SplashPage> createState() => _SplashPageState();
-}
-
-class _SplashPageState extends ConsumerState<_SplashPage> {
-  String? _restoreError;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(_boot);
-  }
-
-  Future<void> _boot() async {
-    setState(() => _restoreError = null);
-    final locale = ref.read(localeCodeProvider);
-    final update = await checkForUpdate(
-      ref.read(siteRemoteSourceProvider),
-      locale: locale,
-    );
-    if (!mounted) return;
-
-    if (update.kind == UpdateKind.force || update.kind == UpdateKind.soft) {
-      final l10n = AppLocalizations.of(context);
-      final force = update.kind == UpdateKind.force;
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: !force,
-        builder: (ctx) => PopScope(
-          canPop: !force,
-          child: AlertDialog(
-            title: Text(l10n.updateAvailable),
-            content: Text(
-              update.message?.isNotEmpty == true
-                  ? update.message!
-                  : l10n.updateAvailableBody,
-            ),
-            actions: [
-              if (!force)
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(l10n.updateLater),
-                ),
-              FilledButton(
-                onPressed: () async {
-                  await openStoreUrl(update.storeUrl);
-                  if (!force && ctx.mounted) Navigator.pop(ctx);
-                },
-                child: Text(l10n.updateNow),
-              ),
-            ],
-          ),
-        ),
-      );
-      if (force) return;
-    }
-
-    await ref.read(authControllerProvider.notifier).bootstrap();
-    if (!mounted) return;
-    final auth = ref.read(authControllerProvider);
-    if (auth is AuthSessionRestoreFailed) {
-      setState(() => _restoreError = auth.message ?? l10nFallback());
-    }
-  }
-
-  String l10nFallback() => AppLocalizations.of(context).errorOffline;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    if (_restoreError != null) {
-      return Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _restoreError!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.muted),
-                ),
-                const SizedBox(height: 16),
-                TextButton(onPressed: _boot, child: Text(l10n.retry)),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    final brand = ref.watch(siteBrandingProvider).maybeWhen(
-      data: (s) => s,
-      orElse: () => SiteBranding.fallback,
-    );
-
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SiteBrandMark(
-              logoUrl: brand.logoUrl,
-              size: 72,
-              borderRadius: 18,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              brand.displayName,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 28),
-            const FunLoader(size: FunLoaderSize.lg),
-          ],
-        ),
-      ),
-    );
-  }
-}

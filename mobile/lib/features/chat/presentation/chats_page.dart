@@ -6,6 +6,7 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
@@ -16,6 +17,7 @@ import 'package:fun_mobile/features/notifications/presentation/notifications_pag
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 /// Ambient unread badge for shell topbar / sidebar (updated by [ChatToastListener]).
 final chatUnreadTotalProvider = StateProvider<int>((ref) => 0);
@@ -31,17 +33,69 @@ final chatsListProvider =
       return (data: result.data, unreadTotal: result.unreadTotal);
     });
 
-class ChatsPage extends ConsumerWidget {
+enum _ChatFilter { recent, unread }
+
+class ChatsPage extends ConsumerStatefulWidget {
   const ChatsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatsPage> createState() => _ChatsPageState();
+}
+
+class _ChatsPageState extends ConsumerState<ChatsPage> {
+  final _search = TextEditingController();
+  _ChatFilter _filter = _ChatFilter.recent;
+  bool _showSearch = false;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<ChatThread> _filtered(List<ChatThread> all) {
+    var list = all;
+    if (_filter == _ChatFilter.unread) {
+      list = list.where((c) => c.unreadCount > 0).toList();
+    }
+    final q = _search.text.trim().toLowerCase();
+    if (q.isEmpty) return list;
+    return list
+        .where((c) {
+          final hay = [
+            c.title,
+            c.city ?? '',
+            c.lastMessage?.body ?? '',
+            c.lastMessage?.userName ?? '',
+          ].join(' ').toLowerCase();
+          return hay.contains(q);
+        })
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final async = ref.watch(chatsListProvider);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: AppBar(title: Text(l10n.chatsTitle)),
+      appBar: AppBar(
+        centerTitle: false,
+        title: Text(l10n.chatsTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.search,
+            icon: Icon(_showSearch ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) _search.clear();
+              });
+            },
+          ),
+        ],
+      ),
       body: async.when(
         loading: () => const Center(child: FunLoader()),
         error: (error, _) => Center(
@@ -82,124 +136,374 @@ class ChatsPage extends ConsumerWidget {
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(chatsListProvider),
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              itemCount: payload.data.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final chat = payload.data[index];
-                final last = chat.lastMessage;
-                final preview = last == null
-                    ? l10n.chatsNoMessages
-                    : '${last.isMine ? l10n.chatsYou : (last.userName ?? '')}: ${last.body}';
-                final unread = chat.unreadCount > 0;
+          final rows = _filtered(payload.data);
 
-                return Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: () => context.push('/events/${chat.eventId}/chat'),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: unread
-                                ? AppColors.primary
-                                : AppColors.primary.withValues(alpha: 0.12),
-                            foregroundColor: unread
-                                ? Colors.white
-                                : AppColors.primary,
-                            child: Text(
-                              chat.title.isNotEmpty
-                                  ? chat.title.characters.first.toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
+          return Column(
+            children: [
+              Container(
+                width: double.infinity,
+                color: AppColors.primary,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    if (_showSearch) ...[
+                      TextField(
+                        controller: _search,
+                        onChanged: (_) => setState(() {}),
+                        autofocus: true,
+                        style: const TextStyle(color: Colors.white),
+                        cursorColor: Colors.white,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchChatsHint,
+                          hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  chat.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: unread
-                                        ? FontWeight.w800
-                                        : FontWeight.w700,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                if (chat.city != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    chat.city!,
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(height: 4),
-                                Text(
-                                  preview,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: unread
-                                        ? AppColors.text
-                                        : AppColors.muted,
-                                    fontWeight: unread
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
-                          if (unread)
-                            Container(
-                              margin: const EdgeInsetsDirectional.only(
-                                start: 8,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                chat.unreadCount > 99
-                                    ? '99+'
-                                    : '${chat.unreadCount}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                        ],
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
                       ),
+                      const SizedBox(height: 12),
+                    ],
+                    Row(
+                      children: [
+                        _FilterChip(
+                          label: l10n.chatsFilterRecent,
+                          selected: _filter == _ChatFilter.recent,
+                          onTap: () =>
+                              setState(() => _filter = _ChatFilter.recent),
+                        ),
+                        const SizedBox(width: 12),
+                        _FilterChip(
+                          label: l10n.chatsFilterUnread,
+                          selected: _filter == _ChatFilter.unread,
+                          onTap: () =>
+                              setState(() => _filter = _ChatFilter.unread),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              },
-            ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: rows.isEmpty
+                    ? Center(
+                        child: Text(
+                          l10n.chatsNoResults,
+                          style: const TextStyle(color: AppColors.muted),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async =>
+                            ref.invalidate(chatsListProvider),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          itemCount: rows.length,
+                          itemBuilder: (context, index) {
+                            final chat = rows[index];
+                            return _ChatCard(
+                              chat: chat,
+                              onTap: () => context.push(
+                                '/events/${chat.eventId}/chat',
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? Colors.white : Colors.transparent,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? AppColors.text : Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatCard extends StatelessWidget {
+  const _ChatCard({required this.chat, required this.onTap});
+
+  final ChatThread chat;
+  final VoidCallback onTap;
+
+  String _relativeTime(BuildContext context, DateTime? at) {
+    if (at == null) return '';
+    final local = at.toLocal();
+    final now = DateTime.now();
+    final diff = now.difference(local);
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inHours < 1) return '${diff.inMinutes}m';
+    if (diff.inDays < 1) return '${diff.inHours}h';
+    if (diff.inDays < 7) return '${diff.inDays}d';
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.MMMd(locale).format(local);
+  }
+
+  String _eventWhen(BuildContext context) {
+    final at = chat.startsAt;
+    if (at == null) return '';
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.MMMd(locale).add_jm().format(at.toLocal());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final last = chat.lastMessage;
+    final unread = chat.unreadCount > 0;
+    final preview = last == null
+        ? l10n.chatsNoMessages
+        : '${last.isMine ? l10n.chatsYou : (last.userName ?? '')}: ${last.body}';
+    final messageTime = _relativeTime(context, last?.createdAtDate);
+    final eventWhen = _eventWhen(context);
+    final hasImage = chat.imageUrl != null && chat.imageUrl!.isNotEmpty;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            _EventAvatar(
+              title: chat.title,
+              imageUrl: hasImage ? chat.imageUrl : null,
+              unread: unread,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          chat.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight:
+                                unread ? FontWeight.w800 : FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (messageTime.isNotEmpty)
+                        Text(
+                          messageTime,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: unread
+                                ? AppColors.primary
+                                : AppColors.muted,
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (eventWhen.isNotEmpty || chat.city != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      [
+                        if (eventWhen.isNotEmpty) eventWhen,
+                        if (chat.city != null) chat.city!,
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.muted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          preview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: unread ? AppColors.text : AppColors.muted,
+                            fontWeight:
+                                unread ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      if (unread) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            chat.unreadCount > 99
+                                ? '99+'
+                                : '${chat.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EventAvatar extends StatelessWidget {
+  const _EventAvatar({
+    required this.title,
+    required this.unread,
+    this.imageUrl,
+  });
+
+  final String title;
+  final String? imageUrl;
+  final bool unread;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = title.trim().isNotEmpty
+        ? title.trim().characters.first.toUpperCase()
+        : '?';
+
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            width: 52,
+            height: 52,
+            child: imageUrl != null
+                ? AppNetworkImage(
+                    url: imageUrl!,
+                    logicalWidth: 52,
+                    logicalHeight: 52,
+                    maxCacheWidth: 160,
+                    maxCacheHeight: 160,
+                    placeholder: ColoredBox(
+                      color: AppColors.primarySoft,
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    error: ColoredBox(
+                      color: AppColors.primarySoft,
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : ColoredBox(
+                    color: unread
+                        ? AppColors.primary
+                        : AppColors.primarySoft,
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: unread ? Colors.white : AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        ),
+        if (unread)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: AppColors.success,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.canvas, width: 2.5),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -258,7 +562,6 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinAcceptedSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
-    // Shared client — disconnect sockets but do not dispose the provider instance.
     await _realtime?.disconnect();
     _realtime = null;
     _usePollToasts = true;
@@ -312,7 +615,6 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       return;
     }
 
-    // Keep poll toasts until the socket is live, then slow down.
     _usePollToasts = true;
     _schedulePoll(const Duration(seconds: 15));
     Future<void>.delayed(const Duration(seconds: 8), () {

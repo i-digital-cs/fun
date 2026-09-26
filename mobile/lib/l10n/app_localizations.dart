@@ -296,6 +296,42 @@ abstract class AppLocalizations {
   /// **'You'**
   String get chatsYou;
 
+  /// No description provided for @chatsFilterRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get chatsFilterRecent;
+
+  /// No description provided for @chatsFilterUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get chatsFilterUnread;
+
+  /// No description provided for @chatsNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats match your search'**
+  String get chatsNoResults;
+
+  /// No description provided for @searchChatsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats…'**
+  String get searchChatsHint;
+
+  /// No description provided for @copyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy message'**
+  String get copyMessage;
+
+  /// No description provided for @messageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Message copied'**
+  String get messageCopied;
+
   /// No description provided for @notificationsTitle.
   ///
   /// In en, this message translates to:
@@ -577,6 +613,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading…'**
   String get loading;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet nearby. Join for real.'**
+  String get splashTagline;
 
   /// No description provided for @comingSoon.
   ///
