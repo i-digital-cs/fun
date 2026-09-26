@@ -49,15 +49,25 @@ GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 
 **Package / applicationId:** `com.funity.fun_mobile` (from `mobile/android/app/build.gradle.kts`).
 
+This is the usual cause of: *“Google sign-in failed. Check that Google is configured for this app.”*  
+(`ApiException: 10` / DEVELOPER_ERROR — missing Android OAuth client or wrong SHA-1.)
+
 1. Get **SHA-1** fingerprints:
 
-**Debug keystore (dev):**
+**Debug keystore (dev / `flutter run`):**
 ```bash
+# Linux/macOS
 keytool -list -v \
   -keystore ~/.android/debug.keystore \
   -alias androiddebugkey \
   -storepass android -keypass android
 ```
+
+Server debug SHA-1 currently registered on Firebase app `funnity-157aa`:
+```text
+26:1A:5B:7E:A0:20:DC:35:6D:12:77:70:8B:6D:BE:65:22:BE:C1:C2
+```
+(If your machine’s `~/.android/debug.keystore` differs, use **your** SHA-1 instead.)
 
 **Release keystore (Play / production):**
 ```bash
@@ -66,14 +76,29 @@ keytool -list -v -keystore /path/to/your-release.keystore -alias your-alias
 
 **Play App Signing:** also add the **App signing key certificate SHA-1** from Google Play Console → Setup → App integrity (required for store builds).
 
-2. Create OAuth client → Android → package `com.funity.fun_mobile` + SHA-1 (debug and release/Play signing certs — often one Android client per SHA-1).
-3. Copy Android **Client ID** → server `.env` (optional but recommended):
+2. **Create the Android OAuth client** (pick one):
+
+**Option A — Firebase (recommended)**  
+[Firebase Console](https://console.firebase.google.com/) → project **funnity-157aa** → Project settings → Your apps → Android `com.funity.fun_mobile`  
+- Confirm SHA-1 / SHA-256 fingerprints are listed  
+- **Authentication → Sign-in method → Google → Enable** (saves Web client ID/secret)  
+- Download a fresh `google-services.json` into `mobile/android/app/`  
+- Confirm the file’s `oauth_client` array is **not empty**
+
+**Option B — Google Cloud Console**  
+[Credentials](https://console.cloud.google.com/apis/credentials) → Create credentials → OAuth client ID → **Android**  
+- Package name: `com.funity.fun_mobile`  
+- SHA-1: debug + release/Play as needed  
+
+3. Copy Android **Client ID** → server `.env`:
 
 ```env
 GOOGLE_ANDROID_CLIENT_ID=xxxxx-android.apps.googleusercontent.com
 ```
 
 Then `php artisan config:clear`. Without this, tokens whose `aud` is only the Android client ID will fail verification (tokens with Web `serverClientId` audience still work via `GOOGLE_CLIENT_ID`).
+
+4. **Rebuild** the Flutter app (`flutter clean && flutter run`) so the new `google-services.json` / client is picked up.
 
 ### iOS client
 

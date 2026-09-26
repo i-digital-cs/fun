@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
-import 'package:fun_mobile/core/config/env.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
+import 'package:fun_mobile/features/auth/data/google_sign_in_helper.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
@@ -78,11 +77,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       _error = null;
     });
     try {
-      final serverClientId = Env.googleServerClientId;
-      final googleUser = await GoogleSignIn(
-        scopes: const ['email', 'profile'],
-        serverClientId: serverClientId.isEmpty ? null : serverClientId,
-      ).signIn();
+      final googleUser = await GoogleSignInHelper.client().signIn();
       if (googleUser == null) {
         if (!mounted) return;
         setState(() => _submitting = false);
@@ -119,11 +114,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = e.code == 'sign_in_failed' || e.code == '10'
-            ? AppLocalizations.of(context).googleSignInFailed
-            : (e.message?.isNotEmpty == true
-                ? e.message!
-                : AppLocalizations.of(context).googleSignInFailed);
+        _error = GoogleSignInHelper.messageFor(
+          e,
+          AppLocalizations.of(context).googleSignInFailed,
+        );
       });
     } catch (_) {
       if (!mounted) return;

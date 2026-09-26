@@ -12,7 +12,20 @@
           "package_name": "com.funity.fun_mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "51496053622-b5avb6ck9mb2njegjn4ehur2494nq4b1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.funity.fun_mobile",
+            "certificate_hash": "261a5b7ea020dc356d1277708b6dbe6522bec1c2"
+          }
+        },
+        {
+          "client_id": "51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBYZVVMrS68_quIkG0w8egcktOBMunYaDU"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
