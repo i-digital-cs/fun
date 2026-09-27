@@ -228,6 +228,7 @@
   "chatToastJustNow": "الآن",
   "joinAcceptedToast": "تم قبولك!",
   "joinRequestedToast": "طلب انضمام جديد",
+  "messageReactedToast": "تفاعل جديد",
   "uploadTooLarge": "الصورة كبيرة جداً (الحد الأقصى 8 ميغابايت).",
   "uploadBadType": "استخدم صورة بصيغة JPG أو PNG أو WEBP.",
   "uploadMissing": "تعذر قراءة الصورة. جرّب ملفاً آخر.",
@@ -392,5 +393,12 @@
   "updateAvailableBody": "يتوفر إصدار جديد من التطبيق.",
   "updateNow": "تحديث",
   "updateLater": "لاحقاً",
-  "searching": "جاري البحث"
+  "searching": "جاري البحث",
+  "chatLike": "إعجاب",
+  "chatDislike": "عدم إعجاب",
+  "reactionsTitle": "التفاعلات",
+  "likedBy": "أعجب بها",
+  "dislikedBy": "لم يعجب بها",
+  "noLikesYet": "لا إعجابات بعد.",
+  "noDislikesYet": "لا عدم إعجاب بعد."
 }

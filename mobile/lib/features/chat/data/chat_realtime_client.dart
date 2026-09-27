@@ -19,14 +19,18 @@ class ChatRealtimeClient {
   final _messages = StreamController<InAppToastPayload>.broadcast();
   final _joinAccepted = StreamController<InAppToastPayload>.broadcast();
   final _joinRequested = StreamController<InAppToastPayload>.broadcast();
+  final _messageReacted = StreamController<InAppToastPayload>.broadcast();
   final _threadPosted = StreamController<ChatMessage>.broadcast();
+  final _threadReacted = StreamController<ChatMessageReaction>.broadcast();
 
   PusherChannelsClient? _client;
   StreamSubscription<void>? _connectionSub;
   StreamSubscription<ChannelReadEvent>? _eventSub;
   StreamSubscription<ChannelReadEvent>? _joinSub;
   StreamSubscription<ChannelReadEvent>? _joinRequestedSub;
+  StreamSubscription<ChannelReadEvent>? _messageReactedSub;
   StreamSubscription<ChannelReadEvent>? _threadSub;
+  StreamSubscription<ChannelReadEvent>? _threadReactSub;
   PrivateChannel? _userChannel;
   PrivateChannel? _eventChannel;
   String? _authToken;
@@ -42,8 +46,14 @@ class ChatRealtimeClient {
   /// Fires when the server broadcasts `.join.requested` (organizer).
   Stream<InAppToastPayload> get joinRequested => _joinRequested.stream;
 
+  /// Fires when someone reacts to one of your messages (`.chat.reaction`).
+  Stream<InAppToastPayload> get messageReacted => _messageReacted.stream;
+
   /// Live `.message.posted` payloads for the currently subscribed event thread.
   Stream<ChatMessage> get threadPosted => _threadPosted.stream;
+
+  /// Live `.message.reacted` count updates for the subscribed thread.
+  Stream<ChatMessageReaction> get threadReacted => _threadReacted.stream;
 
   bool get isConnected => _connected;
 
@@ -147,6 +157,15 @@ class ChatRealtimeClient {
         }
       });
 
+      _messageReactedSub = channel.bind('chat.reaction').listen((event) {
+        final data = event.tryGetDataAsMap() ?? const <String, dynamic>{};
+        final payload = InAppToastPayload.fromMessageReactedJson(data);
+        if (payload.eventId <= 0) return;
+        if (!_messageReacted.isClosed) {
+          _messageReacted.add(payload);
+        }
+      });
+
       unawaited(client.connect());
       return true;
     } catch (e, st) {
@@ -174,6 +193,8 @@ class ChatRealtimeClient {
   Future<void> unsubscribeEventChat() async {
     await _threadSub?.cancel();
     _threadSub = null;
+    await _threadReactSub?.cancel();
+    _threadReactSub = null;
     try {
       _eventChannel?.unsubscribe();
     } catch (_) {}
@@ -188,6 +209,8 @@ class ChatRealtimeClient {
 
     await _threadSub?.cancel();
     _threadSub = null;
+    await _threadReactSub?.cancel();
+    _threadReactSub = null;
     try {
       _eventChannel?.unsubscribe();
     } catch (_) {}
@@ -223,6 +246,24 @@ class ChatRealtimeClient {
         }
       }
     });
+
+    _threadReactSub = channel.bind('message.reacted').listen((event) {
+      final data = event.tryGetDataAsMap();
+      if (data == null) return;
+      try {
+        final reaction = ChatMessageReaction.fromJson(
+          Map<String, dynamic>.from(data),
+        );
+        if (reaction.messageId <= 0) return;
+        if (!_threadReacted.isClosed) {
+          _threadReacted.add(reaction);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('ChatRealtime reaction parse failed: $e');
+        }
+      }
+    });
   }
 
   Future<void> disconnect() async {
@@ -234,6 +275,8 @@ class ChatRealtimeClient {
     _joinSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
+    await _messageReactedSub?.cancel();
+    _messageReactedSub = null;
     await _connectionSub?.cancel();
     _connectionSub = null;
     try {
@@ -253,7 +296,38 @@ class ChatRealtimeClient {
     await _messages.close();
     await _joinAccepted.close();
     await _joinRequested.close();
+    await _messageReacted.close();
     await _threadPosted.close();
+    await _threadReacted.close();
+  }
+}
+
+class ChatMessageReaction {
+  const ChatMessageReaction({
+    required this.messageId,
+    required this.eventId,
+    required this.actorId,
+    required this.likesCount,
+    required this.dislikesCount,
+    this.myReaction,
+  });
+
+  final int messageId;
+  final int eventId;
+  final int actorId;
+  final int likesCount;
+  final int dislikesCount;
+  final String? myReaction;
+
+  factory ChatMessageReaction.fromJson(Map<String, dynamic> json) {
+    return ChatMessageReaction(
+      messageId: (json['id'] as num?)?.toInt() ?? 0,
+      eventId: (json['event_id'] as num?)?.toInt() ?? 0,
+      actorId: (json['actor_id'] as num?)?.toInt() ?? 0,
+      likesCount: (json['likes_count'] as num?)?.toInt() ?? 0,
+      dislikesCount: (json['dislikes_count'] as num?)?.toInt() ?? 0,
+      myReaction: json['my_reaction'] as String?,
+    );
   }
 }
 

@@ -639,6 +639,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   StreamSubscription<InAppToastPayload>? _realtimeSub;
   StreamSubscription<InAppToastPayload>? _joinAcceptedSub;
   StreamSubscription<InAppToastPayload>? _joinRequestedSub;
+  StreamSubscription<InAppToastPayload>? _messageReactedSub;
   StreamSubscription<InAppToastPayload>? _fcmToastSub;
   final List<InAppToastPayload> _toasts = [];
   final Set<String> _shownToastKeys = {};
@@ -686,6 +687,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinAcceptedSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
+    await _messageReactedSub?.cancel();
+    _messageReactedSub = null;
     await _realtime?.disconnect();
     _realtime = null;
     _usePollToasts = true;
@@ -719,6 +722,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinAcceptedSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
+    await _messageReactedSub?.cancel();
+    _messageReactedSub = null;
 
     _realtime = client;
     _realtimeSub = client.messages.listen(
@@ -728,6 +733,9 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       (payload) => _enqueueToast(payload, bumpNotify: true),
     );
     _joinRequestedSub = client.joinRequested.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _messageReactedSub = client.messageReacted.listen(
       (payload) => _enqueueToast(payload, bumpNotify: true),
     );
 
@@ -765,14 +773,17 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       _shownToastKeys.remove(_shownToastKeys.first);
     }
 
-    if (payload.kind == InAppToastKind.chat) {
-      final messageId = int.tryParse(
-        payload.dedupeKey.startsWith('chat:')
-            ? payload.dedupeKey.substring(5)
-            : '',
-      );
-      if (messageId != null && messageId > 0) {
-        _lastSeenMessageIds[payload.eventId] = messageId;
+    if (payload.kind == InAppToastKind.chat ||
+        payload.kind == InAppToastKind.messageReacted) {
+      if (payload.kind == InAppToastKind.chat) {
+        final messageId = int.tryParse(
+          payload.dedupeKey.startsWith('chat:')
+              ? payload.dedupeKey.substring(5)
+              : '',
+        );
+        if (messageId != null && messageId > 0) {
+          _lastSeenMessageIds[payload.eventId] = messageId;
+        }
       }
 
       final location = GoRouterState.of(context).uri.path;

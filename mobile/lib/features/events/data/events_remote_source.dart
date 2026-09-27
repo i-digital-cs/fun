@@ -341,6 +341,54 @@ class EventsRemoteSource {
     }
   }
 
+  Future<({Failure? failure, ChatMessage? data})> reactToMessage(
+    int eventId,
+    int messageId, {
+    String? type,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/events/$eventId/messages/$messageId/react',
+        data: {'type': type},
+      );
+      final data =
+          response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+      return (
+        failure: null,
+        data: ChatMessage(
+          id: (data['id'] as num?)?.toInt() ?? messageId,
+          eventId: (data['event_id'] as num?)?.toInt() ?? eventId,
+          body: '',
+          isSystem: false,
+          likesCount: (data['likes_count'] as num?)?.toInt() ?? 0,
+          dislikesCount: (data['dislikes_count'] as num?)?.toInt() ?? 0,
+          myReaction: data['my_reaction'] as String?,
+        ),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, MessageReactions? data})> messageReactions(
+    int eventId,
+    int messageId,
+  ) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/$eventId/messages/$messageId/reactions',
+      );
+      final data =
+          response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+      return (
+        failure: null,
+        data: MessageReactions.fromJson(Map<String, dynamic>.from(data)),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
   Future<({Failure? failure, List<EventRating>? data})> ratings(int id) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(

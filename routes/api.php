@@ -143,6 +143,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/events/{event}/messages', [ApiEventChatController::class, 'index']);
         Route::post('/events/{event}/messages', [ApiEventChatController::class, 'store'])
             ->middleware('throttle:messages');
+        Route::post('/events/{event}/messages/{message}/react', [ApiEventChatController::class, 'react'])
+            ->middleware('throttle:60,1');
+        Route::get('/events/{event}/messages/{message}/reactions', [ApiEventChatController::class, 'reactions']);
 
         Route::get('/events/{event}/ticket', [ApiEventTicketController::class, 'show'])
             ->whereNumber('event');

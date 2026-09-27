@@ -682,6 +682,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinRequestedToast => 'New join request';
 
   @override
+  String get messageReactedToast => 'New reaction';
+
+  @override
   String get uploadTooLarge => 'Image is too large (max 8 MB).';
 
   @override
@@ -1213,4 +1216,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searching => 'Searching';
+
+  @override
+  String get chatLike => 'Like';
+
+  @override
+  String get chatDislike => 'Dislike';
+
+  @override
+  String get reactionsTitle => 'Reactions';
+
+  @override
+  String get likedBy => 'Liked by';
+
+  @override
+  String get dislikedBy => 'Disliked by';
+
+  @override
+  String get noLikesYet => 'No likes yet.';
+
+  @override
+  String get noDislikesYet => 'No dislikes yet.';
 }

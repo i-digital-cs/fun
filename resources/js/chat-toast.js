@@ -127,6 +127,38 @@ function showJoinRequestedToast(payload, host) {
     });
 }
 
+function showMessageReactedToast(payload, host) {
+    const eventId = Number(payload.event_id);
+    if (currentChatEventId() === eventId) {
+        return;
+    }
+
+    const eventTitle = payload.event_title || '';
+    const title = payload.title || host.dataset.labelReaction || 'New reaction';
+    const body = payload.body || '';
+    const eventUrl = payload.chat_url || `/events/${eventId || ''}/chat`;
+    const labelNew = host.dataset.labelReaction || title;
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+    const actor = payload.actor || {};
+    const name = actor.name || '';
+    const initials = actor.initials || (name ? name.trim().charAt(0).toUpperCase() : '?');
+    const photo = actor.profile_image_path || '';
+    const reaction = payload.reaction === 'dislike' ? '👎' : '👍';
+
+    showNotifyToast({
+        host,
+        labelNew,
+        labelJustNow,
+        title,
+        body,
+        eventTitle,
+        eventUrl,
+        avatarHtml: photo
+            ? `<img src="${escapeHtml(photo)}" alt="" class="chat-toast__avatar-img"><span class="chat-toast__badge" aria-hidden="true">${reaction}</span>`
+            : `<div class="chat-toast__avatar">${escapeHtml(initials)}</div><span class="chat-toast__badge" aria-hidden="true">${reaction}</span>`,
+    });
+}
+
 export function initChatToasts() {
     const host = document.getElementById('chat-toast-host');
     if (!host || !window.Echo) {
@@ -150,6 +182,10 @@ export function initChatToasts() {
 
     channel.listen('.join.requested', (payload) => {
         showJoinRequestedToast(payload || {}, host);
+    });
+
+    channel.listen('.chat.reaction', (payload) => {
+        showMessageReactedToast(payload || {}, host);
     });
 }
 

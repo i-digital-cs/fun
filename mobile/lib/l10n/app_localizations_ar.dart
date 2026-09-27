@@ -677,6 +677,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get joinRequestedToast => 'طلب انضمام جديد';
 
   @override
+  String get messageReactedToast => 'تفاعل جديد';
+
+  @override
   String get uploadTooLarge => 'الصورة كبيرة جداً (الحد الأقصى 8 ميغابايت).';
 
   @override
@@ -1202,4 +1205,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searching => 'جاري البحث';
+
+  @override
+  String get chatLike => 'إعجاب';
+
+  @override
+  String get chatDislike => 'عدم إعجاب';
+
+  @override
+  String get reactionsTitle => 'التفاعلات';
+
+  @override
+  String get likedBy => 'أعجب بها';
+
+  @override
+  String get dislikedBy => 'لم يعجب بها';
+
+  @override
+  String get noLikesYet => 'لا إعجابات بعد.';
+
+  @override
+  String get noDislikesYet => 'لا عدم إعجاب بعد.';
 }

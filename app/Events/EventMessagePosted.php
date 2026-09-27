@@ -46,6 +46,9 @@ class EventMessagePosted implements ShouldBroadcastNow
             'body' => $this->message->body,
             'is_system' => $this->message->is_system,
             'created_at' => $this->message->created_at?->toIso8601String(),
+            'likes_count' => 0,
+            'dislikes_count' => 0,
+            'my_reaction' => null,
             'user' => [
                 'id' => $this->message->user?->id,
                 'name' => $this->message->user?->name,

@@ -29,6 +29,8 @@ class ChatToastBanner extends StatelessWidget {
         payload.title.isNotEmpty ? payload.title : l10n.joinAcceptedToast,
       InAppToastKind.joinRequested =>
         payload.title.isNotEmpty ? payload.title : l10n.joinRequestedToast,
+      InAppToastKind.messageReacted =>
+        payload.title.isNotEmpty ? payload.title : l10n.messageReactedToast,
     };
     final name = switch (payload.kind) {
       InAppToastKind.chat =>
@@ -37,10 +39,14 @@ class ChatToastBanner extends StatelessWidget {
         payload.title.isNotEmpty ? payload.title : l10n.joinAcceptedToast,
       InAppToastKind.joinRequested =>
         payload.title.isNotEmpty ? payload.title : l10n.joinRequestedToast,
+      InAppToastKind.messageReacted =>
+        payload.title.isNotEmpty ? payload.title : l10n.messageReactedToast,
     };
     final body = switch (payload.kind) {
       InAppToastKind.chat => l10n.newChatMessage,
-      InAppToastKind.joinAccepted || InAppToastKind.joinRequested =>
+      InAppToastKind.joinAccepted ||
+      InAppToastKind.joinRequested ||
+      InAppToastKind.messageReacted =>
         payload.body.isNotEmpty ? payload.body : name,
     };
 
@@ -226,7 +232,8 @@ class _Avatar extends StatelessWidget {
                     ),
                   ),
           ),
-          if (payload.kind == InAppToastKind.chat)
+          if (payload.kind == InAppToastKind.chat ||
+              payload.kind == InAppToastKind.messageReacted)
             PositionedDirectional(
               end: 0,
               bottom: 0,
@@ -234,12 +241,16 @@ class _Avatar extends StatelessWidget {
                 width: 20,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: payload.kind == InAppToastKind.messageReacted
+                      ? const Color(0xFFF59E0B)
+                      : AppColors.primary,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
-                child: const Icon(
-                  Icons.chat_bubble,
+                child: Icon(
+                  payload.kind == InAppToastKind.messageReacted
+                      ? Icons.thumb_up_alt_rounded
+                      : Icons.chat_bubble,
                   size: 10,
                   color: Colors.white,
                 ),

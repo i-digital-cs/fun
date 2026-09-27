@@ -1382,6 +1382,12 @@ abstract class AppLocalizations {
   /// **'New join request'**
   String get joinRequestedToast;
 
+  /// No description provided for @messageReactedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'New reaction'**
+  String get messageReactedToast;
+
   /// No description provided for @uploadTooLarge.
   ///
   /// In en, this message translates to:
@@ -2371,6 +2377,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Searching'**
   String get searching;
+
+  /// No description provided for @chatLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get chatLike;
+
+  /// No description provided for @chatDislike.
+  ///
+  /// In en, this message translates to:
+  /// **'Dislike'**
+  String get chatDislike;
+
+  /// No description provided for @reactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get reactionsTitle;
+
+  /// No description provided for @likedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Liked by'**
+  String get likedBy;
+
+  /// No description provided for @dislikedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Disliked by'**
+  String get dislikedBy;
+
+  /// No description provided for @noLikesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No likes yet.'**
+  String get noLikesYet;
+
+  /// No description provided for @noDislikesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No dislikes yet.'**
+  String get noDislikesYet;
 }
 
 class _AppLocalizationsDelegate

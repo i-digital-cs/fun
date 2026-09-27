@@ -365,6 +365,9 @@ class ChatMessage extends Equatable {
     this.userName,
     this.userPublicId,
     this.userProfileImagePath,
+    this.likesCount = 0,
+    this.dislikesCount = 0,
+    this.myReaction,
   });
 
   final int id;
@@ -376,6 +379,9 @@ class ChatMessage extends Equatable {
   final String? userName;
   final String? userPublicId;
   final String? userProfileImagePath;
+  final int likesCount;
+  final int dislikesCount;
+  final String? myReaction;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final rawUser = json['user'];
@@ -394,6 +400,31 @@ class ChatMessage extends Equatable {
       userName: user?['name'] as String?,
       userPublicId: user?['public_id'] as String?,
       userProfileImagePath: user?['profile_image_path'] as String?,
+      likesCount: (json['likes_count'] as num?)?.toInt() ?? 0,
+      dislikesCount: (json['dislikes_count'] as num?)?.toInt() ?? 0,
+      myReaction: json['my_reaction'] as String?,
+    );
+  }
+
+  ChatMessage copyWith({
+    int? likesCount,
+    int? dislikesCount,
+    String? myReaction,
+    bool clearMyReaction = false,
+  }) {
+    return ChatMessage(
+      id: id,
+      eventId: eventId,
+      body: body,
+      isSystem: isSystem,
+      createdAt: createdAt,
+      userId: userId,
+      userName: userName,
+      userPublicId: userPublicId,
+      userProfileImagePath: userProfileImagePath,
+      likesCount: likesCount ?? this.likesCount,
+      dislikesCount: dislikesCount ?? this.dislikesCount,
+      myReaction: clearMyReaction ? null : (myReaction ?? this.myReaction),
     );
   }
 
@@ -408,7 +439,76 @@ class ChatMessage extends Equatable {
     userName,
     userPublicId,
     userProfileImagePath,
+    likesCount,
+    dislikesCount,
+    myReaction,
   ];
+}
+
+class MessageReactor extends Equatable {
+  const MessageReactor({
+    required this.id,
+    required this.name,
+    this.publicId,
+    this.initials,
+    this.profileImagePath,
+    this.reactedAt,
+  });
+
+  final int id;
+  final String name;
+  final String? publicId;
+  final String? initials;
+  final String? profileImagePath;
+  final DateTime? reactedAt;
+
+  factory MessageReactor.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    final userMap = user is Map
+        ? Map<String, dynamic>.from(user)
+        : const <String, dynamic>{};
+    return MessageReactor(
+      id: (userMap['id'] as num?)?.toInt() ?? 0,
+      name: userMap['name'] as String? ?? '',
+      publicId: userMap['public_id'] as String?,
+      initials: userMap['initials'] as String?,
+      profileImagePath: userMap['profile_image_path'] as String?,
+      reactedAt: json['reacted_at'] is String
+          ? DateTime.tryParse(json['reacted_at'] as String)
+          : null,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, name, publicId, initials, profileImagePath];
+}
+
+class MessageReactions extends Equatable {
+  const MessageReactions({
+    this.likes = const [],
+    this.dislikes = const [],
+  });
+
+  final List<MessageReactor> likes;
+  final List<MessageReactor> dislikes;
+
+  factory MessageReactions.fromJson(Map<String, dynamic> json) {
+    List<MessageReactor> parse(dynamic raw) {
+      if (raw is! List) return const [];
+      return raw
+          .whereType<Map>()
+          .map((e) => MessageReactor.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
+
+    return MessageReactions(
+      likes: parse(json['likes']),
+      dislikes: parse(json['dislikes']),
+    );
+  }
+
+  @override
+  List<Object?> get props => [likes, dislikes];
 }
 
 class JoinRequestItem extends Equatable {

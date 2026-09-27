@@ -1,5 +1,5 @@
-/// In-app toast kinds — mirror web `.chat-toast` (chat + join accept/request).
-enum InAppToastKind { chat, joinAccepted, joinRequested }
+/// In-app toast kinds — mirror web `.chat-toast` (chat + join + message reaction).
+enum InAppToastKind { chat, joinAccepted, joinRequested, messageReacted }
 
 /// Payload for foreground sweet toasts (Pusher realtime or FCM-while-open fallback).
 class InAppToastPayload {
@@ -28,7 +28,8 @@ class InAppToastPayload {
   String get resolvedOpenPath {
     if (openPath != null && openPath!.isNotEmpty) return openPath!;
     return switch (kind) {
-      InAppToastKind.chat => '/events/$eventId/chat',
+      InAppToastKind.chat || InAppToastKind.messageReacted =>
+        '/events/$eventId/chat',
       InAppToastKind.joinAccepted => '/events/$eventId',
       InAppToastKind.joinRequested => '/events/$eventId/requests',
     };
@@ -99,6 +100,34 @@ class InAppToastPayload {
     );
   }
 
+  /// `.chat.reaction` / [UserMessageReacted].
+  factory InAppToastPayload.fromMessageReactedJson(Map<String, dynamic> json) {
+    final eventId = (json['event_id'] as num?)?.toInt() ?? 0;
+    final messageId = (json['message_id'] as num?)?.toInt() ?? 0;
+    final reaction = json['reaction'] as String? ?? 'like';
+    final actor = json['actor'];
+    final actorMap = actor is Map ? Map<String, dynamic>.from(actor) : const {};
+    final name = actorMap['name'] as String? ?? '';
+    final initials =
+        actorMap['initials'] as String? ??
+        (name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase());
+    final photo = actorMap['profile_image_path'] as String?;
+
+    return InAppToastPayload(
+      kind: InAppToastKind.messageReacted,
+      dedupeKey: messageId > 0
+          ? 'react:$messageId:$reaction'
+          : 'react:$eventId:$reaction:${name.hashCode}',
+      eventId: eventId,
+      eventTitle: json['event_title'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      senderInitials: initials,
+      senderPhotoUrl: (photo != null && photo.isNotEmpty) ? photo : null,
+      openPath: '/events/$eventId/chat',
+    );
+  }
+
   /// FCM data map while the app is foreground (no system tray).
   static InAppToastPayload? tryFromFcmData(Map<String, dynamic> data) {
     final type = data['type'] as String? ?? '';
@@ -146,6 +175,21 @@ class InAppToastPayload {
           body: body,
           senderInitials: '?',
           openPath: '/events/$eventId/requests',
+        );
+      case 'message_reacted':
+        final messageId = int.tryParse('${data['message_id'] ?? ''}') ?? 0;
+        final reaction = data['reaction'] as String? ?? 'like';
+        return InAppToastPayload(
+          kind: InAppToastKind.messageReacted,
+          dedupeKey: messageId > 0
+              ? 'react:$messageId:$reaction'
+              : 'react:fcm:$eventId:$reaction',
+          eventId: eventId,
+          eventTitle: eventTitle,
+          title: title,
+          body: body,
+          senderInitials: reaction == 'dislike' ? '👎' : '👍',
+          openPath: '/events/$eventId/chat',
         );
       default:
         return null;

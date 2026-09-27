@@ -5,5 +5,6 @@
      data-label-new="{{ __('chat.toast_new') }}"
      data-label-join-accepted="{{ __('events.notify_join_accepted_title') }}"
      data-label-join-requested="{{ __('events.notify_join_request_title') }}"
+     data-label-reaction="{{ __('chat.toast_reaction') }}"
      data-label-just-now="{{ __('chat.toast_just_now') }}"
      aria-live="polite"></div>

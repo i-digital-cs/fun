@@ -259,6 +259,7 @@
   "chatToastJustNow": "Just now",
   "joinAcceptedToast": "You're in!",
   "joinRequestedToast": "New join request",
+  "messageReactedToast": "New reaction",
   "uploadTooLarge": "Image is too large (max 8 MB).",
   "uploadBadType": "Use a JPG, PNG, or WEBP image.",
   "uploadMissing": "Could not read that image. Try another file.",
@@ -464,5 +465,12 @@
   "updateAvailableBody": "A new version of the app is available.",
   "updateNow": "Update",
   "updateLater": "Later",
-  "searching": "Searching"
+  "searching": "Searching",
+  "chatLike": "Like",
+  "chatDislike": "Dislike",
+  "reactionsTitle": "Reactions",
+  "likedBy": "Liked by",
+  "dislikedBy": "Disliked by",
+  "noLikesYet": "No likes yet.",
+  "noDislikesYet": "No dislikes yet."
 }

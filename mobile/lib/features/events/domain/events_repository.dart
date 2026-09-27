@@ -121,6 +121,15 @@ abstract class EventsRepository {
 
   Future<Result<List<ChatMessage>>> messages(int id, {Object? cancelToken});
   Future<Result<ChatMessage>> postMessage(int id, String body);
+  Future<Result<ChatMessage>> reactToMessage(
+    int eventId,
+    int messageId, {
+    String? type,
+  });
+  Future<Result<MessageReactions>> messageReactions(
+    int eventId,
+    int messageId,
+  );
 
   Future<Result<List<EventRating>>> ratings(int id);
   Future<Result<EventRating?>> myRating(int id);

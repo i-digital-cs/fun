@@ -20,6 +20,9 @@ class EventMessageResource extends JsonResource
             'body' => $this->body,
             'is_system' => (bool) $this->is_system,
             'created_at' => $this->created_at?->toIso8601String(),
+            'likes_count' => (int) ($this->likes_count ?? 0),
+            'dislikes_count' => (int) ($this->dislikes_count ?? 0),
+            'my_reaction' => $this->my_reaction ?? null,
             'user' => [
                 'id' => $this->user?->id,
                 'name' => $this->user?->name,

@@ -47,6 +47,16 @@
             data-csrf="{{ csrf_token() }}"
             data-report-url="{{ route('reports.create') }}"
             data-report-label="{{ __('safety.report') }}"
+            data-react-url-template="{{ event_route('events.chat.react', $event, ['message' => '__MID__']) }}"
+            data-reactions-url-template="{{ event_route('events.chat.reactions', $event, ['message' => '__MID__']) }}"
+            data-like-label="{{ __('chat.like') }}"
+            data-dislike-label="{{ __('chat.dislike') }}"
+            data-reactions-title="{{ __('chat.reactions_title') }}"
+            data-liked-by-label="{{ __('chat.liked_by') }}"
+            data-disliked-by-label="{{ __('chat.disliked_by') }}"
+            data-no-likes-label="{{ __('chat.no_likes_yet') }}"
+            data-no-dislikes-label="{{ __('chat.no_dislikes_yet') }}"
+            data-see-who-label="{{ __('chat.see_who_reacted') }}"
         >
             <div id="chat-messages" class="event-chat__messages fancy-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-5" role="log" aria-live="polite">
                 @forelse ($messages as $message)
@@ -92,7 +102,7 @@
                                 @endif
                             @endunless
 
-                            <div class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}{{ $isHost ? ' chat-message--host' : '' }}">
+                            <div class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}{{ $isHost ? ' chat-message--host' : '' }}{{ ($message->my_reaction ?? null) === 'like' ? ' chat-message--reacted-like' : (($message->my_reaction ?? null) === 'dislike' ? ' chat-message--reacted-dislike' : '') }}">
                                 @unless ($mine)
                                     <div class="chat-message__author-row">
                                         @if ($profileUrl)
@@ -113,6 +123,44 @@
                                 @endunless
                                 <p class="chat-message__body">{{ $message->body }}</p>
                                 <div class="chat-message__footer">
+                                    @unless ($isSystem)
+                                        <div class="chat-message__reactions" data-message-id="{{ $message->id }}">
+                                            <button
+                                                type="button"
+                                                class="chat-react-btn {{ ($message->my_reaction ?? null) === 'like' ? 'is-active' : '' }}"
+                                                data-react="like"
+                                                aria-label="{{ __('chat.like') }}"
+                                                aria-pressed="{{ ($message->my_reaction ?? null) === 'like' ? 'true' : 'false' }}"
+                                            >
+                                                <span aria-hidden="true">👍</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="chat-react-count"
+                                                data-react-list="like"
+                                                data-react-count="like"
+                                                title="{{ __('chat.see_who_reacted') }}"
+                                                aria-label="{{ __('chat.liked_by') }}"
+                                            >{{ (int) ($message->likes_count ?? 0) }}</button>
+                                            <button
+                                                type="button"
+                                                class="chat-react-btn {{ ($message->my_reaction ?? null) === 'dislike' ? 'is-active' : '' }}"
+                                                data-react="dislike"
+                                                aria-label="{{ __('chat.dislike') }}"
+                                                aria-pressed="{{ ($message->my_reaction ?? null) === 'dislike' ? 'true' : 'false' }}"
+                                            >
+                                                <span aria-hidden="true">👎</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="chat-react-count"
+                                                data-react-list="dislike"
+                                                data-react-count="dislike"
+                                                title="{{ __('chat.see_who_reacted') }}"
+                                                aria-label="{{ __('chat.disliked_by') }}"
+                                            >{{ (int) ($message->dislikes_count ?? 0) }}</button>
+                                        </div>
+                                    @endunless
                                     @if (! $mine)
                                         <a href="{{ route('reports.create', ['reportable_type' => 'message', 'reportable_id' => $message->id]) }}" class="chat-message__report">{{ __('safety.report') }}</a>
                                     @endif

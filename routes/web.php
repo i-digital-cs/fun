@@ -208,6 +208,13 @@ Route::middleware('auth')->group(function () {
                 ->whereNumber('event')->where('slug', $slug)
                 ->middleware('throttle:messages')
                 ->name('events.chat.store');
+            Route::post('/events/{event}/{slug}/chat/{message}/react', [EventChatController::class, 'react'])
+                ->whereNumber('event')->where('slug', $slug)->whereNumber('message')
+                ->middleware('throttle:60,1')
+                ->name('events.chat.react');
+            Route::get('/events/{event}/{slug}/chat/{message}/reactions', [EventChatController::class, 'reactions'])
+                ->whereNumber('event')->where('slug', $slug)->whereNumber('message')
+                ->name('events.chat.reactions');
 
             Route::get('/events/{event}/{slug}/ticket', [EventTicketController::class, 'show'])
                 ->whereNumber('event')->where('slug', $slug)

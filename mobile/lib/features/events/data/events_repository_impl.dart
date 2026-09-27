@@ -83,6 +83,21 @@ class EventsRepositoryImpl implements EventsRepository {
       _remote.postMessage(id, body);
 
   @override
+  Future<Result<ChatMessage>> reactToMessage(
+    int eventId,
+    int messageId, {
+    String? type,
+  }) =>
+      _remote.reactToMessage(eventId, messageId, type: type);
+
+  @override
+  Future<Result<MessageReactions>> messageReactions(
+    int eventId,
+    int messageId,
+  ) =>
+      _remote.messageReactions(eventId, messageId);
+
+  @override
   Future<Result<List<EventRating>>> ratings(int id) => _remote.ratings(id);
 
   @override
