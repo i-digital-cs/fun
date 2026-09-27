@@ -647,6 +647,10 @@ class EventsRemoteSource {
     final locationCity = location?['city'] is Map
         ? Map<String, dynamic>.from(location!['city'] as Map)
         : null;
+    final creatorRaw = json['creator'];
+    final creator = creatorRaw is Map
+        ? Map<String, dynamic>.from(creatorRaw)
+        : null;
 
     final latitude =
         _asNum(json['latitude'])?.toDouble() ??
@@ -724,6 +728,14 @@ class EventsRemoteSource {
               longitude: _asNum(
                 (city ?? locationCity)!['longitude'],
               )?.toDouble(),
+            )
+          : null,
+      creator: creator != null
+          ? EventCreator(
+              id: _asInt(creator['id']) ?? 0,
+              name: creator['name'] as String? ?? '',
+              initials: creator['initials'] as String?,
+              profileImagePath: creator['profile_image_path'] as String?,
             )
           : null,
     );

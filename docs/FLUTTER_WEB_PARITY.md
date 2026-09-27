@@ -141,7 +141,7 @@ For each screen:
 
 1. **Greeting** — “Good morning/afternoon/evening, {firstName} 👋” + subtitle + orange **Create event**  
 2. **Hero** — dark photo/gradient block, titles “Find people. / Do what you love.”, **Find events** (indigo) → Discover, trust chips; ambient **espiral** glow anchored end-side (`x-ui.espiral`, amber) — decorative only, not a loader  
-3. **Your participations** — same card style as before, scaled down; **4-up** preview (max 4) from `GET /api/home/participations`; overflow → My Events; empty → Discover CTA
+3. **Your participations** — web-matching card (accent bar, badge, steps/host footer); scaled **4-up** preview from `GET /api/home/participations` (includes `creator`); overflow → My Events; empty → Discover CTA
 4. **What are you into?** — category grid (emoji + name + count) → Discover filtered by category  
 5. **Happening near you** — compact cards + weather + **now-playing** (live/next/previous) + starting soon + safety  
 6. **How {brand} works** — 3 steps  
@@ -149,7 +149,7 @@ For each screen:
 
 **Card style here:** compact dashboard card (indigo soft “View event”), **not** the full Discover rich card.
 
-**My events `/my-events`:** three blocks — **Waiting for acceptance** (pending), **Hosting** (your own), **Events you joined** (memberships that aren’t yours) + View ticket.
+**My events `/my-events`:** three blocks — **Waiting for acceptance** (pending), **Hosting** (your own), **Events you joined** — denser **grid** cards (2–3 up) matching home participation shape (top accent bar, badge, compact actions); overflow/pagination unchanged.
 
 **Favorites `/favorites`:** bookmarked events (sidebar after My Events); toggle via amber bookmark on cards/detail (`POST /api/events/{id}/favorite`).
 
@@ -391,7 +391,7 @@ Same fields as create. Keep existing image if not replaced.
 | **Blade** | `events/mine.blade.php` |
 | **API** | `GET /api/my-events` |
 
-**Must:** list **Hosting** (`created_by = me`) and **Joined** (member, not owner) separately — title, date, members, city, **status pill** + relationship badge (`your_own` / `joined`); pending section; empty state + Create / Discover CTAs; tap → detail; **View ticket** action per row (§2.4a). API `GET /api/my-events` includes `join_action` (`owned` | `joined` | …); optional `?section=hosting|joined`.
+**Must:** list **Hosting** (`created_by = me`) and **Joined** (member, not owner) separately in a responsive **grid** (same compact card language as home participations: accent bar, relationship badge, date/members/city, **status pill**, ticket + view actions); pending section; empty state + Create / Discover CTAs; tap → detail; **View ticket** action per card (§2.4a). API `GET /api/my-events` includes `join_action` (`owned` | `joined` | …); optional `?section=hosting|joined`. Home participations API includes `creator` when loaded.
 
 ---
 

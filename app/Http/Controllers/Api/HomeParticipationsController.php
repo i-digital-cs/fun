@@ -33,7 +33,7 @@ class HomeParticipationsController extends Controller
                 return null;
             }
             $event->setAttribute('join_action', $actions[$event->id]->value ?? null);
-            $event->loadMissing(['category', 'city']);
+            $event->loadMissing(['category', 'city', 'creator:id,public_id,name,profile_image_path']);
             if (! isset($event->members_count)) {
                 $event->loadCount('members');
             }

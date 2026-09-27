@@ -39,6 +39,33 @@ class EventCity extends Equatable {
   List<Object?> get props => [id, name, nameEn, nameAr, latitude, longitude];
 }
 
+class EventCreator extends Equatable {
+  const EventCreator({
+    required this.id,
+    required this.name,
+    this.initials,
+    this.profileImagePath,
+  });
+
+  final int id;
+  final String name;
+  final String? initials;
+  final String? profileImagePath;
+
+  String get displayInitials {
+    final fromApi = initials?.trim();
+    if (fromApi != null && fromApi.isNotEmpty) return fromApi;
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
+  }
+
+  @override
+  List<Object?> get props => [id, name, initials, profileImagePath];
+}
+
 class EventItem extends Equatable {
   const EventItem({
     required this.id,
@@ -56,6 +83,7 @@ class EventItem extends Equatable {
     this.status,
     this.category,
     this.city,
+    this.creator,
     this.categoryId,
     this.cityId,
     this.distanceKm,
@@ -87,6 +115,7 @@ class EventItem extends Equatable {
   final String? status;
   final EventCategory? category;
   final EventCity? city;
+  final EventCreator? creator;
   final int? categoryId;
   final int? cityId;
   final double? distanceKm;
@@ -180,6 +209,7 @@ class EventItem extends Equatable {
       status: status ?? this.status,
       category: category,
       city: city,
+      creator: creator,
       categoryId: categoryId,
       cityId: cityId,
       distanceKm: distanceKm,
@@ -214,6 +244,7 @@ class EventItem extends Equatable {
     status,
     category,
     city,
+    creator,
     categoryId,
     cityId,
     distanceKm,

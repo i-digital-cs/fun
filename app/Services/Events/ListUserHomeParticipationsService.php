@@ -17,7 +17,7 @@ class ListUserHomeParticipationsService
      *     pendingRequests: Collection<int, EventJoinRequest>
      * }
      */
-    public function forUser(User $user, int $limit = 4): array
+    public function forUser(User $user, int $limit = 12): array
     {
         $memberships = EventMember::query()
             ->where('user_id', $user->id)
@@ -34,7 +34,7 @@ class ListUserHomeParticipationsService
             ->with([
                 'event.category',
                 'event.city',
-                'event.creator:id,name',
+                'event.creator:id,public_id,name,profile_image_path',
             ])
             ->join('events', 'events.id', '=', 'event_members.event_id')
             ->orderBy('events.starts_at')
@@ -49,7 +49,7 @@ class ListUserHomeParticipationsService
             ->with([
                 'event.category',
                 'event.city',
-                'event.creator:id,name',
+                'event.creator:id,public_id,name,profile_image_path',
             ])
             ->latest()
             ->limit($limit)

@@ -1167,6 +1167,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get joinedEmpty => 'لم تنضم إلى أي فعاليات بعد.';
 
   @override
+  String get participationHost => 'المضيف';
+
+  @override
+  String get stepRequested => 'طُلب';
+
+  @override
+  String get stepAccepted => 'قُبل';
+
+  @override
+  String get stepGathering => 'التجمع';
+
+  @override
   String get weatherSetLocation => 'حدد موقعك';
 
   @override

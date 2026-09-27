@@ -1178,6 +1178,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinedEmpty => 'You haven\'t joined any events yet.';
 
   @override
+  String get participationHost => 'Host';
+
+  @override
+  String get stepRequested => 'Requested';
+
+  @override
+  String get stepAccepted => 'Accepted';
+
+  @override
+  String get stepGathering => 'Gathering';
+
+  @override
   String get weatherSetLocation => 'Set your location';
 
   @override

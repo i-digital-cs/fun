@@ -2300,6 +2300,30 @@ abstract class AppLocalizations {
   /// **'You haven\'t joined any events yet.'**
   String get joinedEmpty;
 
+  /// No description provided for @participationHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get participationHost;
+
+  /// No description provided for @stepRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get stepRequested;
+
+  /// No description provided for @stepAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get stepAccepted;
+
+  /// No description provided for @stepGathering.
+  ///
+  /// In en, this message translates to:
+  /// **'Gathering'**
+  String get stepGathering;
+
   /// No description provided for @weatherSetLocation.
   ///
   /// In en, this message translates to:

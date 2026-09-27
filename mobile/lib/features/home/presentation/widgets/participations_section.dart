@@ -6,7 +6,7 @@ import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-/// Same participation card style as before, scaled down — max 4 in a row/grid.
+/// Mirrors web `x-community.participations` — same card shape, scaled for phone.
 class ParticipationsSection extends StatelessWidget {
   const ParticipationsSection({
     super.key,
@@ -119,55 +119,36 @@ class ParticipationsSection extends StatelessWidget {
             ),
           )
         else ...[
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: preview.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: crossAxisCount == 1
-                  ? 2.4
-                  : crossAxisCount == 2
-                      ? 1.35
-                      : 1.05,
-            ),
-            itemBuilder: (context, index) {
-              final item = preview[index];
-              return _ParticipationCard(
-                event: item.event,
-                badge: item.pending
-                    ? l10n.requestPendingShort
-                    : l10n.confirmedAttendance,
-                badgeColor:
-                    item.pending ? AppColors.accent : AppColors.success,
-                when: _when(item.event.startsAt, locale),
-                notice: item.pending ? l10n.pendingReviewNotice : null,
-                onOpen: () => onOpenEvent(item.event.id),
-                actions: item.pending
-                    ? [
-                        _ActionChip(
-                          label: l10n.viewEvent,
-                          onTap: () => onOpenEvent(item.event.id),
-                        ),
-                      ]
-                    : [
-                        _ActionChip(
-                          label: l10n.viewTicket,
-                          filled: true,
-                          onTap: () => onOpenTicket(item.event.id),
-                        ),
-                        _ActionChip(
-                          label: l10n.chat,
-                          onTap: () => onOpenChat(item.event.id),
-                        ),
-                      ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final gap = 10.0;
+              final cols = crossAxisCount;
+              final cardWidth = cols == 1
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - gap * (cols - 1)) / cols;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final item in preview)
+                    SizedBox(
+                      width: cardWidth,
+                      child: _WebStyleParticipationCard(
+                        event: item.event,
+                        pending: item.pending,
+                        when: _when(item.event.startsAt, locale),
+                        onOpen: () => onOpenEvent(item.event.id),
+                        onChat: () => onOpenChat(item.event.id),
+                        onTicket: () => onOpenTicket(item.event.id),
+                      ),
+                    ),
+                ],
               );
             },
           ),
           if (hidden > 0) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Center(
               child: TextButton(
                 onPressed: onManageAll,
@@ -181,112 +162,274 @@ class ParticipationsSection extends StatelessWidget {
   }
 }
 
-class _ParticipationCard extends StatelessWidget {
-  const _ParticipationCard({
+class _WebStyleParticipationCard extends StatelessWidget {
+  const _WebStyleParticipationCard({
     required this.event,
-    required this.badge,
-    required this.badgeColor,
+    required this.pending,
     required this.when,
     required this.onOpen,
-    required this.actions,
-    this.notice,
+    required this.onChat,
+    required this.onTicket,
   });
 
   final EventItem event;
-  final String badge;
-  final Color badgeColor;
+  final bool pending;
   final String when;
-  final String? notice;
   final VoidCallback onOpen;
-  final List<Widget> actions;
+  final VoidCallback onChat;
+  final VoidCallback onTicket;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final host = event.creator;
+    final place = event.placeLine;
+    final accent = pending
+        ? const [Color(0xFFFBBF24), Color(0xFFFB923C), Color(0xFFFB7185)]
+        : const [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFFB923C)];
+
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onOpen,
-        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderSoft),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
+              Container(
+                height: 3,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: accent),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: pending
+                                ? const Color(0xFFFFFBEB)
+                                : const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: pending
+                                  ? const Color(0xFFFDE68A)
+                                  : const Color(0xFFA7F3D0),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                pending
+                                    ? Icons.schedule_rounded
+                                    : Icons.verified_rounded,
+                                size: 12,
+                                color: pending
+                                    ? const Color(0xFFB45309)
+                                    : const Color(0xFF047857),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                pending
+                                    ? l10n.requestPendingShort
+                                    : l10n.confirmedAttendance,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: pending
+                                      ? const Color(0xFFB45309)
+                                      : const Color(0xFF047857),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        if (when.isNotEmpty)
+                          Text(
+                            when,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      badge,
-                      style: TextStyle(
-                        fontSize: 10,
+                    const SizedBox(height: 8),
+                    Text(
+                      event.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: bidiTextDirection(event.title),
+                      style: const TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: badgeColor,
+                        height: 1.25,
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  if (when.isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        when,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.end,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppColors.muted,
-                          fontWeight: FontWeight.w600,
+                    if (place.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.place_rounded,
+                            size: 14,
+                            color: Color(0xFF818CF8),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              place,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textDirection: bidiTextDirection(place),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (pending) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBEB).withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFFDE68A).withValues(alpha: 0.7),
+                          ),
+                        ),
+                        child: Text(
+                          l10n.pendingReviewNotice,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF92400E),
+                          ),
                         ),
                       ),
+                    ] else ...[
+                      const SizedBox(height: 8),
+                      _StepRow(
+                        labels: [
+                          l10n.stepRequested,
+                          l10n.stepAccepted,
+                          l10n.stepGathering,
+                        ],
+                        doneCount: 2,
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        if (host != null) ...[
+                          Container(
+                            width: 28,
+                            height: 28,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: pending
+                                    ? const [
+                                        Color(0xFFFB7185),
+                                        Color(0xFFFB923C),
+                                      ]
+                                    : const [
+                                        Color(0xFF6366F1),
+                                        Color(0xFF7C3AED),
+                                      ],
+                              ),
+                            ),
+                            child: Text(
+                              host.displayInitials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  host.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  l10n.participationHost,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.muted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else
+                          const Spacer(),
+                        if (pending)
+                          _MiniBtn(
+                            label: l10n.viewEvent,
+                            filled: true,
+                            color: const Color(0xFF0F172A),
+                            onTap: onOpen,
+                          )
+                        else ...[
+                          _MiniBtn(
+                            label: l10n.viewTicket,
+                            filled: true,
+                            color: AppColors.accent,
+                            onTap: onTicket,
+                          ),
+                          const SizedBox(width: 6),
+                          _MiniBtn(
+                            label: l10n.openChat,
+                            filled: true,
+                            color: AppColors.primary,
+                            onTap: onChat,
+                          ),
+                        ],
+                      ],
                     ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                event.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textDirection: bidiTextDirection(event.title),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  height: 1.25,
+                  ],
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                [
-                  if (event.venue.isNotEmpty) event.venue,
-                  if (event.city?.name != null) event.city!.name,
-                ].join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, color: AppColors.muted),
-              ),
-              if (notice != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  notice!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
-                ),
-              ],
-              const Spacer(),
-              Wrap(spacing: 6, runSpacing: 6, children: actions),
             ],
           ),
         ),
@@ -295,50 +438,116 @@ class _ParticipationCard extends StatelessWidget {
   }
 }
 
-class _ActionChip extends StatelessWidget {
-  const _ActionChip({
+class _StepRow extends StatelessWidget {
+  const _StepRow({required this.labels, required this.doneCount});
+
+  final List<String> labels;
+  final int doneCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < labels.length; i++) ...[
+          if (i > 0)
+            Expanded(
+              child: Container(
+                height: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(99),
+                  gradient: LinearGradient(
+                    colors: i <= doneCount
+                        ? const [Color(0xFF6EE7B7), Color(0xFFE2E8F0)]
+                        : const [Color(0xFFE2E8F0), Color(0xFFE2E8F0)],
+                  ),
+                ),
+              ),
+            ),
+          Column(
+            children: [
+              Container(
+                width: 18,
+                height: 18,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: i < doneCount
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFF1F5F9),
+                  boxShadow: i < doneCount
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                            blurRadius: 4,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  i < doneCount ? Icons.check_rounded : Icons.place_rounded,
+                  size: 11,
+                  color: i < doneCount ? Colors.white : const Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                labels[i],
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: i < doneCount
+                      ? const Color(0xFF047857)
+                      : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _MiniBtn extends StatelessWidget {
+  const _MiniBtn({
     required this.label,
     required this.onTap,
+    required this.color,
     this.filled = false,
   });
 
   final String label;
   final VoidCallback onTap;
+  final Color color;
   final bool filled;
 
   @override
   Widget build(BuildContext context) {
-    if (filled) {
-      return Material(
-        color: AppColors.accent,
-        borderRadius: BorderRadius.circular(9),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(9),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-              ),
+    return Material(
+      color: filled ? color : Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          decoration: filled
+              ? null
+              : BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: filled ? Colors.white : AppColors.text,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ),
-      );
-    }
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-        visualDensity: VisualDensity.compact,
       ),
-      child: Text(label),
     );
   }
 }
