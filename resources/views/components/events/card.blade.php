@@ -48,12 +48,12 @@
 
         <div class="event-3d__body">
             <h3 class="event-3d__title">
-                <a href="{{ event_show_url($event) }}">{{ $event->title }}</a>
+                <a href="{{ event_show_url($event) }}" dir="{{ bidi_dir($event->title) }}" class="bidi-text">{{ $event->title }}</a>
             </h3>
             @if ($schedule)
                 <span class="event-3d__meta">{{ $schedule }}</span>
             @endif
-            <span class="event-3d__text">{{ $event->locationLabel() }}</span>
+            <span class="event-3d__text bidi-text" dir="{{ bidi_dir($event->locationLabel()) }}">{{ $event->locationLabel() }}</span>
             @if ($event->sex)
                 <span class="event-3d__meta">{{ __('events.sex') }}: {{ __('ui.sex_'.$event->sex->value) }}</span>
             @endif

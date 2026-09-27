@@ -47,7 +47,7 @@ Then check the API / DB: `device_tokens` should have a row for your user.
 
 | App state | What the user sees |
 |-----------|--------------------|
-| **Open (foreground)** | No system tray banner. Unread badge increments; Pusher in-app toast still works. |
+| **Open (foreground)** | No system tray banner. Same sweet in-app toast as web (chat + join accept/request) + badge. Pusher is primary; FCM data is a deduped fallback. |
 | **Background / killed** | OS shows the FCM notification (Android: Funnity white status icon + indigo tint). |
 
 ## 6. Android notification icon

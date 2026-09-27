@@ -4,9 +4,10 @@ import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 
-/// Blade / Uiverse-style chat toast (web `.chat-toast`).
+/// Blade / Uiverse-style in-app toast (web `.chat-toast`).
 ///
-/// SEC-PRIV-002: never shows message body — uses [AppLocalizations.newChatMessage].
+/// Chat: SEC-PRIV-002 — never shows message body ([AppLocalizations.newChatMessage]).
+/// Join accept / request: title + body from realtime/FCM (same as web).
 class ChatToastBanner extends StatelessWidget {
   const ChatToastBanner({
     super.key,
@@ -15,13 +16,33 @@ class ChatToastBanner extends StatelessWidget {
     required this.onDismiss,
   });
 
-  final ChatToastPayload payload;
+  final InAppToastPayload payload;
   final VoidCallback onOpen;
   final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final eyebrow = switch (payload.kind) {
+      InAppToastKind.chat => l10n.chatToastNew,
+      InAppToastKind.joinAccepted =>
+        payload.title.isNotEmpty ? payload.title : l10n.joinAcceptedToast,
+      InAppToastKind.joinRequested =>
+        payload.title.isNotEmpty ? payload.title : l10n.joinRequestedToast,
+    };
+    final name = switch (payload.kind) {
+      InAppToastKind.chat =>
+        payload.title.isEmpty ? l10n.chatToastNew : payload.title,
+      InAppToastKind.joinAccepted =>
+        payload.title.isNotEmpty ? payload.title : l10n.joinAcceptedToast,
+      InAppToastKind.joinRequested =>
+        payload.title.isNotEmpty ? payload.title : l10n.joinRequestedToast,
+    };
+    final body = switch (payload.kind) {
+      InAppToastKind.chat => l10n.newChatMessage,
+      InAppToastKind.joinAccepted || InAppToastKind.joinRequested =>
+        payload.body.isNotEmpty ? payload.body : name,
+    };
 
     return Material(
       color: Colors.transparent,
@@ -46,15 +67,18 @@ class ChatToastBanner extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(
-                    l10n.chatToastNew,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text,
+                  Expanded(
+                    child: Text(
+                      eyebrow,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.text,
+                      ),
                     ),
                   ),
-                  const Spacer(),
                   IconButton(
                     onPressed: onDismiss,
                     icon: const Icon(Icons.close, size: 16),
@@ -81,9 +105,7 @@ class ChatToastBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            payload.senderName.isEmpty
-                                ? l10n.chatToastNew
-                                : payload.senderName,
+                            name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -94,8 +116,8 @@ class ChatToastBanner extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            l10n.newChatMessage,
-                            maxLines: 1,
+                            body,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Color(0xFF475569),
@@ -147,10 +169,26 @@ class ChatToastBanner extends StatelessWidget {
 class _Avatar extends StatelessWidget {
   const _Avatar({required this.payload});
 
-  final ChatToastPayload payload;
+  final InAppToastPayload payload;
 
   @override
   Widget build(BuildContext context) {
+    if (payload.kind == InAppToastKind.joinAccepted) {
+      return Container(
+        width: 48,
+        height: 48,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF059669)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Icon(Icons.check_rounded, color: Colors.white, size: 26),
+      );
+    }
+
     return SizedBox(
       width: 48,
       height: 48,
@@ -167,9 +205,11 @@ class _Avatar extends StatelessWidget {
                     maxCacheHeight: 128,
                   )
                 : DecoratedBox(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.accent],
+                        colors: payload.kind == InAppToastKind.joinRequested
+                            ? const [Color(0xFFF59E0B), Color(0xFFEA580C)]
+                            : const [AppColors.primary, AppColors.accent],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -186,24 +226,25 @@ class _Avatar extends StatelessWidget {
                     ),
                   ),
           ),
-          PositionedDirectional(
-            end: 0,
-            bottom: 0,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: const Icon(
-                Icons.chat_bubble,
-                size: 10,
-                color: Colors.white,
+          if (payload.kind == InAppToastKind.chat)
+            PositionedDirectional(
+              end: 0,
+              bottom: 0,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: const Icon(
+                  Icons.chat_bubble,
+                  size: 10,
+                  color: Colors.white,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

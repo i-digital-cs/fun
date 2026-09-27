@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
@@ -304,6 +305,7 @@ class _PendingRequestCard extends StatelessWidget {
             onTap: onView,
             child: Text(
               event.title,
+              textDirection: bidiTextDirection(event.title),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,

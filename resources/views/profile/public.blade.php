@@ -61,7 +61,7 @@
                                 <a href="{{ event_show_url($event) }}"
                                    class="flex items-start justify-between gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white hover:shadow-md">
                                     <div class="min-w-0">
-                                        <p class="truncate font-bold text-slate-900">{{ $event->title }}</p>
+                                        <p class="truncate font-bold text-slate-900 bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</p>
                                         <p class="mt-1 text-xs font-medium text-indigo-600">
                                             {{ $event->starts_at?->timezone(config('app.timezone'))->translatedFormat('M j · g:i A') }}
                                         </p>

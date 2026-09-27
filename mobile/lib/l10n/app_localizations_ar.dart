@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -667,6 +666,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatToastJustNow => 'الآن';
+
+  @override
+  String get joinAcceptedToast => 'تم قبولك!';
+
+  @override
+  String get joinRequestedToast => 'طلب انضمام جديد';
 
   @override
   String get uploadTooLarge => 'الصورة كبيرة جداً (الحد الأقصى 8 ميغابايت).';

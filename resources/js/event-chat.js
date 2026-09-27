@@ -56,6 +56,39 @@ function avatarHtml(user, profileBase) {
     return `<span class="chat-row__avatar" aria-hidden="true">${inner}</span>`;
 }
 
+/** Jump to newest message without fighting layout/images. */
+function scrollMessagesToEnd(container, { smooth = false } = {}) {
+    if (!container) {
+        return;
+    }
+
+    const apply = () => {
+        const last = container.querySelector('.chat-row:last-child');
+        if (last && typeof last.scrollIntoView === 'function') {
+            last.scrollIntoView({
+                block: 'end',
+                inline: 'nearest',
+                behavior: smooth ? 'smooth' : 'auto',
+            });
+        }
+        container.scrollTop = container.scrollHeight;
+    };
+
+    apply();
+    requestAnimationFrame(() => {
+        apply();
+        requestAnimationFrame(apply);
+    });
+}
+
+function isNearBottom(container, threshold = 96) {
+    if (!container) {
+        return true;
+    }
+    const gap = container.scrollHeight - container.scrollTop - container.clientHeight;
+    return gap <= threshold;
+}
+
 function appendMessage(container, message, emptyEl, currentUserId, options = {}) {
     if (container.querySelector(`[data-message-id="${message.id}"]`)) {
         return;
@@ -63,6 +96,7 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
 
     emptyEl?.remove();
 
+    const stickToBottom = options.forceScroll === true || isNearBottom(container);
     const time = formatChatTime(message.created_at);
     const mine = Number(message.user?.id) === Number(currentUserId);
     const isSystem = Boolean(message.is_system);
@@ -79,7 +113,9 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
         el.dataset.system = '1';
         el.innerHTML = `<p class="chat-row__system-text">${escapeHtml(message.body ?? '')}</p>`;
         container.appendChild(el);
-        container.scrollTop = container.scrollHeight;
+        if (stickToBottom || mine) {
+            scrollMessagesToEnd(container);
+        }
         return;
     }
 
@@ -116,7 +152,9 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
     el.innerHTML = mine ? `${bubble}${avatar}` : `${avatar}${bubble}`;
 
     container.appendChild(el);
-    container.scrollTop = container.scrollHeight;
+    if (stickToBottom || mine || options.forceScroll) {
+        scrollMessagesToEnd(container);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -142,11 +180,20 @@ document.addEventListener('DOMContentLoaded', () => {
         profileBase: '/u',
     };
 
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+    // Always land on the newest message when opening the thread.
+    scrollMessagesToEnd(messagesEl);
+    window.addEventListener('load', () => scrollMessagesToEnd(messagesEl), { once: true });
+    setTimeout(() => scrollMessagesToEnd(messagesEl), 120);
 
     if (bodyInput) {
         autosize(bodyInput);
-        bodyInput.addEventListener('input', () => autosize(bodyInput));
+        bodyInput.addEventListener('input', () => {
+            autosize(bodyInput);
+            // Keep newest visible while composing if already at bottom.
+            if (isNearBottom(messagesEl, 140)) {
+                scrollMessagesToEnd(messagesEl);
+            }
+        });
         bodyInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
@@ -197,7 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             );
 
-            appendMessage(messagesEl, response.data.data, emptyEl, currentUserId, appendOptions);
+            appendMessage(messagesEl, response.data.data, emptyEl, currentUserId, {
+                ...appendOptions,
+                forceScroll: true,
+            });
             bodyInput.value = '';
             autosize(bodyInput);
             if (statusEl && !statusEl.dataset.fallbackActive) {

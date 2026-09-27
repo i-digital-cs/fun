@@ -32,6 +32,18 @@ function escapeHtml(value) {
         .replace(/"/g, '&quot;');
 }
 
+/** First strong letter → rtl for Arabic/Hebrew, else ltr (stable mixed titles). */
+function bidiDir(text) {
+    const value = String(text ?? '');
+    const match = value.match(/[\p{L}\p{N}]/u);
+    if (!match) {
+        return 'ltr';
+    }
+    return /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(match[0])
+        ? 'rtl'
+        : 'ltr';
+}
+
 function buildSuggestUrl(root, query) {
     const url = new URL(root.dataset.liveSearchUrl, window.location.origin);
     url.searchParams.set('q', query);
@@ -119,8 +131,8 @@ function renderSuggestResults(root, payload) {
         .map(
             (item) => `
         <a href="${escapeHtml(item.url)}" class="live-search__item">
-            <span class="live-search__item-title">${escapeHtml(item.title)}</span>
-            ${item.subtitle ? `<span class="live-search__item-sub">${escapeHtml(item.subtitle)}</span>` : ''}
+            <span class="live-search__item-title bidi-text" dir="${bidiDir(item.title)}">${escapeHtml(item.title)}</span>
+            ${item.subtitle ? `<span class="live-search__item-sub bidi-text" dir="${bidiDir(item.subtitle)}">${escapeHtml(item.subtitle)}</span>` : ''}
             ${item.meta ? `<span class="live-search__item-meta">${escapeHtml(item.meta)}</span>` : ''}
         </a>`
         )

@@ -3,12 +3,12 @@
 @section('title', __('chat.title').' — '.$event->title)
 
 @section('content')
-    <div class="mx-auto flex max-w-3xl flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="event-chat-page mx-auto flex w-full max-w-3xl flex-col gap-3">
+        <div class="event-chat-page__header flex shrink-0 flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ __('chat.title') }}</h1>
                 <p class="mt-1 text-sm text-slate-500">
-                    <a href="{{ event_show_url($event) }}" class="font-medium text-indigo-600 hover:text-indigo-800">{{ $event->title }}</a>
+                    <a href="{{ event_show_url($event) }}" class="font-medium text-indigo-600 hover:text-indigo-800 bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                 </p>
             </div>
             <a href="{{ event_show_url($event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
@@ -16,7 +16,7 @@
 
         <div
             id="event-chat"
-            class="event-chat flex min-h-[28rem] flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm"
+            class="event-chat flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm"
             data-event-id="{{ $event->id }}"
             data-post-url="{{ event_route('events.chat.store', $event) }}"
             data-channel="events.{{ $event->id }}.chat"
@@ -25,7 +25,7 @@
             data-report-url="{{ route('reports.create') }}"
             data-report-label="{{ __('safety.report') }}"
         >
-            <div id="chat-messages" class="event-chat__messages fancy-scroll flex-1 overflow-y-auto p-4 sm:p-5" role="log" aria-live="polite">
+            <div id="chat-messages" class="event-chat__messages fancy-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-5" role="log" aria-live="polite">
                 @forelse ($messages as $message)
                     @php
                         $mine = (int) $message->user_id === (int) auth()->id();
@@ -111,7 +111,7 @@
             </div>
 
             {{-- Uiverse.io by dorian_8749 — chat composer --}}
-            <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" class="event-chat__composer">
+            <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" class="event-chat__composer shrink-0">
                 @csrf
                 <div class="chat-composer">
                     <div class="chat-composer__shell">

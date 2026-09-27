@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/utils/rtl.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
@@ -336,6 +337,7 @@ class _EventCardState extends State<EventCard> {
                         event.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
+                        textDirection: bidiTextDirection(event.title),
                         style: const TextStyle(
                           color: Color(0xFF312E81),
                           fontWeight: FontWeight.w900,

@@ -16,9 +16,9 @@ class ChatRealtimeClient {
     : _tokenStorage = tokenStorage;
 
   final TokenStorage _tokenStorage;
-  final _messages = StreamController<ChatToastPayload>.broadcast();
-  final _joinAccepted = StreamController<void>.broadcast();
-  final _joinRequested = StreamController<void>.broadcast();
+  final _messages = StreamController<InAppToastPayload>.broadcast();
+  final _joinAccepted = StreamController<InAppToastPayload>.broadcast();
+  final _joinRequested = StreamController<InAppToastPayload>.broadcast();
   final _threadPosted = StreamController<ChatMessage>.broadcast();
 
   PusherChannelsClient? _client;
@@ -34,13 +34,13 @@ class ChatRealtimeClient {
   int? _subscribedEventId;
   bool _connected = false;
 
-  Stream<ChatToastPayload> get messages => _messages.stream;
+  Stream<InAppToastPayload> get messages => _messages.stream;
 
   /// Fires when the server broadcasts `.join.accepted` to this user.
-  Stream<void> get joinAccepted => _joinAccepted.stream;
+  Stream<InAppToastPayload> get joinAccepted => _joinAccepted.stream;
 
   /// Fires when the server broadcasts `.join.requested` (organizer).
-  Stream<void> get joinRequested => _joinRequested.stream;
+  Stream<InAppToastPayload> get joinRequested => _joinRequested.stream;
 
   /// Live `.message.posted` payloads for the currently subscribed event thread.
   Stream<ChatMessage> get threadPosted => _threadPosted.stream;
@@ -122,7 +122,7 @@ class ChatRealtimeClient {
       _eventSub = channel.bind('chat.message').listen((event) {
         final data = event.tryGetDataAsMap();
         if (data == null) return;
-        final payload = ChatToastPayload.fromJson(data);
+        final payload = InAppToastPayload.fromChatJson(data);
         if (payload.eventId <= 0) return;
         if (!_messages.isClosed) {
           _messages.add(payload);
@@ -130,14 +130,20 @@ class ChatRealtimeClient {
       });
 
       _joinSub = channel.bind('join.accepted').listen((event) {
+        final data = event.tryGetDataAsMap() ?? const <String, dynamic>{};
+        final payload = InAppToastPayload.fromJoinAcceptedJson(data);
+        if (payload.eventId <= 0) return;
         if (!_joinAccepted.isClosed) {
-          _joinAccepted.add(null);
+          _joinAccepted.add(payload);
         }
       });
 
       _joinRequestedSub = channel.bind('join.requested').listen((event) {
+        final data = event.tryGetDataAsMap() ?? const <String, dynamic>{};
+        final payload = InAppToastPayload.fromJoinRequestedJson(data);
+        if (payload.eventId <= 0) return;
         if (!_joinRequested.isClosed) {
-          _joinRequested.add(null);
+          _joinRequested.add(payload);
         }
       });
 

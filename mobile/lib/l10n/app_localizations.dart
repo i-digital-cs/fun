@@ -1364,6 +1364,18 @@ abstract class AppLocalizations {
   /// **'Just now'**
   String get chatToastJustNow;
 
+  /// No description provided for @joinAcceptedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in!'**
+  String get joinAcceptedToast;
+
+  /// No description provided for @joinRequestedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'New join request'**
+  String get joinRequestedToast;
+
   /// No description provided for @uploadTooLarge.
   ///
   /// In en, this message translates to:

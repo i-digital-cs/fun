@@ -7,12 +7,14 @@ import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/chat/domain/chat_thread.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
 import 'package:fun_mobile/features/chat/presentation/widgets/chat_toast_banner.dart';
+import 'package:fun_mobile/features/notifications/data/push_notification_service.dart';
 import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -431,6 +433,7 @@ class _ChatCard extends StatelessWidget {
                             chat.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            textDirection: bidiTextDirection(chat.title),
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight:
@@ -633,11 +636,12 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   bool _usePollToasts = true;
 
   ChatRealtimeClient? _realtime;
-  StreamSubscription<ChatToastPayload>? _realtimeSub;
-  StreamSubscription<void>? _joinAcceptedSub;
-  StreamSubscription<void>? _joinRequestedSub;
-  final List<ChatToastPayload> _toasts = [];
-  final Set<int> _shownMessageIds = {};
+  StreamSubscription<InAppToastPayload>? _realtimeSub;
+  StreamSubscription<InAppToastPayload>? _joinAcceptedSub;
+  StreamSubscription<InAppToastPayload>? _joinRequestedSub;
+  StreamSubscription<InAppToastPayload>? _fcmToastSub;
+  final List<InAppToastPayload> _toasts = [];
+  final Set<String> _shownToastKeys = {};
 
   @override
   void initState() {
@@ -646,6 +650,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _poll();
       _syncRealtime();
+      _bindFcmToasts();
     });
   }
 
@@ -653,12 +658,25 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   void dispose() {
     _timer?.cancel();
     unawaited(_teardownRealtime());
+    unawaited(_fcmToastSub?.cancel());
     super.dispose();
   }
 
   void _schedulePoll(Duration interval) {
     _timer?.cancel();
     _timer = Timer.periodic(interval, (_) => _poll());
+  }
+
+  void _bindFcmToasts() {
+    final service = ref.read(pushNotificationServiceProvider);
+    _fcmToastSub?.cancel();
+    _fcmToastSub = service.foregroundToasts.listen((payload) {
+      _enqueueToast(
+        payload,
+        bumpChat: payload.kind == InAppToastKind.chat,
+        bumpNotify: payload.kind != InAppToastKind.chat,
+      );
+    });
   }
 
   Future<void> _teardownRealtime() async {
@@ -703,14 +721,15 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinRequestedSub = null;
 
     _realtime = client;
-    _realtimeSub = client.messages.listen(_onRealtimeMessage);
-    void bumpNotify() {
-      if (!mounted) return;
-      ref.read(notificationUnreadTotalProvider.notifier).update((n) => n + 1);
-    }
-
-    _joinAcceptedSub = client.joinAccepted.listen((_) => bumpNotify());
-    _joinRequestedSub = client.joinRequested.listen((_) => bumpNotify());
+    _realtimeSub = client.messages.listen(
+      (payload) => _enqueueToast(payload, bumpChat: true),
+    );
+    _joinAcceptedSub = client.joinAccepted.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _joinRequestedSub = client.joinRequested.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
 
     final started = await client.connect(userId: auth.user.id, config: config);
     if (!mounted) return;
@@ -732,22 +751,41 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     });
   }
 
-  void _onRealtimeMessage(ChatToastPayload payload, {bool bumpUnread = true}) {
+  void _enqueueToast(
+    InAppToastPayload payload, {
+    bool bumpChat = false,
+    bool bumpNotify = false,
+  }) {
     if (!mounted) return;
+    if (payload.eventId <= 0) return;
 
-    if (payload.messageId > 0) {
-      if (_shownMessageIds.contains(payload.messageId)) return;
-      _shownMessageIds.add(payload.messageId);
-      _lastSeenMessageIds[payload.eventId] = payload.messageId;
+    if (_shownToastKeys.contains(payload.dedupeKey)) return;
+    _shownToastKeys.add(payload.dedupeKey);
+    if (_shownToastKeys.length > 80) {
+      _shownToastKeys.remove(_shownToastKeys.first);
     }
 
-    final location = GoRouterState.of(context).uri.path;
-    if (location == '/events/${payload.eventId}/chat') {
-      return;
+    if (payload.kind == InAppToastKind.chat) {
+      final messageId = int.tryParse(
+        payload.dedupeKey.startsWith('chat:')
+            ? payload.dedupeKey.substring(5)
+            : '',
+      );
+      if (messageId != null && messageId > 0) {
+        _lastSeenMessageIds[payload.eventId] = messageId;
+      }
+
+      final location = GoRouterState.of(context).uri.path;
+      if (location == '/events/${payload.eventId}/chat') {
+        return;
+      }
     }
 
-    if (bumpUnread) {
+    if (bumpChat) {
       ref.read(chatUnreadTotalProvider.notifier).update((n) => n + 1);
+    }
+    if (bumpNotify) {
+      ref.read(notificationUnreadTotalProvider.notifier).update((n) => n + 1);
     }
 
     setState(() {
@@ -763,12 +801,10 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     });
   }
 
-  void _dismissToast(ChatToastPayload payload) {
+  void _dismissToast(InAppToastPayload payload) {
     setState(
       () => _toasts.removeWhere(
-        (t) =>
-            identical(t, payload) ||
-            (t.messageId != 0 && t.messageId == payload.messageId),
+        (t) => identical(t, payload) || t.dedupeKey == payload.dedupeKey,
       ),
     );
   }
@@ -779,7 +815,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     if (auth is! Authenticated) {
       _primed = false;
       _lastSeenMessageIds.clear();
-      _shownMessageIds.clear();
+      _shownToastKeys.clear();
       ref.read(chatUnreadTotalProvider.notifier).state = 0;
       ref.read(notificationUnreadTotalProvider.notifier).state = 0;
       return;
@@ -823,17 +859,18 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
         }
 
         final last = chat.lastMessage;
-        _onRealtimeMessage(
-          ChatToastPayload(
-            messageId: lastId,
+        final name = last?.userName ?? '';
+        _enqueueToast(
+          InAppToastPayload(
+            kind: InAppToastKind.chat,
+            dedupeKey: 'chat:$lastId',
             eventId: chat.eventId,
             eventTitle: chat.title,
-            senderName: last?.userName ?? '',
-            senderInitials: (last?.userName?.trim().isNotEmpty == true)
-                ? last!.userName!.trim()[0].toUpperCase()
+            title: name,
+            senderInitials: name.trim().isNotEmpty
+                ? name.trim()[0].toUpperCase()
                 : '?',
           ),
-          bumpUnread: false,
         );
       }
 
@@ -873,7 +910,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
                         onDismiss: () => _dismissToast(toast),
                         onOpen: () {
                           _dismissToast(toast);
-                          context.push('/events/${toast.eventId}/chat');
+                          context.push(toast.resolvedOpenPath);
                         },
                       ),
                       const SizedBox(height: 12),

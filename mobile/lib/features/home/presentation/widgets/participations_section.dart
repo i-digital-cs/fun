@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -249,6 +250,7 @@ class _ParticipationCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 event.title,
+                textDirection: bidiTextDirection(event.title),
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,

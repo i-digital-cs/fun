@@ -100,7 +100,7 @@ For each screen:
 
 **Profile** tab: **Profile settings** + links to location / identity / blocks.
 
-**Topbar:** live search → suggestions via `GET /search/suggest` (wifi **Searching** while typed query awaits API); Enter / See all → Discover; locale; **notifications bell** → `/notifications` (orange unread dot); avatar menu (Profile · Location · Identity · Blocks · Logout).
+**Topbar:** live search → suggestions via `GET /search/suggest` (wifi **Searching** while typed query awaits API); titles use BiDi isolate (`bidi_dir` / `bidiTextDirection`); Enter / See all → Discover; locale; **notifications bell** → `/notifications` (orange unread dot); avatar menu (Profile · Location · Identity · Blocks · Logout).
 *(Topbar chat icon → `/chats` with unread dot when messages arrive.)*
 
 ---
@@ -437,9 +437,9 @@ Bookmark UI (web CSS `.ui-bookmark`) on Discover / dashboard / home cards and ev
 
 List pending requesters with Accept / Reject.
 
-**Organizer notify (web + API, same service):** when someone requests to join, the event **creator** receives `JoinRequestReceivedNotification` via **mail + database inbox + FCM** (when a device token exists) **+ realtime** Pusher `join.requested` on private `App.Models.User.{creator}` (web toast + notify badge; Flutter notify badge). CTA → event requests. Failures are logged and do **not** block the join.
+**Organizer notify (web + API, same service):** when someone requests to join, the event **creator** receives `JoinRequestReceivedNotification` via **mail + database inbox + FCM** (when a device token exists) **+ realtime** Pusher `join.requested` on private `App.Models.User.{creator}` (web + Flutter sweet toast + notify badge). CTA → event requests. Failures are logged and do **not** block the join.
 
-**Applicant notify on accept:** `JoinRequestAcceptedNotification` → **database inbox + FCM** + realtime Pusher event `join.accepted` on private `App.Models.User.{id}` (web toast + notify badge).
+**Applicant notify on accept:** `JoinRequestAcceptedNotification` → **database inbox + FCM** + realtime Pusher event `join.accepted` on private `App.Models.User.{id}` (web + Flutter sweet toast + notify badge).
 
 Flutter: poll `GET /api/notifications` for join request / accept as fallback; same `POST .../join` and accept endpoints trigger notifies + live badge bumps.
 
@@ -459,7 +459,7 @@ In-app list of database notifications (`join_request`, `join_accepted`). Unread 
 
 **FCM push (outside app):** join request, join accept, and chat messages (`JoinRequestReceivedNotification`, `JoinRequestAcceptedNotification`, `ChatMessagePushNotification`). Flutter registers via `POST /api/device-tokens` after login (requires `google-services.json` — see `mobile/docs/FIREBASE_PUSH.md`). Logout → `DELETE`. Chat push body does **not** include message text (privacy). Inbox still stores join request/accept.
 
-**Foreground vs background (Flutter):** when the app is **open**, FCM still arrives but **no system tray banner** is shown (`onMessage` only bumps the in-app unread badge; iOS `setForegroundNotificationPresentationOptions(alert: false)`). When the app is **backgrounded / killed**, the OS shows the tray notification. In-app Pusher toasts still work while open.
+**Foreground vs background (Flutter):** when the app is **open**, FCM still arrives but **no system tray banner** is shown (`onMessage` → in-app sweet toast + badge; iOS `setForegroundNotificationPresentationOptions(alert: false)`). When the app is **backgrounded / killed**, the OS shows the tray notification. Pusher toasts remain the primary live path while open (FCM is a deduped fallback).
 
 **Android tray branding:** status-bar icon is `ic_stat_funity` (white silhouette — Android requirement) tinted indigo (`#4F46E5`); channel `funnity_alerts`. Server FCM sets `android.notification.icon` / `color` / `channel_id`. Expanded large image uses site logo URL only when it is a bitmap (PNG/JPEG/WebP), not SVG.
 
@@ -484,7 +484,7 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 |--|--|
 | **Blade** | `events/chat.blade.php` |
 | **Inbox** | `GET /chats` → `chats/index.blade.php` · `GET /api/chats` · Flutter `/chats` — **same arrangement on web + Flutter:** event cover, event date/time, compact relative last-message time (`now`/`Nm`/`Nh`/`Nd`), **Recent \| Unread** segment, search (icon toggle), separate tinted cards, unread badge beside preview. Payload: `image_url`, `starts_at`. Thread: long-press → **copy message** (Flutter); web report link in bubble footer. |
-| **Toast** | Web + Flutter: private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). **Also:** `.join.requested` (organizer toast + notify badge) and `.join.accepted` (applicant toast + notify badge). **Transport:** production uses **Pusher Channels** (`BROADCAST_CONNECTION=pusher`); Reverb remains an optional VPS alternative. Flutter: `GET /api/site` → `broadcast` (`enabled`, `driver`=`pusher`|`reverb`, `key`, `cluster` for Pusher, `host`/`port`/`scheme` for Reverb) + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). **FCM:** other members get outside-app push on new messages (no message body in push). SEC-PRIV-002: Flutter toasts never echo message body. |
+| **Toast** | Web + Flutter: private `App.Models.User.{id}` `.chat.message` → Uiverse toast (suppressed on that event’s chat). **Also:** `.join.requested` (organizer toast + notify badge) and `.join.accepted` (applicant toast + notify badge). **Transport:** production uses **Pusher Channels** (`BROADCAST_CONNECTION=pusher`); Reverb remains an optional VPS alternative. Flutter: `GET /api/site` → `broadcast` + `POST /api/broadcasting/auth` (Sanctum); poll `/api/chats` every 15s as fallback (60s unread sync when WS live). **While app open:** no FCM system banner — same sweet toast UI (Pusher primary, FCM data as deduped fallback). **FCM tray:** only when backgrounded/killed. SEC-PRIV-002: Flutter chat toasts never echo message body. |
 | **Unread** | `event_chat_reads.last_read_message_id`; mark on open thread / `POST /api/events/{id}/messages/read` |
 | **API** | `GET /api/events/{id}/messages` (page 1 = **newest first** for pagination), `POST .../messages` |
 | **Access** | Joined members only |
@@ -1164,6 +1164,7 @@ API: `POST .../publish|cancel|complete`.
 | Orange gradient CTA | Primary conversion button |
 | Indigo→violet CTA | Secondary brand (login, chat) |
 | Form fields | rounded-xl, indigo focus |
+| Mixed AR/EN titles | `bidi_dir()` / `.bidi-text` (web) · `bidiTextDirection()` (Flutter) — isolate by first strong letter |
 
 Copy strings from `lang/en/*.php` and `lang/ar/*.php` into Flutter l10n (ARB).
 
@@ -1265,7 +1266,8 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
 15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; **all member web actions** use `/events/{id}/{slug}/…` (edit, chat, ticket, members, requests, join, …) via `event_route()` / `event_show_url()`. Legacy `/events/{id}/edit|chat|…` **301** to the slug form. API stays `/api/events/{id}/…` (Flutter GoRouter can stay `/events/:id`).  
 16. **Publish SEO soft-warn** — `POST /api/events/{id}/publish` may include `seo_warning: true` + `message` when description is empty (still publishes). Flutter can toast the message; non-blocking.
-17. **Notifications** — join request/accept → internal inbox (+ email on request; Pusher toast on accept). Chat messages → FCM push + Pusher toast. Flutter: inbox screen + FCM token register (§2.8a).
+17. **Notifications** — join request/accept → internal inbox (+ email on request; Pusher/FCM-while-open sweet toast + badge). Chat messages → FCM push (tray when backgrounded) + in-app toast when open. Flutter: inbox screen + FCM token register (§2.8a).
+18. **Mixed AR/EN titles (BiDi)** — web `bidi_dir` + `.bidi-text` isolate; Flutter `bidiTextDirection` on cards, detail, search, chats, now-playing, participations. Prefer Arabic-first titles when seeding mixed content.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 

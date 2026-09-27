@@ -225,6 +225,8 @@
   "newChatMessage": "لديك رسالة دردشة جديدة.",
   "chatToastNew": "رسالة جديدة",
   "chatToastJustNow": "الآن",
+  "joinAcceptedToast": "تم قبولك!",
+  "joinRequestedToast": "طلب انضمام جديد",
   "uploadTooLarge": "الصورة كبيرة جداً (الحد الأقصى 8 ميغابايت).",
   "uploadBadType": "استخدم صورة بصيغة JPG أو PNG أو WEBP.",
   "uploadMissing": "تعذر قراءة الصورة. جرّب ملفاً آخر.",

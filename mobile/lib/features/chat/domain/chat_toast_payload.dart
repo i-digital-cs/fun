@@ -1,22 +1,41 @@
-/// Payload from Reverb `.chat.message` / [UserChatMessageReceived].
-class ChatToastPayload {
-  const ChatToastPayload({
-    required this.messageId,
+/// In-app toast kinds — mirror web `.chat-toast` (chat + join accept/request).
+enum InAppToastKind { chat, joinAccepted, joinRequested }
+
+/// Payload for foreground sweet toasts (Pusher realtime or FCM-while-open fallback).
+class InAppToastPayload {
+  const InAppToastPayload({
+    required this.kind,
+    required this.dedupeKey,
     required this.eventId,
     required this.eventTitle,
-    required this.senderName,
-    required this.senderInitials,
+    required this.title,
+    this.body = '',
+    this.senderInitials = '?',
     this.senderPhotoUrl,
+    this.openPath,
   });
 
-  final int messageId;
+  final InAppToastKind kind;
+  final String dedupeKey;
   final int eventId;
   final String eventTitle;
-  final String senderName;
+  final String title;
+  final String body;
   final String senderInitials;
   final String? senderPhotoUrl;
+  final String? openPath;
 
-  factory ChatToastPayload.fromJson(Map<String, dynamic> json) {
+  String get resolvedOpenPath {
+    if (openPath != null && openPath!.isNotEmpty) return openPath!;
+    return switch (kind) {
+      InAppToastKind.chat => '/events/$eventId/chat',
+      InAppToastKind.joinAccepted => '/events/$eventId',
+      InAppToastKind.joinRequested => '/events/$eventId/requests',
+    };
+  }
+
+  /// Reverb `.chat.message` / [UserChatMessageReceived].
+  factory InAppToastPayload.fromChatJson(Map<String, dynamic> json) {
     final user = json['user'];
     final userMap = user is Map ? Map<String, dynamic>.from(user) : const {};
     final name = userMap['name'] as String? ?? '';
@@ -24,14 +43,115 @@ class ChatToastPayload {
         userMap['initials'] as String? ??
         (name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase());
     final photo = userMap['profile_image_path'] as String?;
+    final messageId = (json['id'] as num?)?.toInt() ?? 0;
+    final eventId = (json['event_id'] as num?)?.toInt() ?? 0;
 
-    return ChatToastPayload(
-      messageId: (json['id'] as num?)?.toInt() ?? 0,
-      eventId: (json['event_id'] as num?)?.toInt() ?? 0,
+    return InAppToastPayload(
+      kind: InAppToastKind.chat,
+      dedupeKey: messageId > 0 ? 'chat:$messageId' : 'chat:$eventId:${name.hashCode}',
+      eventId: eventId,
       eventTitle: json['event_title'] as String? ?? '',
-      senderName: name,
+      title: name,
       senderInitials: initials,
       senderPhotoUrl: (photo != null && photo.isNotEmpty) ? photo : null,
     );
   }
+
+  /// `.join.accepted` / [UserJoinAccepted].
+  factory InAppToastPayload.fromJoinAcceptedJson(Map<String, dynamic> json) {
+    final eventId = (json['event_id'] as num?)?.toInt() ?? 0;
+    final eventTitle = json['event_title'] as String? ?? '';
+
+    return InAppToastPayload(
+      kind: InAppToastKind.joinAccepted,
+      dedupeKey: 'join_accepted:$eventId',
+      eventId: eventId,
+      eventTitle: eventTitle,
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      senderInitials: '✓',
+      openPath: '/events/$eventId',
+    );
+  }
+
+  /// `.join.requested` / [UserJoinRequested].
+  factory InAppToastPayload.fromJoinRequestedJson(Map<String, dynamic> json) {
+    final eventId = (json['event_id'] as num?)?.toInt() ?? 0;
+    final eventTitle = json['event_title'] as String? ?? '';
+    final joinRequestId = (json['join_request_id'] as num?)?.toInt() ?? 0;
+    final requester = json['requester'];
+    final requesterMap =
+        requester is Map ? Map<String, dynamic>.from(requester) : const {};
+    final name = requesterMap['name'] as String? ?? '';
+    final initials = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+
+    return InAppToastPayload(
+      kind: InAppToastKind.joinRequested,
+      dedupeKey: joinRequestId > 0
+          ? 'join_request:$joinRequestId'
+          : 'join_request:$eventId:${name.hashCode}',
+      eventId: eventId,
+      eventTitle: eventTitle,
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      senderInitials: initials,
+      openPath: '/events/$eventId/requests',
+    );
+  }
+
+  /// FCM data map while the app is foreground (no system tray).
+  static InAppToastPayload? tryFromFcmData(Map<String, dynamic> data) {
+    final type = data['type'] as String? ?? '';
+    final eventId = int.tryParse('${data['event_id'] ?? ''}') ?? 0;
+    if (eventId <= 0) return null;
+
+    final title = data['title'] as String? ?? '';
+    final body = data['body'] as String? ?? '';
+    final eventTitle = data['event_title'] as String? ?? title;
+
+    switch (type) {
+      case 'chat_message':
+        final messageId = int.tryParse('${data['message_id'] ?? ''}') ?? 0;
+        return InAppToastPayload(
+          kind: InAppToastKind.chat,
+          dedupeKey: messageId > 0 ? 'chat:$messageId' : 'chat:fcm:$eventId',
+          eventId: eventId,
+          eventTitle: eventTitle,
+          title: title,
+          body: body,
+          senderInitials: '?',
+        );
+      case 'join_accepted':
+        return InAppToastPayload(
+          kind: InAppToastKind.joinAccepted,
+          dedupeKey: 'join_accepted:$eventId',
+          eventId: eventId,
+          eventTitle: eventTitle,
+          title: title,
+          body: body,
+          senderInitials: '✓',
+          openPath: '/events/$eventId',
+        );
+      case 'join_request':
+        final joinRequestId =
+            int.tryParse('${data['join_request_id'] ?? ''}') ?? 0;
+        return InAppToastPayload(
+          kind: InAppToastKind.joinRequested,
+          dedupeKey: joinRequestId > 0
+              ? 'join_request:$joinRequestId'
+              : 'join_request:fcm:$eventId',
+          eventId: eventId,
+          eventTitle: eventTitle,
+          title: title,
+          body: body,
+          senderInitials: '?',
+          openPath: '/events/$eventId/requests',
+        );
+      default:
+        return null;
+    }
+  }
 }
+
+/// Backward-compatible alias used by chat poll / older call sites.
+typedef ChatToastPayload = InAppToastPayload;

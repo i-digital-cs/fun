@@ -127,10 +127,10 @@
                             <span class="min-w-0 flex-1">
                                 <span class="flex items-start justify-between gap-2">
                                     <span @class([
-                                        'truncate text-[15px] text-slate-900',
+                                        'truncate text-[15px] text-slate-900 bidi-text',
                                         'font-extrabold' => $unread > 0,
                                         'font-semibold' => $unread === 0,
-                                    ])>{{ $chat['title'] }}</span>
+                                    ]) dir="{{ bidi_dir($chat['title'] ?? '') }}">{{ $chat['title'] }}</span>
                                     @if ($relative !== '')
                                         <time @class([
                                             'shrink-0 text-[11px] font-bold',

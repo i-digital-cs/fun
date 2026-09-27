@@ -314,3 +314,39 @@ if (! function_exists('chat_relative_time')) {
         return $local->translatedFormat('M j');
     }
 }
+
+if (! function_exists('bidi_dir')) {
+    /**
+     * Detect base direction from the first strong letter/digit.
+     * Arabic/Hebrew → rtl so mixed AR/EN titles keep a stable visual order.
+     */
+    function bidi_dir(?string $text): string
+    {
+        if (! filled($text)) {
+            return 'ltr';
+        }
+
+        if (preg_match('/[\p{L}\p{N}]/u', $text, $m)) {
+            $ch = $m[0];
+            if (preg_match('/[\x{0590}-\x{05FF}\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{08A0}-\x{08FF}\x{FB50}-\x{FDFF}\x{FE70}-\x{FEFF}]/u', $ch)) {
+                return 'rtl';
+            }
+        }
+
+        return 'ltr';
+    }
+}
+
+if (! function_exists('bidi_text')) {
+    /**
+     * Wrap mixed-direction text so browsers keep a stable visual order.
+     */
+    function bidi_text(?string $text, string $class = ''): string
+    {
+        $safe = e((string) ($text ?? ''));
+        $dir = bidi_dir($text);
+        $classAttr = trim('bidi-text '.$class);
+
+        return '<span class="'.e($classAttr).'" dir="'.$dir.'">'.$safe.'</span>';
+    }
+}

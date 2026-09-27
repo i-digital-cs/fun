@@ -24,7 +24,7 @@
                                     {{ __('home.request_pending') }}
                                 </span>
                                 <h3 class="mt-2 font-extrabold tracking-tight text-slate-900">
-                                    <a href="{{ event_show_url($event) }}" class="hover:text-indigo-700">{{ $event->title }}</a>
+                                    <a href="{{ event_show_url($event) }}" class="hover:text-indigo-700 bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                                 </h3>
                                 <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
                                     <span class="font-medium text-indigo-600">
@@ -69,7 +69,7 @@
                         <a href="{{ event_show_url($event) }}" class="group block">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
-                                    <h3 class="font-extrabold tracking-tight text-slate-900 transition group-hover:text-indigo-700">{{ $event->title }}</h3>
+                                    <h3 class="font-extrabold tracking-tight text-slate-900 transition group-hover:text-indigo-700 bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</h3>
                                     <p class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
                                         <span class="inline-flex items-center gap-1 font-medium text-indigo-600">
                                             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">

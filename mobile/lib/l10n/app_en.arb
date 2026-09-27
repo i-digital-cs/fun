@@ -256,6 +256,8 @@
   "newChatMessage": "You have a new chat message.",
   "chatToastNew": "New message",
   "chatToastJustNow": "Just now",
+  "joinAcceptedToast": "You're in!",
+  "joinRequestedToast": "New join request",
   "uploadTooLarge": "Image is too large (max 8 MB).",
   "uploadBadType": "Use a JPG, PNG, or WEBP image.",
   "uploadMissing": "Could not read that image. Try another file.",

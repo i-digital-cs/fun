@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -306,6 +307,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                 _eventTitle!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                textDirection: bidiTextDirection(_eventTitle),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,

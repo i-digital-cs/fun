@@ -63,7 +63,7 @@
                         class="now-playing__cover"
                     />
                     <span class="now-playing__meta">
-                        <span class="now-playing__name">{{ $running->title }}</span>
+                        <span class="now-playing__name bidi-text" dir="{{ bidi_dir($running->title) }}">{{ $running->title }}</span>
                         <span class="now-playing__desc">
                             {{ $running->category?->localizedName() ?? __('events.events') }}
                             @if ($running->city) · {{ $running->city->localizedName() }} @endif
@@ -87,7 +87,7 @@
                         class="now-playing__cover"
                     />
                     <span class="now-playing__meta">
-                        <span class="now-playing__name">{{ $event->title }}</span>
+                        <span class="now-playing__name bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</span>
                         <span class="now-playing__desc">{{ __('dashboard.now_playing_up_next') }} · {{ $timeLabel($event) }}</span>
                     </span>
                     <span class="now-playing__chevron" aria-hidden="true">
@@ -107,7 +107,7 @@
                         class="now-playing__cover"
                     />
                     <span class="now-playing__meta">
-                        <span class="now-playing__name">{{ $event->title }}</span>
+                        <span class="now-playing__name bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</span>
                         <span class="now-playing__desc">{{ __('dashboard.now_playing_previous') }} · {{ $timeLabel($event) }}</span>
                     </span>
                     <span class="now-playing__chevron" aria-hidden="true">

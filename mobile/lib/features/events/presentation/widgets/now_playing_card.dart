@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/utils/rtl.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
@@ -279,6 +280,7 @@ class _RowItem extends StatelessWidget {
                         event.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        textDirection: bidiTextDirection(event.title),
                         style: const TextStyle(
                           color: AppColors.text,
                           fontWeight: FontWeight.w700,

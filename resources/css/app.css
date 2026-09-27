@@ -1442,6 +1442,12 @@
     font-size: 0.875rem;
     font-weight: 700;
     color: rgb(15 23 42);
+    unicode-bidi: isolate;
+}
+
+.bidi-text {
+    unicode-bidi: isolate;
+    /* Keep mixed AR/EN titles in one stable order (not rearranged by parent LTR/RTL). */
 }
 
 .live-search__item-sub {
@@ -2386,8 +2392,32 @@
     opacity: 0.35;
 }
 
-/* Event chat — Uiverse composer (dorian_8749) + bubbles */
+/* Event chat — fixed viewport shell; messages scroll inside */
+.event-chat-page {
+    /* Fill dashboard main under topbar without growing the document forever */
+    height: calc(100dvh - 9.5rem);
+    max-height: calc(100dvh - 9.5rem);
+}
+
+@media (max-width: 1023px) {
+    .event-chat-page {
+        height: calc(100dvh - 11.5rem);
+        max-height: calc(100dvh - 11.5rem);
+    }
+}
+
+.event-chat {
+    min-height: 0;
+}
+
+.event-chat__messages {
+    min-height: 0;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
 .event-chat__composer {
+    flex-shrink: 0;
     padding: 1rem 1.25rem 1.25rem;
     background: rgb(248 250 252 / 0.9);
     border-top: 1px solid rgb(226 232 240 / 0.8);
@@ -3249,11 +3279,13 @@ html[data-page-loading='1'] {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    unicode-bidi: isolate;
 }
 
 .event-3d__title a {
     color: inherit;
     text-decoration: none;
+    unicode-bidi: isolate;
 }
 
 .event-3d__title a:hover {

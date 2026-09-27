@@ -204,13 +204,13 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-extrabold leading-snug tracking-tight text-slate-900 transition group-hover:text-indigo-700">
-                            <a href="{{ event_show_url($event) }}">{{ $event->title }}</a>
+                            <a href="{{ event_show_url($event) }}" class="bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                         </h3>
                         <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                             <svg class="h-4 w-4 shrink-0 text-indigo-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
                             </svg>
-                            {{ $event->locationLabel() }}
+                            <span class="bidi-text" dir="{{ bidi_dir($event->locationLabel()) }}">{{ $event->locationLabel() }}</span>
                         </p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -285,13 +285,13 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-extrabold leading-snug tracking-tight text-slate-900 transition group-hover:text-indigo-700">
-                            <a href="{{ event_show_url($event) }}">{{ $event->title }}</a>
+                            <a href="{{ event_show_url($event) }}" class="bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                         </h3>
                         <p class="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
                             <svg class="h-4 w-4 shrink-0 text-indigo-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
                             </svg>
-                            {{ $event->locationLabel() }}
+                            <span class="bidi-text" dir="{{ bidi_dir($event->locationLabel()) }}">{{ $event->locationLabel() }}</span>
                         </p>
                     </div>
                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-amber-200/70 bg-amber-50/70 px-4 py-3">

@@ -62,7 +62,7 @@
                     @if ($event->city)
                         <p class="text-sm font-semibold text-indigo-200">{{ $event->city->localizedName() }}</p>
                     @endif
-                    <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl md:text-4xl">
+                    <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl md:text-4xl bidi-text" dir="{{ bidi_dir(filled($event->title) ? $event->title : __('events.view_event')) }}">
                         {{ filled($event->title) ? $event->title : __('events.view_event') }}
                     </h1>
                 </div>
@@ -92,7 +92,7 @@
                         <svg class="h-4 w-4 shrink-0 text-indigo-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z"/>
                         </svg>
-                        <span class="truncate" title="{{ $placeLabel }}">{{ $placeLabel }}</span>
+                        <span class="truncate bidi-text" dir="{{ bidi_dir($placeLabel) }}" title="{{ $placeLabel }}">{{ $placeLabel }}</span>
                     </span>
                 @elseif ($event->hasPlacePin())
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">

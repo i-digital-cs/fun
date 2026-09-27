@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
@@ -282,6 +283,7 @@ class HomeStartingSoonCard extends StatelessWidget {
                                 event.title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                textDirection: bidiTextDirection(event.title),
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,

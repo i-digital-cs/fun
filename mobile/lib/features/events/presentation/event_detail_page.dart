@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
 import 'package:fun_mobile/core/widgets/espiral_glow.dart';
@@ -369,6 +370,7 @@ class EventDetailInfoCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             event.title,
+            textDirection: bidiTextDirection(event.title),
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           if (schedule != null) ...[

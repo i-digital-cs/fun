@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
@@ -193,6 +194,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
                         tileColor: AppColors.surface,
                         title: Text(
                           event.title,
+                          textDirection: bidiTextDirection(event.title),
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         subtitle: Text(
