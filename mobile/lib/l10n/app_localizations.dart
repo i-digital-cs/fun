@@ -2246,6 +2246,12 @@ abstract class AppLocalizations {
   /// **'No upcoming participations. Discover something fun.'**
   String get participationsEmpty;
 
+  /// No description provided for @participationsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+ {count} more · My events'**
+  String participationsMore(int count);
+
   /// No description provided for @confirmedAttendance.
   ///
   /// In en, this message translates to:

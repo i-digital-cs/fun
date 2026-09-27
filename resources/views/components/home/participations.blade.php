@@ -4,7 +4,14 @@
 ])
 
 @php
+    $limit = 4;
+    $memberships = collect($memberships)->filter(fn ($m) => $m->event)->values();
+    $pendingRequests = collect($pendingRequests)->filter(fn ($r) => $r->event)->values();
     $scheduledCount = $memberships->count() + $pendingRequests->count();
+    $previewMemberships = $memberships->take($limit);
+    $remainingSlots = max(0, $limit - $previewMemberships->count());
+    $previewPending = $pendingRequests->take($remainingSlots);
+    $hiddenCount = max(0, $scheduledCount - $previewMemberships->count() - $previewPending->count());
 @endphp
 
 <section class="mb-4 space-y-4" aria-labelledby="home-participations-heading">
@@ -36,12 +43,11 @@
             </a>
         </div>
     @else
-        <div class="grid gap-4 lg:grid-cols-2">
-            @foreach ($memberships as $membership)
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @foreach ($previewMemberships as $membership)
                 @php($event = $membership->event)
-                @continue(! $event)
-                <article class="flex h-full flex-col justify-between gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm">
-                    <div class="space-y-3">
+                <article class="flex h-full flex-col justify-between gap-2.5 rounded-2xl border border-border bg-surface p-3 shadow-sm">
+                    <div class="space-y-2">
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <div class="flex flex-wrap gap-2">
                                 <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
@@ -59,7 +65,7 @@
                             </span>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-text">
+                            <h3 class="text-sm font-semibold text-text">
                                 <a href="{{ event_show_url($event) }}" class="hover:text-primary bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                             </h3>
                             <p class="mt-1 text-sm text-muted bidi-text" dir="{{ bidi_dir($event->locationLabel()) }}">{{ $event->locationLabel() }}</p>
@@ -89,11 +95,10 @@
                 </article>
             @endforeach
 
-            @foreach ($pendingRequests as $joinRequest)
+            @foreach ($previewPending as $joinRequest)
                 @php($event = $joinRequest->event)
-                @continue(! $event)
-                <article class="flex h-full flex-col justify-between gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm">
-                    <div class="space-y-3">
+                <article class="flex h-full flex-col justify-between gap-2.5 rounded-2xl border border-border bg-surface p-3 shadow-sm">
+                    <div class="space-y-2">
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <div class="flex flex-wrap gap-2">
                                 <span class="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">
@@ -110,7 +115,7 @@
                             </span>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-text">
+                            <h3 class="text-sm font-semibold text-text">
                                 <a href="{{ event_show_url($event) }}" class="hover:text-primary bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                             </h3>
                             <p class="mt-1 text-sm text-muted bidi-text" dir="{{ bidi_dir($event->locationLabel()) }}">{{ $event->locationLabel() }}</p>
@@ -133,6 +138,14 @@
                     </div>
                 </article>
             @endforeach
+
+        @if ($hiddenCount > 0)
+            <div class="col-span-full text-center">
+                <a href="{{ route('events.mine') }}" class="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                    {{ __('home.participations_more', ['count' => $hiddenCount]) }}
+                </a>
+            </div>
+        @endif
         </div>
     @endif
 </section>

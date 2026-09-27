@@ -372,6 +372,7 @@
   "yourParticipations": "مشاركاتك",
   "manageAll": "إدارة الكل",
   "participationsEmpty": "لا مشاركات قادمة. اكتشف شيئاً ممتعاً.",
+  "participationsMore": "+ {count} أخرى · فعالياتي",
   "confirmedAttendance": "مؤكد",
   "requestPendingShort": "قيد الانتظار",
   "pendingReviewNotice": "بانتظار موافقة المضيف على طلبك.",

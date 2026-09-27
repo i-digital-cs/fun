@@ -24,6 +24,7 @@ return [
     'scheduled_count' => '{0} لا شيء مجدول|{1} :count مجدولة|[2,*] :count مجدولة',
     'manage_all' => 'إدارة الكل',
     'participations_empty' => 'ليس لديك مشاركات قادمة بعد.',
+    'participations_more' => '+ :count أخرى · فعالياتي',
     'confirmed_attendance' => 'تم تأكيد الحضور',
     'request_pending' => 'الطلب قيد الانتظار',
     'pending_review_notice' => 'بانتظار مراجعة المنظم لطلبك.',

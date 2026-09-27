@@ -6,7 +6,7 @@ import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-/// Confirmed + pending participations — Blade `x-home.participations` / community.
+/// Same participation card style as before, scaled down — max 4 in a row/grid.
 class ParticipationsSection extends StatelessWidget {
   const ParticipationsSection({
     super.key,
@@ -18,6 +18,8 @@ class ParticipationsSection extends StatelessWidget {
     required this.onOpenTicket,
   });
 
+  static const int previewLimit = 4;
+
   final HomeParticipations data;
   final VoidCallback onDiscover;
   final VoidCallback onManageAll;
@@ -25,16 +27,32 @@ class ParticipationsSection extends StatelessWidget {
   final ValueChanged<int> onOpenChat;
   final ValueChanged<int> onOpenTicket;
 
-  String _when(AppLocalizations l10n, DateTime? starts, String locale) {
+  String _when(DateTime? starts, String locale) {
     if (starts == null) return '';
-    final local = starts.toLocal();
-    return DateFormat('E · h:mm a', locale).format(local);
+    return DateFormat('E · h:mm a', locale).format(starts.toLocal());
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
+    final width = MediaQuery.sizeOf(context).width;
+    final crossAxisCount = width >= 1100
+        ? 4
+        : width >= 700
+            ? 2
+            : 1;
+
+    final preview = <({bool pending, EventItem event})>[];
+    for (final row in data.memberships) {
+      if (preview.length >= previewLimit) break;
+      preview.add((pending: false, event: row.event));
+    }
+    for (final row in data.pendingRequests) {
+      if (preview.length >= previewLimit) break;
+      preview.add((pending: true, event: row.event));
+    }
+    final hidden = data.scheduledCount - preview.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,10 +104,7 @@ class ParticipationsSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: AppColors.border,
-                style: BorderStyle.solid,
-              ),
+              border: Border.all(color: AppColors.border),
             ),
             child: Column(
               children: [
@@ -104,72 +119,59 @@ class ParticipationsSection extends StatelessWidget {
             ),
           )
         else ...[
-          if (data.memberships.isNotEmpty) ...[
-            Text(
-              l10n.confirmedAttendance,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: AppColors.success,
-              ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: preview.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: crossAxisCount == 1
+                  ? 2.4
+                  : crossAxisCount == 2
+                      ? 1.35
+                      : 1.05,
             ),
+            itemBuilder: (context, index) {
+              final item = preview[index];
+              return _ParticipationCard(
+                event: item.event,
+                badge: item.pending
+                    ? l10n.requestPendingShort
+                    : l10n.confirmedAttendance,
+                badgeColor:
+                    item.pending ? AppColors.accent : AppColors.success,
+                when: _when(item.event.startsAt, locale),
+                notice: item.pending ? l10n.pendingReviewNotice : null,
+                onOpen: () => onOpenEvent(item.event.id),
+                actions: item.pending
+                    ? [
+                        _ActionChip(
+                          label: l10n.viewEvent,
+                          onTap: () => onOpenEvent(item.event.id),
+                        ),
+                      ]
+                    : [
+                        _ActionChip(
+                          label: l10n.viewTicket,
+                          filled: true,
+                          onTap: () => onOpenTicket(item.event.id),
+                        ),
+                        _ActionChip(
+                          label: l10n.chat,
+                          onTap: () => onOpenChat(item.event.id),
+                        ),
+                      ],
+              );
+            },
+          ),
+          if (hidden > 0) ...[
             const SizedBox(height: 8),
-            ...data.memberships.map(
-              (row) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _ParticipationCard(
-                  event: row.event,
-                  badge: l10n.confirmedAttendance,
-                  badgeColor: AppColors.success,
-                  when: _when(l10n, row.event.startsAt, locale),
-                  onOpen: () => onOpenEvent(row.event.id),
-                  actions: [
-                    _ActionChip(
-                      label: l10n.viewTicket,
-                      filled: true,
-                      onTap: () => onOpenTicket(row.event.id),
-                    ),
-                    _ActionChip(
-                      label: l10n.chat,
-                      onTap: () => onOpenChat(row.event.id),
-                    ),
-                    _ActionChip(
-                      label: l10n.viewEvent,
-                      onTap: () => onOpenEvent(row.event.id),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          if (data.pendingRequests.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              l10n.requestPendingShort,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: AppColors.accent,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ...data.pendingRequests.map(
-              (row) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _ParticipationCard(
-                  event: row.event,
-                  badge: l10n.requestPendingShort,
-                  badgeColor: AppColors.accent,
-                  when: _when(l10n, row.event.startsAt, locale),
-                  notice: l10n.pendingReviewNotice,
-                  onOpen: () => onOpenEvent(row.event.id),
-                  actions: [
-                    _ActionChip(
-                      label: l10n.viewEvent,
-                      onTap: () => onOpenEvent(row.event.id),
-                    ),
-                  ],
-                ),
+            Center(
+              child: TextButton(
+                onPressed: onManageAll,
+                child: Text(l10n.participationsMore(hidden)),
               ),
             ),
           ],
@@ -202,15 +204,14 @@ class _ParticipationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onOpen,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderSoft),
           ),
           child: Column(
@@ -220,8 +221,8 @@ class _ParticipationCard extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 7,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: badgeColor.withValues(alpha: 0.12),
@@ -238,41 +239,54 @@ class _ParticipationCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (when.isNotEmpty)
-                    Text(
-                      when,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.muted,
+                    Flexible(
+                      child: Text(
+                        when,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 event.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 textDirection: bidiTextDirection(event.title),
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 13,
                   fontWeight: FontWeight.w800,
+                  height: 1.25,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 [
                   if (event.venue.isNotEmpty) event.venue,
                   if (event.city?.name != null) event.city!.name,
                 ].join(' · '),
-                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 11, color: AppColors.muted),
               ),
               if (notice != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   notice!,
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10, color: AppColors.muted),
                 ),
               ],
-              const SizedBox(height: 10),
-              Wrap(spacing: 8, runSpacing: 8, children: actions),
+              const Spacer(),
+              Wrap(spacing: 6, runSpacing: 6, children: actions),
             ],
           ),
         ),
@@ -297,17 +311,17 @@ class _ActionChip extends StatelessWidget {
     if (filled) {
       return Material(
         color: AppColors.accent,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(9),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(9),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Text(
               label,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -318,15 +332,13 @@ class _ActionChip extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        visualDensity: VisualDensity.compact,
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-      ),
+      child: Text(label),
     );
   }
 }

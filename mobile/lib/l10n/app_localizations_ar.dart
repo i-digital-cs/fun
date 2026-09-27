@@ -1138,6 +1138,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get participationsEmpty => 'لا مشاركات قادمة. اكتشف شيئاً ممتعاً.';
 
   @override
+  String participationsMore(int count) {
+    return '+ $count أخرى · فعالياتي';
+  }
+
+  @override
   String get confirmedAttendance => 'مؤكد';
 
   @override

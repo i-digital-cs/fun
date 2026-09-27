@@ -141,7 +141,7 @@ For each screen:
 
 1. **Greeting** — “Good morning/afternoon/evening, {firstName} 👋” + subtitle + orange **Create event**  
 2. **Hero** — dark photo/gradient block, titles “Find people. / Do what you love.”, **Find events** (indigo) → Discover, trust chips; ambient **espiral** glow anchored end-side (`x-ui.espiral`, amber) — decorative only, not a loader  
-3. **Your participations** — `GET /api/home/participations`: **confirmed memberships** + **pending join requests** (no demo cards); empty → Discover CTA; confirmed rows link to ticket + chat  
+3. **Your participations** — same card style as before, scaled down; **4-up** preview (max 4) from `GET /api/home/participations`; overflow → My Events; empty → Discover CTA
 4. **What are you into?** — category grid (emoji + name + count) → Discover filtered by category  
 5. **Happening near you** — compact cards + weather + **now-playing** (live/next/previous) + starting soon + safety  
 6. **How {brand} works** — 3 steps  

@@ -439,6 +439,12 @@
   "yourParticipations": "Your participations",
   "manageAll": "Manage all",
   "participationsEmpty": "No upcoming participations. Discover something fun.",
+  "participationsMore": "+ {count} more · My events",
+  "@participationsMore": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "confirmedAttendance": "Confirmed",
   "requestPendingShort": "Pending",
   "pendingReviewNotice": "Waiting for the host to accept your request.",

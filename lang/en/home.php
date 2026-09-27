@@ -24,6 +24,7 @@ return [
     'scheduled_count' => '{0} none scheduled|{1} :count scheduled|[2,*] :count scheduled',
     'manage_all' => 'Manage all',
     'participations_empty' => 'You have no upcoming participations yet.',
+    'participations_more' => '+ :count more · My events',
     'confirmed_attendance' => 'Confirmed Attendance',
     'request_pending' => 'Request Pending',
     'pending_review_notice' => 'Waiting for the organizer to review your request.',

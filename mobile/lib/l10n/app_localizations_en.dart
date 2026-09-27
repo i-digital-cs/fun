@@ -1148,6 +1148,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'No upcoming participations. Discover something fun.';
 
   @override
+  String participationsMore(int count) {
+    return '+ $count more · My events';
+  }
+
+  @override
   String get confirmedAttendance => 'Confirmed';
 
   @override
