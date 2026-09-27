@@ -33,6 +33,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   bool _loading = true;
   bool _sending = false;
   String? _eventTitle;
+  EventCreator? _host;
+  int? _ownerId;
   final _text = TextEditingController();
   final _scroll = ScrollController();
   Timer? _poll;
@@ -74,7 +76,12 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
         .read(eventsRepositoryProvider)
         .show(widget.eventId);
     if (!mounted || result.data == null) return;
-    setState(() => _eventTitle = result.data!.event.title);
+    final event = result.data!.event;
+    setState(() {
+      _eventTitle = event.title;
+      _host = event.creator;
+      _ownerId = event.createdBy ?? event.creator?.id;
+    });
   }
 
   Future<void> _subscribeLive() async {
@@ -327,6 +334,73 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
       ),
       body: Column(
         children: [
+          if (_host != null)
+            Material(
+              color: AppColors.surface,
+              child: InkWell(
+                onTap: () {
+                  final publicId = _host!.publicId?.trim();
+                  if (publicId != null && publicId.isNotEmpty) {
+                    context.push('/u/$publicId');
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.borderSoft),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: AppColors.primary,
+                        child: Text(
+                          _host!.displayInitials,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _host!.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primarySoft,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          l10n.participationHost,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           Expanded(
             child: AsyncBody(
               isLoading: _loading,
@@ -347,9 +421,14 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                   final message = _messages[index];
                   final mine =
                       currentId != null && message.userId == currentId;
+                  final isHost = _ownerId != null &&
+                      message.userId != null &&
+                      message.userId == _ownerId;
                   return ChatBubble(
                     message: message,
                     isMine: mine,
+                    isHost: isHost,
+                    hostLabel: l10n.participationHost,
                     onAvatarTap: message.isSystem
                         ? null
                         : () => _openProfile(message),
@@ -373,12 +452,16 @@ class ChatBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.isMine,
+    this.isHost = false,
+    this.hostLabel,
     this.onLongPress,
     this.onAvatarTap,
   });
 
   final ChatMessage message;
   final bool isMine;
+  final bool isHost;
+  final String? hostLabel;
   final VoidCallback? onLongPress;
   final VoidCallback? onAvatarTap;
 
@@ -421,22 +504,81 @@ class ChatBubble extends StatelessWidget {
             ),
             border: isMine
                 ? null
-                : Border.all(color: AppColors.borderSoft),
+                : Border.all(
+                    color: isHost
+                        ? AppColors.primary.withValues(alpha: 0.35)
+                        : AppColors.borderSoft,
+                  ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!isMine && message.userName != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
+                  padding: const EdgeInsets.only(bottom: 4),
                   child: GestureDetector(
                     onTap: onAvatarTap,
-                    child: Text(
-                      message.userName!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                        color: AppColors.primary,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            message.userName!,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        if (isHost && hostLabel != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primarySoft,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              hostLabel!,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                )
+              else if (isMine && isHost && hostLabel != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        hostLabel!,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
+                        ),
                       ),
                     ),
                   ),

@@ -2655,7 +2655,7 @@
 
 .chat-message__author {
     display: inline-block;
-    margin: 0 0 0.125rem;
+    margin: 0;
     font-size: 0.75rem;
     font-weight: 700;
     color: rgb(79 70 229);
@@ -2664,6 +2664,41 @@
 
 .chat-message__author:hover {
     text-decoration: underline;
+}
+
+.chat-message__author-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.125rem;
+}
+
+.chat-message__author-row--mine {
+    justify-content: flex-end;
+}
+
+.chat-message__host-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: rgb(238 242 255);
+    color: rgb(67 56 202);
+    padding: 0.1rem 0.45rem;
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.chat-message__host-badge--mine {
+    background: rgb(255 255 255 / 0.22);
+    color: #fff;
+}
+
+.chat-message--host.chat-message--theirs {
+    border-color: rgb(199 210 254);
 }
 
 .chat-message__body {

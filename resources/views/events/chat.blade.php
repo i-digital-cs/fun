@@ -5,11 +5,32 @@
 @section('content')
     <div class="event-chat-page mx-auto flex w-full max-w-3xl flex-col gap-3">
         <div class="event-chat-page__header flex shrink-0 flex-wrap items-center justify-between gap-3">
-            <div>
+            <div class="min-w-0 flex-1">
                 <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">{{ __('chat.title') }}</h1>
                 <p class="mt-1 text-sm text-slate-500">
                     <a href="{{ event_show_url($event) }}" class="font-medium text-indigo-600 hover:text-indigo-800 bidi-text" dir="{{ bidi_dir($event->title) }}">{{ $event->title }}</a>
                 </p>
+                @if ($event->creator)
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                        @if ($event->creator->public_id)
+                            <a href="{{ route('users.public.show', $event->creator->public_id) }}" class="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 py-1 pe-3 ps-1 no-underline transition hover:bg-indigo-100">
+                                @if ($event->creator->profile_image_path)
+                                    <img src="{{ $event->creator->profile_image_path }}" alt="" class="h-7 w-7 rounded-full object-cover">
+                                @else
+                                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-[10px] font-black text-white">{{ user_initials($event->creator->name) }}</span>
+                                @endif
+                                <span class="text-xs font-bold text-slate-800">{{ $event->creator->name }}</span>
+                                <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-indigo-700 shadow-sm">{{ __('home.host') }}</span>
+                            </a>
+                        @else
+                            <span class="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 py-1 pe-3 ps-1">
+                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-[10px] font-black text-white">{{ user_initials($event->creator->name) }}</span>
+                                <span class="text-xs font-bold text-slate-800">{{ $event->creator->name }}</span>
+                                <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-indigo-700 shadow-sm">{{ __('home.host') }}</span>
+                            </span>
+                        @endif
+                    </div>
+                @endif
             </div>
             <a href="{{ event_show_url($event) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.view_event') }}</a>
         </div>
@@ -18,6 +39,8 @@
             id="event-chat"
             class="event-chat flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-sm"
             data-event-id="{{ $event->id }}"
+            data-owner-id="{{ $event->created_by }}"
+            data-host-label="{{ __('home.host') }}"
             data-post-url="{{ event_route('events.chat.store', $event) }}"
             data-channel="events.{{ $event->id }}.chat"
             data-user-id="{{ auth()->id() }}"
@@ -30,6 +53,7 @@
                     @php
                         $mine = (int) $message->user_id === (int) auth()->id();
                         $isSystem = (bool) ($message->is_system ?? false);
+                        $isHost = (int) $message->user_id === (int) $event->created_by;
                         $user = $message->user;
                         $photo = $user?->profile_image_path;
                         $initials = user_initials($user?->name);
@@ -46,6 +70,7 @@
                             class="chat-row {{ $mine ? 'chat-row--mine' : 'chat-row--theirs' }}"
                             data-message-id="{{ $message->id }}"
                             data-mine="{{ $mine ? '1' : '0' }}"
+                            @if ($isHost) data-host="1" @endif
                         >
                             @unless ($mine)
                                 @if ($profileUrl)
@@ -67,12 +92,23 @@
                                 @endif
                             @endunless
 
-                            <div class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}">
+                            <div class="chat-message {{ $mine ? 'chat-message--mine' : 'chat-message--theirs' }}{{ $isHost ? ' chat-message--host' : '' }}">
                                 @unless ($mine)
-                                    @if ($profileUrl)
-                                        <a href="{{ $profileUrl }}" class="chat-message__author">{{ $user?->name }}</a>
-                                    @else
-                                        <p class="chat-message__author">{{ $user?->name }}</p>
+                                    <div class="chat-message__author-row">
+                                        @if ($profileUrl)
+                                            <a href="{{ $profileUrl }}" class="chat-message__author">{{ $user?->name }}</a>
+                                        @else
+                                            <p class="chat-message__author">{{ $user?->name }}</p>
+                                        @endif
+                                        @if ($isHost)
+                                            <span class="chat-message__host-badge">{{ __('home.host') }}</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    @if ($isHost)
+                                        <div class="chat-message__author-row chat-message__author-row--mine">
+                                            <span class="chat-message__host-badge chat-message__host-badge--mine">{{ __('home.host') }}</span>
+                                        </div>
                                     @endif
                                 @endunless
                                 <p class="chat-message__body">{{ $message->body }}</p>

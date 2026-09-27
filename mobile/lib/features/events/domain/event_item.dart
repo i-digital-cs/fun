@@ -45,12 +45,14 @@ class EventCreator extends Equatable {
     required this.name,
     this.initials,
     this.profileImagePath,
+    this.publicId,
   });
 
   final int id;
   final String name;
   final String? initials;
   final String? profileImagePath;
+  final String? publicId;
 
   String get displayInitials {
     final fromApi = initials?.trim();
@@ -63,7 +65,7 @@ class EventCreator extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, initials, profileImagePath];
+  List<Object?> get props => [id, name, initials, profileImagePath, publicId];
 }
 
 class EventItem extends Equatable {

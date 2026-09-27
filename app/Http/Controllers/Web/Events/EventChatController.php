@@ -29,7 +29,7 @@ class EventChatController extends Controller
         $readService->mark($user, $event);
 
         return view('events.chat', [
-            'event' => $event->load(['category', 'city']),
+            'event' => $event->load(['category', 'city', 'creator:id,public_id,name,profile_image_path']),
             'messages' => $messages->getCollection()->reverse()->values(),
             'paginator' => $messages,
             'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),

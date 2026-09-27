@@ -117,6 +117,37 @@
                 @endif
             </div>
 
+            @if ($event->creator)
+                <div class="flex flex-wrap items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-3.5 py-3">
+                    @if ($event->creator->public_id)
+                        <a href="{{ route('users.public.show', $event->creator->public_id) }}" class="flex min-w-0 flex-1 items-center gap-3 no-underline">
+                            @if ($event->creator->profile_image_path)
+                                <img src="{{ $event->creator->profile_image_path }}" alt="" class="h-10 w-10 shrink-0 rounded-full object-cover shadow-md shadow-indigo-600/20">
+                            @else
+                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-black text-white shadow-md shadow-indigo-600/25">{{ user_initials($event->creator->name) }}</span>
+                            @endif
+                            <div class="min-w-0 leading-tight">
+                                <p class="truncate text-sm font-extrabold text-slate-900 hover:text-indigo-700">{{ $event->creator->name }}</p>
+                                <p class="text-[11px] font-bold uppercase tracking-wide text-indigo-600">{{ __('home.host') }}</p>
+                            </div>
+                        </a>
+                    @else
+                        <div class="flex min-w-0 flex-1 items-center gap-3">
+                            @if ($event->creator->profile_image_path)
+                                <img src="{{ $event->creator->profile_image_path }}" alt="" class="h-10 w-10 shrink-0 rounded-full object-cover shadow-md shadow-indigo-600/20">
+                            @else
+                                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-black text-white shadow-md shadow-indigo-600/25">{{ user_initials($event->creator->name) }}</span>
+                            @endif
+                            <div class="min-w-0 leading-tight">
+                                <p class="truncate text-sm font-extrabold text-slate-900">{{ $event->creator->name }}</p>
+                                <p class="text-[11px] font-bold uppercase tracking-wide text-indigo-600">{{ __('home.host') }}</p>
+                            </div>
+                        </div>
+                    @endif
+                    <span class="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[10px] font-extrabold text-indigo-700 shadow-sm ring-1 ring-indigo-100">{{ __('home.host') }}</span>
+                </div>
+            @endif
+
             @if ($event->hasPlacePin())
                 @php($googleMapsUrl = app(\App\Support\MapsUrlParser::class)->googleMapsOpenUrl((float) $event->latitude, (float) $event->longitude))
                 <a
@@ -246,7 +277,7 @@
 
             @if ($event->creator)
         <section class="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur">
-            <h2 class="text-lg font-extrabold tracking-tight text-slate-900">{{ __('ratings.organizer_rating') }}</h2>
+            <h2 class="text-lg font-extrabold tracking-tight text-slate-900">{{ __('home.host') }} · {{ __('ratings.organizer_rating') }}</h2>
             <div class="mt-3 flex items-center gap-3">
                 @if ($event->creator->public_id)
                     <a href="{{ route('users.public.show', $event->creator->public_id) }}" class="flex items-center gap-3 no-underline">
@@ -257,12 +288,15 @@
                         @endif
                         <div>
                             <p class="text-sm font-semibold text-slate-800 hover:text-indigo-700">{{ $event->creator->name }}</p>
-                            <p class="text-xs font-medium text-indigo-500">{{ __('profile.view_profile') }}</p>
+                            <p class="text-xs font-bold uppercase tracking-wide text-indigo-600">{{ __('home.host') }} · {{ __('profile.view_profile') }}</p>
                         </div>
                     </a>
                 @else
                     <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-md shadow-indigo-600/25">{{ user_initials($event->creator->name) }}</span>
-                    <p class="text-sm font-semibold text-slate-800">{{ $event->creator->name }}</p>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">{{ $event->creator->name }}</p>
+                        <p class="text-xs font-bold uppercase tracking-wide text-indigo-600">{{ __('home.host') }}</p>
+                    </div>
                 @endif
             </div>
             @if (($creatorSummary['count'] ?? 0) > 0)

@@ -100,6 +100,9 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
     const time = formatChatTime(message.created_at);
     const mine = Number(message.user?.id) === Number(currentUserId);
     const isSystem = Boolean(message.is_system);
+    const ownerId = options.ownerId != null ? Number(options.ownerId) : null;
+    const isHost = ownerId != null && Number(message.user?.id) === ownerId;
+    const hostLabel = options.hostLabel || 'Host';
     const reportUrl = options.reportUrl || '';
     const reportLabel = options.reportLabel || 'Report';
     const profileBase = options.profileBase || '/u';
@@ -107,6 +110,9 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
     const el = document.createElement('div');
     el.dataset.messageId = String(message.id);
     el.dataset.mine = mine ? '1' : '0';
+    if (isHost) {
+        el.dataset.host = '1';
+    }
 
     if (isSystem) {
         el.className = 'chat-row chat-row--system';
@@ -121,13 +127,18 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
 
     el.className = `chat-row ${mine ? 'chat-row--mine' : 'chat-row--theirs'}`;
 
-    const author = !mine && message.user?.name
-        ? (
-            message.user?.public_id
-                ? `<a href="${escapeHtml(`${profileBase.replace(/\/$/, '')}/${encodeURIComponent(message.user.public_id)}`)}" class="chat-message__author">${escapeHtml(message.user.name)}</a>`
-                : `<p class="chat-message__author">${escapeHtml(message.user.name)}</p>`
-        )
-        : '';
+    let author = '';
+    if (!mine && message.user?.name) {
+        const nameLink = message.user?.public_id
+            ? `<a href="${escapeHtml(`${profileBase.replace(/\/$/, '')}/${encodeURIComponent(message.user.public_id)}`)}" class="chat-message__author">${escapeHtml(message.user.name)}</a>`
+            : `<p class="chat-message__author">${escapeHtml(message.user.name)}</p>`;
+        const hostBadge = isHost
+            ? `<span class="chat-message__host-badge">${escapeHtml(hostLabel)}</span>`
+            : '';
+        author = `<div class="chat-message__author-row">${nameLink}${hostBadge}</div>`;
+    } else if (mine && isHost) {
+        author = `<div class="chat-message__author-row chat-message__author-row--mine"><span class="chat-message__host-badge chat-message__host-badge--mine">${escapeHtml(hostLabel)}</span></div>`;
+    }
 
     let report = '';
     if (!mine && reportUrl) {
@@ -138,7 +149,7 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
     }
 
     const bubble = `
-        <div class="chat-message ${mine ? 'chat-message--mine' : 'chat-message--theirs'}">
+        <div class="chat-message ${mine ? 'chat-message--mine' : 'chat-message--theirs'}${isHost ? ' chat-message--host' : ''}">
             ${author}
             <p class="chat-message__body">${escapeHtml(message.body ?? '')}</p>
             <div class="chat-message__footer">
@@ -178,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
         reportUrl: root.dataset.reportUrl || '',
         reportLabel: root.dataset.reportLabel || 'Report',
         profileBase: '/u',
+        ownerId: root.dataset.ownerId || '',
+        hostLabel: root.dataset.hostLabel || 'Host',
     };
 
     // Always land on the newest message when opening the thread.

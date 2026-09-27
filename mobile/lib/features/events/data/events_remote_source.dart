@@ -736,6 +736,7 @@ class EventsRemoteSource {
               name: creator['name'] as String? ?? '',
               initials: creator['initials'] as String?,
               profileImagePath: creator['profile_image_path'] as String?,
+              publicId: creator['public_id'] as String?,
             )
           : null,
     );

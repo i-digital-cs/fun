@@ -203,6 +203,10 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                 children: [
                   EventDetailHero(event: detail.event),
                   const SizedBox(height: 16),
+                  if (detail.event.creator != null) ...[
+                    EventHostCard(creator: detail.event.creator!),
+                    const SizedBox(height: 16),
+                  ],
                   EventDetailInfoCard(detail: detail),
                   const SizedBox(height: 16),
                   EventMembersProgress(event: detail.event),
@@ -211,6 +215,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                     rating: detail.creatorRating,
                     ratings: state.ratings,
                     myRating: detail.myRating,
+                    creator: detail.event.creator,
                   ),
                   const SizedBox(height: 20),
                   if (isOwner)
@@ -561,22 +566,130 @@ class EventMembersProgress extends StatelessWidget {
   }
 }
 
+class EventHostCard extends StatelessWidget {
+  const EventHostCard({super.key, required this.creator});
+
+  final EventCreator creator;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final publicId = creator.publicId?.trim();
+    final photo = creator.profileImagePath?.trim();
+
+    return Material(
+      color: AppColors.primarySoft.withValues(alpha: 0.55),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: publicId != null && publicId.isNotEmpty
+            ? () => context.push('/u/$publicId')
+            : null,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.primary,
+                child: photo != null && photo.isNotEmpty
+                    ? ClipOval(
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: AppNetworkImage(
+                            url: photo,
+                            logicalWidth: 40,
+                            logicalHeight: 40,
+                            maxCacheWidth: 120,
+                          ),
+                        ),
+                      )
+                    : Text(
+                        creator.displayInitials,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      creator.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      l10n.participationHost,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Text(
+                  l10n.participationHost,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class CreatorRatingSection extends StatelessWidget {
   const CreatorRatingSection({
     super.key,
     required this.rating,
     required this.ratings,
     this.myRating,
+    this.creator,
   });
 
   final CreatorRating? rating;
   final List<EventRating> ratings;
   final EventRating? myRating;
+  final EventCreator? creator;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final summary = rating;
+    final publicId = creator?.publicId?.trim();
 
     return Container(
       width: double.infinity,
@@ -589,6 +702,58 @@ class CreatorRatingSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            l10n.participationHost,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+          ),
+          if (creator != null) ...[
+            const SizedBox(height: 10),
+            InkWell(
+              onTap: publicId != null && publicId.isNotEmpty
+                  ? () => context.push('/u/$publicId')
+                  : null,
+              borderRadius: BorderRadius.circular(12),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primary,
+                    child: Text(
+                      creator!.displayInitials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          creator!.name,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          publicId != null && publicId.isNotEmpty
+                              ? l10n.publicProfile
+                              : l10n.participationHost,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
           Row(
             children: [
               const Icon(Icons.star, color: AppColors.primary),

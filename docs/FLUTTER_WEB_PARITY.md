@@ -255,16 +255,17 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 
 1. Cover + category chip + city + title + **status badge** + **favorite bookmark** + ambient espiral on cover (`x-ui.espiral`, indigo, corner-anchored)  
 2. Date/time chip + venue chip + **Open in maps** when `maps_open_url` present  
-3. OSM map preview when `has_place_pin` (web Leaflet viewer; Flutter opens external maps)  
-4. Description  
-5. Requirements box  
-6. Cost / free + members count chips  
-7. **Primary actions** (join state — see §3); when `joined` include **View ticket**  
-8. Owner tools (edit / publish / cancel / complete / requests / members)  
-9. Report event + block host  
-10. Organizer rating summary  
-11. Rate form (when `can_rate`)  
-12. Ratings list  
+3. **Host / event owner row** — avatar/initials, name, Host badge; tap → public profile (`creator.public_id`) when present (web + Flutter)  
+4. OSM map preview when `has_place_pin` (web Leaflet viewer; Flutter opens external maps)  
+5. Description  
+6. Requirements box  
+7. Cost / free + members count chips  
+8. **Primary actions** (join state — see §3); when `joined` include **View ticket**  
+9. Owner tools (edit / publish / cancel / complete / requests / members)  
+10. Report event + block host  
+11. Host + organizer rating summary (name + ratings)  
+12. Rate form (when `can_rate`)  
+13. Ratings list  
 
 ---
 
@@ -492,7 +493,7 @@ Show roles (owner/admin/member). Owner tools: promote, demote, transfer ownershi
 **Must:** message list (author, time, body), dark Uiverse-style composer (textarea + attach affordance + Chat chip + send plane), report message link, link back to event.  
 **Display order:** chat UI must show **oldest → newest** (web reverses the API page; Flutter sorts by `id` ascending) with newest at the **bottom** near the composer.  
 **Realtime thread (web + Flutter):** both subscribe to private `events.{id}.chat` / `.message.posted` (web Echo; Flutter `ChatRealtimeClient.subscribeEventChat`). Flutter keeps a slow poll (60s) as safety net when the socket is live, and 8s poll when realtime is unavailable.  
-**Thread UI (web + Flutter parity):** mine/theirs row with **avatar** (photo or initial) — tap avatar/name → `/u/{publicId}`; **solid indigo** mine bubbles + white text; time **inside** bubble (`g:i A`); author only on theirs; system messages centered italic; AppBar/header **Chat** + event subtitle + **View Event**. Web `POST` JSON + Echo payload include `user.public_id` + `user.profile_image_path`.  
+**Thread UI (web + Flutter parity):** mine/theirs row with **avatar** (photo or initial) — tap avatar/name → `/u/{publicId}`; **solid indigo** mine bubbles + white text; time **inside** bubble (`g:i A`); author only on theirs; **Host badge** when `user_id === event.created_by` (header host chip + per-message badge); system messages centered italic; AppBar/header **Chat** + event subtitle + **View Event**. Web `POST` JSON + Echo payload include `user.public_id` + `user.profile_image_path`.  
 Composer visual matches across platforms (`ChatComposer` dark bar). User-channel Pusher toasts remain for inbox (suppressed while viewing that event’s chat).
 
 ---
@@ -1254,7 +1255,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
-4. **Event detail** — creator card, ratings, report/block, full owner matrix, **View ticket**  
+4. **Event detail** — **host/owner card** + ratings, report/block, full owner matrix, **View ticket**  
 5. **Event ticket** — holographic pass UI + `GET /api/events/{id}/ticket` (§2.4a)  
 6. **Favorites** — bookmark toggle + `/favorites` list (§2.7a)  
 7. **Cards** — rich 3D glass + cover + members; price chip uses Egyptian pound (`EGP` / `ج.م`); same card on home discover + dashboard  
