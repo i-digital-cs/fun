@@ -439,6 +439,12 @@
   "yourParticipations": "Your participations",
   "manageAll": "Manage all",
   "participationsEmpty": "No upcoming participations. Discover something fun.",
+  "participationsMore": "+ {count} more · My events",
+  "@participationsMore": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "confirmedAttendance": "Confirmed",
   "requestPendingShort": "Pending",
   "pendingReviewNotice": "Waiting for the host to accept your request.",
@@ -447,6 +453,10 @@
   "hostingEventsSection": "Hosting",
   "hostingEmpty": "You haven't created any events yet.",
   "joinedEmpty": "You haven't joined any events yet.",
+  "participationHost": "Host",
+  "stepRequested": "Requested",
+  "stepAccepted": "Accepted",
+  "stepGathering": "Gathering",
   "weatherSetLocation": "Set your location",
   "weatherSetLocationHint": "Choose a city to see local weather on your home.",
   "requestToJoin": "Request to join",

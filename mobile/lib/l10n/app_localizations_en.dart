@@ -1149,6 +1149,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'No upcoming participations. Discover something fun.';
 
   @override
+  String participationsMore(int count) {
+    return '+ $count more · My events';
+  }
+
+  @override
   String get confirmedAttendance => 'Confirmed';
 
   @override
@@ -1172,6 +1177,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinedEmpty => 'You haven\'t joined any events yet.';
+
+  @override
+  String get participationHost => 'Host';
+
+  @override
+  String get stepRequested => 'Requested';
+
+  @override
+  String get stepAccepted => 'Accepted';
+
+  @override
+  String get stepGathering => 'Gathering';
 
   @override
   String get weatherSetLocation => 'Set your location';

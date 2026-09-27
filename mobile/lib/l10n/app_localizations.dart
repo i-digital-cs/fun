@@ -2246,6 +2246,12 @@ abstract class AppLocalizations {
   /// **'No upcoming participations. Discover something fun.'**
   String get participationsEmpty;
 
+  /// No description provided for @participationsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+ {count} more · My events'**
+  String participationsMore(int count);
+
   /// No description provided for @confirmedAttendance.
   ///
   /// In en, this message translates to:
@@ -2293,6 +2299,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You haven\'t joined any events yet.'**
   String get joinedEmpty;
+
+  /// No description provided for @participationHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get participationHost;
+
+  /// No description provided for @stepRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get stepRequested;
+
+  /// No description provided for @stepAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get stepAccepted;
+
+  /// No description provided for @stepGathering.
+  ///
+  /// In en, this message translates to:
+  /// **'Gathering'**
+  String get stepGathering;
 
   /// No description provided for @weatherSetLocation.
   ///

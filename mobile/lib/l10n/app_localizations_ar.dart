@@ -1139,6 +1139,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get participationsEmpty => 'لا مشاركات قادمة. اكتشف شيئاً ممتعاً.';
 
   @override
+  String participationsMore(int count) {
+    return '+ $count أخرى · فعالياتي';
+  }
+
+  @override
   String get confirmedAttendance => 'مؤكد';
 
   @override
@@ -1161,6 +1166,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get joinedEmpty => 'لم تنضم إلى أي فعاليات بعد.';
+
+  @override
+  String get participationHost => 'المضيف';
+
+  @override
+  String get stepRequested => 'طُلب';
+
+  @override
+  String get stepAccepted => 'قُبل';
+
+  @override
+  String get stepGathering => 'التجمع';
 
   @override
   String get weatherSetLocation => 'حدد موقعك';

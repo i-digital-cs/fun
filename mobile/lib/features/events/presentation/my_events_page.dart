@@ -10,7 +10,6 @@ import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
-import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -119,9 +118,32 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
     });
   }
 
+  Widget _sectionGrid({
+    required List<Widget> children,
+    required double maxWidth,
+  }) {
+    final cols = maxWidth >= 1000
+        ? 3
+        : maxWidth >= 560
+            ? 2
+            : 1;
+    final gap = 10.0;
+    final cardWidth =
+        cols == 1 ? maxWidth : (maxWidth - gap * (cols - 1)) / cols;
+
+    return Wrap(
+      spacing: gap,
+      runSpacing: gap,
+      children: [
+        for (final child in children) SizedBox(width: cardWidth, child: child),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
     final isEmpty = _items.isEmpty && _pending.isEmpty;
 
     return Scaffold(
@@ -180,108 +202,129 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
               child: RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () => _load(refresh: true),
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-                  children: [
-                    if (_pending.isNotEmpty) ...[
-                      Text(
-                        l10n.pendingRequestsSection,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      for (final row in _pending) ...[
-                        _PendingRequestCard(
-                          row: row,
-                          onView: () => context.push('/events/${row.event.id}'),
-                          onCancel: () => _cancelJoin(row.event.id),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      const SizedBox(height: 12),
-                    ],
-                    Text(
-                      l10n.hostingEventsSection,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_hosting.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          l10n.hostingEmpty,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.muted),
-                        ),
-                      )
-                    else
-                      for (var i = 0; i < _hosting.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 16),
-                        MyEventCardWrapper(
-                          event: _hosting[i],
-                          onView: () =>
-                              context.push('/events/${_hosting[i].id}'),
-                          onViewTicket: () => context.push(
-                            '/events/${_hosting[i].id}/ticket',
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+                      children: [
+                        if (_pending.isNotEmpty) ...[
+                          Text(
+                            l10n.pendingRequestsSection,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          _sectionGrid(
+                            maxWidth: constraints.maxWidth - 40,
+                            children: [
+                              for (final row in _pending)
+                                _MineCard(
+                                  event: row.event,
+                                  kind: _MineKind.pending,
+                                  locale: locale,
+                                  onView: () =>
+                                      context.push('/events/${row.event.id}'),
+                                  onCancel: () => _cancelJoin(row.event.id),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                        Text(
+                          l10n.hostingEventsSection,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.text,
                           ),
                         ),
-                      ],
-                    const SizedBox(height: 24),
-                    Text(
-                      l10n.joinedEventsSection,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_joined.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          l10n.joinedEmpty,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.muted),
-                        ),
-                      )
-                    else
-                      for (var i = 0; i < _joined.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 16),
-                        MyEventCardWrapper(
-                          event: _joined[i],
-                          onView: () =>
-                              context.push('/events/${_joined[i].id}'),
-                          onViewTicket: () => context.push(
-                            '/events/${_joined[i].id}/ticket',
+                        const SizedBox(height: 10),
+                        if (_hosting.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              l10n.hostingEmpty,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: AppColors.muted),
+                            ),
+                          )
+                        else
+                          _sectionGrid(
+                            maxWidth: constraints.maxWidth - 40,
+                            children: [
+                              for (final event in _hosting)
+                                _MineCard(
+                                  event: event,
+                                  kind: _MineKind.hosting,
+                                  locale: locale,
+                                  onView: () =>
+                                      context.push('/events/${event.id}'),
+                                  onTicket: () => context.push(
+                                    '/events/${event.id}/ticket',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        const SizedBox(height: 20),
+                        Text(
+                          l10n.joinedEventsSection,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.text,
                           ),
                         ),
+                        const SizedBox(height: 10),
+                        if (_joined.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              l10n.joinedEmpty,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: AppColors.muted),
+                            ),
+                          )
+                        else
+                          _sectionGrid(
+                            maxWidth: constraints.maxWidth - 40,
+                            children: [
+                              for (final event in _joined)
+                                _MineCard(
+                                  event: event,
+                                  kind: _MineKind.joined,
+                                  locale: locale,
+                                  onView: () =>
+                                      context.push('/events/${event.id}'),
+                                  onTicket: () => context.push(
+                                    '/events/${event.id}/ticket',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        if (_hasMore)
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Builder(
+                              builder: (context) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  if (mounted) _loadMore();
+                                });
+                                return const Center(
+                                  child: FunLoader(
+                                    size: FunLoaderSize.sm,
+                                    showLabel: false,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                       ],
-                    if (_hasMore)
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Builder(
-                          builder: (context) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) _loadMore();
-                            });
-                            return const Center(
-                              child: FunLoader(
-                                size: FunLoaderSize.sm,
-                                showLabel: false,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -292,202 +335,249 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
   }
 }
 
-class _PendingRequestCard extends StatelessWidget {
-  const _PendingRequestCard({
-    required this.row,
-    required this.onView,
-    required this.onCancel,
-  });
+enum _MineKind { pending, hosting, joined }
 
-  final HomeParticipationRow row;
-  final VoidCallback onView;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
-    final event = row.event;
-    final when = event.startsAt == null
-        ? ''
-        : DateFormat(
-            'MMM d · h:mm a',
-            locale,
-          ).format(event.startsAt!.toLocal());
-    final city = event.city?.name;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB).withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFFDE68A).withValues(alpha: 0.9),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFBEB),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFFDE68A)),
-            ),
-            child: Text(
-              l10n.requestPendingShort,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFFB45309),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          InkWell(
-            onTap: onView,
-            child: Text(
-              event.title,
-              textDirection: bidiTextDirection(event.title),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.text,
-              ),
-            ),
-          ),
-          if (when.isNotEmpty || (city != null && city.isNotEmpty)) ...[
-            const SizedBox(height: 6),
-            Text(
-              [if (when.isNotEmpty) when, ?city].join(' · '),
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.muted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            l10n.pendingReviewNotice,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              OutlinedButton(onPressed: onView, child: Text(l10n.viewEvent)),
-              const SizedBox(width: 8),
-              CancelStopButton(
-                label: l10n.cancelJoin,
-                size: CancelStopSize.sm,
-                onPressed: onCancel,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class MyEventCardWrapper extends StatelessWidget {
-  const MyEventCardWrapper({
-    super.key,
+class _MineCard extends StatelessWidget {
+  const _MineCard({
     required this.event,
+    required this.kind,
+    required this.locale,
     required this.onView,
-    this.onViewTicket,
+    this.onTicket,
+    this.onCancel,
   });
 
   final EventItem event;
+  final _MineKind kind;
+  final String locale;
   final VoidCallback onView;
-  final VoidCallback? onViewTicket;
+  final VoidCallback? onTicket;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final when = event.startsAt == null
+        ? ''
+        : DateFormat('MMM d · h:mm a', locale)
+            .format(event.startsAt!.toLocal());
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        EventCard(
-          event: event,
-          onView: onView,
-          statusBadge: event.status != null
-              ? EventStatusChip(status: event.status!)
-              : null,
+    final (badge, badgeFg, badgeBg, badgeBorder, bar) = switch (kind) {
+      _MineKind.pending => (
+          l10n.requestPendingShort,
+          const Color(0xFFB45309),
+          const Color(0xFFFFFBEB),
+          const Color(0xFFFDE68A),
+          const [Color(0xFFFBBF24), Color(0xFFFB923C), Color(0xFFFB7185)],
         ),
-        if (onViewTicket != null) ...[
-          const SizedBox(height: 8),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: Material(
-              color: AppColors.accent,
-              borderRadius: BorderRadius.circular(12),
-              child: InkWell(
-                onTap: onViewTicket,
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.confirmation_number_outlined,
-                        size: 16,
-                        color: Colors.white,
+      _MineKind.hosting => (
+          l10n.yourOwnEvent,
+          AppColors.primary,
+          AppColors.primarySoft,
+          AppColors.primary.withValues(alpha: 0.25),
+          const [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFFB923C)],
+        ),
+      _MineKind.joined => (
+          l10n.joined,
+          AppColors.success,
+          const Color(0xFFECFDF5),
+          const Color(0xFFA7F3D0),
+          const [Color(0xFF34D399), Color(0xFF2DD4BF), Color(0xFF818CF8)],
+        ),
+    };
+
+    final meta = [
+      if (when.isNotEmpty) when,
+      '${event.membersCount} / ${event.maxParticipants}',
+      if (event.city?.name != null && event.city!.name.isNotEmpty)
+        event.city!.name,
+    ].join(' · ');
+
+    return Material(
+      color: kind == _MineKind.pending
+          ? const Color(0xFFFFFBEB).withValues(alpha: 0.45)
+          : AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onView,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: kind == _MineKind.pending
+                  ? const Color(0xFFFDE68A).withValues(alpha: 0.9)
+                  : AppColors.borderSoft,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                height: 3,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: bar),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeBg,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: badgeBorder),
+                          ),
+                          child: Text(
+                            badge,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: badgeFg,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        if (event.status != null && kind != _MineKind.pending)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: AppColors.borderSoft),
+                            ),
+                            child: Text(
+                              event.status!,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      event.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: bidiTextDirection(event.title),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        height: 1.25,
                       ),
-                      const SizedBox(width: 6),
+                    ),
+                    if (meta.isNotEmpty) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        l10n.viewTicket,
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
-                  ),
+                    if (kind == _MineKind.pending) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.pendingReviewNotice,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF92400E),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        if (onTicket != null)
+                          _MineAction(
+                            label: l10n.viewTicket,
+                            filled: true,
+                            color: AppColors.accent,
+                            onTap: onTicket!,
+                          ),
+                        _MineAction(
+                          label: l10n.viewEvent,
+                          onTap: onView,
+                        ),
+                        if (onCancel != null)
+                          CancelStopButton(
+                            label: l10n.cancelJoin,
+                            size: CancelStopSize.sm,
+                            onPressed: onCancel!,
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 }
 
-class EventStatusChip extends StatelessWidget {
-  const EventStatusChip({super.key, required this.status});
+class _MineAction extends StatelessWidget {
+  const _MineAction({
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+    this.color,
+  });
 
-  final String status;
+  final String label;
+  final VoidCallback onTap;
+  final bool filled;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      'published' => AppColors.success,
-      'cancelled' => AppColors.danger,
-      'draft' => AppColors.muted,
-      _ => AppColors.primary,
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: color,
+    return Material(
+      color: filled ? (color ?? AppColors.accent) : Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: filled
+              ? null
+              : BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: filled ? Colors.white : AppColors.text,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ),
     );
