@@ -250,15 +250,61 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                                           s.subtitle!,
                                           style: const TextStyle(fontSize: 11),
                                         ),
-                                  trailing: s.meta == null
-                                      ? null
-                                      : Text(
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (s.badge != null &&
+                                          s.badge!.isNotEmpty)
+                                        Container(
+                                          margin:
+                                              const EdgeInsetsDirectional.only(
+                                            end: 8,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: switch (s.joinAction) {
+                                              'owned' =>
+                                                const Color(0xFFEEF2FF),
+                                              'joined' =>
+                                                const Color(0xFFECFDF5),
+                                              'request_pending' =>
+                                                const Color(0xFFFFFBEB),
+                                              _ => AppColors.primarySoft,
+                                            },
+                                            borderRadius: BorderRadius.circular(
+                                              999,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            s.badge!,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                              color: switch (s.joinAction) {
+                                                'owned' =>
+                                                  const Color(0xFF4338CA),
+                                                'joined' =>
+                                                  const Color(0xFF047857),
+                                                'request_pending' =>
+                                                  const Color(0xFFB45309),
+                                                _ => AppColors.primary,
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      if (s.meta != null)
+                                        Text(
                                           s.meta!,
                                           style: const TextStyle(
                                             fontSize: 11,
                                             color: AppColors.muted,
                                           ),
                                         ),
+                                    ],
+                                  ),
                                   onTap: () => context.push('/events/${s.id}'),
                                 ),
                               ),

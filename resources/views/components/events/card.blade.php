@@ -68,7 +68,7 @@
                 </div>
             </div>
 
-            @if (in_array($action, ['request_pending', 'joined', 'request_rejected', 'event_full', 'sex_mismatch'], true))
+            @if (in_array($action, ['request_pending', 'owned', 'joined', 'request_rejected', 'event_full', 'sex_mismatch'], true))
                 <div class="event-3d__status">
                     @if ($action === 'request_pending')
                         <span class="block rounded-xl border border-slate-200/70 bg-white/80 px-3 py-1.5 text-center text-xs font-semibold text-slate-600">{{ __('events.request_pending') }}</span>
@@ -76,6 +76,8 @@
                             @csrf
                             <x-ui.cancel-btn type="submit" size="sm" :label="__('events.cancel_join')" />
                         </form>
+                    @elseif ($action === 'owned')
+                        <span class="block rounded-xl bg-indigo-50 px-3 py-1.5 text-center text-xs font-semibold text-indigo-700">{{ __('events.your_own') }}</span>
                     @elseif ($action === 'joined')
                         <span class="block rounded-xl bg-emerald-50 px-3 py-1.5 text-center text-xs font-semibold text-emerald-700">{{ __('events.joined') }}</span>
                     @elseif ($action === 'request_rejected')

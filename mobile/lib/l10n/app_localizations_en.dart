@@ -543,6 +543,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joined => 'Joined';
 
   @override
+  String get yourOwnEvent => 'Your event';
+
+  @override
   String get notAvailable => 'Not available';
 
   @override
@@ -1159,6 +1162,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinedEventsSection => 'Events you joined';
+
+  @override
+  String get hostingEventsSection => 'Hosting';
+
+  @override
+  String get hostingEmpty => 'You haven\'t created any events yet.';
+
+  @override
+  String get joinedEmpty => 'You haven\'t joined any events yet.';
 
   @override
   String get weatherSetLocation => 'Set your location';

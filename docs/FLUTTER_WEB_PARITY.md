@@ -149,7 +149,7 @@ For each screen:
 
 **Card style here:** compact dashboard card (indigo soft “View event”), **not** the full Discover rich card.
 
-**My events `/my-events`:** two blocks — **Waiting for acceptance** (pending) then **Events you joined** (memberships + View ticket).
+**My events `/my-events`:** three blocks — **Waiting for acceptance** (pending), **Hosting** (your own), **Events you joined** (memberships that aren’t yours) + View ticket.
 
 **Favorites `/favorites`:** bookmarked events (sidebar after My Events); toggle via amber bookmark on cards/detail (`POST /api/events/{id}/favorite`).
 
@@ -391,7 +391,7 @@ Same fields as create. Keep existing image if not replaced.
 | **Blade** | `events/mine.blade.php` |
 | **API** | `GET /api/my-events` |
 
-**Must:** list owned/membership events — title, date, members, city, **status pill**; empty state + Create CTA; tap → detail; **View ticket** action per row (§2.4a).
+**Must:** list **Hosting** (`created_by = me`) and **Joined** (member, not owner) separately — title, date, members, city, **status pill** + relationship badge (`your_own` / `joined`); pending section; empty state + Create / Discover CTAs; tap → detail; **View ticket** action per row (§2.4a). API `GET /api/my-events` includes `join_action` (`owned` | `joined` | …); optional `?section=hosting|joined`.
 
 ---
 
@@ -1125,6 +1125,7 @@ From `App\Enums\EventJoinAction` — drive buttons on cards + event detail:
 |-------|-----|
 | `request_to_join` | Orange **Request to join** |
 | `request_pending` | Muted “Request pending” + **Cancel join** (`POST /api/events/{id}/join/cancel`, web `events.join.cancel`) |
+| `owned` | Indigo **Your event** (creator) — discover/search/cards; detail uses owner lifecycle actions |
 | `joined` | Emerald “Joined” + **View ticket** + Chat + Members (+ **Leave** via cancel/stop button if not owner) |
 | `…` | Owner **Cancel event** also uses the same cancel/stop control (web `x-ui.cancel-btn`: idle label → focus/press shows **Stop**) |
 

@@ -59,13 +59,22 @@ class DiscoverNearbyEventsService
         }
 
         if ($origin !== null) {
-            $cityIds = $this->nearbyCityIds(
-                $origin['latitude'],
-                $origin['longitude'],
-                $origin['distance_km']
-            );
+            // Text search is nationwide unless the user explicitly picked a city filter.
+            // (Otherwise joined/owned events outside the radius never appear in search.)
+            $skipGeoForTextSearch = ! empty($filters['q'])
+                && ! array_key_exists('city_id', $filters);
 
-            $query->whereIn('city_id', $cityIds->all());
+            if (! $skipGeoForTextSearch) {
+                $cityIds = $this->nearbyCityIds(
+                    $origin['latitude'],
+                    $origin['longitude'],
+                    $origin['distance_km']
+                );
+
+                $query->whereIn('city_id', $cityIds->all());
+            } else {
+                $origin = null;
+            }
         }
 
         /** @var LengthAwarePaginator $events */

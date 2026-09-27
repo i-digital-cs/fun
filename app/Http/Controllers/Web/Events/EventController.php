@@ -111,15 +111,25 @@ class EventController extends Controller
 
     public function mine(Request $request): View
     {
-        $events = Event::query()
+        $userId = (int) $request->user()->id;
+
+        $hosting = Event::query()
             ->with(['category', 'city'])
             ->withCount('members')
-            ->whereHas('members', fn ($q) => $q->where('user_id', $request->user()->id))
+            ->where('created_by', $userId)
             ->latest('starts_at')
-            ->paginate(12);
+            ->paginate(12, ['*'], 'hosting_page');
+
+        $joined = Event::query()
+            ->with(['category', 'city'])
+            ->withCount('members')
+            ->where('created_by', '!=', $userId)
+            ->whereHas('members', fn ($q) => $q->where('user_id', $userId))
+            ->latest('starts_at')
+            ->paginate(12, ['*'], 'joined_page');
 
         $pendingRequests = EventJoinRequest::query()
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $userId)
             ->where('status', JoinRequestStatus::Pending)
             ->whereHas('event', fn ($q) => $q->where('status', EventStatus::Published))
             ->with(['event.category', 'event.city'])
@@ -127,7 +137,8 @@ class EventController extends Controller
             ->get();
 
         return view('events.mine', [
-            'events' => $events,
+            'hosting' => $hosting,
+            'joined' => $joined,
             'pendingRequests' => $pendingRequests,
             'categories' => Category::query()
                 ->active()

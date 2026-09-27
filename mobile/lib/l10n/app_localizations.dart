@@ -1118,6 +1118,12 @@ abstract class AppLocalizations {
   /// **'Joined'**
   String get joined;
 
+  /// No description provided for @yourOwnEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your event'**
+  String get yourOwnEvent;
+
   /// No description provided for @notAvailable.
   ///
   /// In en, this message translates to:
@@ -2269,6 +2275,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Events you joined'**
   String get joinedEventsSection;
+
+  /// No description provided for @hostingEventsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosting'**
+  String get hostingEventsSection;
+
+  /// No description provided for @hostingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t created any events yet.'**
+  String get hostingEmpty;
+
+  /// No description provided for @joinedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t joined any events yet.'**
+  String get joinedEmpty;
 
   /// No description provided for @weatherSetLocation.
   ///

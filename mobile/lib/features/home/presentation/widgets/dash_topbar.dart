@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
@@ -477,20 +478,55 @@ class _SuggestPanel extends StatelessWidget {
             dense: true,
             title: Text(
               s.title,
+              textDirection: bidiTextDirection(s.title),
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
             subtitle: s.subtitle == null
                 ? null
                 : Text(s.subtitle!, style: const TextStyle(fontSize: 11)),
-            trailing: s.meta == null
-                ? null
-                : Text(
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (s.badge != null && s.badge!.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsetsDirectional.only(end: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: switch (s.joinAction) {
+                        'owned' => const Color(0xFFEEF2FF),
+                        'joined' => const Color(0xFFECFDF5),
+                        'request_pending' => const Color(0xFFFFFBEB),
+                        _ => AppColors.primarySoft,
+                      },
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      s.badge!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: switch (s.joinAction) {
+                          'owned' => const Color(0xFF4338CA),
+                          'joined' => const Color(0xFF047857),
+                          'request_pending' => const Color(0xFFB45309),
+                          _ => AppColors.primary,
+                        },
+                      ),
+                    ),
+                  ),
+                if (s.meta != null)
+                  Text(
                     s.meta!,
                     style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.muted,
                     ),
                   ),
+              ],
+            ),
             onTap: () => onTapItem(s.id),
           ),
         TextButton(

@@ -27,6 +27,8 @@ class SearchSuggestRemoteSource {
               title: m['title'] as String? ?? '',
               subtitle: m['subtitle'] as String?,
               meta: m['meta'] as String?,
+              joinAction: m['join_action'] as String?,
+              badge: m['badge'] as String?,
             );
           })
           .where((e) => e.id > 0 && e.title.isNotEmpty)

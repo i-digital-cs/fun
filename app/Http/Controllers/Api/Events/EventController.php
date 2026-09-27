@@ -46,14 +46,43 @@ class EventController extends Controller
         return EventResource::collection($events);
     }
 
-    public function mine(Request $request): AnonymousResourceCollection
-    {
-        $events = Event::query()
+    public function mine(
+        Request $request,
+        ResolveEventJoinActionService $joinActions,
+    ): AnonymousResourceCollection {
+        $user = $request->user();
+        $userId = (int) $user->id;
+        $section = $request->string('section')->toString(); // hosting | joined | (all)
+
+        $query = Event::query()
             ->with(['category', 'city'])
-            ->withCount('members')
-            ->whereHas('members', fn ($q) => $q->where('user_id', $request->user()->id))
-            ->latest('starts_at')
-            ->paginate(12);
+            ->withCount('members');
+
+        if ($section === 'hosting') {
+            $query->where('created_by', $userId);
+        } elseif ($section === 'joined') {
+            $query->where('created_by', '!=', $userId)
+                ->whereHas('members', fn ($q) => $q->where('user_id', $userId));
+        } else {
+            // Default: memberships (hosting + joined) — clients split via join_action / created_by.
+            $query->whereHas('members', fn ($q) => $q->where('user_id', $userId));
+        }
+
+        $events = $query->latest('starts_at')->paginate(12);
+        $actions = $joinActions->resolveMany($user, $events->getCollection());
+
+        $events->getCollection()->transform(function (Event $event) use ($actions, $userId) {
+            if ((int) $event->created_by === $userId) {
+                $event->setAttribute('join_action', 'owned');
+            } else {
+                $event->setAttribute(
+                    'join_action',
+                    $actions[$event->id]->value ?? 'joined'
+                );
+            }
+
+            return $event;
+        });
 
         return EventResource::collection($events);
     }

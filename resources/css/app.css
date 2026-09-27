@@ -1461,6 +1461,39 @@
     color: rgb(79 70 229);
 }
 
+.live-search__item-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin-top: 0.15rem;
+}
+
+.live-search__item-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.live-search__item-badge--owned {
+    background: rgb(238 242 255);
+    color: rgb(67 56 202);
+}
+
+.live-search__item-badge--joined {
+    background: rgb(236 253 245);
+    color: rgb(4 120 87);
+}
+
+.live-search__item-badge--request_pending {
+    background: rgb(255 251 235);
+    color: rgb(180 83 9);
+}
+
 .live-search__empty {
     margin: 0;
     padding: 1rem;

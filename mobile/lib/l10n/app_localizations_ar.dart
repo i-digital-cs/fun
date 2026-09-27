@@ -539,6 +539,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get joined => 'منضم';
 
   @override
+  String get yourOwnEvent => 'فعاليتك';
+
+  @override
   String get notAvailable => 'غير متاح';
 
   @override
@@ -1148,6 +1151,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get joinedEventsSection => 'الفعاليات التي انضممت إليها';
+
+  @override
+  String get hostingEventsSection => 'تستضيفها';
+
+  @override
+  String get hostingEmpty => 'لم تنشئ أي فعاليات بعد.';
+
+  @override
+  String get joinedEmpty => 'لم تنضم إلى أي فعاليات بعد.';
 
   @override
   String get weatherSetLocation => 'حدد موقعك';

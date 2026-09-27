@@ -756,6 +756,39 @@ class EventJoinActions extends StatelessWidget {
           ),
         ],
       ),
+      'owned' => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          JoinStatusBanner(label: l10n.yourOwnEvent, color: AppColors.primary),
+          if (onViewTicket != null) ...[
+            const SizedBox(height: 12),
+            GradientButton(
+              label: l10n.viewTicket,
+              onPressed: onViewTicket,
+              icon: Icons.confirmation_number_outlined,
+            ),
+          ],
+          const SizedBox(height: 12),
+          GradientButton.indigo(
+            label: l10n.chat,
+            onPressed: onChat,
+            icon: Icons.chat_bubble_outline,
+          ),
+          if (onMembers != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: onMembers,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(l10n.viewMembers),
+            ),
+          ],
+        ],
+      ),
       'event_full' => JoinStatusBanner(
         label: l10n.eventFull,
         color: AppColors.accent,

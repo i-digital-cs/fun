@@ -52,6 +52,7 @@ class _EventCardState extends State<EventCard> {
 
   bool _showsJoinStatus(String? action) {
     return action == 'request_pending' ||
+        action == 'owned' ||
         action == 'joined' ||
         action == 'request_rejected' ||
         action == 'event_full' ||
@@ -531,6 +532,12 @@ class _JoinStatusStrip extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     final (label, bg, fg, border) = switch (action) {
+      'owned' => (
+        l10n.yourOwnEvent,
+        const Color(0xFFEEF2FF),
+        const Color(0xFF4338CA),
+        Colors.transparent,
+      ),
       'joined' => (
         l10n.joined,
         const Color(0xFFECFDF5),

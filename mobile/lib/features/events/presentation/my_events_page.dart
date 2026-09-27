@@ -8,6 +8,7 @@ import 'package:fun_mobile/core/widgets/cancel_stop_button.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
+import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -29,6 +30,19 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
   int _page = 1;
   bool _hasMore = false;
   bool _loadingMore = false;
+
+  List<EventItem> get _hosting => _items
+      .where((e) => e.joinAction == 'owned' || e.createdBy == _myUserId)
+      .toList();
+
+  List<EventItem> get _joined => _items
+      .where((e) => e.joinAction != 'owned' && e.createdBy != _myUserId)
+      .toList();
+
+  int? get _myUserId {
+    final auth = ref.read(authControllerProvider);
+    return auth is Authenticated ? auth.user.id : null;
+  }
 
   @override
   void initState() {
@@ -190,6 +204,37 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
                       const SizedBox(height: 12),
                     ],
                     Text(
+                      l10n.hostingEventsSection,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_hosting.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Text(
+                          l10n.hostingEmpty,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: AppColors.muted),
+                        ),
+                      )
+                    else
+                      for (var i = 0; i < _hosting.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 16),
+                        MyEventCardWrapper(
+                          event: _hosting[i],
+                          onView: () =>
+                              context.push('/events/${_hosting[i].id}'),
+                          onViewTicket: () => context.push(
+                            '/events/${_hosting[i].id}/ticket',
+                          ),
+                        ),
+                      ],
+                    const SizedBox(height: 24),
+                    Text(
                       l10n.joinedEventsSection,
                       style: const TextStyle(
                         fontSize: 17,
@@ -198,26 +243,25 @@ class _MyEventsPageState extends ConsumerState<MyEventsPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (_items.isEmpty)
+                    if (_joined.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Text(
-                          l10n.emptyMyEvents,
+                          l10n.joinedEmpty,
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: AppColors.muted),
                         ),
                       )
                     else
-                      for (var i = 0; i < _items.length; i++) ...[
+                      for (var i = 0; i < _joined.length; i++) ...[
                         if (i > 0) const SizedBox(height: 16),
                         MyEventCardWrapper(
-                          event: _items[i],
-                          onView: () => context.push('/events/${_items[i].id}'),
-                          onViewTicket: _items[i].joinAction == 'joined'
-                              ? () => context.push(
-                                  '/events/${_items[i].id}/ticket',
-                                )
-                              : null,
+                          event: _joined[i],
+                          onView: () =>
+                              context.push('/events/${_joined[i].id}'),
+                          onViewTicket: () => context.push(
+                            '/events/${_joined[i].id}/ticket',
+                          ),
                         ),
                       ],
                     if (_hasMore)

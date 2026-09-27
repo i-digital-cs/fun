@@ -14,6 +14,10 @@ class ResolveEventJoinActionService
 {
     public function resolve(?User $user, Event $event): EventJoinAction
     {
+        if ($user !== null && (int) $event->created_by === (int) $user->id) {
+            return EventJoinAction::Owned;
+        }
+
         if ($event->status !== EventStatus::Published) {
             return EventJoinAction::NotAvailable;
         }
@@ -85,6 +89,11 @@ class ResolveEventJoinActionService
         }
 
         foreach ($events as $event) {
+            if ($user !== null && (int) $event->created_by === (int) $user->id) {
+                $actions[$event->id] = EventJoinAction::Owned;
+                continue;
+            }
+
             if ($event->status !== EventStatus::Published) {
                 $actions[$event->id] = EventJoinAction::NotAvailable;
                 continue;

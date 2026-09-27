@@ -128,14 +128,20 @@ function renderSuggestResults(root, payload) {
     }
 
     const list = items
-        .map(
-            (item) => `
+        .map((item) => {
+            const badge = item.badge
+                ? `<span class="live-search__item-badge live-search__item-badge--${escapeHtml(item.join_action || 'info')}">${escapeHtml(item.badge)}</span>`
+                : '';
+            return `
         <a href="${escapeHtml(item.url)}" class="live-search__item">
             <span class="live-search__item-title bidi-text" dir="${bidiDir(item.title)}">${escapeHtml(item.title)}</span>
             ${item.subtitle ? `<span class="live-search__item-sub bidi-text" dir="${bidiDir(item.subtitle)}">${escapeHtml(item.subtitle)}</span>` : ''}
-            ${item.meta ? `<span class="live-search__item-meta">${escapeHtml(item.meta)}</span>` : ''}
-        </a>`
-        )
+            <span class="live-search__item-meta-row">
+                ${item.meta ? `<span class="live-search__item-meta">${escapeHtml(item.meta)}</span>` : ''}
+                ${badge}
+            </span>
+        </a>`;
+        })
         .join('');
 
     const footer = seeAll
