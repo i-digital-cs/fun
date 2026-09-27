@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "51496053622-utglssep106q91u26fo57r21v6ncnood.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.funity.fun_mobile",
+            "certificate_hash": "526245eb40ae60039691c323eef069b759a2e103"
+          }
+        },
+        {
           "client_id": "51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com",
           "client_type": 3
         }
