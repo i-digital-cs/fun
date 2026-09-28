@@ -3,6 +3,7 @@
 namespace App\Services\Friends;
 
 use App\Enums\FriendshipStatus;
+use App\Events\UserFriendAccepted;
 use App\Events\UserFriendRequested;
 use App\Exceptions\DomainException;
 use App\Models\Friendship;
@@ -199,6 +200,16 @@ class FriendshipService
             $other->notify(new FriendAcceptedNotification($actor));
         } catch (Throwable $e) {
             Log::warning('friend_accepted_notify_failed', [
+                'actor_id' => $actor->id,
+                'other_id' => $other->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            broadcast(new UserFriendAccepted($other, $actor));
+        } catch (BroadcastException $e) {
+            Log::warning('friend_accepted_broadcast_failed', [
                 'actor_id' => $actor->id,
                 'other_id' => $other->id,
                 'error' => $e->getMessage(),

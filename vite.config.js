@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/event-chat.js',
+                'resources/js/dm-chat.js',
                 'resources/js/chat-inbox.js',
                 'resources/js/auth-access.js',
             ],

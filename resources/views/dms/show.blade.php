@@ -53,11 +53,11 @@
                         </div>
                     </div>
                 @empty
-                    <p class="py-10 text-center text-sm text-slate-500">{{ __('chat.empty_thread') }}</p>
+                    <p class="py-10 text-center text-sm text-slate-500" id="dm-empty">{{ __('chat.empty_thread') }}</p>
                 @endforelse
             </div>
 
-            <form method="POST" action="{{ route('dms.store', $conversation) }}" class="border-t border-slate-100 bg-slate-50/80 p-3 sm:p-4">
+            <form id="dm-form" method="POST" action="{{ route('dms.store', $conversation) }}" class="border-t border-slate-100 bg-slate-50/80 p-3 sm:p-4">
                 @csrf
                 <div class="flex gap-2">
                     <label class="sr-only" for="dm-body">{{ __('chat.placeholder') }}</label>
@@ -82,29 +82,5 @@
 @endsection
 
 @push('scripts')
-<script>
-(() => {
-    const root = document.getElementById('dm-chat');
-    if (!root || !window.Echo) return;
-    const channel = root.dataset.channel;
-    const userId = Number(root.dataset.userId);
-    const log = document.getElementById('dm-messages');
-    Echo.private(channel).listen('.message.posted', (payload) => {
-        if (!payload?.id || document.querySelector(`[data-message-id="${payload.id}"]`)) return;
-        const mine = Number(payload.user?.id) === userId;
-        const row = document.createElement('div');
-        row.className = `chat-row ${mine ? 'chat-row--mine' : 'chat-row--theirs'}`;
-        row.dataset.messageId = payload.id;
-        const body = document.createElement('div');
-        body.className = 'chat-row__bubble';
-        const p = document.createElement('p');
-        p.className = 'chat-row__body whitespace-pre-wrap break-words';
-        p.textContent = payload.body || '';
-        body.appendChild(p);
-        row.appendChild(body);
-        log.appendChild(row);
-        log.scrollTop = log.scrollHeight;
-    });
-})();
-</script>
+    @vite(['resources/js/dm-chat.js'])
 @endpush

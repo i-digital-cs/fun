@@ -159,6 +159,87 @@ function showMessageReactedToast(payload, host) {
     });
 }
 
+function showFriendRequestToast(payload, host) {
+    const title = payload.title || host.dataset.labelFriendRequest || 'Friend request';
+    const body = payload.body || '';
+    const url = payload.url || '/friends?tab=requests';
+    const name = payload.requester_name || '';
+    const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+    const labelNew = host.dataset.labelFriendRequest || title;
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+
+    showNotifyToast({
+        host,
+        labelNew,
+        labelJustNow,
+        title,
+        body,
+        eventTitle: name,
+        eventUrl: url,
+        avatarHtml: `<div class="chat-toast__avatar">${escapeHtml(initials)}</div>`,
+    });
+}
+
+function showFriendAcceptedToast(payload, host) {
+    const title = payload.title || host.dataset.labelFriendAccepted || 'Friend accepted';
+    const body = payload.body || '';
+    const url = payload.url || '/friends';
+    const name = payload.accepter_name || '';
+    const initials = name ? name.trim().charAt(0).toUpperCase() : '?';
+    const labelNew = host.dataset.labelFriendAccepted || title;
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+
+    showNotifyToast({
+        host,
+        labelNew,
+        labelJustNow,
+        title,
+        body,
+        eventTitle: name,
+        eventUrl: url,
+        avatarHtml: `<div class="chat-toast__avatar">${escapeHtml(initials)}</div>`,
+    });
+}
+
+function showDmToast(payload, host) {
+    const conversationId = Number(payload.conversation_id || 0);
+    const current = currentDmConversationId();
+    if (current && conversationId && current === conversationId) {
+        return;
+    }
+
+    const user = payload.user || {};
+    const name = user.name || payload.sender_name || '';
+    const initials = user.initials || (name ? name.trim().charAt(0).toUpperCase() : '?');
+    const photo = user.profile_image_path || '';
+    const chatUrl = payload.chat_url || (conversationId ? `/dms/${conversationId}` : '/chats?tab=direct');
+    const labelNew = host.dataset.labelDm || host.dataset.labelNew || 'New message';
+    const labelJustNow = host.dataset.labelJustNow || 'Just now';
+
+    showNotifyToast({
+        host,
+        labelNew,
+        labelJustNow,
+        title: name || labelNew,
+        body: host.dataset.labelDmBody || 'Sent you a direct message',
+        eventTitle: name,
+        eventUrl: chatUrl,
+        avatarHtml: photo
+            ? `<img src="${escapeHtml(photo)}" alt="" class="chat-toast__avatar-img">`
+            : `<div class="chat-toast__avatar">${escapeHtml(initials)}</div>`,
+    });
+    bumpChatBadge();
+}
+
+function currentDmConversationId() {
+    const root = document.getElementById('dm-chat');
+    if (!root) {
+        return null;
+    }
+    const id = Number(root.dataset.conversationId || 0);
+    return id > 0 ? id : null;
+}
+
 export function initChatToasts() {
     const host = document.getElementById('chat-toast-host');
     if (!host || !window.Echo) {
@@ -186,6 +267,18 @@ export function initChatToasts() {
 
     channel.listen('.chat.reaction', (payload) => {
         showMessageReactedToast(payload || {}, host);
+    });
+
+    channel.listen('.dm.message', (payload) => {
+        showDmToast(payload || {}, host);
+    });
+
+    channel.listen('.friend.requested', (payload) => {
+        showFriendRequestToast(payload || {}, host);
+    });
+
+    channel.listen('.friend.accepted', (payload) => {
+        showFriendAcceptedToast(payload || {}, host);
     });
 }
 

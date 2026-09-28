@@ -33,6 +33,8 @@ class ChatToastBanner extends StatelessWidget {
         payload.title.isNotEmpty ? payload.title : l10n.messageReactedToast,
       InAppToastKind.friendRequest =>
         payload.title.isNotEmpty ? payload.title : l10n.friendsTabRequests,
+      InAppToastKind.friendAccepted =>
+        payload.title.isNotEmpty ? payload.title : l10n.friendsTabFriends,
     };
     final name = switch (payload.kind) {
       InAppToastKind.chat || InAppToastKind.dm =>
@@ -43,7 +45,7 @@ class ChatToastBanner extends StatelessWidget {
         payload.title.isNotEmpty ? payload.title : l10n.joinRequestedToast,
       InAppToastKind.messageReacted =>
         payload.title.isNotEmpty ? payload.title : l10n.messageReactedToast,
-      InAppToastKind.friendRequest =>
+      InAppToastKind.friendRequest || InAppToastKind.friendAccepted =>
         payload.eventTitle.isNotEmpty ? payload.eventTitle : payload.title,
     };
     final body = switch (payload.kind) {
@@ -51,7 +53,8 @@ class ChatToastBanner extends StatelessWidget {
       InAppToastKind.joinAccepted ||
       InAppToastKind.joinRequested ||
       InAppToastKind.messageReacted ||
-      InAppToastKind.friendRequest =>
+      InAppToastKind.friendRequest ||
+      InAppToastKind.friendAccepted =>
         payload.body.isNotEmpty ? payload.body : name,
     };
 

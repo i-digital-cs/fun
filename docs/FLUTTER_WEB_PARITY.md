@@ -59,7 +59,7 @@ For each screen:
 | Safety | `POST /api/reports` (`description` not `details`) · `GET /api/blocks` · block/unblock user |
 | Notifications | `GET /api/notifications` · `GET /api/notifications/unread-count` · `POST /api/notifications/{id}/read` · `POST /api/notifications/read-all` · `POST/DELETE /api/device-tokens` (FCM) |
 | Friends | `GET /api/users/search?q=` · `GET /api/friends` · `GET /api/friends/requests` · `POST /api/friends` · `POST /api/friends/{user}/accept|decline|cancel` · `DELETE /api/friends/{user}` |
-| Direct messages | `GET /api/dms` · `POST /api/dms/with/{userId}` · `GET/POST /api/dms/{conversation}/messages` · `POST /api/dms/{conversation}/read` · Pusher `private-dms.{id}` `.message.posted` · user `.dm.message` toast |
+| Direct messages | `GET /api/dms` · `POST /api/dms/with/{userId}` · `GET/POST /api/dms/{conversation}/messages` · `POST /api/dms/{conversation}/read` · Pusher `private-dms.{id}` `.message.posted` · user `.dm.message` toast · web `dm-chat.js` waits for Echo · Flutter `subscribeDm` + shell `ChatToastListener` |
 | Friend prefs | `GET /api/user` (`notify_friend_events`) · `PUT /api/settings/notifications` |
 
 **Auth header:** Send `Authorization: Bearer {token}` on **all** authenticated calls **and** on public `GET /api/events` / `GET /api/events/{id}` so `join_action` is personalized.
@@ -1335,7 +1335,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 17. **Notifications** — join request/accept + **message like/dislike** → internal inbox (+ email on request; Pusher/FCM-while-open sweet toast + badge). Chat messages → FCM push (tray when backgrounded) + in-app toast when open. Flutter: inbox screen + FCM token register (§2.8a).
 18. **Mixed AR/EN titles (BiDi)** — web `bidi_dir` + `.bidi-text` isolate; Flutter `bidiTextDirection` on cards, detail, search, chats, now-playing, participations. Prefer Arabic-first titles when seeding mixed content.
 19. **Store compliance (Play + App Store)** — master checklist [`docs/STORE_COMPLIANCE.md`](STORE_COMPLIANCE.md): Terms `/terms`, Support `/support`, account deletion (API + web + Flutter + `/account-deletion` help), Sign in with Apple (iOS + `POST /api/auth/apple`), iOS usage strings, Profile/auth legal links, console Data Safety / App Privacy answers.
-20. **Friends + 1:1 DM (web+Flutter)** — `/friends` hub (list + requests + public ID search); public profile friendship CTAs; `/chats?tab=direct` inbox; `/dms/{id}` thread (composer, `dms.{id}` live + poll); `notify_friend_events` in `/settings/notifications`. Flutter: `lib/features/friends/`, routes `/friends`, `/dms/:conversationId`, `/settings/notifications`.
+20. **Friends + 1:1 DM (web+Flutter)** — `/friends` hub (list + requests + public ID search); public profile friendship CTAs; `/chats?tab=direct` inbox; `/dms/{id}` thread (composer, `dms.{id}` live + poll); realtime user toasts: `.friend.requested`, `.friend.accepted`, `.dm.message`; `notify_friend_events` in `/settings/notifications`. Flutter: `lib/features/friends/`, routes `/friends`, `/dms/:conversationId`, `/settings/notifications`.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 

@@ -438,7 +438,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if (window.Echo && channelName) {
+    const bindRealtime = () => {
+        if (!window.Echo || !channelName) {
+            if (statusEl) {
+                statusEl.textContent = statusEl.dataset.fallback || 'Live updates unavailable.';
+                statusEl.classList.remove('hidden');
+            }
+            return;
+        }
         const channel = window.Echo.private(channelName);
         channel.listen('.message.posted', (payload) => {
             if (Number(payload.user?.id) === currentUserId) {
@@ -452,9 +459,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 isActor: Number(payload.actor_id) === currentUserId,
             });
         });
-    } else if (statusEl) {
-        statusEl.textContent = statusEl.dataset.fallback || 'Live updates unavailable.';
-        statusEl.classList.remove('hidden');
+        statusEl?.classList.add('hidden');
+    };
+
+    if (window.Echo) {
+        bindRealtime();
+    } else {
+        const onReady = () => {
+            window.removeEventListener('funnity:echo-ready', onReady);
+            bindRealtime();
+        };
+        window.addEventListener('funnity:echo-ready', onReady, { once: true });
+        let tries = 0;
+        const timer = window.setInterval(() => {
+            tries += 1;
+            if (window.Echo) {
+                window.clearInterval(timer);
+                window.removeEventListener('funnity:echo-ready', onReady);
+                bindRealtime();
+                return;
+            }
+            if (tries >= 50) {
+                window.clearInterval(timer);
+                window.removeEventListener('funnity:echo-ready', onReady);
+                bindRealtime();
+            }
+        }, 100);
     }
 
     form?.addEventListener('submit', async (event) => {
