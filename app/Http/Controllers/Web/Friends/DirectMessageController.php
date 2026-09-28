@@ -41,15 +41,39 @@ class DirectMessageController extends Controller
         Request $request,
         DirectConversation $conversation,
         DirectMessageService $dms,
-    ): RedirectResponse {
+    ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
         ]);
 
         try {
-            $dms->sendToConversation($request->user(), $conversation, $validated['body']);
+            $message = $dms->sendToConversation($request->user(), $conversation, $validated['body']);
         } catch (DomainException $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+
             return back()->withErrors(['body' => $e->getMessage()]);
+        }
+
+        if ($request->expectsJson()) {
+            $name = $message->user?->name ?? '';
+
+            return response()->json([
+                'message' => [
+                    'id' => $message->id,
+                    'conversation_id' => $message->conversation_id,
+                    'body' => $message->body,
+                    'created_at' => $message->created_at?->toIso8601String(),
+                    'user' => [
+                        'id' => $message->user?->id,
+                        'name' => $name,
+                        'public_id' => $message->user?->public_id,
+                        'initials' => user_initials($name),
+                        'profile_image_path' => $message->user?->profile_image_path,
+                    ],
+                ],
+            ], 201);
         }
 
         return back();

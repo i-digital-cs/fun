@@ -19,7 +19,7 @@ export function initRealtime() {
             enabledTransports: ['ws', 'wss'],
             authEndpoint: '/broadcasting/auth',
         });
-
+        window.dispatchEvent(new CustomEvent('funnity:echo-ready'));
         return;
     }
 
@@ -34,9 +34,44 @@ export function initRealtime() {
             enabledTransports: ['ws', 'wss'],
             authEndpoint: '/broadcasting/auth',
         });
-
+        window.dispatchEvent(new CustomEvent('funnity:echo-ready'));
         return;
     }
 
     window.Echo = null;
+}
+
+/** Run after Echo exists (app.js loads realtime asynchronously). */
+export function whenEchoReady(callback, { attempts = 50, intervalMs = 100 } = {}) {
+    if (typeof callback !== 'function') {
+        return;
+    }
+
+    if (window.Echo) {
+        callback(window.Echo);
+        return;
+    }
+
+    const onReady = () => {
+        if (window.Echo) {
+            callback(window.Echo);
+        }
+    };
+
+    window.addEventListener('funnity:echo-ready', onReady, { once: true });
+
+    let tries = 0;
+    const timer = window.setInterval(() => {
+        tries += 1;
+        if (window.Echo) {
+            window.clearInterval(timer);
+            window.removeEventListener('funnity:echo-ready', onReady);
+            callback(window.Echo);
+            return;
+        }
+        if (tries >= attempts) {
+            window.clearInterval(timer);
+            window.removeEventListener('funnity:echo-ready', onReady);
+        }
+    }, intervalMs);
 }

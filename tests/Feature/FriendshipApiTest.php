@@ -210,4 +210,28 @@ class FriendshipApiTest extends TestCase
         );
         \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\UserFriendRequested::class);
     }
+
+    public function test_accept_broadcasts_friend_accepted(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        \Illuminate\Support\Facades\Event::fake([
+            \App\Events\UserFriendRequested::class,
+            \App\Events\UserFriendAccepted::class,
+        ]);
+
+        $a = User::factory()->active()->create();
+        $b = User::factory()->active()->create();
+
+        Sanctum::actingAs($a);
+        $this->postJson('/api/friends', ['public_id' => $b->public_id])->assertCreated();
+
+        Sanctum::actingAs($b);
+        $this->postJson("/api/friends/{$a->id}/accept")->assertOk();
+
+        \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\UserFriendAccepted::class);
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $a,
+            \App\Notifications\FriendAcceptedNotification::class
+        );
+    }
 }

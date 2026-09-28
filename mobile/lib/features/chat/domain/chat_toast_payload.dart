@@ -6,6 +6,7 @@ enum InAppToastKind {
   joinRequested,
   messageReacted,
   friendRequest,
+  friendAccepted,
 }
 
 /// Payload for foreground sweet toasts (Pusher realtime or FCM-while-open fallback).
@@ -44,6 +45,7 @@ class InAppToastPayload {
       InAppToastKind.joinAccepted => '/events/$eventId',
       InAppToastKind.joinRequested => '/events/$eventId/requests',
       InAppToastKind.friendRequest => '/friends?tab=requests',
+      InAppToastKind.friendAccepted => '/friends',
     };
   }
 
@@ -131,6 +133,26 @@ class InAppToastPayload {
       body: json['body'] as String? ?? '',
       senderInitials: initials,
       openPath: '/friends?tab=requests',
+    );
+  }
+
+  /// User channel `.friend.accepted` / [UserFriendAccepted].
+  factory InAppToastPayload.fromFriendAcceptedJson(Map<String, dynamic> json) {
+    final accepterId = (json['accepter_id'] as num?)?.toInt() ?? 0;
+    final name = json['accepter_name'] as String? ?? '';
+    final initials = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+
+    return InAppToastPayload(
+      kind: InAppToastKind.friendAccepted,
+      dedupeKey: accepterId > 0
+          ? 'friend_accepted:$accepterId'
+          : 'friend_accepted:${name.hashCode}',
+      eventId: 0,
+      eventTitle: name,
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      senderInitials: initials,
+      openPath: '/friends',
     );
   }
 
@@ -231,7 +253,7 @@ class InAppToastPayload {
     if (type == 'friend_accepted') {
       final accepterId = int.tryParse('${data['accepter_id'] ?? ''}') ?? 0;
       return InAppToastPayload(
-        kind: InAppToastKind.friendRequest,
+        kind: InAppToastKind.friendAccepted,
         dedupeKey: accepterId > 0
             ? 'friend_accepted:fcm:$accepterId'
             : 'friend_accepted:fcm:${title.hashCode}',

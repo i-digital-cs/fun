@@ -42,6 +42,7 @@ return [
     'dm_open' => 'مراسلة',
     'dm_notify_title' => 'رسالة جديدة',
     'dm_notify_body' => ':name أرسل لك رسالة',
+    'dm_notify_body_generic' => 'أرسل لك رسالة مباشرة',
     'notify_request_title' => 'طلب صداقة جديد',
     'notify_request_body' => ':name أرسل لك طلب صداقة',
     'notify_accepted_title' => 'تم قبول طلب الصداقة',

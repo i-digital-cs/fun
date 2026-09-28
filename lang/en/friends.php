@@ -42,6 +42,7 @@ return [
     'dm_open' => 'Message',
     'dm_notify_title' => 'New message',
     'dm_notify_body' => ':name sent you a message',
+    'dm_notify_body_generic' => 'Sent you a direct message',
     'notify_request_title' => 'New friend request',
     'notify_request_body' => ':name sent you a friend request',
     'notify_accepted_title' => 'Friend request accepted',
