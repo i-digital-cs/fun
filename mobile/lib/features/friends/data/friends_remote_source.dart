@@ -16,7 +16,7 @@ class FriendsRemoteSource {
       final list = _mapUsers(raw);
       return (failure: null, data: list);
     } on DioException catch (e) {
-      return (failure: mapDioException(e), data: const []);
+      return (failure: mapDioException(e), data: const <FriendUser>[]);
     }
   }
 
@@ -58,7 +58,7 @@ class FriendsRemoteSource {
       final list = _mapUsers(raw);
       return (failure: null, data: list);
     } on DioException catch (e) {
-      return (failure: mapDioException(e), data: const []);
+      return (failure: mapDioException(e), data: const <FriendUser>[]);
     }
   }
 
@@ -111,7 +111,7 @@ class FriendsRemoteSource {
   }
 
   List<FriendUser> _mapUsers(Object? raw) {
-    if (raw is! List) return const [];
+    if (raw is! List) return const <FriendUser>[];
     return raw
         .whereType<Map>()
         .map((row) => FriendUser.fromJson(Map<String, dynamic>.from(row)))

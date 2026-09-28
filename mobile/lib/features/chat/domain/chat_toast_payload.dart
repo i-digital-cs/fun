@@ -32,7 +32,8 @@ class InAppToastPayload {
     return switch (kind) {
       InAppToastKind.chat || InAppToastKind.messageReacted =>
         '/events/$eventId/chat',
-      InAppToastKind.dm when conversationId > 0 => '/dms/$conversationId',
+      InAppToastKind.dm =>
+        conversationId > 0 ? '/dms/$conversationId' : '/chats?tab=direct',
       InAppToastKind.joinAccepted => '/events/$eventId',
       InAppToastKind.joinRequested => '/events/$eventId/requests',
     };
@@ -160,12 +161,30 @@ class InAppToastPayload {
   /// FCM data map while the app is foreground (no system tray).
   static InAppToastPayload? tryFromFcmData(Map<String, dynamic> data) {
     final type = data['type'] as String? ?? '';
-    final eventId = int.tryParse('${data['event_id'] ?? ''}') ?? 0;
-    if (eventId <= 0) return null;
-
     final title = data['title'] as String? ?? '';
     final body = data['body'] as String? ?? '';
     final eventTitle = data['event_title'] as String? ?? title;
+
+    if (type == 'dm_message') {
+      final conversationId =
+          int.tryParse('${data['conversation_id'] ?? ''}') ?? 0;
+      final messageId = int.tryParse('${data['message_id'] ?? ''}') ?? 0;
+      if (conversationId <= 0) return null;
+      return InAppToastPayload(
+        kind: InAppToastKind.dm,
+        dedupeKey: messageId > 0 ? 'dm:$messageId' : 'dm:fcm:$conversationId',
+        eventId: 0,
+        conversationId: conversationId,
+        eventTitle: title,
+        title: title,
+        body: body,
+        senderInitials: '?',
+        openPath: '/dms/$conversationId',
+      );
+    }
+
+    final eventId = int.tryParse('${data['event_id'] ?? ''}') ?? 0;
+    if (eventId <= 0) return null;
 
     switch (type) {
       case 'chat_message':

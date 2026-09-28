@@ -76,9 +76,9 @@ class DmsRemoteSource {
       return (failure: null, data: list);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
-        return (failure: null, data: const []);
+        return (failure: null, data: const <DmMessage>[]);
       }
-      return (failure: mapDioException(e), data: const []);
+      return (failure: mapDioException(e), data: const <DmMessage>[]);
     }
   }
 
