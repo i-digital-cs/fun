@@ -50,6 +50,42 @@ class SearchSuggestTest extends TestCase
             ->assertJsonPath('data', []);
     }
 
+    public function test_suggest_finds_recent_past_and_arabic_alias(): void
+    {
+        $owner = User::factory()->active()->create();
+        Event::factory()->published()->create([
+            'created_by' => $owner->id,
+            'category_id' => Category::factory()->create()->id,
+            'city_id' => City::factory()->create()->id,
+            'status' => EventStatus::Published,
+            'title' => 'فرجة على ماتش الزمالك في الكافيه',
+            'starts_at' => now()->subDays(2),
+            'ends_at' => now()->subDays(2)->addHours(2),
+        ]);
+
+        $this->getJson(route('search.suggest', ['q' => 'zamalek', 'type' => 'events']))
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'فرجة على ماتش الزمالك في الكافيه']);
+    }
+
+    public function test_suggest_includes_completed_events(): void
+    {
+        $owner = User::factory()->active()->create();
+        Event::factory()->create([
+            'created_by' => $owner->id,
+            'category_id' => Category::factory()->create()->id,
+            'city_id' => City::factory()->create()->id,
+            'status' => EventStatus::Completed,
+            'title' => 'Zamalek football match',
+            'starts_at' => now()->subDays(3),
+            'ends_at' => now()->subDays(3)->addHours(2),
+        ]);
+
+        $this->getJson(route('search.suggest', ['q' => 'zamalek', 'type' => 'events']))
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Zamalek football match']);
+    }
+
     public function test_discover_fragment_returns_partial_html(): void
     {
         $owner = User::factory()->active()->create();

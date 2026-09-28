@@ -425,7 +425,7 @@
   "friendsTitle": "الأصدقاء",
   "friendsTabFriends": "الأصدقاء",
   "friendsTabRequests": "الطلبات",
-  "friendsSearchHint": "ابحث برقم الهوية العام…",
+  "friendsSearchHint": "المعرّف أو الرقم (مثل 001108)…",
   "friendsSearchMinLength": "أدخل 3 أحرف على الأقل.",
   "friendsSearchEmpty": "لا يوجد أعضاء بهذا الرقم.",
   "friendsEmpty": "لا أصدقاء بعد. ابحث برقم الهوية للتواصل.",

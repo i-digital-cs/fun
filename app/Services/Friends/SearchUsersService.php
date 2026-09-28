@@ -18,7 +18,7 @@ class SearchUsersService
     }
 
     /**
-     * Search by public_id (exact or prefix). Discovery fields only.
+     * Search by public_id. Accepts full ID, digits only (e.g. 001108), or prefix.
      *
      * @return Collection<int, User>
      */
@@ -40,11 +40,13 @@ class SearchUsersService
             ->whereNotNull('public_id')
             ->whereNotIn('id', $blockedIds);
 
-        if (UserPublicId::isValid($q)) {
-            $builder->where('public_id', $q);
+        $normalized = UserPublicId::normalizeQuery($q);
+
+        if ($normalized !== null) {
+            // Digits / full ID → exact (001108 or 1108 → Funity-F001108).
+            $builder->where('public_id', $normalized);
         } else {
             // Prefix match on public_id only (not name) for privacy.
-            // Escape LIKE wildcards so "%" / "_" cannot widen the search.
             $escaped = addcslashes($q, '%_\\');
             $builder->where('public_id', 'like', $escaped.'%');
         }

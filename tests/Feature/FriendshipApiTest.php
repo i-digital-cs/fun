@@ -131,6 +131,24 @@ class FriendshipApiTest extends TestCase
             ->assertJsonPath('data.0.public_id', $b->public_id);
     }
 
+    public function test_search_by_numeric_suffix(): void
+    {
+        $a = User::factory()->active()->create();
+        $b = User::factory()->active()->create([
+            'public_id' => 'Funity-F001108',
+        ]);
+
+        Sanctum::actingAs($a);
+        $this->getJson('/api/users/search?q=001108')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.public_id', 'Funity-F001108');
+
+        $this->getJson('/api/users/search?q=1108')
+            ->assertOk()
+            ->assertJsonPath('data.0.public_id', 'Funity-F001108');
+    }
+
     public function test_profile_includes_friendship_state(): void
     {
         $a = User::factory()->active()->create();
@@ -173,5 +191,23 @@ class FriendshipApiTest extends TestCase
         $this->getJson('/api/users/search?q=%25ab')
             ->assertOk()
             ->assertJsonCount(0, 'data');
+    }
+
+    public function test_friend_request_writes_database_notification(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        \Illuminate\Support\Facades\Event::fake([\App\Events\UserFriendRequested::class]);
+
+        $a = User::factory()->active()->create();
+        $b = User::factory()->active()->create();
+
+        Sanctum::actingAs($a);
+        $this->postJson('/api/friends', ['public_id' => $b->public_id])->assertCreated();
+
+        \Illuminate\Support\Facades\Notification::assertSentTo(
+            $b,
+            \App\Notifications\FriendRequestNotification::class
+        );
+        \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\UserFriendRequested::class);
     }
 }

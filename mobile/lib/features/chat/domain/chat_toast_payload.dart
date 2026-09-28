@@ -1,5 +1,12 @@
 /// In-app toast kinds — mirror web `.chat-toast` (chat + join + message reaction).
-enum InAppToastKind { chat, dm, joinAccepted, joinRequested, messageReacted }
+enum InAppToastKind {
+  chat,
+  dm,
+  joinAccepted,
+  joinRequested,
+  messageReacted,
+  friendRequest,
+}
 
 /// Payload for foreground sweet toasts (Pusher realtime or FCM-while-open fallback).
 class InAppToastPayload {
@@ -36,6 +43,7 @@ class InAppToastPayload {
         conversationId > 0 ? '/dms/$conversationId' : '/chats?tab=direct',
       InAppToastKind.joinAccepted => '/events/$eventId',
       InAppToastKind.joinRequested => '/events/$eventId/requests',
+      InAppToastKind.friendRequest => '/friends?tab=requests',
     };
   }
 
@@ -102,6 +110,27 @@ class InAppToastPayload {
       body: json['body'] as String? ?? '',
       senderInitials: '✓',
       openPath: '/events/$eventId',
+    );
+  }
+
+  /// User channel `.friend.requested` / [UserFriendRequested].
+  factory InAppToastPayload.fromFriendRequestedJson(Map<String, dynamic> json) {
+    final requesterId = (json['requester_id'] as num?)?.toInt() ?? 0;
+    final friendshipId = (json['friendship_id'] as num?)?.toInt() ?? 0;
+    final name = json['requester_name'] as String? ?? '';
+    final initials = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+
+    return InAppToastPayload(
+      kind: InAppToastKind.friendRequest,
+      dedupeKey: friendshipId > 0
+          ? 'friend_request:$friendshipId'
+          : 'friend_request:$requesterId',
+      eventId: 0,
+      eventTitle: name,
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      senderInitials: initials,
+      openPath: '/friends?tab=requests',
     );
   }
 
@@ -180,6 +209,38 @@ class InAppToastPayload {
         body: body,
         senderInitials: '?',
         openPath: '/dms/$conversationId',
+      );
+    }
+
+    if (type == 'friend_request') {
+      final requesterId = int.tryParse('${data['requester_id'] ?? ''}') ?? 0;
+      return InAppToastPayload(
+        kind: InAppToastKind.friendRequest,
+        dedupeKey: requesterId > 0
+            ? 'friend_request:fcm:$requesterId'
+            : 'friend_request:fcm:${title.hashCode}',
+        eventId: 0,
+        eventTitle: title,
+        title: title,
+        body: body,
+        senderInitials: '?',
+        openPath: '/friends?tab=requests',
+      );
+    }
+
+    if (type == 'friend_accepted') {
+      final accepterId = int.tryParse('${data['accepter_id'] ?? ''}') ?? 0;
+      return InAppToastPayload(
+        kind: InAppToastKind.friendRequest,
+        dedupeKey: accepterId > 0
+            ? 'friend_accepted:fcm:$accepterId'
+            : 'friend_accepted:fcm:${title.hashCode}',
+        eventId: 0,
+        eventTitle: title,
+        title: title,
+        body: body,
+        senderInitials: '✓',
+        openPath: '/friends',
       );
     }
 

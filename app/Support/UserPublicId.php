@@ -47,6 +47,31 @@ class UserPublicId
         return (bool) preg_match('/^'.preg_quote(self::PREFIX, '/').'\d{6}$/', $value);
     }
 
+    /**
+     * Normalize user input to a public_id candidate when possible.
+     * Accepts full IDs, "Funity-F001108", or digits only ("001108", "1108").
+     */
+    public static function normalizeQuery(string $value): ?string
+    {
+        $value = trim($value);
+
+        if (self::isValid($value)) {
+            return $value;
+        }
+
+        // Case-insensitive full ID with optional spacing.
+        if (preg_match('/^funity-?f\s*(\d{1,6})$/i', $value, $matches)) {
+            return self::format((int) $matches[1]);
+        }
+
+        // Digits only → pad to Funity-F######.
+        if (preg_match('/^\d{1,6}$/', $value)) {
+            return self::format((int) $value);
+        }
+
+        return null;
+    }
+
     /** Route `{publicId}` constraint pattern. */
     public static function routePattern(): string
     {

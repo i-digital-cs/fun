@@ -141,6 +141,14 @@ class _NotificationTile extends ConsumerWidget {
       context.push('/events/${item.eventId}/requests');
       return;
     }
+    if (item.type == 'friend_request') {
+      context.push('/friends?tab=requests');
+      return;
+    }
+    if (item.type == 'friend_accepted') {
+      context.push('/friends');
+      return;
+    }
     if (item.type == 'message_reacted' && item.eventId != null) {
       context.push('/events/${item.eventId}/chat');
       return;
@@ -180,9 +188,12 @@ class _NotificationTile extends ConsumerWidget {
                 child: Icon(
                   item.type == 'join_accepted'
                       ? Icons.check_circle_outline
-                      : item.type == 'message_reacted'
-                          ? Icons.thumb_up_alt_outlined
-                          : Icons.notifications_outlined,
+                      : item.type == 'friend_request' ||
+                              item.type == 'friend_accepted'
+                          ? Icons.person_add_alt_1_outlined
+                          : item.type == 'message_reacted'
+                              ? Icons.thumb_up_alt_outlined
+                              : Icons.notifications_outlined,
                   size: 22,
                   color: unread ? Colors.white : const Color(0xFF64748B),
                 ),

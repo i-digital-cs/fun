@@ -497,7 +497,7 @@
   "friendsTitle": "Friends",
   "friendsTabFriends": "Friends",
   "friendsTabRequests": "Requests",
-  "friendsSearchHint": "Search by public ID…",
+  "friendsSearchHint": "Public ID or number (e.g. 001108)…",
   "friendsSearchMinLength": "Enter at least 3 characters.",
   "friendsSearchEmpty": "No members match that public ID.",
   "friendsEmpty": "No friends yet. Search by public ID to connect.",

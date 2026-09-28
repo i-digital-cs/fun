@@ -1303,7 +1303,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendsTabRequests => 'Requests';
 
   @override
-  String get friendsSearchHint => 'Search by public ID…';
+  String get friendsSearchHint => 'Public ID or number (e.g. 001108)…';
 
   @override
   String get friendsSearchMinLength => 'Enter at least 3 characters.';

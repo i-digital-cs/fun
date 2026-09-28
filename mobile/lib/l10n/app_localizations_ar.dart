@@ -1292,7 +1292,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get friendsTabRequests => 'الطلبات';
 
   @override
-  String get friendsSearchHint => 'ابحث برقم الهوية العام…';
+  String get friendsSearchHint => 'المعرّف أو الرقم (مثل 001108)…';
 
   @override
   String get friendsSearchMinLength => 'أدخل 3 أحرف على الأقل.';

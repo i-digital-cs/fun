@@ -3,12 +3,14 @@
 namespace App\Services\Friends;
 
 use App\Enums\FriendshipStatus;
+use App\Events\UserFriendRequested;
 use App\Exceptions\DomainException;
 use App\Models\Friendship;
 use App\Models\User;
 use App\Notifications\FriendAcceptedNotification;
 use App\Notifications\FriendRequestNotification;
 use App\Services\Safety\UserBlockService;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -379,6 +381,16 @@ class FriendshipService
             $addressee->notify(new FriendRequestNotification($requester, $friendship));
         } catch (Throwable $e) {
             Log::warning('friend_request_notify_failed', [
+                'requester_id' => $requester->id,
+                'addressee_id' => $addressee->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            broadcast(new UserFriendRequested($addressee, $requester, $friendship));
+        } catch (BroadcastException $e) {
+            Log::warning('friend_request_broadcast_failed', [
                 'requester_id' => $requester->id,
                 'addressee_id' => $addressee->id,
                 'error' => $e->getMessage(),

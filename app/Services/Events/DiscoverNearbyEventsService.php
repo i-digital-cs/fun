@@ -29,9 +29,26 @@ class DiscoverNearbyEventsService
 
         $query = Event::query()
             ->with(['category', 'city', 'creator'])
-            ->withCount('members')
-            ->where('status', EventStatus::Published)
-            ->where('starts_at', '>=', now()->subDay());
+            ->withCount('members');
+
+        $hasTextSearch = ! empty($filters['q']) && trim((string) $filters['q']) !== '';
+
+        if ($hasTextSearch) {
+            // Name search: include published + completed (recent enough to be useful).
+            $query->whereIn('status', [EventStatus::Published, EventStatus::Completed])
+                ->where(function (Builder $builder) {
+                    $builder->where('starts_at', '>=', now()->subDays(90))
+                        ->orWhere(function (Builder $ongoing) {
+                            $ongoing->where('status', EventStatus::Published)
+                                ->whereNotNull('ends_at')
+                                ->where('ends_at', '>=', now());
+                        });
+                });
+        } else {
+            // Browse: live/upcoming published only.
+            $query->where('status', EventStatus::Published)
+                ->where('starts_at', '>=', now()->subDay());
+        }
 
         if ($user !== null) {
             $blockedIds = $this->blocks->blockedUserIdsFor($user);
@@ -49,20 +66,25 @@ class DiscoverNearbyEventsService
             $this->applyWhenFilter($query, (string) $filters['when']);
         }
 
-        if (! empty($filters['q'])) {
+        if ($hasTextSearch) {
             $term = trim((string) $filters['q']);
-            $query->where(function (Builder $builder) use ($term) {
-                $builder->where('title', 'like', '%'.$term.'%')
-                    ->orWhere('venue', 'like', '%'.$term.'%')
-                    ->orWhere('description', 'like', '%'.$term.'%');
+            $variants = $this->searchTermVariants($term);
+            $query->where(function (Builder $builder) use ($variants) {
+                foreach ($variants as $variant) {
+                    $like = '%'.$variant.'%';
+                    $builder->orWhere(function (Builder $inner) use ($like) {
+                        $inner->where('title', 'like', $like)
+                            ->orWhere('venue', 'like', $like)
+                            ->orWhere('description', 'like', $like);
+                    });
+                }
             });
         }
 
         if ($origin !== null) {
             // Text search is nationwide unless the user explicitly picked a city filter.
-            // (Otherwise joined/owned events outside the radius never appear in search.)
-            $skipGeoForTextSearch = ! empty($filters['q'])
-                && ! array_key_exists('city_id', $filters);
+            $explicitCity = array_key_exists('city_id', $filters) && $filters['city_id'] !== null;
+            $skipGeoForTextSearch = $hasTextSearch && ! $explicitCity;
 
             if (! $skipGeoForTextSearch) {
                 $cityIds = $this->nearbyCityIds(
@@ -212,5 +234,37 @@ class DiscoverNearbyEventsService
         }
 
         return [$saturday, $saturday->copy()->addDay()->endOfDay()];
+    }
+
+    /**
+     * Expand common EN/AR place/team aliases so "zamalek" finds "الزمالك".
+     *
+     * @return list<string>
+     */
+    private function searchTermVariants(string $term): array
+    {
+        $term = trim($term);
+        $variants = [$term];
+        $lower = mb_strtolower($term);
+
+        $aliases = [
+            'zamalek' => ['الزمالك', 'زمالك'],
+            'الزمالك' => ['zamalek', 'زمالك'],
+            'زمالك' => ['zamalek', 'الزمالك'],
+            'cairo' => ['القاهرة', 'قاهرة'],
+            'القاهرة' => ['cairo'],
+            'giza' => ['الجيزة', 'جيزة'],
+            'الجيزة' => ['giza'],
+        ];
+
+        foreach ($aliases as $key => $extras) {
+            if ($lower === mb_strtolower($key) || str_contains($lower, mb_strtolower($key))) {
+                foreach ($extras as $extra) {
+                    $variants[] = $extra;
+                }
+            }
+        }
+
+        return array_values(array_unique(array_filter($variants, fn ($v) => $v !== '')));
     }
 }

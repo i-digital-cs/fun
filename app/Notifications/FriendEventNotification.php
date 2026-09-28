@@ -6,10 +6,9 @@ use App\Models\Event;
 use App\Models\User;
 use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class FriendEventNotification extends Notification implements ShouldQueue
+class FriendEventNotification extends Notification
 {
     use Queueable;
 

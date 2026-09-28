@@ -936,6 +936,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   StreamSubscription<InAppToastPayload>? _realtimeSub;
   StreamSubscription<InAppToastPayload>? _joinAcceptedSub;
   StreamSubscription<InAppToastPayload>? _joinRequestedSub;
+  StreamSubscription<InAppToastPayload>? _friendRequestedSub;
   StreamSubscription<InAppToastPayload>? _messageReactedSub;
   StreamSubscription<InAppToastPayload>? _dmToastSub;
   StreamSubscription<InAppToastPayload>? _fcmToastSub;
@@ -985,6 +986,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinAcceptedSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
+    await _friendRequestedSub?.cancel();
+    _friendRequestedSub = null;
     await _messageReactedSub?.cancel();
     _messageReactedSub = null;
     await _dmToastSub?.cancel();
@@ -1022,6 +1025,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinAcceptedSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
+    await _friendRequestedSub?.cancel();
+    _friendRequestedSub = null;
     await _messageReactedSub?.cancel();
     _messageReactedSub = null;
     await _dmToastSub?.cancel();
@@ -1035,6 +1040,9 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       (payload) => _enqueueToast(payload, bumpNotify: true),
     );
     _joinRequestedSub = client.joinRequested.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _friendRequestedSub = client.friendRequested.listen(
       (payload) => _enqueueToast(payload, bumpNotify: true),
     );
     _messageReactedSub = client.messageReacted.listen(
@@ -1070,7 +1078,11 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     bool bumpNotify = false,
   }) {
     if (!mounted) return;
-    if (payload.kind != InAppToastKind.dm && payload.eventId <= 0) return;
+    if (payload.kind != InAppToastKind.dm &&
+        payload.kind != InAppToastKind.friendRequest &&
+        payload.eventId <= 0) {
+      return;
+    }
     if (payload.kind == InAppToastKind.dm && payload.conversationId <= 0) {
       return;
     }

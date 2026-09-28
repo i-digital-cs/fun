@@ -20,6 +20,7 @@ class ChatRealtimeClient {
   final _messages = StreamController<InAppToastPayload>.broadcast();
   final _joinAccepted = StreamController<InAppToastPayload>.broadcast();
   final _joinRequested = StreamController<InAppToastPayload>.broadcast();
+  final _friendRequested = StreamController<InAppToastPayload>.broadcast();
   final _messageReacted = StreamController<InAppToastPayload>.broadcast();
   final _threadPosted = StreamController<ChatMessage>.broadcast();
   final _threadReacted = StreamController<ChatMessageReaction>.broadcast();
@@ -31,6 +32,7 @@ class ChatRealtimeClient {
   StreamSubscription<ChannelReadEvent>? _eventSub;
   StreamSubscription<ChannelReadEvent>? _joinSub;
   StreamSubscription<ChannelReadEvent>? _joinRequestedSub;
+  StreamSubscription<ChannelReadEvent>? _friendRequestedSub;
   StreamSubscription<ChannelReadEvent>? _messageReactedSub;
   StreamSubscription<ChannelReadEvent>? _threadSub;
   StreamSubscription<ChannelReadEvent>? _threadReactSub;
@@ -52,6 +54,9 @@ class ChatRealtimeClient {
 
   /// Fires when the server broadcasts `.join.requested` (organizer).
   Stream<InAppToastPayload> get joinRequested => _joinRequested.stream;
+
+  /// Fires when the server broadcasts `.friend.requested`.
+  Stream<InAppToastPayload> get friendRequested => _friendRequested.stream;
 
   /// Fires when someone reacts to one of your messages (`.chat.reaction`).
   Stream<InAppToastPayload> get messageReacted => _messageReacted.stream;
@@ -171,6 +176,14 @@ class ChatRealtimeClient {
         if (payload.eventId <= 0) return;
         if (!_joinRequested.isClosed) {
           _joinRequested.add(payload);
+        }
+      });
+
+      _friendRequestedSub = channel.bind('friend.requested').listen((event) {
+        final data = event.tryGetDataAsMap() ?? const <String, dynamic>{};
+        final payload = InAppToastPayload.fromFriendRequestedJson(data);
+        if (!_friendRequested.isClosed) {
+          _friendRequested.add(payload);
         }
       });
 
@@ -369,6 +382,8 @@ class ChatRealtimeClient {
     _joinSub = null;
     await _joinRequestedSub?.cancel();
     _joinRequestedSub = null;
+    await _friendRequestedSub?.cancel();
+    _friendRequestedSub = null;
     await _messageReactedSub?.cancel();
     _messageReactedSub = null;
     await _dmToastSub?.cancel();
@@ -392,6 +407,7 @@ class ChatRealtimeClient {
     await _messages.close();
     await _joinAccepted.close();
     await _joinRequested.close();
+    await _friendRequested.close();
     await _messageReacted.close();
     await _threadPosted.close();
     await _threadReacted.close();
