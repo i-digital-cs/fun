@@ -70,14 +70,25 @@ class EventResource extends JsonResource
                 fn () => (bool) $this->is_favorited
             ),
             'created_by' => $this->created_by,
-            'creator' => $this->whenLoaded('creator', fn () => [
-                'id' => $this->creator->id,
-                'public_id' => $this->creator->public_id,
-                'name' => $this->creator->name,
-                'profile_image_path' => $this->creator->profile_image_path,
-                'initials' => user_initials($this->creator->name),
-                'profile_url' => $this->creator->publicProfileUrl(),
-            ]),
+            // Always emit when relation was eager-loaded (including explicit null)
+            // so Flutter/web clients can show the Host row like Blade `events/show`.
+            'creator' => $this->when(
+                $this->relationLoaded('creator'),
+                function () {
+                    if ($this->creator === null) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $this->creator->id,
+                        'public_id' => $this->creator->public_id,
+                        'name' => $this->creator->name,
+                        'profile_image_path' => $this->creator->profile_image_path,
+                        'initials' => user_initials($this->creator->name),
+                        'profile_url' => $this->creator->publicProfileUrl(),
+                    ];
+                }
+            ),
         ];
     }
 }

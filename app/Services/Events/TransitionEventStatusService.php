@@ -64,7 +64,12 @@ class TransitionEventStatusService
 
             Cache::forget('seo.sitemap.xml');
 
-            return $locked->refresh()->load(['category', 'city', 'members']);
+            return $locked->refresh()->load([
+                'category',
+                'city',
+                'members',
+                'creator:id,public_id,name,profile_image_path',
+            ]);
         });
     }
 }

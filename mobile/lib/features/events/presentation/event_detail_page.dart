@@ -203,10 +203,6 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                 children: [
                   EventDetailHero(event: detail.event),
                   const SizedBox(height: 16),
-                  if (detail.event.creator != null) ...[
-                    EventHostCard(creator: detail.event.creator!),
-                    const SizedBox(height: 16),
-                  ],
                   EventDetailInfoCard(detail: detail),
                   const SizedBox(height: 16),
                   EventMembersProgress(event: detail.event),
@@ -426,6 +422,10 @@ class EventDetailInfoCard extends StatelessWidget {
                 label: Text(l10n.openInMaps),
               ),
             ),
+          ],
+          if (event.creator != null) ...[
+            const SizedBox(height: 14),
+            EventHostCard(creator: event.creator!),
           ],
           if (event.hasPlacePin &&
               event.latitude != null &&

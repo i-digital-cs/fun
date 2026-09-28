@@ -85,7 +85,12 @@ class CreateEventService
                 throw new DomainException(__('events.capacity_too_small'));
             }
 
-            return $event->refresh()->load(['category', 'city', 'members']);
+            return $event->refresh()->load([
+                'category',
+                'city',
+                'members',
+                'creator:id,public_id,name,profile_image_path',
+            ]);
         });
     }
 

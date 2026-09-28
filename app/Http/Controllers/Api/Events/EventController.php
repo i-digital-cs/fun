@@ -55,7 +55,7 @@ class EventController extends Controller
         $section = $request->string('section')->toString(); // hosting | joined | (all)
 
         $query = Event::query()
-            ->with(['category', 'city'])
+            ->with(['category', 'city', 'creator:id,public_id,name,profile_image_path'])
             ->withCount('members');
 
         if ($section === 'hosting') {
@@ -101,7 +101,9 @@ class EventController extends Controller
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return (new EventResource($event->loadCount('members')))->response()->setStatusCode(201);
+        return (new EventResource(
+            $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members')
+        ))->response()->setStatusCode(201);
     }
 
     public function show(
@@ -163,7 +165,9 @@ class EventController extends Controller
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return new EventResource($event->loadCount('members'));
+        return new EventResource(
+            $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members')
+        );
     }
 
     public function publish(Event $event, TransitionEventStatusService $service): EventResource|JsonResponse
@@ -176,7 +180,9 @@ class EventController extends Controller
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        $payload = (new EventResource($event->loadCount('members')))->resolve();
+        $payload = (new EventResource(
+            $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members')
+        ))->resolve();
         $message = filled($event->description)
             ? __('events.published')
             : __('events.published_missing_description');
@@ -198,7 +204,9 @@ class EventController extends Controller
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return new EventResource($event->loadCount('members'));
+        return new EventResource(
+            $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members')
+        );
     }
 
     public function complete(Event $event, TransitionEventStatusService $service): EventResource|JsonResponse
@@ -211,6 +219,8 @@ class EventController extends Controller
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return new EventResource($event->loadCount('members'));
+        return new EventResource(
+            $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members')
+        );
     }
 }

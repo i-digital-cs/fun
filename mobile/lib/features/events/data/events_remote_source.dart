@@ -54,7 +54,14 @@ class EventsRemoteSource {
         '/events/$id',
       );
       final body = response.data!;
-      final data = body['data'] as Map<String, dynamic>? ?? body;
+      final rawData = body['data'];
+      final data = Map<String, dynamic>.from(
+        rawData is Map ? rawData : body,
+      );
+      // Show payload also mirrors creator at the top level — keep either.
+      if (data['creator'] == null && body['creator'] is Map) {
+        data['creator'] = Map<String, dynamic>.from(body['creator'] as Map);
+      }
       final event = parseEvent(data);
       final myRatingJson = body['my_rating'];
       final creatorJson = body['creator_rating'];
@@ -74,10 +81,10 @@ class EventsRemoteSource {
               'not_available',
           readyForRatings: body['ready_for_ratings'] as bool? ?? false,
           canRate: body['can_rate'] as bool? ?? false,
-          myRating: myRatingJson is Map<String, dynamic>
-              ? _parseRating(myRatingJson)
+          myRating: myRatingJson is Map
+              ? _parseRating(Map<String, dynamic>.from(myRatingJson))
               : null,
-          creatorRating: creatorJson is Map<String, dynamic>
+          creatorRating: creatorJson is Map
               ? CreatorRating(
                   average: (creatorJson['average'] as num?)?.toDouble(),
                   count: creatorJson['count'] as int? ?? 0,

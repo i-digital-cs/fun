@@ -251,7 +251,7 @@ Flutter: overlay/inline Searching animation on query change; hide when results a
 |--|--|
 | **Route** | `events.show` → `/events/{id}/{slug}` (bare `/events/{id}` **301** to canonical). Member actions: `/events/{id}/{slug}/edit|chat|ticket|members|requests|…` via `event_route()` |
 | **Blade** | `events/show.blade.php` |
-| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator`, `join_action`, `creator_rating`, `slug`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant) |
+| **API** | `GET /api/events/{id}` (+ Bearer), join/leave, ratings; response includes `creator` (also mirrored at top-level), `join_action`, `creator_rating`, `slug`, `image_url` (card/optimized), `image_url_detail` (larger OG/detail variant). Create/update/publish/`GET /api/my-events` also eager-load `creator` so the Host row is never missing after mutations. |
 | **Web SEO** | Public published/completed pages emit meta description, Open Graph, Twitter card, canonical, **Event** + **BreadcrumbList** JSON-LD (`App\Support\Seo::forEvent`). Draft/cancelled remain `noindex`. Share previews use detail `coverUrl()`. |
 
 **Layout hierarchy (same as web):**
@@ -395,7 +395,7 @@ Same fields as create. Keep existing image if not replaced.
 | **Blade** | `events/mine.blade.php` |
 | **API** | `GET /api/my-events` |
 
-**Must:** list **Hosting** (`created_by = me`) and **Joined** (member, not owner) separately in a responsive **grid** (same compact card language as home participations: accent bar, relationship badge, date/members/city, **status pill**, ticket + view actions); pending section; empty state + Create / Discover CTAs; tap → detail; **View ticket** action per card (§2.4a). API `GET /api/my-events` includes `join_action` (`owned` | `joined` | …); optional `?section=hosting|joined`. Home participations API includes `creator` when loaded.
+**Must:** list **Hosting** (`created_by = me`) and **Joined** (member, not owner) separately in a responsive **grid** (same compact card language as home participations: accent bar, relationship badge, date/members/city, **status pill**, ticket + view actions); pending section; empty state + Create / Discover CTAs; tap → detail; **View ticket** action per card (§2.4a). API `GET /api/my-events` includes `join_action` (`owned` | `joined` | …) and eager-loads `creator`; optional `?section=hosting|joined`. Home participations API includes `creator` when loaded.
 
 ---
 

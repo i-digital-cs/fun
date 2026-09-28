@@ -204,7 +204,9 @@ class EventRatingTest extends TestCase
             ->assertJsonPath('can_rate', true)
             ->assertJsonPath('creator_rating.average', 4)
             ->assertJsonPath('creator_rating.count', 1)
-            ->assertJsonPath('my_rating.stars', 4);
+            ->assertJsonPath('my_rating.stars', 4)
+            ->assertJsonPath('data.creator.id', $owner->id)
+            ->assertJsonPath('creator.id', $owner->id);
     }
 
     public function test_web_show_renders_rating_form_for_eligible_member(): void
