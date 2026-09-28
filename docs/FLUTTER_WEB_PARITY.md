@@ -752,6 +752,62 @@ Readable guidelines page; linked from dashboard safety card.
 
 ---
 
+### 2.17a Privacy Policy `/privacy-policy`
+
+| | |
+|--|--|
+| **Blade** | `legal/privacy.blade.php` |
+| **Flutter** | `PrivacyPolicyPage` · route `/privacy-policy` |
+| **API** | Static copy (EN/AR l10n); no authenticated API |
+
+Full public Privacy Policy. Linked from community footer + Flutter Profile. SEO + sitemap.
+
+---
+
+### 2.17b Terms of Service `/terms`
+
+| | |
+|--|--|
+| **Blade** | `legal/document.blade.php` via `TermsOfServiceController` |
+| **Flutter** | `LegalWebPage` → opens canonical web Terms |
+
+---
+
+### 2.17c Support `/support`
+
+| | |
+|--|--|
+| **Blade** | `legal/support.blade.php` |
+| **Flutter** | `LegalWebPage` → opens canonical web Support |
+
+---
+
+### 2.17d Account deletion
+
+| | |
+|--|--|
+| **Help URL** | `/account-deletion` (public, store listing) |
+| **Web** | `/settings/delete-account` (verified email; outside `account.active`) |
+| **API** | `POST /api/account/delete`, `POST /api/account/delete/cancel` |
+| **Flutter** | `/settings/delete-account` |
+| **Job** | `account:purge-deletions` daily (30-day grace) |
+
+Confirm with password or `provider_reauth=confirmed` for social-only accounts. See [`STORE_COMPLIANCE.md`](STORE_COMPLIANCE.md).
+
+---
+
+### 2.17e Sign in with Apple
+
+| | |
+|--|--|
+| **API** | `POST /api/auth/apple` `{ id_token, name?, locale? }` |
+| **Flutter** | iOS only · `sign_in_with_apple` beside Google |
+| **DB** | `users.apple_id` |
+
+Configure `APPLE_CLIENT_IDS` (bundle / Services ID audiences).
+
+---
+
 ### 2.18 Report `/report`
 
 | | |
@@ -1227,7 +1283,12 @@ Use web admin at `https://www.funnity.com/admin`.
 | `/settings/location` | `/settings/location` |
 | `/blocks` | `/settings/blocks` |
 | `/report` | `/report` |
-| `/safety` | `/safety` |
+| `/safety` | `/safety/guidelines` |
+| `/privacy-policy` | `/privacy-policy` |
+| `/terms` | `/terms` |
+| `/support` | `/support` |
+| `/account-deletion` | `/account-deletion` |
+| `/settings/delete-account` | `/settings/delete-account` |
 | `/deactivated` | `/account/deactivated` |
 
 ---
@@ -1264,12 +1325,13 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 10. **Chat** — inbox `/chats` + thread list/post; web + Flutter share layout (Recent/Unread, cards, avatars, indigo mine bubbles, in-bubble time); live `events.{id}.chat` + user-channel toasts (Pusher/Reverb); Flutter poll fallback; avatars → public profile; View Event CTA
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link / place autocomplete without Google credentials (web+Flutter+API); open → Google Maps  
-13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety; Flutter unchanged (API IDs).  
+13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety · **privacy policy**; Flutter mirrors privacy as in-app static copy (`/privacy-policy`).  
 14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
 15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; **all member web actions** use `/events/{id}/{slug}/…` (edit, chat, ticket, members, requests, join, …) via `event_route()` / `event_show_url()`. Legacy `/events/{id}/edit|chat|…` **301** to the slug form. API stays `/api/events/{id}/…` (Flutter GoRouter can stay `/events/:id`).  
 16. **Publish SEO soft-warn** — `POST /api/events/{id}/publish` may include `seo_warning: true` + `message` when description is empty (still publishes). Flutter can toast the message; non-blocking.
 17. **Notifications** — join request/accept + **message like/dislike** → internal inbox (+ email on request; Pusher/FCM-while-open sweet toast + badge). Chat messages → FCM push (tray when backgrounded) + in-app toast when open. Flutter: inbox screen + FCM token register (§2.8a).
 18. **Mixed AR/EN titles (BiDi)** — web `bidi_dir` + `.bidi-text` isolate; Flutter `bidiTextDirection` on cards, detail, search, chats, now-playing, participations. Prefer Arabic-first titles when seeding mixed content.
+19. **Store compliance (Play + App Store)** — master checklist [`docs/STORE_COMPLIANCE.md`](STORE_COMPLIANCE.md): Terms `/terms`, Support `/support`, account deletion (API + web + Flutter + `/account-deletion` help), Sign in with Apple (iOS + `POST /api/auth/apple`), iOS usage strings, Profile/auth legal links, console Data Safety / App Privacy answers.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 
@@ -1298,6 +1360,11 @@ Base: `https://www.funnity.com`
 | Location | `/settings/location` |
 | Identity | `/identity` |
 | Safety | `/safety` |
+| Privacy Policy | `/privacy-policy` |
+| Terms | `/terms` |
+| Support | `/support` |
+| Account deletion help | `/account-deletion` |
+| Delete account (signed in) | `/settings/delete-account` |
 | Blocks | `/settings/blocks` |
 | Report | `/report` |
 | Robots | `/robots.txt` |

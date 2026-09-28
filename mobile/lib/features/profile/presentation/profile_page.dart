@@ -218,6 +218,26 @@ class ProfilePage extends ConsumerWidget {
             onTap: () => context.push('/safety/guidelines'),
           ),
           ProfileLinkTile(
+            icon: Icons.privacy_tip_outlined,
+            title: l10n.privacyPolicy,
+            onTap: () => context.push('/privacy-policy'),
+          ),
+          ProfileLinkTile(
+            icon: Icons.description_outlined,
+            title: l10n.termsOfService,
+            onTap: () => context.push('/terms'),
+          ),
+          ProfileLinkTile(
+            icon: Icons.support_agent_outlined,
+            title: l10n.support,
+            onTap: () => context.push('/support'),
+          ),
+          ProfileLinkTile(
+            icon: Icons.delete_forever_outlined,
+            title: l10n.deleteAccount,
+            onTap: () => context.push('/settings/delete-account'),
+          ),
+          ProfileLinkTile(
             icon: Icons.flag_outlined,
             title: l10n.report,
             onTap: () => context.push('/report'),

@@ -472,5 +472,26 @@
   "likedBy": "Liked by",
   "dislikedBy": "Disliked by",
   "noLikesYet": "No likes yet.",
-  "noDislikesYet": "No dislikes yet."
+  "noDislikesYet": "No dislikes yet.",
+  "privacyPolicy": "Privacy Policy",
+  "termsOfService": "Terms of Service",
+  "support": "Support",
+  "openFullDocument": "Open full document",
+  "termsBlurb": "Read the full Terms of Service covering accounts, meetups, acceptable use, and liability.",
+  "supportBlurb": "Get help with your account, safety tools, or privacy questions.",
+  "deleteAccount": "Delete account",
+  "deleteAccountIntro": "This schedules permanent deletion after {days} days. You can cancel by signing in again during that window.",
+  "@deleteAccountIntro": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "confirmDeleteAccount": "Schedule deletion",
+  "cancelDeletion": "Cancel deletion",
+  "deletionCancelled": "Account deletion cancelled.",
+  "deletionPendingBanner": "Deletion is scheduled. Cancel below to keep your account.",
+  "deletionReauthHint": "Confirm to delete. Social-login accounts are marked confirmed after you continue.",
+  "accountDeletionHelp": "How to delete your account",
+  "authLegalConsent": "By continuing, you agree to our Terms and Privacy Policy.",
+  "continueWithApple": "Continue with Apple"
 }

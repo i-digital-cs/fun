@@ -311,6 +311,29 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   ),
                                   label: Text(l10n.continueWithGoogle),
                                 ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  l10n.authLegalConsent,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () => context.push('/terms'),
+                                      child: Text(l10n.termsOfService),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          context.push('/privacy-policy'),
+                                      child: Text(l10n.privacyPolicy),
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 8),
                                 TextButton(
                                   onPressed: () => context.go('/discover'),

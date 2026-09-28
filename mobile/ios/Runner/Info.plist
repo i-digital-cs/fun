@@ -49,6 +49,16 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Funnity needs camera access so you can take a selfie and photos for identity verification and your profile.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Funnity needs photo library access so you can upload identity documents, profile photos, and event covers.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Funnity may save images you choose when sharing event media.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

@@ -400,5 +400,26 @@
   "likedBy": "أعجب بها",
   "dislikedBy": "لم يعجب بها",
   "noLikesYet": "لا إعجابات بعد.",
-  "noDislikesYet": "لا عدم إعجاب بعد."
+  "noDislikesYet": "لا عدم إعجاب بعد.",
+  "privacyPolicy": "سياسة الخصوصية",
+  "termsOfService": "شروط الخدمة",
+  "support": "الدعم",
+  "openFullDocument": "فتح المستند الكامل",
+  "termsBlurb": "اقرأ شروط الخدمة الكاملة حول الحسابات واللقاءات والاستخدام المقبول والمسؤولية.",
+  "supportBlurb": "احصل على مساعدة بخصوص حسابك أو أدوات السلامة أو أسئلة الخصوصية.",
+  "deleteAccount": "حذف الحساب",
+  "deleteAccountIntro": "يؤدي هذا إلى جدولة الحذف النهائي بعد {days} يومًا. يمكنك الإلغاء بتسجيل الدخول مجددًا خلال تلك الفترة.",
+  "@deleteAccountIntro": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "confirmDeleteAccount": "جدولة الحذف",
+  "cancelDeletion": "إلغاء الحذف",
+  "deletionCancelled": "تم إلغاء حذف الحساب.",
+  "deletionPendingBanner": "الحذف مجدول. ألغِ أدناه للاحتفاظ بحسابك.",
+  "deletionReauthHint": "أكّد الحذف. حسابات الدخول الاجتماعي تُؤكَّد عند المتابعة.",
+  "accountDeletionHelp": "كيفية حذف حسابك",
+  "authLegalConsent": "بالمتابعة، فإنك توافق على الشروط وسياسة الخصوصية.",
+  "continueWithApple": "المتابعة باستخدام Apple"
 }

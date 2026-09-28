@@ -12,6 +12,19 @@ abstract class AuthRepository {
     String? locale,
   });
 
+  Future<Result<User>> loginWithApple({
+    required String idToken,
+    String? name,
+    String? locale,
+  });
+
+  Future<Result<void>> requestAccountDeletion({
+    String? password,
+    bool providerReauth = false,
+  });
+
+  Future<Result<void>> cancelAccountDeletion();
+
   Future<Result<User>> register({
     required String name,
     required String email,

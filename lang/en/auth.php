@@ -11,6 +11,8 @@ return [
     'google_not_configured' => 'Google Sign-In is not configured on the server.',
     'google_invalid_token' => 'Google Sign-In token is invalid or expired.',
     'google_email_unverified' => 'Your Google account email is not verified.',
+    'apple_not_configured' => 'Sign in with Apple is not configured on the server.',
+    'apple_invalid_token' => 'Apple Sign-In token is invalid or expired.',
     'deactivated' => 'Your account has been deactivated.',
     'pending_documents' => 'Please upload your identity documents to continue.',
     'email_not_verified' => 'Please verify your email with the code we sent you.',

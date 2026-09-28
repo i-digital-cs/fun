@@ -131,5 +131,15 @@
                 </a>
             </div>
         </form>
+
+        <section class="mt-8 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">{{ __('privacy.footer_link') }} · {{ __('terms.footer_link') }}</h2>
+            <div class="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
+                <a href="{{ route('legal.privacy') }}" class="text-indigo-600 hover:underline">{{ __('privacy.footer_link') }}</a>
+                <a href="{{ route('legal.terms') }}" class="text-indigo-600 hover:underline">{{ __('terms.footer_link') }}</a>
+                <a href="{{ route('legal.support') }}" class="text-indigo-600 hover:underline">{{ __('support.footer_link') }}</a>
+                <a href="{{ route('settings.account.delete') }}" class="text-rose-600 hover:underline">{{ __('account.delete_title') }}</a>
+            </div>
+        </section>
     </div>
 @endsection

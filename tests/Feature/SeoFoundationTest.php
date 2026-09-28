@@ -68,6 +68,15 @@ class SeoFoundationTest extends TestCase
             ->assertSee(__('safety.guidelines_intro'), false);
     }
 
+    public function test_privacy_policy_page_is_indexable(): void
+    {
+        $this->get(route('legal.privacy'))
+            ->assertOk()
+            ->assertSee('name="robots" content="index,follow"', false)
+            ->assertSee(__('privacy.title'), false)
+            ->assertSee(__('privacy.meta_description'), false);
+    }
+
     public function test_login_is_noindex(): void
     {
         $this->get(route('login'))
@@ -110,6 +119,7 @@ class SeoFoundationTest extends TestCase
         $response->assertSee(route('home'), false);
         $response->assertSee(route('events.index'), false);
         $response->assertSee(route('safety.guidelines'), false);
+        $response->assertSee(route('legal.privacy'), false);
         $response->assertSee(event_show_url($event), false);
         $response->assertDontSee('Sitemap Event', false);
     }

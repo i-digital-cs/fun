@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1227,4 +1226,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noDislikesYet => 'لا عدم إعجاب بعد.';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get termsOfService => 'شروط الخدمة';
+
+  @override
+  String get support => 'الدعم';
+
+  @override
+  String get openFullDocument => 'فتح المستند الكامل';
+
+  @override
+  String get termsBlurb =>
+      'اقرأ شروط الخدمة الكاملة حول الحسابات واللقاءات والاستخدام المقبول والمسؤولية.';
+
+  @override
+  String get supportBlurb =>
+      'احصل على مساعدة بخصوص حسابك أو أدوات السلامة أو أسئلة الخصوصية.';
+
+  @override
+  String get deleteAccount => 'حذف الحساب';
+
+  @override
+  String deleteAccountIntro(int days) {
+    return 'يؤدي هذا إلى جدولة الحذف النهائي بعد $days يومًا. يمكنك الإلغاء بتسجيل الدخول مجددًا خلال تلك الفترة.';
+  }
+
+  @override
+  String get confirmDeleteAccount => 'جدولة الحذف';
+
+  @override
+  String get cancelDeletion => 'إلغاء الحذف';
+
+  @override
+  String get deletionCancelled => 'تم إلغاء حذف الحساب.';
+
+  @override
+  String get deletionPendingBanner =>
+      'الحذف مجدول. ألغِ أدناه للاحتفاظ بحسابك.';
+
+  @override
+  String get deletionReauthHint =>
+      'أكّد الحذف. حسابات الدخول الاجتماعي تُؤكَّد عند المتابعة.';
+
+  @override
+  String get accountDeletionHelp => 'كيفية حذف حسابك';
+
+  @override
+  String get authLegalConsent =>
+      'بالمتابعة، فإنك توافق على الشروط وسياسة الخصوصية.';
+
+  @override
+  String get continueWithApple => 'المتابعة باستخدام Apple';
 }

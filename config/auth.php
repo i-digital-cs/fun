@@ -114,4 +114,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Account deletion grace period (days)
+    |--------------------------------------------------------------------------
+    |
+    | After a user requests deletion, they may cancel within this many days.
+    | The scheduled purge then anonymizes overdue accounts.
+    |
+    */
+
+    'account_deletion_grace_days' => (int) env('ACCOUNT_DELETION_GRACE_DAYS', 30),
+
 ];

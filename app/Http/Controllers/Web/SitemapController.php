@@ -32,6 +32,30 @@ class SitemapController extends Controller
                     'priority' => '0.4',
                     'lastmod' => now()->toAtomString(),
                 ],
+                [
+                    'loc' => route('legal.privacy'),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.4',
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('legal.terms'),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.4',
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('legal.support'),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.3',
+                    'lastmod' => now()->toAtomString(),
+                ],
+                [
+                    'loc' => route('legal.account-deletion'),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.5',
+                    'lastmod' => now()->toAtomString(),
+                ],
             ];
 
             Event::query()

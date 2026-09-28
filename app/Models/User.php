@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'google_id',
+        'apple_id',
         'locale',
         'sex',
         'city_id',
@@ -43,6 +44,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'google_id',
+        'apple_id',
     ];
 
     /**
@@ -57,6 +59,7 @@ class User extends Authenticatable
             'platform_role' => PlatformRole::class,
             'sex' => UserSex::class,
             'deactivated_at' => 'datetime',
+            'deletion_requested_at' => 'datetime',
             'distance_km' => 'integer',
         ];
     }
@@ -71,35 +74,50 @@ class User extends Authenticatable
         return filled($this->google_id);
     }
 
+    public function hasAppleLogin(): bool
+    {
+        return filled($this->apple_id);
+    }
+
     public function hasPasswordLogin(): bool
     {
         return $this->password !== null && $this->password !== '';
     }
 
+    public function hasPendingDeletion(): bool
+    {
+        return $this->deletion_requested_at !== null;
+    }
+
     /**
-     * Admin label for how this account can sign in: google | password | both.
+     * Admin label for how this account can sign in: google | apple | password | combinations.
      */
     public function authMethod(): string
     {
         $google = $this->hasGoogleLogin();
+        $apple = $this->hasAppleLogin();
         $password = $this->hasPasswordLogin();
-
-        if ($google && $password) {
-            return 'both';
-        }
-
+        $parts = [];
         if ($google) {
-            return 'google';
+            $parts[] = 'google';
+        }
+        if ($apple) {
+            $parts[] = 'apple';
+        }
+        if ($password) {
+            $parts[] = 'password';
         }
 
-        return 'password';
+        return $parts === [] ? 'password' : implode('+', $parts);
     }
 
     public function authMethodLabel(): string
     {
         return match ($this->authMethod()) {
             'google' => __('admin.auth_method_google'),
-            'both' => __('admin.auth_method_both'),
+            'apple' => __('admin.auth_method_apple'),
+            'google+apple' => __('admin.auth_method_social'),
+            'google+password', 'apple+password', 'google+apple+password', 'both' => __('admin.auth_method_both'),
             default => __('admin.auth_method_password'),
         };
     }

@@ -22,6 +22,7 @@ class User extends Equatable {
     this.needsSex = false,
     this.canParticipateFlag,
     this.hasPassword = true,
+    this.deletionRequestedAt,
   });
 
   final int id;
@@ -48,12 +49,16 @@ class User extends Equatable {
   /// When non-null, API `can_participate` wins; else derived from status.
   final bool? canParticipateFlag;
   final bool hasPassword;
+  final DateTime? deletionRequestedAt;
+
+  bool get hasPendingDeletion => deletionRequestedAt != null;
 
   factory User.fromJson(Map<String, dynamic> json) {
     final city = json['city'];
     final emailVerified =
         json['email_verified'] as bool? ?? (json['email_verified_at'] != null);
     final sex = json['sex'] as String?;
+    final deletionRaw = json['deletion_requested_at'] as String?;
     return User(
       id: json['id'] as int,
       publicId: json['public_id'] as String?,
@@ -78,6 +83,9 @@ class User extends Equatable {
       needsSex: json['needs_sex'] as bool? ?? (sex == null || sex.isEmpty),
       canParticipateFlag: json['can_participate'] as bool?,
       hasPassword: json['has_password'] as bool? ?? true,
+      deletionRequestedAt: deletionRaw != null
+          ? DateTime.tryParse(deletionRaw)
+          : null,
     );
   }
 
@@ -130,6 +138,8 @@ class User extends Equatable {
     bool? needsSex,
     bool? canParticipateFlag,
     bool? hasPassword,
+    DateTime? deletionRequestedAt,
+    bool clearDeletionRequestedAt = false,
     bool clearProfileImage = false,
     bool clearSex = false,
   }) {
@@ -159,6 +169,9 @@ class User extends Equatable {
       needsSex: needsSex ?? this.needsSex,
       canParticipateFlag: canParticipateFlag ?? this.canParticipateFlag,
       hasPassword: hasPassword ?? this.hasPassword,
+      deletionRequestedAt: clearDeletionRequestedAt
+          ? null
+          : (deletionRequestedAt ?? this.deletionRequestedAt),
     );
   }
 
@@ -184,5 +197,6 @@ class User extends Equatable {
     needsSex,
     canParticipateFlag,
     hasPassword,
+    deletionRequestedAt,
   ];
 }

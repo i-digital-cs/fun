@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1238,4 +1237,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noDislikesYet => 'No dislikes yet.';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String get openFullDocument => 'Open full document';
+
+  @override
+  String get termsBlurb =>
+      'Read the full Terms of Service covering accounts, meetups, acceptable use, and liability.';
+
+  @override
+  String get supportBlurb =>
+      'Get help with your account, safety tools, or privacy questions.';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String deleteAccountIntro(int days) {
+    return 'This schedules permanent deletion after $days days. You can cancel by signing in again during that window.';
+  }
+
+  @override
+  String get confirmDeleteAccount => 'Schedule deletion';
+
+  @override
+  String get cancelDeletion => 'Cancel deletion';
+
+  @override
+  String get deletionCancelled => 'Account deletion cancelled.';
+
+  @override
+  String get deletionPendingBanner =>
+      'Deletion is scheduled. Cancel below to keep your account.';
+
+  @override
+  String get deletionReauthHint =>
+      'Confirm to delete. Social-login accounts are marked confirmed after you continue.';
+
+  @override
+  String get accountDeletionHelp => 'How to delete your account';
+
+  @override
+  String get authLegalConsent =>
+      'By continuing, you agree to our Terms and Privacy Policy.';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
 }

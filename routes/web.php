@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AccountStatusController;
+use App\Http\Controllers\Web\Account\DeleteAccountController;
 use App\Http\Controllers\Web\Admin\AuditLogController;
 use App\Http\Controllers\Web\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Web\Admin\ChatModerationController;
@@ -26,6 +27,10 @@ use App\Http\Controllers\Web\Events\EventRatingController;
 use App\Http\Controllers\Web\Events\EventTicketController;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Identity\IdentityDocumentController;
+use App\Http\Controllers\Web\Legal\AccountDeletionHelpController;
+use App\Http\Controllers\Web\Legal\PrivacyPolicyController;
+use App\Http\Controllers\Web\Legal\SupportController;
+use App\Http\Controllers\Web\Legal\TermsOfServiceController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\Notifications\NotificationInboxController;
 use App\Http\Controllers\Web\RobotsController;
@@ -48,6 +53,10 @@ Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
 Route::get('/safety', SafetyGuidelinesController::class)->name('safety.guidelines');
+Route::get('/privacy-policy', PrivacyPolicyController::class)->name('legal.privacy');
+Route::get('/terms', TermsOfServiceController::class)->name('legal.terms');
+Route::get('/support', SupportController::class)->name('legal.support');
+Route::get('/account-deletion', AccountDeletionHelpController::class)->name('legal.account-deletion');
 
 Route::get('/search/suggest', SearchSuggestController::class)
     ->middleware('throttle:60,1')
@@ -113,6 +122,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/identity/documents/{document}', [IdentityDocumentController::class, 'showDocument'])
             ->whereNumber('document')
             ->name('identity.documents.show');
+
+        Route::get('/settings/delete-account', [DeleteAccountController::class, 'edit'])->name('settings.account.delete');
+        Route::delete('/settings/delete-account', [DeleteAccountController::class, 'destroy'])
+            ->middleware('throttle:6,1')
+            ->name('settings.account.delete.destroy');
+        Route::post('/settings/delete-account/cancel', [DeleteAccountController::class, 'cancel'])
+            ->middleware('throttle:6,1')
+            ->name('settings.account.delete.cancel');
 
         Route::middleware('account.active')->group(function () {
         Route::get('/settings/profile', [ProfileController::class, 'edit'])->name('settings.profile.edit');

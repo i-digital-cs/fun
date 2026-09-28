@@ -124,6 +124,49 @@ class AuthController extends StateNotifier<AuthState> {
     return null;
   }
 
+  Future<String?> loginWithApple({
+    required String idToken,
+    String? name,
+    String? locale,
+  }) async {
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .loginWithApple(idToken: idToken, name: name, locale: locale);
+    if (result.failure != null || result.data == null) {
+      return result.failure?.message;
+    }
+    state = Authenticated(result.data!);
+    return null;
+  }
+
+  Future<String?> requestAccountDeletion({
+    String? password,
+    bool providerReauth = false,
+  }) async {
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .requestAccountDeletion(
+          password: password,
+          providerReauth: providerReauth,
+        );
+    if (result.failure != null) {
+      return result.failure?.message;
+    }
+    await logout();
+    return null;
+  }
+
+  Future<String?> cancelAccountDeletion() async {
+    final result = await _ref
+        .read(authRepositoryProvider)
+        .cancelAccountDeletion();
+    if (result.failure != null) {
+      return result.failure?.message;
+    }
+    await refreshMe();
+    return null;
+  }
+
   Future<String?> register({
     required String name,
     required String email,

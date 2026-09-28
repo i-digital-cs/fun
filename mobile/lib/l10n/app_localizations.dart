@@ -2419,6 +2419,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No dislikes yet.'**
   String get noDislikesYet;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @support.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get support;
+
+  /// No description provided for @openFullDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full document'**
+  String get openFullDocument;
+
+  /// No description provided for @termsBlurb.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the full Terms of Service covering accounts, meetups, acceptable use, and liability.'**
+  String get termsBlurb;
+
+  /// No description provided for @supportBlurb.
+  ///
+  /// In en, this message translates to:
+  /// **'Get help with your account, safety tools, or privacy questions.'**
+  String get supportBlurb;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This schedules permanent deletion after {days} days. You can cancel by signing in again during that window.'**
+  String deleteAccountIntro(int days);
+
+  /// No description provided for @confirmDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule deletion'**
+  String get confirmDeleteAccount;
+
+  /// No description provided for @cancelDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel deletion'**
+  String get cancelDeletion;
+
+  /// No description provided for @deletionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion cancelled.'**
+  String get deletionCancelled;
+
+  /// No description provided for @deletionPendingBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletion is scheduled. Cancel below to keep your account.'**
+  String get deletionPendingBanner;
+
+  /// No description provided for @deletionReauthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to delete. Social-login accounts are marked confirmed after you continue.'**
+  String get deletionReauthHint;
+
+  /// No description provided for @accountDeletionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'How to delete your account'**
+  String get accountDeletionHelp;
+
+  /// No description provided for @authLegalConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to our Terms and Privacy Policy.'**
+  String get authLegalConsent;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
 }
 
 class _AppLocalizationsDelegate

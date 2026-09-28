@@ -330,4 +330,92 @@ class Seo
             robots: 'index,follow',
         );
     }
+
+    /**
+     * @return array{
+     *     title: ?string,
+     *     description: ?string,
+     *     image: ?string,
+     *     url: ?string,
+     *     type: string,
+     *     robots: string,
+     *     jsonLd: array<string, mixed>|null
+     * }
+     */
+    public static function forPrivacy(): array
+    {
+        return self::make(
+            title: __('privacy.title'),
+            description: __('privacy.meta_description'),
+            image: site_logo_url() ?: asset('logo.svg'),
+            url: route('legal.privacy'),
+            robots: 'index,follow',
+        );
+    }
+
+    /**
+     * @return array{
+     *     title: ?string,
+     *     description: ?string,
+     *     image: ?string,
+     *     url: ?string,
+     *     type: string,
+     *     robots: string,
+     *     jsonLd: array<string, mixed>|null
+     * }
+     */
+    public static function forTerms(): array
+    {
+        return self::make(
+            title: __('terms.title'),
+            description: __('terms.meta_description'),
+            image: site_logo_url() ?: asset('logo.svg'),
+            url: route('legal.terms'),
+            robots: 'index,follow',
+        );
+    }
+
+    /**
+     * @return array{
+     *     title: ?string,
+     *     description: ?string,
+     *     image: ?string,
+     *     url: ?string,
+     *     type: string,
+     *     robots: string,
+     *     jsonLd: array<string, mixed>|null
+     * }
+     */
+    public static function forSupport(): array
+    {
+        return self::make(
+            title: __('support.title'),
+            description: __('support.meta_description'),
+            image: site_logo_url() ?: asset('logo.svg'),
+            url: route('legal.support'),
+            robots: 'index,follow',
+        );
+    }
+
+    /**
+     * @return array{
+     *     title: ?string,
+     *     description: ?string,
+     *     image: ?string,
+     *     url: ?string,
+     *     type: string,
+     *     robots: string,
+     *     jsonLd: array<string, mixed>|null
+     * }
+     */
+    public static function forAccountDeletion(): array
+    {
+        return self::make(
+            title: __('account_deletion.title'),
+            description: __('account_deletion.meta_description'),
+            image: site_logo_url() ?: asset('logo.svg'),
+            url: route('legal.account-deletion'),
+            robots: 'index,follow',
+        );
+    }
 }

@@ -48,6 +48,14 @@ return [
         ])),
     ],
 
+    'apple' => [
+        // Bundle ID and/or Services ID audiences accepted on Sign in with Apple id_token `aud`.
+        'client_ids' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('APPLE_CLIENT_IDS', env('APPLE_CLIENT_ID', '')))
+        ))),
+    ],
+
     'weather' => [
         // Open-Meteo — free, no API key required: https://open-meteo.com/
         'driver' => env('WEATHER_DRIVER', 'open_meteo'),

@@ -11,6 +11,8 @@ return [
     'google_not_configured' => 'تسجيل الدخول عبر Google غير مُعد على الخادم.',
     'google_invalid_token' => 'رمز Google غير صالح أو منتهٍ.',
     'google_email_unverified' => 'بريد Google غير مُتحقق منه.',
+    'apple_not_configured' => 'تسجيل الدخول عبر Apple غير مضبوط على الخادم.',
+    'apple_invalid_token' => 'رمز تسجيل الدخول عبر Apple غير صالح أو منتهٍ.',
     'deactivated' => 'تم إيقاف حسابك.',
     'pending_documents' => 'يرجى رفع مستندات الهوية للمتابعة.',
     'email_not_verified' => 'يرجى التحقق من بريدك باستخدام الرمز الذي أرسلناه.',

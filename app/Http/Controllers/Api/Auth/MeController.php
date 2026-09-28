@@ -26,6 +26,7 @@ class MeController extends Controller
             'distance_km' => $user->distance_km,
             'profile_image_path' => $user->profile_image_path,
             'has_password' => filled($user->getAuthPassword()),
+            'deletion_requested_at' => $user->deletion_requested_at?->toIso8601String(),
             'can_participate' => $user->canParticipate(),
             'email_verified' => $user->email_verified_at !== null,
             'email_verified_at' => $user->email_verified_at?->toIso8601String(),

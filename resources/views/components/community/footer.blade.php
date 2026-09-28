@@ -34,6 +34,9 @@
                 </svg>
                 {{ __('home.safety_guidelines') }}
             </a>
+            <a href="{{ route('legal.privacy') }}" class="transition hover:text-indigo-600">{{ __('privacy.footer_link') }}</a>
+            <a href="{{ route('legal.terms') }}" class="transition hover:text-indigo-600">{{ __('terms.footer_link') }}</a>
+            <a href="{{ route('legal.support') }}" class="transition hover:text-indigo-600">{{ __('support.footer_link') }}</a>
             <span class="text-slate-300">|</span>
             <form method="POST" action="{{ route('locale.update') }}" class="inline-flex">
                 @csrf

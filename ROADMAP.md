@@ -20,7 +20,16 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Current focus
 
-**Flutter mobile client (`mobile/`) — F2 + F3 shipped.** Continue with F4 (perf, flavors, release, tests).
+**Store compliance (Play + App Store + web) — Task S1.** See [`docs/STORE_COMPLIANCE.md`](docs/STORE_COMPLIANCE.md). Also continue F4 (perf, flavors, release, tests).
+
+---
+
+## Store compliance
+
+### Task S1 — Google Play + App Store + web mandatory surfaces
+- **Status:** `done`
+- **Completed:** 2026-09-28
+- **Notes:** `docs/STORE_COMPLIANCE.md`; Terms/Support/account-deletion help; delete account API+web+Flutter (30-day grace + purge job); Sign in with Apple API + iOS UI; Info.plist usage strings + entitlements; Profile/auth legal links; privacy copy updates; Data Safety / App Privacy answers in compliance doc.
 
 ---
 

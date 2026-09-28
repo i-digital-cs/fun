@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\Admin\EventModerationController as ApiEventModerati
 use App\Http\Controllers\Api\Admin\ReportModerationController as ApiReportModerationController;
 use App\Http\Controllers\Api\Admin\SiteSettingsController as ApiSiteSettingsController;
 use App\Http\Controllers\Api\Admin\UserModerationController as ApiUserModerationController;
+use App\Http\Controllers\Api\Account\AccountDeletionController as ApiAccountDeletionController;
+use App\Http\Controllers\Api\Auth\AppleAuthController as ApiAppleAuthController;
 use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController as ApiGoogleAuthController;
 use App\Http\Controllers\Api\Auth\LoginController;
@@ -56,6 +58,7 @@ Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [RegisterController::class, 'store']);
     Route::post('/login', [LoginController::class, 'store']);
     Route::post('/auth/google', [ApiGoogleAuthController::class, 'store']);
+    Route::post('/auth/apple', [ApiAppleAuthController::class, 'store']);
 });
 
 Route::middleware('throttle:auth-codes')->group(function () {
@@ -88,6 +91,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/settings/profile', [ApiProfileController::class, 'update'])
         ->middleware('throttle:uploads');
+
+    Route::post('/account/delete', [ApiAccountDeletionController::class, 'store'])
+        ->middleware('throttle:6,1');
+    Route::post('/account/delete/cancel', [ApiAccountDeletionController::class, 'destroy'])
+        ->middleware('throttle:6,1');
 
     Route::get('/home/participations', HomeParticipationsController::class);
 

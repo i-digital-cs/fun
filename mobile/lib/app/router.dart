@@ -27,6 +27,9 @@ import 'package:fun_mobile/features/profile/presentation/profile_page.dart';
 import 'package:fun_mobile/features/profile/presentation/public_profile_page.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
+import 'package:fun_mobile/features/account/presentation/delete_account_page.dart';
+import 'package:fun_mobile/features/legal/presentation/legal_web_page.dart';
+import 'package:fun_mobile/features/legal/presentation/privacy_policy_page.dart';
 import 'package:fun_mobile/features/safety/presentation/blocks_page.dart';
 import 'package:fun_mobile/features/safety/presentation/report_page.dart';
 import 'package:fun_mobile/features/safety/presentation/safety_guidelines_page.dart';
@@ -54,6 +57,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isGuestBrowse =
           loc == '/discover' ||
           loc == '/safety/guidelines' ||
+          loc == '/privacy-policy' ||
+          loc == '/terms' ||
+          loc == '/support' ||
+          loc == '/account-deletion' ||
           loc.startsWith('/u/') ||
           _isGuestEventShow(loc);
 
@@ -270,6 +277,52 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/safety/guidelines',
         parentNavigatorKey: _rootKey,
         builder: (context, state) => const SafetyGuidelinesPage(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const PrivacyPolicyPage(),
+      ),
+      GoRoute(
+        path: '/terms',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) {
+          final l10n = AppLocalizations.of(context);
+          return LegalWebPage(
+            title: l10n.termsOfService,
+            path: '/terms',
+            blurb: l10n.termsBlurb,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/support',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) {
+          final l10n = AppLocalizations.of(context);
+          return LegalWebPage(
+            title: l10n.support,
+            path: '/support',
+            blurb: l10n.supportBlurb,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/account-deletion',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) {
+          final l10n = AppLocalizations.of(context);
+          return LegalWebPage(
+            title: l10n.accountDeletionHelp,
+            path: '/account-deletion',
+            blurb: l10n.deleteAccountIntro(30),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/settings/delete-account',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const DeleteAccountPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

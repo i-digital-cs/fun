@@ -42,11 +42,58 @@ class AuthRemoteSource {
         data: {
           if (idToken != null && idToken.isNotEmpty) 'id_token': idToken,
           if (accessToken != null && accessToken.isNotEmpty)
-            'access_token': accessToken,
+              'access_token': accessToken,
           if (locale != null && locale.isNotEmpty) 'locale': locale,
         },
       );
       return (failure: null, data: _parseSession(response.data!));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, AuthSessionDto? data})> loginWithApple({
+    required String idToken,
+    String? name,
+    String? locale,
+  }) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/auth/apple',
+        data: {
+          'id_token': idToken,
+          if (name != null && name.isNotEmpty) 'name': name,
+          if (locale != null && locale.isNotEmpty) 'locale': locale,
+        },
+      );
+      return (failure: null, data: _parseSession(response.data!));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> requestAccountDeletion({
+    String? password,
+    bool providerReauth = false,
+  }) async {
+    try {
+      await _client.dio.post<void>(
+        '/account/delete',
+        data: {
+          if (password != null && password.isNotEmpty) 'password': password,
+          if (providerReauth) 'provider_reauth': 'confirmed',
+        },
+      );
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> cancelAccountDeletion() async {
+    try {
+      await _client.dio.post<void>('/account/delete/cancel');
+      return (failure: null, data: null);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }

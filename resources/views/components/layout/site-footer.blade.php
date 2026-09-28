@@ -17,6 +17,15 @@
                 </svg>
                 {{ __('home.safety_guidelines') }}
             </a>
+            <a href="{{ route('legal.privacy') }}" class="inline-flex items-center gap-1 text-muted no-underline hover:text-text">
+                {{ __('privacy.footer_link') }}
+            </a>
+            <a href="{{ route('legal.terms') }}" class="inline-flex items-center gap-1 text-muted no-underline hover:text-text">
+                {{ __('terms.footer_link') }}
+            </a>
+            <a href="{{ route('legal.support') }}" class="inline-flex items-center gap-1 text-muted no-underline hover:text-text">
+                {{ __('support.footer_link') }}
+            </a>
             <a href="{{ route('safety.guidelines') }}" class="inline-flex items-center gap-1 text-muted no-underline hover:text-text">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14.5l-3.5-3.5 1.4-1.4L11 12.7l4.6-4.6 1.4 1.4L11 15.5z"/>

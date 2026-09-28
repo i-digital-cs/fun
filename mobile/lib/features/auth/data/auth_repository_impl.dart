@@ -46,6 +46,44 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<User>> loginWithApple({
+    required String idToken,
+    String? name,
+    String? locale,
+  }) async {
+    final result = await _remote.loginWithApple(
+      idToken: idToken,
+      name: name,
+      locale: locale,
+    );
+    if (result.failure != null) {
+      return (failure: result.failure, data: null);
+    }
+    await _tokenStorage.write(result.data!.token);
+    final me = await _remote.me();
+    if (me.data != null) {
+      return (failure: null, data: me.data);
+    }
+    return (failure: null, data: result.data!.user);
+  }
+
+  @override
+  Future<Result<void>> requestAccountDeletion({
+    String? password,
+    bool providerReauth = false,
+  }) {
+    return _remote.requestAccountDeletion(
+      password: password,
+      providerReauth: providerReauth,
+    );
+  }
+
+  @override
+  Future<Result<void>> cancelAccountDeletion() {
+    return _remote.cancelAccountDeletion();
+  }
+
+  @override
   Future<Result<User>> register({
     required String name,
     required String email,

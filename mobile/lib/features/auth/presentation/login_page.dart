@@ -6,12 +6,14 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
+import 'package:fun_mobile/features/auth/data/apple_sign_in_helper.dart';
 import 'package:fun_mobile/features/auth/data/google_sign_in_helper.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -56,6 +58,62 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _error = null;
       _submitting = true;
     });
+  }
+
+  Future<void> _apple() async {
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      final credential = await AppleSignInHelper.signIn();
+      if (credential == null) {
+        if (!mounted) return;
+        setState(() => _submitting = false);
+        return;
+      }
+      final idToken = credential.identityToken;
+      if (idToken == null || idToken.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _submitting = false;
+          _error = 'Apple Sign-In failed';
+        });
+        return;
+      }
+      final given = credential.givenName?.trim();
+      final family = credential.familyName?.trim();
+      final nameParts = [given, family].whereType<String>().where((s) => s.isNotEmpty);
+      final name = nameParts.isEmpty ? null : nameParts.join(' ');
+      final locale = ref.read(localeCodeProvider);
+      final err = await ref
+          .read(authControllerProvider.notifier)
+          .loginWithApple(idToken: idToken, name: name, locale: locale);
+      if (!mounted) return;
+      if (err != null) {
+        setState(() {
+          _submitting = false;
+          _error = err;
+        });
+        return;
+      }
+      setState(() => _submitting = false);
+      _goAfterAuth();
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        if (e.code != AuthorizationErrorCode.canceled) {
+          _error = e.message;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.toString();
+      });
+    }
   }
 
   Future<void> _google() async {
@@ -302,6 +360,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ),
                                   ),
                                   label: Text(l10n.continueWithGoogle),
+                                ),
+                                if (AppleSignInHelper.isSupported) ...[
+                                  const SizedBox(height: 10),
+                                  SignInWithAppleButton(
+                                    onPressed: () {
+                                      if (!_submitting) _apple();
+                                    },
+                                    style: SignInWithAppleButtonStyle.black,
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(12),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(
+                                      l10n.authLegalConsent,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          context.push('/terms'),
+                                      child: Text(l10n.termsOfService),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          context.push('/privacy-policy'),
+                                      child: Text(l10n.privacyPolicy),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 8),
                                 TextButton(
