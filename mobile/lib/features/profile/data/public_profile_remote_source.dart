@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/features/friends/domain/friendship_state.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile.dart';
 
 class PublicProfileRemoteSource {
@@ -52,6 +53,12 @@ class PublicProfileRemoteSource {
           ratingAverage: (stats['rating_average'] as num?)?.toDouble(),
           ratingCount: stats['rating_count'] as int? ?? 0,
           hostedEvents: hosted,
+          friendship: FriendshipState.fromJson(
+            data['friendship'] is Map
+                ? Map<String, dynamic>.from(data['friendship'] as Map)
+                : null,
+          ),
+          canMessage: data['can_message'] as bool? ?? false,
         ),
       );
     } on DioException catch (e) {

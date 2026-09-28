@@ -12,6 +12,7 @@ import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/chat/domain/chat_thread.dart';
+import 'package:fun_mobile/features/friends/domain/dm_models.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
 import 'package:fun_mobile/features/chat/presentation/widgets/chat_toast_banner.dart';
 import 'package:fun_mobile/features/notifications/data/push_notification_service.dart';
@@ -35,10 +36,25 @@ final chatsListProvider =
       return (data: result.data, unreadTotal: result.unreadTotal);
     });
 
+final dmsListProvider =
+    FutureProvider.autoDispose<({List<DmConversation> data, int unreadTotal})>(
+      (ref) async {
+        final result = await ref.watch(dmsRepositoryProvider).list();
+        if (result.failure != null) {
+          throw result.failure!;
+        }
+        return (data: result.data, unreadTotal: result.unreadTotal);
+      },
+    );
+
+enum _InboxTab { events, direct }
+
 enum _ChatFilter { recent, unread }
 
 class ChatsPage extends ConsumerStatefulWidget {
-  const ChatsPage({super.key});
+  const ChatsPage({super.key, this.openDirectTab = false});
+
+  final bool openDirectTab;
 
   @override
   ConsumerState<ChatsPage> createState() => _ChatsPageState();
@@ -48,6 +64,13 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
   final _search = TextEditingController();
   _ChatFilter _filter = _ChatFilter.recent;
   bool _showSearch = false;
+  late _InboxTab _inboxTab;
+
+  @override
+  void initState() {
+    super.initState();
+    _inboxTab = widget.openDirectTab ? _InboxTab.direct : _InboxTab.events;
+  }
 
   @override
   void dispose() {
@@ -79,6 +102,7 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final async = ref.watch(chatsListProvider);
+    final dmsAsync = ref.watch(dmsListProvider);
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -86,19 +110,86 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
         centerTitle: false,
         title: Text(l10n.chatsTitle),
         actions: [
-          IconButton(
-            tooltip: l10n.search,
-            icon: Icon(_showSearch ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                _showSearch = !_showSearch;
-                if (!_showSearch) _search.clear();
-              });
-            },
+          if (_inboxTab == _InboxTab.events)
+            IconButton(
+              tooltip: l10n.search,
+              icon: Icon(_showSearch ? Icons.close : Icons.search),
+              onPressed: () {
+                setState(() {
+                  _showSearch = !_showSearch;
+                  if (!_showSearch) _search.clear();
+                });
+              },
+            ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: _InboxTabBar(
+              eventsLabel: l10n.inboxEvents,
+              directLabel: l10n.inboxDirect,
+              eventsUnread: async.maybeWhen(
+                data: (p) => p.unreadTotal,
+                orElse: () => 0,
+              ),
+              directUnread: dmsAsync.maybeWhen(
+                data: (p) => p.unreadTotal,
+                orElse: () => 0,
+              ),
+              selected: _inboxTab,
+              onChanged: (tab) => setState(() {
+                _inboxTab = tab;
+                _showSearch = false;
+                _search.clear();
+              }),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _inboxTab == _InboxTab.direct
+                ? _DirectInboxBody(dmsAsync: dmsAsync)
+                : _EventsInboxBody(
+                    async: async,
+                    filter: _filter,
+                    showSearch: _showSearch,
+                    search: _search,
+                    onFilterChanged: (f) => setState(() => _filter = f),
+                    onSearchChanged: () => setState(() {}),
+                    filtered: _filtered,
+                  ),
           ),
         ],
       ),
-      body: async.when(
+    );
+  }
+}
+
+class _EventsInboxBody extends ConsumerWidget {
+  const _EventsInboxBody({
+    required this.async,
+    required this.filter,
+    required this.showSearch,
+    required this.search,
+    required this.onFilterChanged,
+    required this.onSearchChanged,
+    required this.filtered,
+  });
+
+  final AsyncValue<({List<ChatThread> data, int unreadTotal})> async;
+  final _ChatFilter filter;
+  final bool showSearch;
+  final TextEditingController search;
+  final ValueChanged<_ChatFilter> onFilterChanged;
+  final VoidCallback onSearchChanged;
+  final List<ChatThread> Function(List<ChatThread>) filtered;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    return async.when(
         loading: () => const Center(child: FunLoader()),
         error: (error, _) => Center(
           child: Padding(
@@ -138,67 +229,37 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
             );
           }
 
-          final rows = _filtered(payload.data);
-          final unreadTotal = payload.data
-              .where((c) => c.unreadCount > 0)
-              .fold<int>(0, (sum, c) => sum + c.unreadCount);
+          final rows = filtered(payload.data);
 
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: Column(
                   children: [
                     _ChatSegmentBar(
                       recentLabel: l10n.chatsFilterRecent,
                       unreadLabel: l10n.chatsFilterUnread,
-                      unreadCount: unreadTotal,
-                      selected: _filter,
-                      onChanged: (next) => setState(() => _filter = next),
+                      unreadCount: payload.unreadTotal,
+                      selected: filter,
+                      onChanged: onFilterChanged,
                     ),
-                    if (_showSearch) ...[
+                    if (showSearch) ...[
                       const SizedBox(height: 12),
                       TextField(
-                        controller: _search,
-                        onChanged: (_) => setState(() {}),
+                        controller: search,
+                        onChanged: (_) => onSearchChanged(),
                         autofocus: true,
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: l10n.searchChatsHint,
                           prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: _search.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  tooltip: l10n.search,
-                                  onPressed: () {
-                                    _search.clear();
-                                    setState(() {});
-                                  },
-                                  icon: const Icon(Icons.close_rounded),
-                                ),
                           filled: true,
                           fillColor: AppColors.surface,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: const BorderSide(
                               color: AppColors.borderSoft,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderSoft,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(
-                              color: AppColors.primary,
-                              width: 1.5,
                             ),
                           ),
                         ),
@@ -214,8 +275,8 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(
-                            _filter == _ChatFilter.unread &&
-                                    _search.text.trim().isEmpty
+                            filter == _ChatFilter.unread &&
+                                    search.text.trim().isEmpty
                                 ? l10n.chatsNoUnread
                                 : l10n.chatsNoResults,
                             textAlign: TextAlign.center,
@@ -245,6 +306,242 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
             ],
           );
         },
+    );
+  }
+}
+
+class _DirectInboxBody extends ConsumerWidget {
+  const _DirectInboxBody({required this.dmsAsync});
+
+  final AsyncValue<({List<DmConversation> data, int unreadTotal})> dmsAsync;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    return dmsAsync.when(
+      loading: () => const Center(child: FunLoader()),
+      error: (error, _) => Center(
+        child: Text(
+          error is Failure
+              ? failureUserMessage(error)
+              : l10n.failedToLoadEvents,
+        ),
+      ),
+      data: (payload) {
+        if (payload.data.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.dmInboxEmpty,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => context.push('/friends'),
+                    child: Text(l10n.friendsTitle),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(dmsListProvider),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+            itemCount: payload.data.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 6),
+            itemBuilder: (context, index) {
+              final dm = payload.data[index];
+              return _DmInboxCard(
+                conversation: dm,
+                onTap: () => context.push('/dms/${dm.id}'),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _InboxTabBar extends StatelessWidget {
+  const _InboxTabBar({
+    required this.eventsLabel,
+    required this.directLabel,
+    required this.eventsUnread,
+    required this.directUnread,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final String eventsLabel;
+  final String directLabel;
+  final int eventsUnread;
+  final int directUnread;
+  final _InboxTab selected;
+  final ValueChanged<_InboxTab> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderSoft),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _InboxTabChip(
+              label: eventsLabel,
+              badge: eventsUnread,
+              selected: selected == _InboxTab.events,
+              onTap: () => onChanged(_InboxTab.events),
+            ),
+          ),
+          Expanded(
+            child: _InboxTabChip(
+              label: directLabel,
+              badge: directUnread,
+              selected: selected == _InboxTab.direct,
+              onTap: () => onChanged(_InboxTab.direct),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InboxTabChip extends StatelessWidget {
+  const _InboxTabChip({
+    required this.label,
+    required this.badge,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int badge;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.surface : Colors.transparent,
+      borderRadius: BorderRadius.circular(11),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(11),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? AppColors.primaryInk : AppColors.muted,
+                ),
+              ),
+              if (badge > 0) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    badge > 99 ? '99+' : '$badge',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DmInboxCard extends StatelessWidget {
+  const _DmInboxCard({required this.conversation, required this.onTap});
+
+  final DmConversation conversation;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final other = conversation.otherUser;
+    final last = conversation.lastMessage;
+    final unread = conversation.unreadCount > 0;
+    final preview = last?.body ?? l10n.chatsNoMessages;
+
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: unread ? AppColors.primary.withValues(alpha: 0.35) : AppColors.borderSoft,
+            ),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                child: Text(other.initials),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      other.name,
+                      style: TextStyle(
+                        fontWeight: unread ? FontWeight.w800 : FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      preview,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -640,6 +937,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   StreamSubscription<InAppToastPayload>? _joinAcceptedSub;
   StreamSubscription<InAppToastPayload>? _joinRequestedSub;
   StreamSubscription<InAppToastPayload>? _messageReactedSub;
+  StreamSubscription<InAppToastPayload>? _dmToastSub;
   StreamSubscription<InAppToastPayload>? _fcmToastSub;
   final List<InAppToastPayload> _toasts = [];
   final Set<String> _shownToastKeys = {};
@@ -689,6 +987,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinRequestedSub = null;
     await _messageReactedSub?.cancel();
     _messageReactedSub = null;
+    await _dmToastSub?.cancel();
+    _dmToastSub = null;
     await _realtime?.disconnect();
     _realtime = null;
     _usePollToasts = true;
@@ -724,6 +1024,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _joinRequestedSub = null;
     await _messageReactedSub?.cancel();
     _messageReactedSub = null;
+    await _dmToastSub?.cancel();
+    _dmToastSub = null;
 
     _realtime = client;
     _realtimeSub = client.messages.listen(
@@ -737,6 +1039,9 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     );
     _messageReactedSub = client.messageReacted.listen(
       (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _dmToastSub = client.dmMessages.listen(
+      (payload) => _enqueueToast(payload, bumpChat: true),
     );
 
     final started = await client.connect(userId: auth.user.id, config: config);
@@ -765,7 +1070,10 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     bool bumpNotify = false,
   }) {
     if (!mounted) return;
-    if (payload.eventId <= 0) return;
+    if (payload.kind != InAppToastKind.dm && payload.eventId <= 0) return;
+    if (payload.kind == InAppToastKind.dm && payload.conversationId <= 0) {
+      return;
+    }
 
     if (_shownToastKeys.contains(payload.dedupeKey)) return;
     _shownToastKeys.add(payload.dedupeKey);
@@ -774,7 +1082,8 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     }
 
     if (payload.kind == InAppToastKind.chat ||
-        payload.kind == InAppToastKind.messageReacted) {
+        payload.kind == InAppToastKind.messageReacted ||
+        payload.kind == InAppToastKind.dm) {
       if (payload.kind == InAppToastKind.chat) {
         final messageId = int.tryParse(
           payload.dedupeKey.startsWith('chat:')
@@ -788,6 +1097,10 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
 
       final location = GoRouterState.of(context).uri.path;
       if (location == '/events/${payload.eventId}/chat') {
+        return;
+      }
+      if (payload.kind == InAppToastKind.dm &&
+          location == '/dms/${payload.conversationId}') {
         return;
       }
     }
@@ -835,11 +1148,14 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     _inFlight = true;
     try {
       final result = await ref.read(chatsRepositoryProvider).list();
+      final dmResult = await ref.read(dmsRepositoryProvider).list();
       if (!mounted || result.failure != null) {
         return;
       }
 
-      ref.read(chatUnreadTotalProvider.notifier).state = result.unreadTotal;
+      final dmUnread = dmResult.failure == null ? dmResult.unreadTotal : 0;
+      ref.read(chatUnreadTotalProvider.notifier).state =
+          result.unreadTotal + dmUnread;
 
       if (!_usePollToasts) {
         for (final chat in result.data) {

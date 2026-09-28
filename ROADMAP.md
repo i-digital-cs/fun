@@ -31,6 +31,11 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 - **Completed:** 2026-09-28
 - **Notes:** `docs/STORE_COMPLIANCE.md`; Terms/Support/account-deletion help; delete account API+web+Flutter (30-day grace + purge job); Sign in with Apple API + iOS UI; Info.plist usage strings + entitlements; Profile/auth legal links; privacy copy updates; Data Safety / App Privacy answers in compliance doc.
 
+### Task S2 — Friends + 1:1 DM + friend-event notify
+- **Status:** `done`
+- **Completed:** 2026-09-28
+- **Notes:** Friendships (pending/accepted/declined), public ID search, friends hub, 1:1 DMs (create on first message), Pusher `dms.{id}` + FCM without body, queued `friend_event` notify + `notify_friend_events` preference. Web + Flutter parity; see `docs/FLUTTER_WEB_PARITY.md`. Tests: FriendshipApiTest + DirectMessageApiTest (13 passed).
+
 ---
 
 ## Flutter mobile
@@ -214,7 +219,7 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Explicitly NOT in V1 (do not implement)
 
-- Private messaging
+- Follow / followers / friend suggestions / group DMs
 - In-app payments / wallet / escrow
 - Complex recommendations / social ranking
 - Speculative tables/columns without an approved task

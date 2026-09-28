@@ -58,6 +58,9 @@ For each screen:
 | Identity | `GET/POST /api/identity` · `GET /api/identity/documents/{id}` |
 | Safety | `POST /api/reports` (`description` not `details`) · `GET /api/blocks` · block/unblock user |
 | Notifications | `GET /api/notifications` · `GET /api/notifications/unread-count` · `POST /api/notifications/{id}/read` · `POST /api/notifications/read-all` · `POST/DELETE /api/device-tokens` (FCM) |
+| Friends | `GET /api/users/search?q=` · `GET /api/friends` · `GET /api/friends/requests` · `POST /api/friends` · `POST /api/friends/{user}/accept|decline|cancel` · `DELETE /api/friends/{user}` |
+| Direct messages | `GET /api/dms` · `POST /api/dms/with/{userId}` · `GET/POST /api/dms/{conversation}/messages` · `POST /api/dms/{conversation}/read` · Pusher `private-dms.{id}` `.message.posted` · user `.dm.message` toast |
+| Friend prefs | `GET /api/user` (`notify_friend_events`) · `PUT /api/settings/notifications` |
 
 **Auth header:** Send `Authorization: Bearer {token}` on **all** authenticated calls **and** on public `GET /api/events` / `GET /api/events/{id}` so `join_action` is personalized.
 
@@ -458,7 +461,7 @@ Flutter: poll `GET /api/notifications` for join request / accept as fallback; sa
 
 In-app list of database notifications (`join_request`, `join_accepted`, `message_reacted`). Unread badge on web topbar / community navbar **and Flutter topbar / sidebar** (`/notifications`, polled unread-count). Flutter: open inbox from bell; tap `join_request` → `/events/:id/requests`, `join_accepted` → event detail, `message_reacted` → event chat.
 
-**FCM push (outside app):** join request, join accept, and chat messages (`JoinRequestReceivedNotification`, `JoinRequestAcceptedNotification`, `ChatMessagePushNotification`). Flutter registers via `POST /api/device-tokens` after login (requires `google-services.json` — see `mobile/docs/FIREBASE_PUSH.md`). Logout → `DELETE`. Chat push body does **not** include message text (privacy). Inbox still stores join request/accept.
+**FCM push (outside app):** join request, join accept, friend request/accepted, friend event publish, event chat, and DM (`DirectMessagePushNotification`). Flutter registers via `POST /api/device-tokens` after login (requires `google-services.json` — see `mobile/docs/FIREBASE_PUSH.md`). Logout → `DELETE`. Chat/DM push body does **not** include message text (privacy). Inbox stores join + friend lifecycle + friend_event.
 
 **Foreground vs background (Flutter):** when the app is **open**, FCM still arrives but **no system tray banner** is shown (`onMessage` → in-app sweet toast + badge; iOS `setForegroundNotificationPresentationOptions(alert: false)`). When the app is **backgrounded / killed**, the OS shows the tray notification. Pusher toasts remain the primary live path while open (FCM is a deduped fallback).
 
@@ -1332,6 +1335,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 17. **Notifications** — join request/accept + **message like/dislike** → internal inbox (+ email on request; Pusher/FCM-while-open sweet toast + badge). Chat messages → FCM push (tray when backgrounded) + in-app toast when open. Flutter: inbox screen + FCM token register (§2.8a).
 18. **Mixed AR/EN titles (BiDi)** — web `bidi_dir` + `.bidi-text` isolate; Flutter `bidiTextDirection` on cards, detail, search, chats, now-playing, participations. Prefer Arabic-first titles when seeding mixed content.
 19. **Store compliance (Play + App Store)** — master checklist [`docs/STORE_COMPLIANCE.md`](STORE_COMPLIANCE.md): Terms `/terms`, Support `/support`, account deletion (API + web + Flutter + `/account-deletion` help), Sign in with Apple (iOS + `POST /api/auth/apple`), iOS usage strings, Profile/auth legal links, console Data Safety / App Privacy answers.
+20. **Friends + 1:1 DM (web+Flutter)** — `/friends` hub (list + requests + public ID search); public profile friendship CTAs; `/chats?tab=direct` inbox; `/dms/{id}` thread (composer, `dms.{id}` live + poll); `notify_friend_events` in `/settings/notifications`. Flutter: `lib/features/friends/`, routes `/friends`, `/dms/:conversationId`, `/settings/notifications`.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 
@@ -1366,6 +1370,10 @@ Base: `https://www.funnity.com`
 | Account deletion help | `/account-deletion` |
 | Delete account (signed in) | `/settings/delete-account` |
 | Blocks | `/settings/blocks` |
+| Friends | `/friends` |
+| Chats (direct tab) | `/chats?tab=direct` |
+| DM thread | `/dms/{conversation}` |
+| Friend event alerts | `/settings/notifications` |
 | Report | `/report` |
 | Robots | `/robots.txt` |
 | Sitemap | `/sitemap.xml` |

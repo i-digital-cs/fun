@@ -23,6 +23,7 @@ class User extends Equatable {
     this.canParticipateFlag,
     this.hasPassword = true,
     this.deletionRequestedAt,
+    this.notifyFriendEvents = true,
   });
 
   final int id;
@@ -50,6 +51,7 @@ class User extends Equatable {
   final bool? canParticipateFlag;
   final bool hasPassword;
   final DateTime? deletionRequestedAt;
+  final bool notifyFriendEvents;
 
   bool get hasPendingDeletion => deletionRequestedAt != null;
 
@@ -86,6 +88,7 @@ class User extends Equatable {
       deletionRequestedAt: deletionRaw != null
           ? DateTime.tryParse(deletionRaw)
           : null,
+      notifyFriendEvents: json['notify_friend_events'] as bool? ?? true,
     );
   }
 
@@ -139,6 +142,7 @@ class User extends Equatable {
     bool? canParticipateFlag,
     bool? hasPassword,
     DateTime? deletionRequestedAt,
+    bool? notifyFriendEvents,
     bool clearDeletionRequestedAt = false,
     bool clearProfileImage = false,
     bool clearSex = false,
@@ -172,6 +176,7 @@ class User extends Equatable {
       deletionRequestedAt: clearDeletionRequestedAt
           ? null
           : (deletionRequestedAt ?? this.deletionRequestedAt),
+      notifyFriendEvents: notifyFriendEvents ?? this.notifyFriendEvents,
     );
   }
 
@@ -198,5 +203,6 @@ class User extends Equatable {
     canParticipateFlag,
     hasPassword,
     deletionRequestedAt,
+    notifyFriendEvents,
   ];
 }

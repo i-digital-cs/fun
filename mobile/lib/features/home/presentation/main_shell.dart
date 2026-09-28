@@ -262,9 +262,15 @@ class _DashSidebar extends StatelessWidget {
                     _SideItem(
                       icon: Icons.chat_bubble_outline,
                       label: l10n.chatsTitle,
-                      selected: _match('/chats'),
+                      selected: _match('/chats') || _match('/dms'),
                       badge: chatUnread > 0,
                       onTap: () => onPush('/chats'),
+                    ),
+                    _SideItem(
+                      icon: Icons.people_outline,
+                      label: l10n.friendsTitle,
+                      selected: _match('/friends'),
+                      onTap: () => onPush('/friends'),
                     ),
                     _SideItem(
                       icon: Icons.notifications_outlined,

@@ -28,7 +28,11 @@ use App\Http\Controllers\Api\HomeParticipationsController;
 use App\Http\Controllers\Api\Identity\IdentityDocumentController as ApiIdentityDocumentController;
 use App\Http\Controllers\Api\Notifications\DeviceTokenController as ApiDeviceTokenController;
 use App\Http\Controllers\Api\Notifications\NotificationInboxController as ApiNotificationInboxController;
+use App\Http\Controllers\Api\Friends\DirectMessageController as ApiDirectMessageController;
+use App\Http\Controllers\Api\Friends\FriendController as ApiFriendController;
+use App\Http\Controllers\Api\Friends\UserSearchController as ApiUserSearchController;
 use App\Http\Controllers\Api\Profile\LocationPreferenceController as ApiLocationPreferenceController;
+use App\Http\Controllers\Api\Profile\NotificationSettingsController as ApiNotificationSettingsController;
 use App\Http\Controllers\Api\Profile\ProfileController as ApiProfileController;
 use App\Http\Controllers\Api\Profile\PublicProfileController as ApiPublicProfileController;
 use App\Http\Controllers\Api\Safety\BlockController as ApiBlockController;
@@ -101,6 +105,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('account.active')->group(function () {
         Route::put('/settings/location', [ApiLocationPreferenceController::class, 'update']);
+        Route::put('/settings/notifications', [ApiNotificationSettingsController::class, 'update']);
+
+        Route::get('/users/search', ApiUserSearchController::class)->middleware('throttle:60,1');
+
+        Route::get('/friends', [ApiFriendController::class, 'index']);
+        Route::get('/friends/requests', [ApiFriendController::class, 'requests']);
+        Route::post('/friends', [ApiFriendController::class, 'store'])->middleware('throttle:30,1');
+        Route::post('/friends/{user}/accept', [ApiFriendController::class, 'accept'])->whereNumber('user');
+        Route::post('/friends/{user}/decline', [ApiFriendController::class, 'decline'])->whereNumber('user');
+        Route::post('/friends/{user}/cancel', [ApiFriendController::class, 'cancel'])->whereNumber('user');
+        Route::delete('/friends/{user}', [ApiFriendController::class, 'destroy'])->whereNumber('user');
+
+        Route::get('/dms', [ApiDirectMessageController::class, 'index']);
+        Route::post('/dms/with/{user}', [ApiDirectMessageController::class, 'open'])->whereNumber('user');
+        Route::get('/dms/{conversation}/messages', [ApiDirectMessageController::class, 'messages'])
+            ->whereNumber('conversation');
+        Route::post('/dms/{conversation}/messages', [ApiDirectMessageController::class, 'store'])
+            ->whereNumber('conversation')
+            ->middleware('throttle:messages');
+        Route::post('/dms/{conversation}/read', [ApiDirectMessageController::class, 'markRead'])
+            ->whereNumber('conversation');
 
         Route::post('/reports', [ApiReportController::class, 'store'])->middleware('throttle:reports');
         Route::get('/blocks', [ApiBlockController::class, 'index']);

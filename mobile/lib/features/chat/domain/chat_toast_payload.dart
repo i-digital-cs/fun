@@ -1,5 +1,5 @@
 /// In-app toast kinds — mirror web `.chat-toast` (chat + join + message reaction).
-enum InAppToastKind { chat, joinAccepted, joinRequested, messageReacted }
+enum InAppToastKind { chat, dm, joinAccepted, joinRequested, messageReacted }
 
 /// Payload for foreground sweet toasts (Pusher realtime or FCM-while-open fallback).
 class InAppToastPayload {
@@ -13,11 +13,13 @@ class InAppToastPayload {
     this.senderInitials = '?',
     this.senderPhotoUrl,
     this.openPath,
+    this.conversationId = 0,
   });
 
   final InAppToastKind kind;
   final String dedupeKey;
   final int eventId;
+  final int conversationId;
   final String eventTitle;
   final String title;
   final String body;
@@ -30,9 +32,36 @@ class InAppToastPayload {
     return switch (kind) {
       InAppToastKind.chat || InAppToastKind.messageReacted =>
         '/events/$eventId/chat',
+      InAppToastKind.dm when conversationId > 0 => '/dms/$conversationId',
       InAppToastKind.joinAccepted => '/events/$eventId',
       InAppToastKind.joinRequested => '/events/$eventId/requests',
     };
+  }
+
+  /// User channel `.dm.message` / [UserDirectMessageReceived].
+  factory InAppToastPayload.fromDmJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    final userMap = user is Map ? Map<String, dynamic>.from(user) : const {};
+    final name =
+        userMap['name'] as String? ?? json['sender_name'] as String? ?? '';
+    final initials =
+        userMap['initials'] as String? ??
+        (name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase());
+    final photo = userMap['profile_image_path'] as String?;
+    final messageId = (json['id'] as num?)?.toInt() ?? 0;
+    final conversationId = (json['conversation_id'] as num?)?.toInt() ?? 0;
+
+    return InAppToastPayload(
+      kind: InAppToastKind.dm,
+      dedupeKey: messageId > 0 ? 'dm:$messageId' : 'dm:$conversationId',
+      eventId: 0,
+      conversationId: conversationId,
+      eventTitle: name,
+      title: name,
+      senderInitials: initials,
+      senderPhotoUrl: (photo != null && photo.isNotEmpty) ? photo : null,
+      openPath: conversationId > 0 ? '/dms/$conversationId' : null,
+    );
   }
 
   /// Reverb `.chat.message` / [UserChatMessageReceived].

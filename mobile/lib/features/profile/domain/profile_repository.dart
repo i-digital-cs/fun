@@ -19,4 +19,8 @@ abstract class ProfileRepository {
     String? photoPath,
     bool removePhoto = false,
   });
+
+  Future<({Failure? failure, void data})> updateNotificationSettings({
+    required bool notifyFriendEvents,
+  });
 }

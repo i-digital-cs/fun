@@ -29,6 +29,48 @@
                 <x-profile.public-card :profile="$profile" class="w-full">
                     @auth
                         @if ((int) auth()->id() !== (int) $profileUser->id && auth()->user()->canParticipate())
+                            @if ($friendship)
+                                @if (($friendship['status'] ?? null) === 'accepted')
+                                    <a href="{{ route('dms.open', $profileUser) }}" class="profile-card__request profile-card__request--primary">
+                                        {{ __('friends.message') }}
+                                    </a>
+                                    <form method="POST" action="{{ route('friends.destroy', $profileUser) }}" class="w-full sm:w-auto sm:flex-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="profile-card__request profile-card__request--muted">
+                                            {{ __('friends.unfriend') }}
+                                        </button>
+                                    </form>
+                                @elseif (($friendship['status'] ?? null) === 'pending' && ($friendship['direction'] ?? null) === 'outgoing')
+                                    <form method="POST" action="{{ route('friends.cancel', $profileUser) }}" class="w-full sm:w-auto sm:flex-1">
+                                        @csrf
+                                        <button type="submit" class="profile-card__request profile-card__request--muted">
+                                            {{ __('friends.cancel_request') }}
+                                        </button>
+                                    </form>
+                                @elseif (($friendship['status'] ?? null) === 'pending' && ($friendship['direction'] ?? null) === 'incoming')
+                                    <form method="POST" action="{{ route('friends.accept', $profileUser) }}" class="w-full sm:w-auto sm:flex-1">
+                                        @csrf
+                                        <button type="submit" class="profile-card__request profile-card__request--primary">
+                                            {{ __('friends.accept') }}
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('friends.decline', $profileUser) }}" class="w-full sm:w-auto sm:flex-1">
+                                        @csrf
+                                        <button type="submit" class="profile-card__request profile-card__request--muted">
+                                            {{ __('friends.decline') }}
+                                        </button>
+                                    </form>
+                                @elseif ($friendship['can_request'] ?? false)
+                                    <form method="POST" action="{{ route('friends.store') }}" class="w-full sm:w-auto sm:flex-1">
+                                        @csrf
+                                        <input type="hidden" name="public_id" value="{{ $profileUser->public_id }}">
+                                        <button type="submit" class="profile-card__request profile-card__request--primary">
+                                            {{ __('friends.add_friend') }}
+                                        </button>
+                                    </form>
+                                @endif
+                            @endif
                             <a href="{{ route('reports.create', ['reportable_type' => 'user', 'reportable_id' => $profileUser->id]) }}"
                                class="profile-card__request">
                                 {{ __('safety.report') }}

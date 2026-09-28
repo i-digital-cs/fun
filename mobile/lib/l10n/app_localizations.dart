@@ -2515,6 +2515,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue with Apple'**
   String get continueWithApple;
+
+  /// No description provided for @friendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friendsTitle;
+
+  /// No description provided for @friendsTabFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friendsTabFriends;
+
+  /// No description provided for @friendsTabRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get friendsTabRequests;
+
+  /// No description provided for @friendsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by public ID…'**
+  String get friendsSearchHint;
+
+  /// No description provided for @friendsSearchMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least 3 characters.'**
+  String get friendsSearchMinLength;
+
+  /// No description provided for @friendsSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No members match that public ID.'**
+  String get friendsSearchEmpty;
+
+  /// No description provided for @friendsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet. Search by public ID to connect.'**
+  String get friendsEmpty;
+
+  /// No description provided for @friendsNoRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending friend requests.'**
+  String get friendsNoRequests;
+
+  /// No description provided for @friendsIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get friendsIncoming;
+
+  /// No description provided for @friendsOutgoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing'**
+  String get friendsOutgoing;
+
+  /// No description provided for @friendsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get friendsAdd;
+
+  /// No description provided for @friendsAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get friendsAccept;
+
+  /// No description provided for @friendsDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get friendsDecline;
+
+  /// No description provided for @friendsCancelRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel request'**
+  String get friendsCancelRequest;
+
+  /// No description provided for @friendsUnfriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfriend'**
+  String get friendsUnfriend;
+
+  /// No description provided for @friendsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get friendsMessage;
+
+  /// No description provided for @friendsRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend request sent.'**
+  String get friendsRequestSent;
+
+  /// No description provided for @friendsDirectChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct message'**
+  String get friendsDirectChat;
+
+  /// No description provided for @inboxEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get inboxEvents;
+
+  /// No description provided for @inboxDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get inboxDirect;
+
+  /// No description provided for @dmInboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No direct messages yet.'**
+  String get dmInboxEmpty;
+
+  /// No description provided for @dmEmptyThread.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hello — your conversation starts here.'**
+  String get dmEmptyThread;
+
+  /// No description provided for @notifyFriendEventsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend event alerts'**
+  String get notifyFriendEventsTitle;
+
+  /// No description provided for @notifyFriendEventsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when an accepted friend publishes a new event.'**
+  String get notifyFriendEventsHelp;
 }
 
 class _AppLocalizationsDelegate

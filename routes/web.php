@@ -20,6 +20,8 @@ use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\Events\EventChatController;
 use App\Http\Controllers\Web\Chat\ChatInboxController;
+use App\Http\Controllers\Web\Friends\DirectMessageController as WebDirectMessageController;
+use App\Http\Controllers\Web\Friends\FriendController as WebFriendController;
 use App\Http\Controllers\Web\Events\EventController;
 use App\Http\Controllers\Web\Events\EventFavoriteController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\Web\Notifications\NotificationInboxController;
 use App\Http\Controllers\Web\RobotsController;
 use App\Http\Controllers\Web\SitemapController;
 use App\Http\Controllers\Web\Profile\LocationPreferenceController;
+use App\Http\Controllers\Web\Profile\NotificationSettingsController;
 use App\Http\Controllers\Web\Profile\ProfileController;
 use App\Http\Controllers\Web\Profile\PublicProfileController;
 use App\Http\Controllers\Web\Safety\BlockController;
@@ -138,6 +141,22 @@ Route::middleware('auth')->group(function () {
             ->name('settings.profile.update');
         Route::get('/settings/location', [LocationPreferenceController::class, 'edit'])->name('settings.location.edit');
         Route::put('/settings/location', [LocationPreferenceController::class, 'update'])->name('settings.location.update');
+        Route::get('/settings/notifications', [NotificationSettingsController::class, 'edit'])->name('settings.notifications.edit');
+        Route::put('/settings/notifications', [NotificationSettingsController::class, 'update'])->name('settings.notifications.update');
+
+        Route::get('/friends', [WebFriendController::class, 'index'])->name('friends.index');
+        Route::post('/friends', [WebFriendController::class, 'store'])->middleware('throttle:30,1')->name('friends.store');
+        Route::post('/friends/{user}/accept', [WebFriendController::class, 'accept'])->whereNumber('user')->name('friends.accept');
+        Route::post('/friends/{user}/decline', [WebFriendController::class, 'decline'])->whereNumber('user')->name('friends.decline');
+        Route::post('/friends/{user}/cancel', [WebFriendController::class, 'cancel'])->whereNumber('user')->name('friends.cancel');
+        Route::delete('/friends/{user}', [WebFriendController::class, 'destroy'])->whereNumber('user')->name('friends.destroy');
+
+        Route::get('/dms/with/{user}', [WebDirectMessageController::class, 'open'])->whereNumber('user')->name('dms.open');
+        Route::get('/dms/{conversation}', [WebDirectMessageController::class, 'show'])->whereNumber('conversation')->name('dms.show');
+        Route::post('/dms/{conversation}', [WebDirectMessageController::class, 'store'])
+            ->whereNumber('conversation')
+            ->middleware('throttle:messages')
+            ->name('dms.store');
 
         Route::get('/report', [ReportController::class, 'create'])->name('reports.create');
         Route::post('/report', [ReportController::class, 'store'])

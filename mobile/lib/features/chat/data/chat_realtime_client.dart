@@ -8,6 +8,7 @@ import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/storage/token_storage.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/friends/domain/dm_models.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 
 /// Laravel Pusher/Reverb client for private user toasts + event chat threads.
@@ -22,6 +23,8 @@ class ChatRealtimeClient {
   final _messageReacted = StreamController<InAppToastPayload>.broadcast();
   final _threadPosted = StreamController<ChatMessage>.broadcast();
   final _threadReacted = StreamController<ChatMessageReaction>.broadcast();
+  final _dmMessages = StreamController<InAppToastPayload>.broadcast();
+  final _dmThreadPosted = StreamController<DmMessage>.broadcast();
 
   PusherChannelsClient? _client;
   StreamSubscription<void>? _connectionSub;
@@ -33,9 +36,13 @@ class ChatRealtimeClient {
   StreamSubscription<ChannelReadEvent>? _threadReactSub;
   PrivateChannel? _userChannel;
   PrivateChannel? _eventChannel;
+  PrivateChannel? _dmChannel;
   String? _authToken;
   int? _userId;
   int? _subscribedEventId;
+  int? _subscribedDmId;
+  StreamSubscription<ChannelReadEvent>? _dmToastSub;
+  StreamSubscription<ChannelReadEvent>? _dmThreadSub;
   bool _connected = false;
 
   Stream<InAppToastPayload> get messages => _messages.stream;
@@ -54,6 +61,12 @@ class ChatRealtimeClient {
 
   /// Live `.message.reacted` count updates for the subscribed thread.
   Stream<ChatMessageReaction> get threadReacted => _threadReacted.stream;
+
+  /// User channel `.dm.message` toast payloads.
+  Stream<InAppToastPayload> get dmMessages => _dmMessages.stream;
+
+  /// Live `.message.posted` on `private-dms.{id}`.
+  Stream<DmMessage> get dmThreadPosted => _dmThreadPosted.stream;
 
   bool get isConnected => _connected;
 
@@ -127,6 +140,10 @@ class ChatRealtimeClient {
         if (eventId != null) {
           unawaited(_attachEventChannel(eventId));
         }
+        final dmId = _subscribedDmId;
+        if (dmId != null) {
+          unawaited(_attachDmChannel(dmId));
+        }
       });
 
       _eventSub = channel.bind('chat.message').listen((event) {
@@ -166,6 +183,15 @@ class ChatRealtimeClient {
         }
       });
 
+      _dmToastSub = channel.bind('dm.message').listen((event) {
+        final data = event.tryGetDataAsMap() ?? const <String, dynamic>{};
+        final payload = InAppToastPayload.fromDmJson(data);
+        if (payload.conversationId <= 0) return;
+        if (!_dmMessages.isClosed) {
+          _dmMessages.add(payload);
+        }
+      });
+
       unawaited(client.connect());
       return true;
     } catch (e, st) {
@@ -188,6 +214,73 @@ class ChatRealtimeClient {
       return;
     }
     await _attachEventChannel(eventId);
+  }
+
+  /// Join `private-dms.{id}` for live DM thread appends.
+  Future<void> subscribeDm(int conversationId) async {
+    if (_subscribedDmId == conversationId && _dmChannel != null) {
+      return;
+    }
+    await unsubscribeDm();
+    _subscribedDmId = conversationId;
+    if (_client == null || !_connected) {
+      return;
+    }
+    await _attachDmChannel(conversationId);
+  }
+
+  Future<void> unsubscribeDm() async {
+    await _dmThreadSub?.cancel();
+    _dmThreadSub = null;
+    try {
+      _dmChannel?.unsubscribe();
+    } catch (_) {}
+    _dmChannel = null;
+    _subscribedDmId = null;
+  }
+
+  Future<void> _attachDmChannel(int conversationId) async {
+    final client = _client;
+    final token = _authToken;
+    if (client == null || token == null || token.isEmpty) return;
+
+    await _dmThreadSub?.cancel();
+    _dmThreadSub = null;
+    try {
+      _dmChannel?.unsubscribe();
+    } catch (_) {}
+    _dmChannel = null;
+
+    final authUri = Uri.parse('${Env.apiBaseUrl}/broadcasting/auth');
+    final channel = client.privateChannel(
+      'private-dms.$conversationId',
+      authorizationDelegate:
+          EndpointAuthorizableChannelTokenAuthorizationDelegate.forPrivateChannel(
+            authorizationEndpoint: authUri,
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          ),
+    );
+    _dmChannel = channel;
+    channel.subscribeIfNotUnsubscribed();
+
+    _dmThreadSub = channel.bind('message.posted').listen((event) {
+      final data = event.tryGetDataAsMap();
+      if (data == null) return;
+      try {
+        final message = DmMessage.fromJson(Map<String, dynamic>.from(data));
+        if (message.id <= 0) return;
+        if (!_dmThreadPosted.isClosed) {
+          _dmThreadPosted.add(message);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('ChatRealtime DM parse failed: $e');
+        }
+      }
+    });
   }
 
   Future<void> unsubscribeEventChat() async {
@@ -268,6 +361,7 @@ class ChatRealtimeClient {
 
   Future<void> disconnect() async {
     _connected = false;
+    await unsubscribeDm();
     await unsubscribeEventChat();
     await _eventSub?.cancel();
     _eventSub = null;
@@ -277,6 +371,8 @@ class ChatRealtimeClient {
     _joinRequestedSub = null;
     await _messageReactedSub?.cancel();
     _messageReactedSub = null;
+    await _dmToastSub?.cancel();
+    _dmToastSub = null;
     await _connectionSub?.cancel();
     _connectionSub = null;
     try {
@@ -299,6 +395,8 @@ class ChatRealtimeClient {
     await _messageReacted.close();
     await _threadPosted.close();
     await _threadReacted.close();
+    await _dmMessages.close();
+    await _dmThreadPosted.close();
   }
 }
 

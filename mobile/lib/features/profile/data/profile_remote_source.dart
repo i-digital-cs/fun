@@ -101,4 +101,22 @@ class ProfileRemoteSource {
       return (failure: mapDioException(e), data: null, emailChanged: false);
     }
   }
+
+  Future<({Failure? failure, bool? notifyFriendEvents})> updateNotifications({
+    required bool notifyFriendEvents,
+  }) async {
+    try {
+      final response = await _client.dio.put<Map<String, dynamic>>(
+        '/settings/notifications',
+        data: {'notify_friend_events': notifyFriendEvents},
+      );
+      final data = response.data?['data'] as Map<String, dynamic>? ?? {};
+      return (
+        failure: null,
+        notifyFriendEvents: data['notify_friend_events'] as bool?,
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), notifyFriendEvents: null);
+    }
+  }
 }

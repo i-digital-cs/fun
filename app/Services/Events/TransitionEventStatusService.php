@@ -4,6 +4,7 @@ namespace App\Services\Events;
 
 use App\Enums\EventStatus;
 use App\Exceptions\DomainException;
+use App\Jobs\NotifyFriendsOfPublishedEvent;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -13,7 +14,11 @@ class TransitionEventStatusService
 {
     public function publish(User $actor, Event $event): Event
     {
-        return $this->transition($actor, $event, EventStatus::Published);
+        $published = $this->transition($actor, $event, EventStatus::Published);
+
+        NotifyFriendsOfPublishedEvent::dispatch($published->id, $actor->id);
+
+        return $published;
     }
 
     public function cancel(User $actor, Event $event): Event

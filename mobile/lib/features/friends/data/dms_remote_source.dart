@@ -1,0 +1,112 @@
+import 'package:dio/dio.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/features/friends/domain/dm_models.dart';
+
+class DmsRemoteSource {
+  DmsRemoteSource(this._client);
+
+  final ApiClient _client;
+
+  Future<({Failure? failure, List<DmConversation> data, int unreadTotal})>
+  list() async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>('/dms');
+      final raw = response.data?['data'];
+      final meta = response.data?['meta'] as Map<String, dynamic>? ?? {};
+      final list = raw is List
+          ? raw
+                .whereType<Map>()
+                .map(
+                  (row) =>
+                      DmConversation.fromJson(Map<String, dynamic>.from(row)),
+                )
+                .where((c) => c.id > 0)
+                .toList()
+          : <DmConversation>[];
+      return (
+        failure: null,
+        data: list,
+        unreadTotal: (meta['unread_total'] as num?)?.toInt() ?? 0,
+      );
+    } on DioException catch (e) {
+      return (
+        failure: mapDioException(e),
+        data: const <DmConversation>[],
+        unreadTotal: 0,
+      );
+    }
+  }
+
+  Future<({Failure? failure, DmOpenResult? data})> openWith(int userId) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/dms/with/$userId',
+      );
+      final data = response.data?['data'] as Map<String, dynamic>? ?? {};
+      return (
+        failure: null,
+        data: DmOpenResult.fromJson(data),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<DmMessage> data})> messages(
+    int conversationId, {
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/dms/$conversationId/messages',
+        cancelToken: cancelToken,
+      );
+      final raw = response.data?['data'];
+      final list = raw is List
+          ? raw
+                .whereType<Map>()
+                .map(
+                  (row) => DmMessage.fromJson(Map<String, dynamic>.from(row)),
+                )
+                .where((m) => m.id > 0)
+                .toList()
+          : <DmMessage>[];
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.cancel) {
+        return (failure: null, data: const []);
+      }
+      return (failure: mapDioException(e), data: const []);
+    }
+  }
+
+  Future<({Failure? failure, DmMessage? data})> postMessage(
+    int conversationId,
+    String body,
+  ) async {
+    try {
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/dms/$conversationId/messages',
+        data: {'body': body},
+      );
+      final data = response.data?['data'] as Map<String, dynamic>?;
+      return (
+        failure: null,
+        data: data != null ? DmMessage.fromJson(data) : null,
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> markRead(int conversationId) async {
+    try {
+      await _client.dio.post<void>('/dms/$conversationId/read');
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+}

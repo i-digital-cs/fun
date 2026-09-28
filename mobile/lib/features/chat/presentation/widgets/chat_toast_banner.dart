@@ -24,7 +24,7 @@ class ChatToastBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final eyebrow = switch (payload.kind) {
-      InAppToastKind.chat => l10n.chatToastNew,
+      InAppToastKind.chat || InAppToastKind.dm => l10n.chatToastNew,
       InAppToastKind.joinAccepted =>
         payload.title.isNotEmpty ? payload.title : l10n.joinAcceptedToast,
       InAppToastKind.joinRequested =>
@@ -33,7 +33,7 @@ class ChatToastBanner extends StatelessWidget {
         payload.title.isNotEmpty ? payload.title : l10n.messageReactedToast,
     };
     final name = switch (payload.kind) {
-      InAppToastKind.chat =>
+      InAppToastKind.chat || InAppToastKind.dm =>
         payload.title.isEmpty ? l10n.chatToastNew : payload.title,
       InAppToastKind.joinAccepted =>
         payload.title.isNotEmpty ? payload.title : l10n.joinAcceptedToast,
@@ -43,7 +43,7 @@ class ChatToastBanner extends StatelessWidget {
         payload.title.isNotEmpty ? payload.title : l10n.messageReactedToast,
     };
     final body = switch (payload.kind) {
-      InAppToastKind.chat => l10n.newChatMessage,
+      InAppToastKind.chat || InAppToastKind.dm => l10n.newChatMessage,
       InAppToastKind.joinAccepted ||
       InAppToastKind.joinRequested ||
       InAppToastKind.messageReacted =>

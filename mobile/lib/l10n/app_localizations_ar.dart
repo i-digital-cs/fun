@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1282,4 +1281,77 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get continueWithApple => 'المتابعة باستخدام Apple';
+
+  @override
+  String get friendsTitle => 'الأصدقاء';
+
+  @override
+  String get friendsTabFriends => 'الأصدقاء';
+
+  @override
+  String get friendsTabRequests => 'الطلبات';
+
+  @override
+  String get friendsSearchHint => 'ابحث برقم الهوية العام…';
+
+  @override
+  String get friendsSearchMinLength => 'أدخل 3 أحرف على الأقل.';
+
+  @override
+  String get friendsSearchEmpty => 'لا يوجد أعضاء بهذا الرقم.';
+
+  @override
+  String get friendsEmpty => 'لا أصدقاء بعد. ابحث برقم الهوية للتواصل.';
+
+  @override
+  String get friendsNoRequests => 'لا طلبات صداقة معلّقة.';
+
+  @override
+  String get friendsIncoming => 'واردة';
+
+  @override
+  String get friendsOutgoing => 'صادرة';
+
+  @override
+  String get friendsAdd => 'إضافة صديق';
+
+  @override
+  String get friendsAccept => 'قبول';
+
+  @override
+  String get friendsDecline => 'رفض';
+
+  @override
+  String get friendsCancelRequest => 'إلغاء الطلب';
+
+  @override
+  String get friendsUnfriend => 'إزالة الصديق';
+
+  @override
+  String get friendsMessage => 'مراسلة';
+
+  @override
+  String get friendsRequestSent => 'تم إرسال طلب الصداقة.';
+
+  @override
+  String get friendsDirectChat => 'رسالة مباشرة';
+
+  @override
+  String get inboxEvents => 'الفعاليات';
+
+  @override
+  String get inboxDirect => 'المباشر';
+
+  @override
+  String get dmInboxEmpty => 'لا رسائل مباشرة بعد.';
+
+  @override
+  String get dmEmptyThread => 'ابدأ المحادثة برسالة ترحيب.';
+
+  @override
+  String get notifyFriendEventsTitle => 'تنبيهات فعاليات الأصدقاء';
+
+  @override
+  String get notifyFriendEventsHelp =>
+      'احصل على تنبيه عندما ينشر صديق مقبول فعالية جديدة.';
 }

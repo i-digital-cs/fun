@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1293,4 +1292,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get friendsTitle => 'Friends';
+
+  @override
+  String get friendsTabFriends => 'Friends';
+
+  @override
+  String get friendsTabRequests => 'Requests';
+
+  @override
+  String get friendsSearchHint => 'Search by public ID…';
+
+  @override
+  String get friendsSearchMinLength => 'Enter at least 3 characters.';
+
+  @override
+  String get friendsSearchEmpty => 'No members match that public ID.';
+
+  @override
+  String get friendsEmpty => 'No friends yet. Search by public ID to connect.';
+
+  @override
+  String get friendsNoRequests => 'No pending friend requests.';
+
+  @override
+  String get friendsIncoming => 'Incoming';
+
+  @override
+  String get friendsOutgoing => 'Outgoing';
+
+  @override
+  String get friendsAdd => 'Add friend';
+
+  @override
+  String get friendsAccept => 'Accept';
+
+  @override
+  String get friendsDecline => 'Decline';
+
+  @override
+  String get friendsCancelRequest => 'Cancel request';
+
+  @override
+  String get friendsUnfriend => 'Unfriend';
+
+  @override
+  String get friendsMessage => 'Message';
+
+  @override
+  String get friendsRequestSent => 'Friend request sent.';
+
+  @override
+  String get friendsDirectChat => 'Direct message';
+
+  @override
+  String get inboxEvents => 'Events';
+
+  @override
+  String get inboxDirect => 'Direct';
+
+  @override
+  String get dmInboxEmpty => 'No direct messages yet.';
+
+  @override
+  String get dmEmptyThread => 'Say hello — your conversation starts here.';
+
+  @override
+  String get notifyFriendEventsTitle => 'Friend event alerts';
+
+  @override
+  String get notifyFriendEventsHelp =>
+      'Get notified when an accepted friend publishes a new event.';
 }

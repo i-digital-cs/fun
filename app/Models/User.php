@@ -35,6 +35,7 @@ class User extends Authenticatable
         'city_id',
         'distance_km',
         'profile_image_path',
+        'notify_friend_events',
     ];
 
     /**
@@ -61,6 +62,7 @@ class User extends Authenticatable
             'deactivated_at' => 'datetime',
             'deletion_requested_at' => 'datetime',
             'distance_km' => 'integer',
+            'notify_friend_events' => 'boolean',
         ];
     }
 
@@ -189,6 +191,16 @@ class User extends Authenticatable
     public function eventFavorites(): HasMany
     {
         return $this->hasMany(EventFavorite::class);
+    }
+
+    public function friendshipsRequested(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'requester_id');
+    }
+
+    public function friendshipsReceived(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'addressee_id');
     }
 
     public function isActive(): bool

@@ -4,13 +4,19 @@ namespace App\Http\Controllers\Api\Profile;
 
 use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
+use App\Services\Friends\FriendshipService;
 use App\Services\Profile\PublicProfileService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PublicProfileController extends Controller
 {
-    public function show(string $publicId, PublicProfileService $profiles): JsonResponse
-    {
+    public function show(
+        Request $request,
+        string $publicId,
+        PublicProfileService $profiles,
+        FriendshipService $friends,
+    ): JsonResponse {
         $user = $profiles->findByPublicId($publicId);
         $profile = $profiles->toPublicArray($user);
 
@@ -33,9 +39,21 @@ class PublicProfileController extends Controller
             ])
             ->values();
 
+        $friendship = null;
+        $canMessage = false;
+        $viewer = $request->user('sanctum');
+
+        if ($viewer !== null) {
+            $state = $friends->stateFor($viewer, $user);
+            $friendship = $state;
+            $canMessage = $state['can_message'];
+        }
+
         return response()->json([
             'data' => $profile + [
                 'hosted_events' => $hostedEvents,
+                'friendship' => $friendship,
+                'can_message' => $canMessage,
             ],
         ]);
     }

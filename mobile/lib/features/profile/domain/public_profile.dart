@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fun_mobile/features/friends/domain/friendship_state.dart';
 
 class PublicProfile extends Equatable {
   const PublicProfile({
@@ -14,6 +15,8 @@ class PublicProfile extends Equatable {
     this.ratingAverage,
     this.ratingCount = 0,
     this.hostedEvents = const [],
+    this.friendship = const FriendshipState(),
+    this.canMessage = false,
   });
 
   final int? id;
@@ -28,6 +31,8 @@ class PublicProfile extends Equatable {
   final double? ratingAverage;
   final int ratingCount;
   final List<PublicHostedEvent> hostedEvents;
+  final FriendshipState friendship;
+  final bool canMessage;
 
   @override
   List<Object?> get props => [
@@ -43,6 +48,8 @@ class PublicProfile extends Equatable {
     ratingAverage,
     ratingCount,
     hostedEvents,
+    friendship,
+    canMessage,
   ];
 }
 

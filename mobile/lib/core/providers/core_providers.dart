@@ -24,6 +24,12 @@ import 'package:fun_mobile/features/profile/data/public_profile_remote_source.da
 import 'package:fun_mobile/features/profile/data/public_profile_repository_impl.dart';
 import 'package:fun_mobile/features/profile/domain/profile_repository.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile_repository.dart';
+import 'package:fun_mobile/features/friends/data/dms_remote_source.dart';
+import 'package:fun_mobile/features/friends/data/dms_repository_impl.dart';
+import 'package:fun_mobile/features/friends/data/friends_remote_source.dart';
+import 'package:fun_mobile/features/friends/data/friends_repository_impl.dart';
+import 'package:fun_mobile/features/friends/domain/dms_repository.dart';
+import 'package:fun_mobile/features/friends/domain/friends_repository.dart';
 import 'package:fun_mobile/features/chat/data/chats_remote_source.dart';
 import 'package:fun_mobile/features/chat/data/chats_repository_impl.dart';
 import 'package:fun_mobile/features/chat/domain/chats_repository.dart';
@@ -164,4 +170,20 @@ final notificationsRepositoryProvider = Provider<NotificationsRepository>((
   return NotificationsRepositoryImpl(
     ref.watch(notificationsRemoteSourceProvider),
   );
+});
+
+final friendsRemoteSourceProvider = Provider<FriendsRemoteSource>((ref) {
+  return FriendsRemoteSource(ref.watch(apiClientProvider));
+});
+
+final friendsRepositoryProvider = Provider<FriendsRepository>((ref) {
+  return FriendsRepositoryImpl(ref.watch(friendsRemoteSourceProvider));
+});
+
+final dmsRemoteSourceProvider = Provider<DmsRemoteSource>((ref) {
+  return DmsRemoteSource(ref.watch(apiClientProvider));
+});
+
+final dmsRepositoryProvider = Provider<DmsRepository>((ref) {
+  return DmsRepositoryImpl(ref.watch(dmsRemoteSourceProvider));
 });

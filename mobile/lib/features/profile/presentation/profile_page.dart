@@ -187,6 +187,16 @@ class ProfilePage extends ConsumerWidget {
             onTap: () => context.push('/chats'),
           ),
           ProfileLinkTile(
+            icon: Icons.people_outline,
+            title: l10n.friendsTitle,
+            onTap: () => context.push('/friends'),
+          ),
+          ProfileLinkTile(
+            icon: Icons.notifications_outlined,
+            title: l10n.notifyFriendEventsTitle,
+            onTap: () => context.push('/settings/notifications'),
+          ),
+          ProfileLinkTile(
             icon: Icons.edit_outlined,
             title: l10n.editProfile,
             onTap: () => context.push('/settings/profile'),

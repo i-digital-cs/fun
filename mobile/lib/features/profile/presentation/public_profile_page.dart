@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
@@ -27,6 +28,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
   String? _error;
   bool _loading = true;
   bool _blocking = false;
+  bool _friendAction = false;
 
   @override
   void initState() {
@@ -52,6 +54,38 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
         _profile = result.data;
       }
     });
+  }
+
+  Future<void> _runFriendAction(
+    Future<({Failure? failure, void data})> Function() action,
+  ) async {
+    setState(() => _friendAction = true);
+    final result = await action();
+    if (!mounted) return;
+    setState(() => _friendAction = false);
+    if (result.failure != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.failure!.message)),
+      );
+      return;
+    }
+    await _load();
+  }
+
+  Future<void> _openMessage(PublicProfile profile) async {
+    final id = profile.id;
+    if (id == null) return;
+    setState(() => _friendAction = true);
+    final result = await ref.read(dmsRepositoryProvider).openWith(id);
+    if (!mounted) return;
+    setState(() => _friendAction = false);
+    if (result.failure != null || result.data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.failure?.message ?? 'Error')),
+      );
+      return;
+    }
+    context.push('/dms/${result.data!.conversationId}');
   }
 
   Future<void> _block(PublicProfile profile) async {
@@ -128,6 +162,8 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
                     onPressed: () => context.push('/settings/profile'),
                   )
                 else if (canAct && profile.id != null) ...[
+                  ..._friendshipActions(context, l10n, profile),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
@@ -211,6 +247,83 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
               ],
             ),
     );
+  }
+
+  List<Widget> _friendshipActions(
+    BuildContext context,
+    AppLocalizations l10n,
+    PublicProfile profile,
+  ) {
+    final fs = profile.friendship;
+    final status = fs.status;
+    final busy = _friendAction;
+
+    if (status == 'accepted') {
+      return [
+        if (fs.canMessage || profile.canMessage)
+          GradientButton.indigo(
+            label: l10n.friendsMessage,
+            onPressed: busy ? null : () => _openMessage(profile),
+          ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: busy
+              ? null
+              : () => _runFriendAction(
+                  () => ref.read(friendsRepositoryProvider).unfriend(profile.id!),
+                ),
+          child: Text(l10n.friendsUnfriend),
+        ),
+      ];
+    }
+    if (status == 'pending' && fs.direction == 'outgoing') {
+      return [
+        OutlinedButton(
+          onPressed: busy
+              ? null
+              : () => _runFriendAction(
+                  () => ref.read(friendsRepositoryProvider).cancel(profile.id!),
+                ),
+          child: Text(l10n.friendsCancelRequest),
+        ),
+      ];
+    }
+    if (status == 'pending' && fs.direction == 'incoming') {
+      return [
+        GradientButton.indigo(
+          label: l10n.friendsAccept,
+          onPressed: busy
+              ? null
+              : () => _runFriendAction(
+                  () => ref.read(friendsRepositoryProvider).accept(profile.id!),
+                ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: busy
+              ? null
+              : () => _runFriendAction(
+                  () => ref.read(friendsRepositoryProvider).decline(profile.id!),
+                ),
+          child: Text(l10n.friendsDecline),
+        ),
+      ];
+    }
+    if (fs.canRequest) {
+      return [
+        GradientButton.indigo(
+          label: l10n.friendsAdd,
+          onPressed: busy
+              ? null
+              : () => _runFriendAction(
+                  () => ref
+                      .read(friendsRepositoryProvider)
+                      .requestFriend(profile.publicId),
+                ),
+        ),
+      ];
+    }
+    return const [];
   }
 }
 

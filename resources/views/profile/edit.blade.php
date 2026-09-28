@@ -26,6 +26,14 @@
                        class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500">
                         {{ __('profile.copy_profile_link') }}
                     </a>
+                    <a href="{{ route('friends.index') }}"
+                       class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">
+                        {{ __('friends.title') }}
+                    </a>
+                    <a href="{{ route('settings.notifications.edit') }}"
+                       class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">
+                        {{ __('friends.notify_friend_events') }}
+                    </a>
                 </div>
             </section>
         @endif

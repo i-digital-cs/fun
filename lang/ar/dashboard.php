@@ -49,6 +49,7 @@ return [
     'nav_discover' => 'اكتشف',
     'nav_my_events' => 'فعالياتي',
     'nav_chats' => 'المحادثات',
+    'nav_friends' => 'الأصدقاء',
     'nav_notifications' => 'الإشعارات',
     'nav_favorites' => 'المفضلة',
     'nav_create' => 'إنشاء فعالية',

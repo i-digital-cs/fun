@@ -19,6 +19,7 @@ class MeController extends Controller
             'email' => $user->email,
             'status' => $user->status->value,
             'locale' => $user->locale,
+            'notify_friend_events' => (bool) $user->notify_friend_events,
             'sex' => $user->sex?->value,
             'needs_sex' => $user->needsSex(),
             'platform_role' => $user->platform_role?->value,

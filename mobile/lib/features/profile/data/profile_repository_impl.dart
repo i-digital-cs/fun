@@ -36,4 +36,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
     photoPath: photoPath,
     removePhoto: removePhoto,
   );
+
+  @override
+  Future<({Failure? failure, void data})> updateNotificationSettings({
+    required bool notifyFriendEvents,
+  }) async {
+    final result = await _remote.updateNotifications(
+      notifyFriendEvents: notifyFriendEvents,
+    );
+    return (failure: result.failure, data: null);
+  }
 }

@@ -26,6 +26,9 @@ import 'package:fun_mobile/features/profile/presentation/profile_edit_page.dart'
 import 'package:fun_mobile/features/profile/presentation/profile_page.dart';
 import 'package:fun_mobile/features/profile/presentation/public_profile_page.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
+import 'package:fun_mobile/features/friends/presentation/dm_chat_page.dart';
+import 'package:fun_mobile/features/friends/presentation/friends_page.dart';
+import 'package:fun_mobile/features/profile/presentation/notification_settings_page.dart';
 import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
 import 'package:fun_mobile/features/account/presentation/delete_account_page.dart';
 import 'package:fun_mobile/features/legal/presentation/legal_web_page.dart';
@@ -172,7 +175,34 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chats',
         parentNavigatorKey: _rootKey,
-        builder: (context, state) => const ChatsPage(),
+        builder: (context, state) {
+          final tab = state.uri.queryParameters['tab'];
+          return ChatsPage(openDirectTab: tab == 'direct');
+        },
+      ),
+      GoRoute(
+        path: '/friends',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) {
+          final search = state.uri.queryParameters['search'];
+          return FriendsPage(focusSearch: search == '1');
+        },
+        routes: [
+          GoRoute(
+            path: 'search',
+            parentNavigatorKey: _rootKey,
+            builder: (context, state) => const FriendsPage(focusSearch: true),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/dms/:conversationId',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) {
+          final id = parsePositiveRouteId(state.pathParameters['conversationId']);
+          if (id == null) return const _InvalidRoutePage();
+          return DmChatPage(conversationId: id);
+        },
       ),
       GoRoute(
         path: '/notifications',
@@ -257,6 +287,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings/profile',
         parentNavigatorKey: _rootKey,
         builder: (context, state) => const ProfileEditPage(),
+      ),
+      GoRoute(
+        path: '/settings/notifications',
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const NotificationSettingsPage(),
       ),
       GoRoute(
         path: '/identity',
@@ -386,7 +421,13 @@ bool _isGuestEventShow(String loc) {
 /// Create / chat / manage routes blocked until identity docs are submitted.
 /// Join is gated on the event detail UI (AUTHZ-JOIN-001); server remains authoritative.
 bool _isIdentityBlockedRoute(String loc) {
-  if (loc == '/create' || loc == '/chats' || loc == '/report') return true;
+  if (loc == '/create' ||
+      loc == '/chats' ||
+      loc == '/friends' ||
+      loc.startsWith('/dms/') ||
+      loc == '/report') {
+    return true;
+  }
   if (RegExp(r'^/events/\d+/(chat|requests|members|edit)$').hasMatch(loc)) {
     return true;
   }
