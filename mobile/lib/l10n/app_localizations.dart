@@ -2537,7 +2537,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendsSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search by public ID…'**
+  /// **'Public ID or number (e.g. 001108)…'**
   String get friendsSearchHint;
 
   /// No description provided for @friendsSearchMinLength.
