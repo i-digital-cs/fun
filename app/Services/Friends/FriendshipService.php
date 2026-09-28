@@ -10,6 +10,7 @@ use App\Notifications\FriendAcceptedNotification;
 use App\Notifications\FriendRequestNotification;
 use App\Services\Safety\UserBlockService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -23,11 +24,12 @@ class FriendshipService
     public function findBetween(User $a, User $b): ?Friendship
     {
         return Friendship::query()
-            ->where(function ($q) use ($a, $b) {
-                $q->where('requester_id', $a->id)->where('addressee_id', $b->id);
-            })
-            ->orWhere(function ($q) use ($a, $b) {
-                $q->where('requester_id', $b->id)->where('addressee_id', $a->id);
+            ->where(function ($outer) use ($a, $b) {
+                $outer->where(function ($q) use ($a, $b) {
+                    $q->where('requester_id', $a->id)->where('addressee_id', $b->id);
+                })->orWhere(function ($q) use ($a, $b) {
+                    $q->where('requester_id', $b->id)->where('addressee_id', $a->id);
+                });
             })
             ->first();
     }
@@ -167,13 +169,29 @@ class FriendshipService
 
     public function accept(User $actor, User $other): Friendship
     {
-        $row = $this->requireIncomingPending($actor, $other);
-
         if ($this->blocks->isBlockedEitherWay($actor, $other)) {
             throw new DomainException(__('friends.blocked'));
         }
 
-        $row->forceFill(['status' => FriendshipStatus::Accepted])->save();
+        $row = DB::transaction(function () use ($actor, $other) {
+            $locked = Friendship::query()
+                ->where(function ($outer) use ($actor, $other) {
+                    $outer->where(function ($q) use ($actor, $other) {
+                        $q->where('requester_id', $other->id)->where('addressee_id', $actor->id);
+                    });
+                })
+                ->where('status', FriendshipStatus::Pending)
+                ->lockForUpdate()
+                ->first();
+
+            if ($locked === null) {
+                throw new DomainException(__('friends.cannot_accept'));
+            }
+
+            $locked->forceFill(['status' => FriendshipStatus::Accepted])->save();
+
+            return $locked;
+        });
 
         try {
             $other->notify(new FriendAcceptedNotification($actor));
@@ -310,6 +328,35 @@ class FriendshipService
             ->pluck('requester_id');
 
         return $asRequester->merge($asAddressee)->unique()->values()->all();
+    }
+
+    /**
+     * Remove any friendship row between two users (block / purge hygiene).
+     */
+    public function purgeBetween(User $a, User $b): void
+    {
+        Friendship::query()
+            ->where(function ($outer) use ($a, $b) {
+                $outer->where(function ($q) use ($a, $b) {
+                    $q->where('requester_id', $a->id)->where('addressee_id', $b->id);
+                })->orWhere(function ($q) use ($a, $b) {
+                    $q->where('requester_id', $b->id)->where('addressee_id', $a->id);
+                });
+            })
+            ->delete();
+    }
+
+    /**
+     * Remove all friendships involving a user (account purge).
+     */
+    public function purgeForUser(User $user): void
+    {
+        Friendship::query()
+            ->where(function ($q) use ($user) {
+                $q->where('requester_id', $user->id)
+                    ->orWhere('addressee_id', $user->id);
+            })
+            ->delete();
     }
 
     private function requireIncomingPending(User $actor, User $other): Friendship

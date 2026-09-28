@@ -112,20 +112,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/friends', [ApiFriendController::class, 'index']);
         Route::get('/friends/requests', [ApiFriendController::class, 'requests']);
         Route::post('/friends', [ApiFriendController::class, 'store'])->middleware('throttle:30,1');
-        Route::post('/friends/{user}/accept', [ApiFriendController::class, 'accept'])->whereNumber('user');
-        Route::post('/friends/{user}/decline', [ApiFriendController::class, 'decline'])->whereNumber('user');
-        Route::post('/friends/{user}/cancel', [ApiFriendController::class, 'cancel'])->whereNumber('user');
-        Route::delete('/friends/{user}', [ApiFriendController::class, 'destroy'])->whereNumber('user');
+        Route::post('/friends/{user}/accept', [ApiFriendController::class, 'accept'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1');
+        Route::post('/friends/{user}/decline', [ApiFriendController::class, 'decline'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1');
+        Route::post('/friends/{user}/cancel', [ApiFriendController::class, 'cancel'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1');
+        Route::delete('/friends/{user}', [ApiFriendController::class, 'destroy'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1');
 
         Route::get('/dms', [ApiDirectMessageController::class, 'index']);
-        Route::post('/dms/with/{user}', [ApiDirectMessageController::class, 'open'])->whereNumber('user');
+        Route::post('/dms/with/{user}', [ApiDirectMessageController::class, 'open'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1');
         Route::get('/dms/{conversation}/messages', [ApiDirectMessageController::class, 'messages'])
             ->whereNumber('conversation');
         Route::post('/dms/{conversation}/messages', [ApiDirectMessageController::class, 'store'])
             ->whereNumber('conversation')
             ->middleware('throttle:messages');
         Route::post('/dms/{conversation}/read', [ApiDirectMessageController::class, 'markRead'])
-            ->whereNumber('conversation');
+            ->whereNumber('conversation')
+            ->middleware('throttle:60,1');
 
         Route::post('/reports', [ApiReportController::class, 'store'])->middleware('throttle:reports');
         Route::get('/blocks', [ApiBlockController::class, 'index']);

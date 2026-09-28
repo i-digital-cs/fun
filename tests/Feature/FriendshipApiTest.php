@@ -142,4 +142,36 @@ class FriendshipApiTest extends TestCase
             ->assertJsonPath('data.friendship.can_request', true)
             ->assertJsonPath('data.can_message', false);
     }
+
+    public function test_block_removes_friendship(): void
+    {
+        $a = User::factory()->active()->create();
+        $b = User::factory()->active()->create();
+
+        Friendship::query()->create([
+            'requester_id' => $a->id,
+            'addressee_id' => $b->id,
+            'status' => FriendshipStatus::Accepted,
+        ]);
+
+        Sanctum::actingAs($a);
+        $this->postJson("/api/users/{$b->id}/block")->assertSuccessful();
+
+        $this->assertDatabaseMissing('friendships', [
+            'requester_id' => $a->id,
+            'addressee_id' => $b->id,
+        ]);
+
+        $this->postJson("/api/dms/with/{$b->id}")->assertStatus(422);
+    }
+
+    public function test_search_escapes_like_wildcards(): void
+    {
+        $a = User::factory()->active()->create();
+        Sanctum::actingAs($a);
+
+        $this->getJson('/api/users/search?q=%25ab')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
 }

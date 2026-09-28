@@ -206,21 +206,57 @@ class DirectMessageService
                     ->orWhere('user_high_id', $user->id);
             })
             ->whereNotNull('last_message_at')
-            ->with(['userLow:id,public_id,name,profile_image_path', 'userHigh:id,public_id,name,profile_image_path'])
+            ->with(['userLow:id,public_id,name,profile_image_path,status', 'userHigh:id,public_id,name,profile_image_path,status'])
             ->orderByDesc('last_message_at')
+            ->limit(100)
             ->get();
 
+        if ($conversations->isEmpty()) {
+            return collect();
+        }
+
         $blockedIds = $this->blocks->blockedUserIdsFor($user);
+        $friendIds = array_flip($this->friendships->acceptedFriendIds($user));
+        $conversationIds = $conversations->pluck('id')->all();
+
         $reads = DirectConversationRead::query()
             ->where('user_id', $user->id)
-            ->whereIn('conversation_id', $conversations->pluck('id'))
+            ->whereIn('conversation_id', $conversationIds)
             ->get()
             ->keyBy('conversation_id');
 
-        return $conversations->map(function (DirectConversation $c) use ($user, $blockedIds, $reads) {
+        $lastMessageIds = DirectMessage::query()
+            ->selectRaw('MAX(id) as id')
+            ->whereIn('conversation_id', $conversationIds)
+            ->groupBy('conversation_id')
+            ->pluck('id');
+
+        $lastByConversation = DirectMessage::query()
+            ->whereIn('id', $lastMessageIds)
+            ->with('user:id,name')
+            ->get()
+            ->keyBy('conversation_id');
+
+        $unreadByConversation = DirectMessage::query()
+            ->selectRaw('direct_messages.conversation_id, COUNT(*) as unread_count')
+            ->leftJoin('direct_conversation_reads as reads', function ($join) use ($user) {
+                $join->on('reads.conversation_id', '=', 'direct_messages.conversation_id')
+                    ->where('reads.user_id', '=', $user->id);
+            })
+            ->whereIn('direct_messages.conversation_id', $conversationIds)
+            ->where('direct_messages.user_id', '!=', $user->id)
+            ->whereRaw('direct_messages.id > COALESCE(reads.last_read_message_id, 0)')
+            ->groupBy('direct_messages.conversation_id')
+            ->pluck('unread_count', 'conversation_id');
+
+        return $conversations->map(function (DirectConversation $c) use ($user, $blockedIds, $friendIds, $lastByConversation, $unreadByConversation) {
             $otherId = $c->otherUserId((int) $user->id);
 
             if (in_array($otherId, $blockedIds, true)) {
+                return null;
+            }
+
+            if (! isset($friendIds[$otherId])) {
                 return null;
             }
 
@@ -230,22 +266,8 @@ class DirectMessageService
                 return null;
             }
 
-            if (! $this->friendships->areFriends($user, $other)) {
-                return null;
-            }
-
-            $last = DirectMessage::query()
-                ->where('conversation_id', $c->id)
-                ->with('user:id,name')
-                ->latest('id')
-                ->first();
-
-            $lastReadId = (int) ($reads->get($c->id)?->last_read_message_id ?? 0);
-            $unread = DirectMessage::query()
-                ->where('conversation_id', $c->id)
-                ->where('user_id', '!=', $user->id)
-                ->when($lastReadId > 0, fn ($q) => $q->where('id', '>', $lastReadId))
-                ->count();
+            $last = $lastByConversation->get($c->id);
+            $unread = (int) ($unreadByConversation[$c->id] ?? 0);
 
             return [
                 'id' => $c->id,

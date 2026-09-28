@@ -2,6 +2,7 @@
 
 namespace App\Services\Safety;
 
+use App\Models\Friendship;
 use App\Models\User;
 use App\Models\UserBlock;
 
@@ -14,11 +15,12 @@ class UserBlockService
         }
 
         return UserBlock::query()
-            ->where(function ($query) use ($a, $b) {
-                $query->where('blocker_id', $a->id)->where('blocked_id', $b->id);
-            })
-            ->orWhere(function ($query) use ($a, $b) {
-                $query->where('blocker_id', $b->id)->where('blocked_id', $a->id);
+            ->where(function ($outer) use ($a, $b) {
+                $outer->where(function ($query) use ($a, $b) {
+                    $query->where('blocker_id', $a->id)->where('blocked_id', $b->id);
+                })->orWhere(function ($query) use ($a, $b) {
+                    $query->where('blocker_id', $b->id)->where('blocked_id', $a->id);
+                });
             })
             ->exists();
     }
@@ -57,10 +59,23 @@ class UserBlockService
             throw new \App\Exceptions\DomainException(__('safety.not_allowed'));
         }
 
-        return UserBlock::query()->firstOrCreate([
+        $row = UserBlock::query()->firstOrCreate([
             'blocker_id' => $blocker->id,
             'blocked_id' => $blocked->id,
         ]);
+
+        // Block supersedes friendship — remove so DM cannot resume after unblock without a new request.
+        Friendship::query()
+            ->where(function ($outer) use ($blocker, $blocked) {
+                $outer->where(function ($q) use ($blocker, $blocked) {
+                    $q->where('requester_id', $blocker->id)->where('addressee_id', $blocked->id);
+                })->orWhere(function ($q) use ($blocker, $blocked) {
+                    $q->where('requester_id', $blocked->id)->where('addressee_id', $blocker->id);
+                });
+            })
+            ->delete();
+
+        return $row;
     }
 
     public function unblock(User $blocker, User $blocked): void

@@ -4,6 +4,10 @@ namespace App\Services\Account;
 
 use App\Exceptions\DomainException;
 use App\Models\DeviceToken;
+use App\Models\DirectConversation;
+use App\Models\DirectConversationRead;
+use App\Models\DirectMessage;
+use App\Models\Friendship;
 use App\Models\IdentityDocument;
 use App\Models\User;
 use App\Notifications\AccountDeletionRequestedNotification;
@@ -109,6 +113,26 @@ class AccountDeletionService
 
             $user->tokens()->delete();
             DeviceToken::query()->where('user_id', $user->id)->delete();
+
+            Friendship::query()
+                ->where(function ($q) use ($user) {
+                    $q->where('requester_id', $user->id)
+                        ->orWhere('addressee_id', $user->id);
+                })
+                ->delete();
+
+            $conversationIds = DirectConversation::query()
+                ->where(function ($q) use ($user) {
+                    $q->where('user_low_id', $user->id)
+                        ->orWhere('user_high_id', $user->id);
+                })
+                ->pluck('id');
+
+            if ($conversationIds->isNotEmpty()) {
+                DirectMessage::query()->whereIn('conversation_id', $conversationIds)->delete();
+                DirectConversationRead::query()->whereIn('conversation_id', $conversationIds)->delete();
+                DirectConversation::query()->whereIn('id', $conversationIds)->delete();
+            }
 
             $anonEmail = 'deleted+'.$user->id.'.'.Str::lower(Str::random(8)).'@deleted.funnity.local';
 

@@ -146,12 +146,27 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/friends', [WebFriendController::class, 'index'])->name('friends.index');
         Route::post('/friends', [WebFriendController::class, 'store'])->middleware('throttle:30,1')->name('friends.store');
-        Route::post('/friends/{user}/accept', [WebFriendController::class, 'accept'])->whereNumber('user')->name('friends.accept');
-        Route::post('/friends/{user}/decline', [WebFriendController::class, 'decline'])->whereNumber('user')->name('friends.decline');
-        Route::post('/friends/{user}/cancel', [WebFriendController::class, 'cancel'])->whereNumber('user')->name('friends.cancel');
-        Route::delete('/friends/{user}', [WebFriendController::class, 'destroy'])->whereNumber('user')->name('friends.destroy');
+        Route::post('/friends/{user}/accept', [WebFriendController::class, 'accept'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1')
+            ->name('friends.accept');
+        Route::post('/friends/{user}/decline', [WebFriendController::class, 'decline'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1')
+            ->name('friends.decline');
+        Route::post('/friends/{user}/cancel', [WebFriendController::class, 'cancel'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1')
+            ->name('friends.cancel');
+        Route::delete('/friends/{user}', [WebFriendController::class, 'destroy'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1')
+            ->name('friends.destroy');
 
-        Route::get('/dms/with/{user}', [WebDirectMessageController::class, 'open'])->whereNumber('user')->name('dms.open');
+        Route::get('/dms/with/{user}', [WebDirectMessageController::class, 'open'])
+            ->whereNumber('user')
+            ->middleware('throttle:30,1')
+            ->name('dms.open');
         Route::get('/dms/{conversation}', [WebDirectMessageController::class, 'show'])->whereNumber('conversation')->name('dms.show');
         Route::post('/dms/{conversation}', [WebDirectMessageController::class, 'store'])
             ->whereNumber('conversation')

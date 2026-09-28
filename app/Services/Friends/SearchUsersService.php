@@ -44,7 +44,9 @@ class SearchUsersService
             $builder->where('public_id', $q);
         } else {
             // Prefix match on public_id only (not name) for privacy.
-            $builder->where('public_id', 'like', $q.'%');
+            // Escape LIKE wildcards so "%" / "_" cannot widen the search.
+            $escaped = addcslashes($q, '%_\\');
+            $builder->where('public_id', 'like', $escaped.'%');
         }
 
         return $builder
