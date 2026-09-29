@@ -56,12 +56,13 @@ android {
     buildTypes {
         release {
             when {
+                // Explicit local smoke flag wins even if key.properties exists
+                // (RELEASE.md: NOT for Play Store).
+                allowDebugReleaseSigning -> {
+                    signingConfig = signingConfigs.getByName("debug")
+                }
                 keystorePropertiesFile.exists() -> {
                     signingConfig = signingConfigs.getByName("release")
-                }
-                allowDebugReleaseSigning -> {
-                    // Local-only: flutter build/run --release -PallowDebugReleaseSigning=true
-                    signingConfig = signingConfigs.getByName("debug")
                 }
                 // Else: leave unset. Fail closed only when a *release* task runs
                 // (see afterEvaluate below) so assembleDebug / flutter run still work.
