@@ -88,6 +88,17 @@ class ChatRealtimeClient {
     required int userId,
     required SiteBroadcastConfig config,
   }) async {
+    // Reuse an existing live socket — tearing down drops user-channel toasts
+    // (friend accept / DM) while another screen (event chat / DM) reconnects.
+    if (_connected &&
+        _client != null &&
+        _userId == userId &&
+        config.enabled &&
+        config.key != null &&
+        config.key!.isNotEmpty) {
+      return true;
+    }
+
     await disconnect();
 
     if (!config.enabled ||

@@ -16,6 +16,7 @@ import 'package:fun_mobile/features/friends/domain/dm_models.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
 import 'package:fun_mobile/features/chat/presentation/widgets/chat_toast_banner.dart';
 import 'package:fun_mobile/features/notifications/data/push_notification_service.dart';
+import 'package:fun_mobile/features/notifications/domain/app_notification.dart';
 import 'package:fun_mobile/features/notifications/presentation/notifications_page.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -929,6 +930,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
   Timer? _timer;
   final Map<int, int> _lastSeenMessageIds = {};
   bool _primed = false;
+  bool _friendNotifyPrimed = false;
   bool _inFlight = false;
   bool _usePollToasts = true;
 
@@ -1017,51 +1019,20 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     }
 
     final client = ref.read(chatRealtimeClientProvider);
-    if (_realtime?.userId == auth.user.id && client.isConnected) {
-      _realtime = client;
+    _realtime = client;
+    _ensureToastSubscriptions(client);
+
+    if (client.isConnected && client.userId == auth.user.id) {
+      _usePollToasts = false;
+      _schedulePoll(const Duration(seconds: 20));
       return;
     }
 
-    await _realtimeSub?.cancel();
-    _realtimeSub = null;
-    await _joinAcceptedSub?.cancel();
-    _joinAcceptedSub = null;
-    await _joinRequestedSub?.cancel();
-    _joinRequestedSub = null;
-    await _friendRequestedSub?.cancel();
-    _friendRequestedSub = null;
-    await _friendAcceptedSub?.cancel();
-    _friendAcceptedSub = null;
-    await _messageReactedSub?.cancel();
-    _messageReactedSub = null;
-    await _dmToastSub?.cancel();
-    _dmToastSub = null;
-
-    _realtime = client;
-    _realtimeSub = client.messages.listen(
-      (payload) => _enqueueToast(payload, bumpChat: true),
-    );
-    _joinAcceptedSub = client.joinAccepted.listen(
-      (payload) => _enqueueToast(payload, bumpNotify: true),
-    );
-    _joinRequestedSub = client.joinRequested.listen(
-      (payload) => _enqueueToast(payload, bumpNotify: true),
-    );
-    _friendRequestedSub = client.friendRequested.listen(
-      (payload) => _enqueueToast(payload, bumpNotify: true),
-    );
-    _friendAcceptedSub = client.friendAccepted.listen(
-      (payload) => _enqueueToast(payload, bumpNotify: true),
-    );
-    _messageReactedSub = client.messageReacted.listen(
-      (payload) => _enqueueToast(payload, bumpNotify: true),
-    );
-    _dmToastSub = client.dmMessages.listen(
-      (payload) => _enqueueToast(payload, bumpChat: true),
-    );
-
     final started = await client.connect(userId: auth.user.id, config: config);
     if (!mounted) return;
+
+    // Re-bind after connect in case a concurrent teardown cancelled streams.
+    _ensureToastSubscriptions(client);
 
     if (!started) {
       _usePollToasts = true;
@@ -1075,9 +1046,35 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       if (!mounted) return;
       if (_realtime?.isConnected == true) {
         _usePollToasts = false;
-        _schedulePoll(const Duration(seconds: 60));
+        // Keep a modest poll so friend accept/request still sweet-toast
+        // if Pusher or FCM was missed while the app was open.
+        _schedulePoll(const Duration(seconds: 20));
       }
     });
+  }
+
+  void _ensureToastSubscriptions(ChatRealtimeClient client) {
+    _realtimeSub ??= client.messages.listen(
+      (payload) => _enqueueToast(payload, bumpChat: true),
+    );
+    _joinAcceptedSub ??= client.joinAccepted.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _joinRequestedSub ??= client.joinRequested.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _friendRequestedSub ??= client.friendRequested.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _friendAcceptedSub ??= client.friendAccepted.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _messageReactedSub ??= client.messageReacted.listen(
+      (payload) => _enqueueToast(payload, bumpNotify: true),
+    );
+    _dmToastSub ??= client.dmMessages.listen(
+      (payload) => _enqueueToast(payload, bumpChat: true),
+    );
   }
 
   void _enqueueToast(
@@ -1159,6 +1156,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     final auth = ref.read(authControllerProvider);
     if (auth is! Authenticated) {
       _primed = false;
+      _friendNotifyPrimed = false;
       _lastSeenMessageIds.clear();
       _shownToastKeys.clear();
       ref.read(chatUnreadTotalProvider.notifier).state = 0;
@@ -1170,7 +1168,20 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
     try {
       final result = await ref.read(chatsRepositoryProvider).list();
       final dmResult = await ref.read(dmsRepositoryProvider).list();
-      if (!mounted || result.failure != null) {
+      final notifyResult = await ref
+          .read(notificationsRepositoryProvider)
+          .list();
+      if (!mounted) {
+        return;
+      }
+
+      if (notifyResult.failure == null && notifyResult.data != null) {
+        ref.read(notificationUnreadTotalProvider.notifier).state =
+            notifyResult.unreadCount;
+        _enqueueFriendNotifyToasts(notifyResult.data);
+      }
+
+      if (result.failure != null) {
         return;
       }
 
@@ -1225,6 +1236,59 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
       _primed = true;
     } finally {
       _inFlight = false;
+    }
+  }
+
+  /// Always show sweet toasts for friend request/accept from the inbox
+  /// (Pusher/FCM can miss while another screen reconnects the socket).
+  void _enqueueFriendNotifyToasts(List<AppNotification> items) {
+    if (!_friendNotifyPrimed) {
+      // First poll: seed dedupe keys so we don't toast historical unread.
+      for (final item in items) {
+        if (item.type == 'friend_request' || item.type == 'friend_accepted') {
+          _shownToastKeys.add('notify:${item.id}');
+        }
+      }
+      _friendNotifyPrimed = true;
+      return;
+    }
+
+    for (final item in items) {
+      if (!item.isUnread) continue;
+      if (item.type != 'friend_request' && item.type != 'friend_accepted') {
+        continue;
+      }
+      final isAccept = item.type == 'friend_accepted';
+      // Match Pusher/FCM dedupe keys so we never double-toast.
+      final realtimeKey = isAccept
+          ? (item.accepterId != null && item.accepterId! > 0
+                ? 'friend_accepted:${item.accepterId}'
+                : null)
+          : (item.requesterId != null && item.requesterId! > 0
+                ? 'friend_request:${item.requesterId}'
+                : null);
+      final dedupe = realtimeKey ?? 'notify:${item.id}';
+      if (_shownToastKeys.contains(dedupe) ||
+          _shownToastKeys.contains('notify:${item.id}')) {
+        continue;
+      }
+
+      _enqueueToast(
+        InAppToastPayload(
+          kind: isAccept
+              ? InAppToastKind.friendAccepted
+              : InAppToastKind.friendRequest,
+          dedupeKey: dedupe,
+          eventId: 0,
+          eventTitle: item.title,
+          title: item.title,
+          body: item.body,
+          senderInitials: isAccept ? '✓' : '?',
+          openPath: isAccept ? '/friends' : '/friends?tab=requests',
+        ),
+        bumpNotify: true,
+      );
+      _shownToastKeys.add('notify:${item.id}');
     }
   }
 

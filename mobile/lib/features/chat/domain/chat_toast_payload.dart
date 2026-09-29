@@ -124,9 +124,11 @@ class InAppToastPayload {
 
     return InAppToastPayload(
       kind: InAppToastKind.friendRequest,
-      dedupeKey: friendshipId > 0
-          ? 'friend_request:$friendshipId'
-          : 'friend_request:$requesterId',
+      dedupeKey: requesterId > 0
+          ? 'friend_request:$requesterId'
+          : (friendshipId > 0
+                ? 'friend_request:$friendshipId'
+                : 'friend_request:${name.hashCode}'),
       eventId: 0,
       eventTitle: name,
       title: json['title'] as String? ?? '',
@@ -239,7 +241,7 @@ class InAppToastPayload {
       return InAppToastPayload(
         kind: InAppToastKind.friendRequest,
         dedupeKey: requesterId > 0
-            ? 'friend_request:fcm:$requesterId'
+            ? 'friend_request:$requesterId'
             : 'friend_request:fcm:${title.hashCode}',
         eventId: 0,
         eventTitle: title,
@@ -255,7 +257,7 @@ class InAppToastPayload {
       return InAppToastPayload(
         kind: InAppToastKind.friendAccepted,
         dedupeKey: accepterId > 0
-            ? 'friend_accepted:fcm:$accepterId'
+            ? 'friend_accepted:$accepterId'
             : 'friend_accepted:fcm:${title.hashCode}',
         eventId: 0,
         eventTitle: title,
