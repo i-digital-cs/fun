@@ -6,7 +6,7 @@ The Flutter app needs a **mobile** Firebase config file so it can obtain an FCM 
 ## 1. Create / open the Firebase Android app
 
 1. Open [Firebase Console](https://console.firebase.google.com/) → project **funnity-157aa** (same as the service account).
-2. Android app package: `com.funity.fun_mobile`
+2. Android app package: `com.funnity.app`
 3. Place config at:
 
 ```text
