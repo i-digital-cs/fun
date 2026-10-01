@@ -80,6 +80,28 @@ class IdentityDocumentsTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_identity_show_lists_each_document_separately(): void
+    {
+        Storage::fake(config('media.private_disk'));
+
+        $owner = User::factory()->create();
+        $this->actingAs($owner)->post(route('identity.store'), [
+            'id_front' => UploadedFile::fake()->image('front.jpg'),
+            'id_back' => UploadedFile::fake()->image('back.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
+        ])->assertRedirect();
+
+        $admin = User::factory()->superAdmin()->create();
+        $this->actingAs($admin)
+            ->get(route('admin.identity.show', $owner))
+            ->assertOk()
+            ->assertSee(__('identity.id_front'), false)
+            ->assertSee(__('identity.id_back'), false)
+            ->assertSee(__('identity.selfie'), false)
+            ->assertSee(__('admin.files_count', ['count' => 3]), false)
+            ->assertDontSee('attachment-folder', false);
+    }
+
     public function test_admin_can_download_identity_document_and_outsider_cannot(): void
     {
         Storage::fake(config('media.private_disk'));

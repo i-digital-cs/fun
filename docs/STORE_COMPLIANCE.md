@@ -12,7 +12,7 @@ Source of truth for store-required product surfaces. Implement with **web + Flut
 | Account deletion help | https://funnity.com/account-deletion |
 | In-app delete | Profile → Delete account (web `/settings/delete-account`, Flutter `/settings/delete-account`) |
 
-Contact: `privacy@funnity.com` · `support@funnity.com`
+Contact: `support@funnity.com` · `support@funnity.com`
 
 ---
 
@@ -127,6 +127,40 @@ Uses standard HTTPS/TLS only → answer that the app only uses encryption exempt
 
 ---
 
+## P1 — Google Play App access (sign-in details)
+
+Paste these values into Play Console → **App content** → **App access** → **Add sign-in details**. Keep this account **Active** (identity approved) so reviewers are not blocked by the ID-upload gate.
+
+| Play Console field | Value |
+|--------------------|-------|
+| **Name** | `Member account (full access)` |
+| **Username / email / phone** | `play.review@funnity.com` |
+| **Password** | `FunnityReview2026!` |
+| **Any other information required for access** | See English block below |
+| **Provides full access…** | **Yes** (check the box) |
+
+### Other information (copy into Play Console — English, ≤500 chars)
+
+```
+How to sign in:
+1. Open Funnity → Login.
+2. Use Email/password (not Google Sign-In).
+3. Email: play.review@funnity.com
+4. Password: FunnityReview2026!
+5. Tap Sign in.
+
+Notes: Account is verified & identity-approved (full access). No 2FA, OTP, QR, biometrics, or location gate. GPS not required (Cairo set). Can browse, join/create events, chat, and use Profile. No IAP/premium. Use only these credentials.
+```
+
+### Ops: keep credentials working
+
+- Account email: `play.review@funnity.com`
+- Must stay `status = active`, `email_verified_at` set, `sex` set, password login enabled.
+- If password is rotated, update **both** Play Console and this doc in the same change.
+- Recreate / reset via production tinker if needed (do not leave the account as `pending_documents`).
+
+---
+
 ## P2 polish
 
 - Auth screens: “By continuing you agree to Terms & Privacy”
@@ -144,4 +178,4 @@ Uses standard HTTPS/TLS only → answer that the app only uses encryption exempt
 
 ---
 
-*Last updated: 2026-09-28*
+*Last updated: 2026-10-01*

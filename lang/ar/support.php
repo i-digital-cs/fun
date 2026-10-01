@@ -7,7 +7,7 @@ return [
     'intro' => 'تحتاج مساعدة مع :brand؟ تواصل معنا أدناه أو استخدم أدوات السلامة داخل التطبيق.',
     'email_label' => 'بريد الدعم',
     'email' => 'support@funnity.com',
-    'privacy_email' => 'privacy@funnity.com',
+    'privacy_email' => 'support@funnity.com',
     'sections' => [
         [
             'title' => 'الحساب وتسجيل الدخول',

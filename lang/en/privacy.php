@@ -7,7 +7,7 @@ return [
     'updated' => 'Last updated: :date',
     'updated_date' => '28 September 2026',
     'intro' => 'This Privacy Policy explains how :brand (“we”, “us”, or “our”) collects, uses, shares, and protects personal information when you use funnity.com, our mobile apps, and related services (the “Service”). By creating an account or using the Service, you acknowledge this policy.',
-    'contact_email' => 'privacy@funnity.com',
+    'contact_email' => 'support@funnity.com',
 
     'sections' => [
         [

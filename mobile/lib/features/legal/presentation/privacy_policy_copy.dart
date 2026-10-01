@@ -16,7 +16,7 @@ class PrivacyPolicyCopy {
 
   static PrivacyPolicyCopy forLocale(String languageCode, {String brand = 'Funnity'}) {
     final isAr = languageCode.toLowerCase().startsWith('ar');
-    final email = 'privacy@funnity.com';
+    final email = 'support@funnity.com';
     final raw = isAr ? _ar : _en;
     String fill(String text) => text
         .replaceAll(':brand', brand)

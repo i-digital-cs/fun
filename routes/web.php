@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\Admin\AuditLogController;
 use App\Http\Controllers\Web\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Web\Admin\ChatModerationController;
 use App\Http\Controllers\Web\Admin\CityController as AdminCityController;
+use App\Http\Controllers\Web\Admin\ActivityController as AdminActivityController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Web\Admin\EventModerationController;
 use App\Http\Controllers\Web\Admin\IdentityDocumentModerationController;
@@ -288,6 +289,9 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('platform.admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
+        Route::get('/activity/{metric}', [AdminActivityController::class, 'show'])
+            ->where('metric', 'active_members|registrations|events_created|join_requests|joins_accepted|event_messages|direct_messages|friend_requests|friend_accepts')
+            ->name('activity.show');
 
         Route::get('/users', [UserModerationController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [UserModerationController::class, 'edit'])

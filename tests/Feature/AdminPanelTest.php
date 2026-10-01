@@ -31,7 +31,146 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertSee(__('admin.dashboard'))
             ->assertSee(__('admin.stat_active_users'), false)
-            ->assertSee(__('admin.chart_activity'), false);
+            ->assertSee(__('admin.today_activity'), false)
+            ->assertSee(__('admin.chart_activity'), false)
+            ->assertSee(__('admin.chart_actions'), false);
+    }
+
+    public function test_dashboard_shows_today_activity_counts(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $tz = config('app.timezone');
+        $today = now($tz)->startOfDay()->addHours(10);
+        $yesterday = $today->copy()->subDay();
+
+        $member = User::factory()->active()->create(['created_at' => $today]);
+        User::factory()->active()->create(['created_at' => $yesterday]);
+
+        $city = City::factory()->create();
+        $category = Category::factory()->create(['is_active' => true]);
+        $event = Event::factory()->published()->create([
+            'created_by' => $member->id,
+            'category_id' => $category->id,
+            'city_id' => $city->id,
+            'created_at' => $today,
+        ]);
+        Event::factory()->published()->create([
+            'created_by' => $member->id,
+            'category_id' => $category->id,
+            'city_id' => $city->id,
+            'created_at' => $yesterday,
+        ]);
+
+        $joiner = User::factory()->active()->create();
+        \App\Models\EventJoinRequest::query()->create([
+            'event_id' => $event->id,
+            'user_id' => $joiner->id,
+            'status' => \App\Enums\JoinRequestStatus::Accepted,
+            'reviewed_at' => $today,
+            'created_at' => $today,
+            'updated_at' => $today,
+        ]);
+        \App\Models\EventJoinRequest::query()->create([
+            'event_id' => $event->id,
+            'user_id' => User::factory()->active()->create()->id,
+            'status' => \App\Enums\JoinRequestStatus::Pending,
+            'created_at' => $yesterday,
+            'updated_at' => $yesterday,
+        ]);
+
+        EventMessage::query()->create([
+            'event_id' => $event->id,
+            'user_id' => $member->id,
+            'body' => 'Hello today',
+            'created_at' => $today,
+            'updated_at' => $today,
+        ]);
+
+        $peer = User::factory()->active()->create();
+        [$low, $high] = \App\Models\DirectConversation::orderedPair((int) $member->id, (int) $peer->id);
+        $conversation = \App\Models\DirectConversation::query()->create([
+            'user_low_id' => $low,
+            'user_high_id' => $high,
+            'last_message_at' => $today,
+        ]);
+        \App\Models\DirectMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $member->id,
+            'body' => 'DM today',
+            'created_at' => $today,
+            'updated_at' => $today,
+        ]);
+
+        \App\Models\Friendship::query()->create([
+            'requester_id' => $member->id,
+            'addressee_id' => $peer->id,
+            'status' => \App\Enums\FriendshipStatus::Accepted,
+            'created_at' => $today,
+            'updated_at' => $today,
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('sessions')->insert([
+            'id' => 'sess-today-1',
+            'user_id' => $member->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'PHPUnit',
+            'payload' => base64_encode('x'),
+            'last_activity' => $today->getTimestamp(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(__('admin.today_metric_registrations'), false)
+            ->assertSee(__('admin.today_metric_events_created'), false)
+            ->assertSee(__('admin.today_metric_join_requests'), false)
+            ->assertSee(__('admin.today_metric_joins_accepted'), false)
+            ->assertSee(__('admin.today_metric_event_messages'), false)
+            ->assertSee(__('admin.today_metric_direct_messages'), false)
+            ->assertSee(__('admin.today_metric_friend_requests'), false)
+            ->assertSee(__('admin.today_metric_friend_accepts'), false)
+            ->assertSee(__('admin.today_metric_active_members'), false)
+            ->assertViewHas('today', function (array $todayStats): bool {
+                return ($todayStats['registrations'] ?? 0) >= 1
+                    && ($todayStats['events_created'] ?? 0) >= 1
+                    && ($todayStats['join_requests'] ?? 0) >= 1
+                    && ($todayStats['joins_accepted'] ?? 0) >= 1
+                    && ($todayStats['event_messages'] ?? 0) >= 1
+                    && ($todayStats['direct_messages'] ?? 0) >= 1
+                    && ($todayStats['friend_requests'] ?? 0) >= 1
+                    && ($todayStats['friend_accepts'] ?? 0) >= 1
+                    && ($todayStats['active_members'] ?? 0) >= 1;
+            });
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity.show', ['metric' => 'registrations', 'day' => 'today']))
+            ->assertOk()
+            ->assertSee($member->email, false)
+            ->assertSee(__('admin.activity_rows'), false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity.show', ['metric' => 'events_created', 'day' => 'today']))
+            ->assertOk()
+            ->assertSee($event->title, false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity.show', ['metric' => 'event_messages', 'day' => 'today']))
+            ->assertOk()
+            ->assertSee('Hello today', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity.show', ['metric' => 'direct_messages', 'day' => 'today']))
+            ->assertOk()
+            ->assertSee('DM today', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity.show', ['metric' => 'active_members', 'day' => 'today']))
+            ->assertOk()
+            ->assertSee($member->email, false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.activity.show', ['metric' => 'not_a_metric']))
+            ->assertNotFound();
     }
 
     public function test_admin_users_lists_active_users_with_event_counts(): void

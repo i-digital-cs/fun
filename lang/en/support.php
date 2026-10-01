@@ -7,7 +7,7 @@ return [
     'intro' => 'Need help with :brand? Reach us below or use in-app safety tools.',
     'email_label' => 'Email support',
     'email' => 'support@funnity.com',
-    'privacy_email' => 'privacy@funnity.com',
+    'privacy_email' => 'support@funnity.com',
     'sections' => [
         [
             'title' => 'Account & login',
