@@ -20,7 +20,9 @@ class PasswordResetTokenService
     {
         $user = User::query()->where('email', strtolower($email))->first();
 
-        if ($user && $user->password !== null) {
+        // Include social-only accounts (null password) so members can set a
+        // password via email OTP when Google/Apple sign-in is unavailable.
+        if ($user !== null) {
             $this->codes->issueAndSend($user, EmailAuthPurpose::PasswordReset);
         }
     }

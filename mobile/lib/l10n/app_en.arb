@@ -408,7 +408,7 @@
   "verifyEmailHint": "Enter the 4-digit code we sent to your email.",
   "resendCode": "Resend code",
   "forgotPassword": "Forgot password?",
-  "forgotPasswordSub": "Enter your email and we’ll send a 4-digit code.",
+  "forgotPasswordSub": "Enter your email and we’ll send a 4-digit code. Works for Google/Apple accounts too — you can set a password.",
   "verifyResetCodeSub": "Check your email for the 4-digit code.",
   "accessFormSub": "Sign in to continue to your community.",
   "accessEnterTitle": "Enter Access Code",

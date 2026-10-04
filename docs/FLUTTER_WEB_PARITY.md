@@ -568,6 +568,8 @@ Codes expire in **15 minutes**. Gate Identity / create / join until `email_verif
 
 Email field + send code. Response always looks successful (no email enumeration).
 
+**Social-only fallback:** if the account exists but has no password (Google/Apple only), the API still emails a 4-digit code so the member can **set** a password when social login is unavailable. Flutter copy should mention this on the forgot-password screen (`forgotPasswordSub`).
+
 ```json
 { "email": "user@example.com" }
 ```
@@ -1315,7 +1317,7 @@ Copy this into PRs:
 
 Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
-1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API)  
+1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API); **forgot-password OTP for social-only accounts** (set password when Google/Apple is down) — web+API+Flutter copy (§2.12b)  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  

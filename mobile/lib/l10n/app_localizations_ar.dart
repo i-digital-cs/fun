@@ -1043,7 +1043,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get forgotPassword => 'نسيت كلمة المرور؟';
 
   @override
-  String get forgotPasswordSub => 'أدخل بريدك وسنرسل رمزاً مكوّناً من 4 أرقام.';
+  String get forgotPasswordSub =>
+      'أدخل بريدك وسنرسل رمزاً من 4 أرقام. يعمل أيضاً لحسابات Google/Apple لتعيين كلمة مرور.';
 
   @override
   String get verifyResetCodeSub =>

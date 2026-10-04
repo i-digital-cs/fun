@@ -1052,7 +1052,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgotPasswordSub =>
-      'Enter your email and we’ll send a 4-digit code.';
+      'Enter your email and we’ll send a 4-digit code. Works for Google/Apple accounts too — you can set a password.';
 
   @override
   String get verifyResetCodeSub => 'Check your email for the 4-digit code.';
