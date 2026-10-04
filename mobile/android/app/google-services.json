@@ -49,6 +49,51 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51496053622:android:b49e37de742513fe0da857",
+        "android_client_info": {
+          "package_name": "com.funnity.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "51496053622-9v18vslp24c442r51o9qm09nmpuq9q0g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.funnity.app",
+            "certificate_hash": "526245eb40ae60039691c323eef069b759a2e103"
+          }
+        },
+        {
+          "client_id": "51496053622-gab1ot6mrja77ik7kf43ergdgksg144e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.funnity.app",
+            "certificate_hash": "261a5b7ea020dc356d1277708b6dbe6522bec1c2"
+          }
+        },
+        {
+          "client_id": "51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYZVVMrS68_quIkG0w8egcktOBMunYaDU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

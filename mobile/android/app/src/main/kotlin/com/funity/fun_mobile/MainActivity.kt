@@ -1,4 +1,4 @@
-package com.funity.fun_mobile
+package com.funnity.app
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

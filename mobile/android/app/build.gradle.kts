@@ -23,7 +23,7 @@ val allowDebugReleaseSigning =
     (project.findProperty("allowDebugReleaseSigning") as String?) == "true"
 
 android {
-    namespace = "com.funity.fun_mobile"
+    namespace = "com.funnity.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -33,7 +33,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.funity.fun_mobile"
+        applicationId = "com.funnity.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

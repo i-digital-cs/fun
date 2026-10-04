@@ -47,7 +47,7 @@ GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 
 ### Android client (needs SHA-1)
 
-**Package / applicationId:** `com.funity.fun_mobile` (from `mobile/android/app/build.gradle.kts`).
+**Package / applicationId:** `com.funnity.app` (from `mobile/android/app/build.gradle.kts`).
 
 This is the usual cause of: *“Google sign-in failed. Check that Google is configured for this app.”*  
 (`ApiException: 10` / DEVELOPER_ERROR — missing Android OAuth client or wrong SHA-1.)
@@ -82,7 +82,7 @@ keytool -list -v -keystore /path/to/your-release.keystore -alias your-alias
 2. **Create the Android OAuth client** (pick one):
 
 **Option A — Firebase (recommended)**  
-[Firebase Console](https://console.firebase.google.com/) → project **funnity-157aa** → Project settings → Your apps → Android `com.funity.fun_mobile`  
+[Firebase Console](https://console.firebase.google.com/) → project **funnity-157aa** → Project settings → Your apps → Android `com.funnity.app`  
 - Confirm SHA-1 / SHA-256 fingerprints are listed  
 - **Authentication → Sign-in method → Google → Enable** (saves Web client ID/secret)  
 - Download a fresh `google-services.json` into `mobile/android/app/`  
@@ -90,7 +90,7 @@ keytool -list -v -keystore /path/to/your-release.keystore -alias your-alias
 
 **Option B — Google Cloud Console**  
 [Credentials](https://console.cloud.google.com/apis/credentials) → Create credentials → OAuth client ID → **Android**  
-- Package name: `com.funity.fun_mobile`  
+- Package name: `com.funnity.app`  
 - SHA-1: debug + release/Play as needed  
 
 3. Copy Android **Client ID** → server `.env`:
