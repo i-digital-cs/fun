@@ -2,11 +2,35 @@
     RewriteEngine On
     RewriteBase /
 
-    # Keep Let's Encrypt ACME challenges served from the web root
+    # Keep Let's Encrypt ACME challenges on HTTP. Do not redirect these.
     RewriteRule ^\.well-known/ - [L]
 
     # Keep cgi-bin untouched
     RewriteRule ^cgi-bin/ - [L]
+
+    # One hop to https://funnity.com for the production host only.
+    # GET/HEAD so logins and form posts are not turned into redirects.
+    # Trailing-slash variants are folded into the same redirect.
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteCond %{HTTP_HOST} ^www\.funnity\.com$ [NC,OR]
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^(www\.)?funnity\.com$ [NC]
+    RewriteCond %{REQUEST_URI} ^/(.+)/$
+    RewriteRule ^ https://funnity.com/%1 [L,R=301]
+
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteCond %{HTTP_HOST} ^www\.funnity\.com$ [NC,OR]
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^(www\.)?funnity\.com$ [NC]
+    RewriteRule ^ https://funnity.com%{REQUEST_URI} [L,R=301]
+
+    # Already on the canonical origin: drop a trailing slash without touching /public.
+    RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+    RewriteCond %{HTTPS} =on
+    RewriteCond %{HTTP_HOST} ^funnity\.com$ [NC]
+    RewriteCond %{REQUEST_URI} ^/(.+)/$
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ https://funnity.com/%1 [L,R=301]
 
     # Never expose /public in the browser URL (document root is project root).
     RewriteCond %{THE_REQUEST} \s/+public([/?\s]) [NC]

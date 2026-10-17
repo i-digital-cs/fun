@@ -30,6 +30,12 @@ class SeoFoundationTest extends TestCase
         $response->assertSee('application/ld+json', false);
         $response->assertSee('"@type":"WebSite"', false);
         $response->assertSee('"@type":"Organization"', false);
+        $response->assertSee('<title>'.e(__('design.home_document_title')).'</title>', false);
+        $response->assertSee(__('design.home_meta_description'), false);
+        $response->assertSee(__('design.brand_identity'), false);
+        $response->assertSee('"email":"'.__('privacy.contact_email').'"', false);
+        $response->assertDontSee('"sameAs"', false);
+        $response->assertDontSee('<meta name="keywords"', false);
     }
 
     public function test_event_show_emits_event_json_ld_and_index_robots(): void
@@ -48,8 +54,11 @@ class SeoFoundationTest extends TestCase
         $response->assertSee('application/ld+json', false);
         $response->assertSee('"@type":"Event"', false);
         $response->assertSee('"@type":"BreadcrumbList"', false);
+        $response->assertSee('"addressLocality":"'.$event->city->name_en.'"', false);
+        $response->assertSee('"startDate":"'.$event->starts_at->toIso8601String().'"', false);
         $response->assertSee('Friday Football Meetup', false);
         $response->assertSee(event_show_url($event), false);
+        $response->assertSee('<link rel="canonical" href="'.e(event_show_url($event)).'"', false);
     }
 
     public function test_discover_page_is_indexable(): void
@@ -122,6 +131,24 @@ class SeoFoundationTest extends TestCase
         $response->assertSee(route('legal.privacy'), false);
         $response->assertSee(event_show_url($event), false);
         $response->assertDontSee('Sitemap Event', false);
+
+        $xml = simplexml_load_string($response->getContent());
+        $this->assertInstanceOf(\SimpleXMLElement::class, $xml);
+        $xml->registerXPathNamespace('s', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+
+        $home = $xml->xpath('//s:url[s:loc="'.route('home').'"]');
+        $this->assertNotEmpty($home);
+        $this->assertCount(0, $home[0]->lastmod, 'Static URLs omit lastmod when no content timestamp exists.');
+
+        $event->forceFill(['updated_at' => '2026-01-15 12:00:00'])->saveQuietly();
+        Cache::forget('seo.sitemap.xml');
+        $again = $this->get(route('sitemap'));
+        $againXml = simplexml_load_string($again->getContent());
+        $this->assertInstanceOf(\SimpleXMLElement::class, $againXml);
+        $againXml->registerXPathNamespace('s', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+        $eventNode = $againXml->xpath('//s:url[s:loc="'.event_show_url($event->fresh()).'"]');
+        $this->assertNotEmpty($eventNode);
+        $this->assertStringStartsWith('2026-01-15', (string) $eventNode[0]->lastmod);
     }
 
     /**

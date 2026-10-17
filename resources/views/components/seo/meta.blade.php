@@ -6,6 +6,7 @@
     'type' => 'website',
     'robots' => 'index,follow',
     'jsonLd' => null,
+    'absoluteTitle' => false,
 ])
 
 @php
@@ -13,7 +14,9 @@
 
     $brand = site_display_name();
     $pageTitle = filled($title) ? trim((string) $title) : null;
-    $documentTitle = $pageTitle ? $pageTitle.' · '.$brand : $brand;
+    $documentTitle = ($absoluteTitle && $pageTitle)
+        ? $pageTitle
+        : ($pageTitle ? $pageTitle.' · '.$brand : $brand);
     $metaDescription = Seo::truncateDescription(
         $description ?: __('design.welcome_sub_generic')
     );

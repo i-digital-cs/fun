@@ -75,6 +75,7 @@
                 </div>
 
                 <div>
+                    <p class="mb-2 text-sm font-bold tracking-tight text-amber-200">{{ __('design.brand_identity') }}</p>
                     <h1 class="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl lg:text-[2.75rem]">
                         @if ($user)
                             {{ __('design.welcome') }}

@@ -7,7 +7,7 @@ Use this after deploying Phases 1–3. Code already provides robots, sitemap, OG
 ```bash
 php artisan seo:health --skip-http          # DB + filesystem
 php artisan seo:health                      # also probes APP_URL over HTTP
-php artisan seo:health --base=https://www.funnity.com
+php artisan seo:health --base=https://funnity.com
 php artisan test --filter='SeoFoundationTest|EventSlugRoutingTest|SeoHardeningTest'
 ```
 
@@ -15,8 +15,8 @@ Expect: robots lists `Sitemap:` and Disallows `/admin`; sitemap includes `/` · 
 
 ## 2. Google Search Console
 
-1. Verify property for `https://www.funnity.com` (DNS or HTML tag — prefer DNS).
-2. **Sitemaps** → submit `https://www.funnity.com/sitemap.xml`.
+1. Verify a **Domain** property for `funnity.com` (DNS TXT). The canonical origin is `https://funnity.com`, not `www`.
+2. **Sitemaps** → submit `https://funnity.com/sitemap.xml`.
 3. Request indexing for `/` and one published `/events/{id}/{slug}` (URL Inspection).
 4. Rich results: paste an event URL into [Rich Results Test](https://search.google.com/test/rich-results) — expect **Event** (+ BreadcrumbList).
 5. Monitor **Coverage / Pages** for soft-404s and unexpected `noindex` on public URLs.
@@ -58,5 +58,5 @@ After release:
 
 1. `php artisan migrate` (slug column if not already)
 2. `npm run build` (split JS + CSS)
-3. `php artisan seo:health --base=https://www.funnity.com`
+3. `php artisan seo:health --base=https://funnity.com`
 4. Submit / refresh sitemap in GSC

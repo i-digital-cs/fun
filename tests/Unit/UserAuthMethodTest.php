@@ -35,7 +35,7 @@ class UserAuthMethodTest extends TestCase
 
         $this->assertTrue($user->hasGoogleLogin());
         $this->assertTrue($user->hasPasswordLogin());
-        $this->assertSame('both', $user->authMethod());
+        $this->assertSame('google+password', $user->authMethod());
     }
 
     private function userWithAuth(?string $googleId, ?string $passwordHash): User

@@ -136,10 +136,7 @@ class HomeController extends Controller
             'highlight' => $highlight,
             'weather' => $weather,
             'nowPlaying' => $playback,
-            'seo' => Seo::forHome(
-                $cityName,
-                $highlight?->coverUrl('detail'),
-            ),
+            'seo' => Seo::forHome($highlight?->coverUrl('detail')),
         ]);
     }
 }

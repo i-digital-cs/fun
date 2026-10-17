@@ -19,10 +19,17 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # Drop a trailing slash in one hop.
+    # When the project-root rewrite has already prefixed /public internally,
+    # REQUEST_URI is /public/events/ — send that to /events, not /public/events.
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+    RewriteCond %{REQUEST_URI} ^/public/(.+)/$
+    RewriteRule ^ /%1 [L,R=301]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} ^/(.+)/$
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^ /%1 [L,R=301]
 
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d

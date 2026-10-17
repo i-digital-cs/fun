@@ -4,7 +4,7 @@ use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\LogApiRequests;
-use App\Http\Middleware\RedirectPublicPrefix;
+use App\Http\Middleware\EnforceCanonicalUrl;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend(RedirectPublicPrefix::class);
+        $middleware->prepend(EnforceCanonicalUrl::class);
 
         $middleware->web(append: [
             SetLocale::class,
