@@ -105,6 +105,7 @@ class Seo
                 [
                     '@type' => 'Organization',
                     'name' => $brand,
+                    'alternateName' => ['فانتي', 'فانيتي'],
                     'url' => $homeUrl,
                     'description' => $description,
                     'logo' => self::absoluteUrl(site_logo_url() ?: asset('logo.svg')),
@@ -118,6 +119,7 @@ class Seo
                 [
                     '@type' => 'WebSite',
                     'name' => $brand,
+                    'alternateName' => ['فانتي', 'فانيتي'],
                     'url' => $homeUrl,
                     'description' => $description,
                     'potentialAction' => [
@@ -158,11 +160,67 @@ class Seo
         $robots = ($page > 1 || $hasFilters) ? 'noindex,follow' : 'index,follow';
 
         return self::make(
-            title: __('events.discover'),
-            description: __('events.discover_subtitle'),
+            title: __('events.discover_document_title'),
+            description: __('events.discover_intro'),
             image: site_logo_url() ?: asset('logo.svg'),
             url: route('events.index'),
             robots: $robots,
+        );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return array{
+     *     title: ?string,
+     *     description: ?string,
+     *     image: ?string,
+     *     url: ?string,
+     *     type: string,
+     *     robots: string,
+     *     jsonLd: array<string, mixed>|null
+     * }
+     */
+    public static function forLanding(string $title, string $description, string $url, int $page, array $items): array
+    {
+        return self::make(
+            title: $title,
+            description: $description,
+            image: site_logo_url() ?: asset('logo.svg'),
+            url: $url,
+            robots: $page > 1 ? 'noindex,follow' : 'index,follow',
+            jsonLd: [
+                '@context' => 'https://schema.org',
+                '@graph' => [
+                    [
+                        '@type' => 'ItemList',
+                        'name' => $title,
+                        'itemListElement' => $items,
+                    ],
+                    [
+                        '@type' => 'BreadcrumbList',
+                        'itemListElement' => [
+                            [
+                                '@type' => 'ListItem',
+                                'position' => 1,
+                                'name' => site_display_name(),
+                                'item' => route('home'),
+                            ],
+                            [
+                                '@type' => 'ListItem',
+                                'position' => 2,
+                                'name' => __('events.discover'),
+                                'item' => route('events.index'),
+                            ],
+                            [
+                                '@type' => 'ListItem',
+                                'position' => 3,
+                                'name' => $title,
+                                'item' => $url,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         );
     }
 
@@ -232,6 +290,26 @@ class Seo
         }
         if ($event->ends_at !== null) {
             $eventSchema['endDate'] = $event->ends_at->toIso8601String();
+        }
+
+        $eventSchema['maximumAttendeeCapacity'] = (int) $event->max_participants;
+        $eventSchema['remainingAttendeeCapacity'] = $event->remainingCapacity();
+
+        if ($event->cost_per_person !== null && $event->cost_per_person !== '') {
+            $offer = [
+                '@type' => 'Offer',
+                'price' => number_format((float) $event->cost_per_person, 2, '.', ''),
+                'priceCurrency' => 'EGP',
+                'url' => $url,
+            ];
+            $stillOpen = $event->status === EventStatus::Published
+                && ($event->ends_at?->isFuture() ?? $event->starts_at?->isFuture());
+            if ($stillOpen) {
+                $offer['availability'] = $event->isFull()
+                    ? 'https://schema.org/SoldOut'
+                    : 'https://schema.org/InStock';
+            }
+            $eventSchema['offers'] = $offer;
         }
 
         if ($event->creator !== null) {

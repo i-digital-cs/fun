@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Services\Seo\LandingPageCatalog;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
@@ -22,6 +23,14 @@ class SitemapController extends Controller
                 $this->staticUrl(route('legal.support'), 'monthly', '0.3'),
                 $this->staticUrl(route('legal.account-deletion'), 'monthly', '0.5'),
             ];
+
+            $catalog = app(LandingPageCatalog::class);
+            foreach ($catalog->eligibleCities() as $city) {
+                $urls[] = $this->staticUrl(route('events.city', $city), 'daily', '0.7');
+            }
+            foreach ($catalog->eligibleCategories() as $category) {
+                $urls[] = $this->staticUrl(route('events.activity', $category), 'daily', '0.7');
+            }
 
             Event::query()
                 ->where('search_indexable', true)

@@ -90,6 +90,9 @@
                     <p class="mt-3 max-w-xl text-sm leading-relaxed text-indigo-100/90 sm:text-base">
                         {{ $welcomeSub }}
                     </p>
+                    <p class="mt-2 max-w-xl text-sm leading-relaxed text-indigo-100/80">
+                        {{ __('design.brand_explanation') }}
+                    </p>
                 </div>
 
                 <div

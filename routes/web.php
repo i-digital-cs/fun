@@ -24,6 +24,7 @@ use App\Http\Controllers\Web\Chat\ChatInboxController;
 use App\Http\Controllers\Web\Friends\DirectMessageController as WebDirectMessageController;
 use App\Http\Controllers\Web\Friends\FriendController as WebFriendController;
 use App\Http\Controllers\Web\Events\EventController;
+use App\Http\Controllers\Web\SeoLandingController;
 use App\Http\Controllers\Web\Events\EventFavoriteController;
 use App\Http\Controllers\Web\Events\EventMembershipController;
 use App\Http\Controllers\Web\Events\EventRatingController;
@@ -67,6 +68,8 @@ Route::get('/search/suggest', SearchSuggestController::class)
     ->name('search.suggest');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
+Route::get('/events/in/{city:slug}', [SeoLandingController::class, 'city'])->name('events.city');
+Route::get('/events/activity/{category:slug}', [SeoLandingController::class, 'activity'])->name('events.activity');
 // events.show is registered AFTER /events/{event}/edit|chat|ticket|… so those paths
 // are not captured as optional {slug} (which previously 301'd back to the event page).
 

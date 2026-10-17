@@ -5,8 +5,18 @@
 @section('content')
     <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ __('events.discover') }}</h1>
-            <p class="mt-1 text-sm text-slate-500">{{ __('events.discover_subtitle') }}</p>
+            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ __('events.discover_document_title') }}</h1>
+            <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">{{ __('events.discover_intro') }}</p>
+            @if (($landingCities ?? collect())->isNotEmpty() || ($landingCategories ?? collect())->isNotEmpty())
+                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                    @foreach ($landingCities as $landingCity)
+                        <a href="{{ route('events.city', $landingCity) }}" class="font-semibold text-indigo-700 hover:text-indigo-900">{{ $landingCity->localizedName() }}</a>
+                    @endforeach
+                    @foreach ($landingCategories as $landingCategory)
+                        <a href="{{ route('events.activity', $landingCategory) }}" class="font-semibold text-indigo-700 hover:text-indigo-900">{{ $landingCategory->localizedName() }}</a>
+                    @endforeach
+                </div>
+            @endif
         </div>
         @auth
             @if (auth()->user()->canParticipate())
