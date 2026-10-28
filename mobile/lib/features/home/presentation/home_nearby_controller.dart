@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
-// discoveryLocationServiceProvider is exported from core_providers.
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
@@ -81,56 +81,74 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       final repo = _ref.read(eventsRepositoryProvider);
       final catalog = _ref.read(catalogRepositoryProvider);
       final home = _ref.read(homeRepositoryProvider);
-
-      final hasCity = user?.cityId != null;
       final location = _ref.read(discoveryLocationServiceProvider);
-      double? deviceLat;
-      double? deviceLng;
-      if (location.useDeviceLocationPreferred) {
+
+      // Authoritative discovery location — never silently replace device mode
+      // with a city centroid when GPS fails.
+      DiscoverFilters homeFilters;
+      final km = location.distanceKm ?? user?.distanceKm ?? 25;
+      if (location.mode == DiscoveryLocationMode.device) {
         final pos = await location.obtainForegroundPosition();
         if (pos != null) {
-          deviceLat = pos.lat;
-          deviceLng = pos.lng;
+          homeFilters = DiscoverFilters(
+            distanceKm: km,
+            latitude: pos.lat,
+            longitude: pos.lng,
+            page: 1,
+          );
+        } else {
+          // Stay in device mode semantically: nationwide browse + surface error.
+          homeFilters = DiscoverFilters(
+            allCities: true,
+            distanceKm: km,
+            page: 1,
+          );
+          state = state.copyWith(
+            error:
+                'Could not detect device location. Retry or pick a city manually.',
+          );
         }
+      } else if (location.manualCityId != null || user?.cityId != null) {
+        homeFilters = DiscoverFilters(
+          cityId: location.manualCityId ?? user!.cityId,
+          distanceKm: km,
+          page: 1,
+          allCities: false,
+        );
+      } else {
+        homeFilters = DiscoverFilters(allCities: true, distanceKm: km, page: 1);
       }
 
-      final homeFilters = deviceLat != null && deviceLng != null
-          ? DiscoverFilters(
-              distanceKm: user?.distanceKm,
-              latitude: deviceLat,
-              longitude: deviceLng,
-              page: 1,
-            )
-          : hasCity
-          ? DiscoverFilters(
-              cityId: user!.cityId,
-              distanceKm: user.distanceKm,
-              page: 1,
-              allCities: false,
-            )
-          : const DiscoverFilters(allCities: true, page: 1);
-
+      final hasCity = homeFilters.cityId != null;
       const soonFilters = DiscoverFilters(
         allCities: true,
         page: 1,
         perPage: 30,
       );
 
-      final bundleResult = await repo.discoverHome(homeFilters);
-      final soonResult = await repo.discover(soonFilters);
-      final categoriesResult = await catalog.categories();
-      final nowPlayingResult = await repo.nowPlaying(cityId: user?.cityId);
+      // Parallelize independent network work — sequential awaits blocked first paint.
+      final bundleFuture = repo.discoverHome(homeFilters);
+      final soonFuture = repo.discover(soonFilters);
+      final categoriesFuture = catalog.categories();
+      final nowPlayingFuture = repo.nowPlaying(cityId: homeFilters.cityId ?? user?.cityId);
+      final weatherFuture = hasCity
+          ? home.weather(cityId: homeFilters.cityId!)
+          : null;
+      final partFuture = (user != null && user.canParticipate)
+          ? home.participations()
+          : null;
 
+      final bundleResult = await bundleFuture;
+      final soonResult = await soonFuture;
+      final categoriesResult = await categoriesFuture;
+      final nowPlayingResult = await nowPlayingFuture;
       WeatherSnapshot? weather;
-      if (hasCity) {
-        final weatherResult = await home.weather(cityId: user!.cityId);
-        weather = weatherResult.data;
+      if (weatherFuture != null) {
+        weather = (await weatherFuture).data;
       }
-
       HomeParticipations? participations;
-      if (user != null && user.canParticipate) {
-        final partResult = await home.participations();
-        participations = partResult.data;
+      if (partFuture != null) {
+        participations = (await partFuture).data;
       }
 
       final categories = categoriesResult.data ?? state.categories;

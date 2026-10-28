@@ -67,13 +67,18 @@ class DiscoverFilters {
     }
 
     if (q != null && q!.trim().isNotEmpty) add('q', q!.trim());
-    if (allCities) {
+    if (hasDeviceOrigin) {
+      add('latitude', latitude);
+      add('longitude', longitude);
+    } else if (allCities) {
       add('city_id', '');
     } else if (cityId != null) {
       add('city_id', cityId);
     }
     if (categoryId != null) add('category_id', categoryId);
-    if (distanceKm != null && !allCities) add('distance_km', distanceKm);
+    if (distanceKm != null && (!allCities || hasDeviceOrigin)) {
+      add('distance_km', distanceKm);
+    }
     if (when != null && when!.isNotEmpty) add('when', when);
     if (perPage != null) add('per_page', perPage);
     add('page', page);

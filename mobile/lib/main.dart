@@ -9,6 +9,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Env.assertSafeForRelease();
 
+  // Cap decoded image memory so long Discover/Home scrolls do not thrash RAM.
+  // (Logical sizes on AppNetworkImage still bound individual decodes.)
+  final imageCache = PaintingBinding.instance.imageCache;
+  imageCache.maximumSize = 120;
+  imageCache.maximumSizeBytes = 80 << 20; // 80 MiB
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
   };

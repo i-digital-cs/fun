@@ -126,8 +126,11 @@ class DiscoverNearbyEventsService
     }
 
     /**
-     * @param  array{city_id?: int|null, distance_km?: int|null}  $filters
-     * @return array{latitude: float, longitude: float, distance_km: int, city: City}|null
+     * Same origin rules as EventDiscoveryService: explicit city → city center;
+     * else ephemeral device lat/lng → device origin; else null (nationwide).
+     *
+     * @param  array{city_id?: int|null, distance_km?: int|null, latitude?: float, longitude?: float}  $filters
+     * @return array{latitude: float, longitude: float, distance_km: int, city: ?City, origin_type: string}|null
      */
     private function resolveOrigin(?User $user, array $filters): ?array
     {
@@ -142,16 +145,55 @@ class DiscoverNearbyEventsService
             ]);
         }
 
-        $cityId = array_key_exists('city_id', $filters)
-            ? $filters['city_id']
-            : $user?->city_id;
+        // Manual city selection wins when city_id is explicitly provided (including
+        // empty = nationwide). Device GPS is only used when city_id is omitted.
+        $hasCityKey = array_key_exists('city_id', $filters);
 
+        if ($hasCityKey) {
+            $cityId = $filters['city_id'];
+            if ($cityId === null) {
+                return null;
+            }
+
+            $city = City::query()->active()->find($cityId);
+            if ($city === null) {
+                throw ValidationException::withMessages([
+                    'city_id' => [__('location.city_unavailable')],
+                ]);
+            }
+
+            return [
+                'latitude' => (float) $city->latitude,
+                'longitude' => (float) $city->longitude,
+                'distance_km' => $distance,
+                'city' => $city,
+                'origin_type' => 'city',
+            ];
+        }
+
+        // Ephemeral device GPS — never persisted; only when caller did not set city_id.
+        if (isset($filters['latitude'], $filters['longitude'])
+            && is_numeric($filters['latitude'])
+            && is_numeric($filters['longitude'])) {
+            $lat = (float) $filters['latitude'];
+            $lng = (float) $filters['longitude'];
+            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                return [
+                    'latitude' => $lat,
+                    'longitude' => $lng,
+                    'distance_km' => $distance,
+                    'city' => null,
+                    'origin_type' => 'device',
+                ];
+            }
+        }
+
+        $cityId = $user?->city_id;
         if ($cityId === null) {
             return null;
         }
 
         $city = City::query()->active()->find($cityId);
-
         if ($city === null) {
             throw ValidationException::withMessages([
                 'city_id' => [__('location.city_unavailable')],
@@ -163,6 +205,7 @@ class DiscoverNearbyEventsService
             'longitude' => (float) $city->longitude,
             'distance_km' => $distance,
             'city' => $city,
+            'origin_type' => 'city',
         ];
     }
 

@@ -8,8 +8,11 @@ import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
+import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_header_scroll.dart';
+import 'package:fun_mobile/features/discover/presentation/discovery_location_controller.dart';
+import 'package:fun_mobile/features/discover/presentation/widgets/location_picker_sheet.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -34,7 +37,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   String? _draftWhen;
   bool _draftAllCities = true;
   bool _catalogLoaded = false;
-  bool _headerVisible = true;
+  final _headerVisible = ValueNotifier<bool>(true);
   double _lastScroll = 0;
 
   static const _headerScrollKey = PageStorageKey<String>('discover-scroll');
@@ -55,6 +58,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     _scroll.removeListener(_onScroll);
     _scroll.dispose();
     _search.dispose();
+    _headerVisible.dispose();
     super.dispose();
   }
 
@@ -64,12 +68,13 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final delta = offset - _lastScroll;
     _lastScroll = offset;
     final next = discoverHeaderVisibleAfterScroll(
-      currentlyVisible: _headerVisible,
+      currentlyVisible: _headerVisible.value,
       offset: offset,
       delta: delta,
     );
-    if (next != _headerVisible) {
-      setState(() => _headerVisible = next);
+    // ValueNotifier — avoids rebuilding the entire Discover scaffold on scroll.
+    if (next != _headerVisible.value) {
+      _headerVisible.value = next;
     }
   }
 
@@ -106,15 +111,49 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   Future<void> _apply() async {
-    await ref
-        .read(discoverControllerProvider.notifier)
-        .applyFilters(
-          q: _search.text.trim().isEmpty ? null : _search.text.trim(),
-          cityId: _draftCityId,
-          categoryId: _draftCategoryId,
+    final locNotifier =
+        ref.read(discoveryLocationControllerProvider.notifier);
+    final before = ref.read(discoveryLocationControllerProvider);
+
+    if (_draftDistanceKm != null) {
+      await locNotifier.setDistanceKm(_draftDistanceKm!);
+    }
+
+    // Sync filter-panel city edits into the location controller, but never
+    // overwrite an active device-GPS mode unless the user cleared to nationwide
+    // or picked a different city in the legacy city dropdown.
+    final deviceActive = before.mode == DiscoveryLocationMode.device;
+    final draftCityChanged = !_draftAllCities &&
+        _draftCityId != null &&
+        _draftCityId != before.cityId;
+    if (_draftAllCities && (before.hasManualCity || deviceActive)) {
+      await locNotifier.setNationwide(distanceKm: _draftDistanceKm);
+    } else if (draftCityChanged || (!deviceActive && _draftCityId != null)) {
+      final city = _cities.where((c) => c.id == _draftCityId).firstOrNull;
+      if (city != null) {
+        await locNotifier.selectManualCity(
+          cityId: city.id,
+          name: city.name,
           distanceKm: _draftDistanceKm,
-          when: _draftWhen,
-          allCities: _draftAllCities,
+        );
+      }
+    }
+
+    final loc = ref.read(discoveryLocationControllerProvider);
+    final filters = loc.toDiscoverFilters(
+      q: _search.text.trim().isEmpty ? null : _search.text.trim(),
+      categoryId: _draftCategoryId,
+      when: _draftWhen,
+    );
+    await ref.read(discoverControllerProvider.notifier).applyFilters(
+          q: filters.q,
+          cityId: filters.cityId,
+          categoryId: filters.categoryId,
+          distanceKm: filters.distanceKm,
+          when: filters.when,
+          allCities: filters.allCities,
+          latitude: filters.latitude,
+          longitude: filters.longitude,
         );
   }
 
@@ -136,27 +175,32 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   }
 
   Future<void> _clear() async {
+    final km = _distances.contains(25)
+        ? 25
+        : (_distances.firstOrNull ?? 25);
     setState(() {
       _search.clear();
       _draftAllCities = true;
       _draftCityId = null;
       _draftCategoryId = null;
-      _draftDistanceKm = _distances.firstOrNull ?? 25;
+      _draftDistanceKm = km;
       _draftWhen = null;
     });
+    await ref
+        .read(discoveryLocationControllerProvider.notifier)
+        .setNationwide(distanceKm: km);
     await ref.read(discoverControllerProvider.notifier).clearFilters();
   }
 
   Future<void> _useMyLocation() async {
-    final auth = ref.read(authControllerProvider);
-    if (auth is! Authenticated || auth.user.cityId == null) {
-      await context.push('/settings/location');
-      return;
-    }
+    await showLocationPickerSheet(context);
+    if (!mounted) return;
+    final loc = ref.read(discoveryLocationControllerProvider);
     setState(() {
-      _draftAllCities = false;
-      _draftCityId = auth.user.cityId;
-      _draftDistanceKm = auth.user.distanceKm ?? _distances.firstOrNull ?? 25;
+      _draftAllCities = !loc.hasManualCity &&
+          loc.mode != DiscoveryLocationMode.device;
+      _draftCityId = loc.cityId;
+      _draftDistanceKm = loc.distanceKm;
     });
     await _apply();
   }
@@ -166,7 +210,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(discoverControllerProvider);
     final auth = ref.watch(authControllerProvider);
+    final loc = ref.watch(discoveryLocationControllerProvider);
     final canCreate = auth is Authenticated && auth.user.canParticipate;
+    final isAuthed = auth is Authenticated;
+    final radiusLabel = loc.distanceKm == 0
+        ? 'All distances'
+        : 'Within ${loc.distanceKm} km';
 
     return Scaffold(
       backgroundColor: AppColors.canvas,
@@ -174,49 +223,98 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AnimatedSize(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: _headerVisible
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                      child: Row(
+            ValueListenableBuilder<bool>(
+              valueListenable: _headerVisible,
+              builder: (context, visible, child) {
+                return AnimatedSize(
+                  duration: const Duration(milliseconds: 160),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: visible
+                      ? child!
+                      : const SizedBox(width: double.infinity),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.discoverTitle,
-                                  style: const TextStyle(
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.discoverSub,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.muted,
-                                  ),
-                                ),
-                              ],
+                          Text(
+                            l10n.discoverTitle,
+                            style: const TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.4,
                             ),
                           ),
-                          if (canCreate)
-                            GradientButton(
-                              label: l10n.createEvent,
-                              icon: Icons.add,
-                              onPressed: () => context.go('/create'),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.discoverSub,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.muted,
                             ),
+                          ),
                         ],
                       ),
-                    )
-                  : const SizedBox(width: double.infinity),
+                    ),
+                    if (canCreate)
+                      GradientButton(
+                        label: l10n.createEvent,
+                        icon: Icons.add,
+                        onPressed: () => context.go('/create'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: InkWell(
+                onTap: _useMyLocation,
+                borderRadius: BorderRadius.circular(14),
+                child: Ink(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.borderSoft),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.place_outlined,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${loc.summaryLabel} · $radiusLabel',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.muted,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
             Expanded(
               child: RefreshIndicator(
@@ -342,13 +440,10 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               );
                             }
                             final event = state.items[index];
-                            final authed = ref.watch(
-                              authControllerProvider,
-                            ) is Authenticated;
                             return EventCard(
                               event: event,
                               onView: () => context.push('/events/${event.id}'),
-                              onFavorite: authed
+                              onFavorite: isAuthed
                                   ? () => ref
                                         .read(
                                           discoverControllerProvider.notifier,
@@ -356,7 +451,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                                         .toggleFavorite(event.id)
                                   : null,
                               onCancelJoin:
-                                  authed &&
+                                  isAuthed &&
                                       event.joinAction == 'request_pending'
                                   ? () => _cancelJoin(event.id)
                                   : null,

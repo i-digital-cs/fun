@@ -119,16 +119,21 @@ class DiscoverController extends StateNotifier<DiscoverState> {
     int? distanceKm,
     String? when,
     required bool allCities,
+    double? latitude,
+    double? longitude,
   }) {
+    final hasDevice = latitude != null && longitude != null;
     return load(
       filters: DiscoverFilters(
         q: q,
-        cityId: allCities ? null : cityId,
+        cityId: hasDevice || allCities ? null : cityId,
         categoryId: categoryId,
-        distanceKm: allCities ? null : distanceKm,
+        distanceKm: allCities && !hasDevice ? null : distanceKm,
+        latitude: latitude,
+        longitude: longitude,
         when: when,
         page: 1,
-        allCities: allCities,
+        allCities: allCities && !hasDevice,
       ),
     );
   }
