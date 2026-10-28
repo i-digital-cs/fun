@@ -265,7 +265,7 @@ class _EventCardState extends State<EventCard> {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: AppColors.text,
                           ),
                         ),
                       ),
@@ -352,7 +352,7 @@ class _EventCardState extends State<EventCard> {
                         Text(
                           schedule,
                           style: TextStyle(
-                            color: const Color(0xFF4F46E5)
+                            color: AppColors.primary
                                 .withValues(alpha: 0.85),
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -367,7 +367,7 @@ class _EventCardState extends State<EventCard> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: const Color(0xFF4338CA)
+                            color: AppColors.primaryDeep
                                 .withValues(alpha: 0.75),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -383,7 +383,7 @@ class _EventCardState extends State<EventCard> {
                             _ => l10n.sexMix,
                           }}',
                           style: TextStyle(
-                            color: const Color(0xFF4F46E5)
+                            color: AppColors.primary
                                 .withValues(alpha: 0.85),
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -421,7 +421,7 @@ class _EventCardState extends State<EventCard> {
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w900,
-                                    color: Color(0xFF0F172A),
+                                    color: AppColors.text,
                                   ),
                                 ),
                               ],
@@ -445,7 +445,7 @@ class _EventCardState extends State<EventCard> {
                                           gradient: LinearGradient(
                                             colors: event.isUrgent
                                                 ? const [
-                                                    Color(0xFFF97316),
+                                                    AppColors.accent,
                                                     Color(0xFFF59E0B),
                                                   ]
                                                 : const [
@@ -535,7 +535,7 @@ class _JoinStatusStrip extends StatelessWidget {
       'owned' => (
         l10n.yourOwnEvent,
         const Color(0xFFEEF2FF),
-        const Color(0xFF4338CA),
+        AppColors.primaryDeep,
         Colors.transparent,
       ),
       'joined' => (
@@ -553,7 +553,7 @@ class _JoinStatusStrip extends StatelessWidget {
       'event_full' => (
         l10n.eventFull,
         Colors.white.withValues(alpha: 0.8),
-        const Color(0xFF475569),
+        AppColors.muted,
         const Color(0xFFE2E8F0),
       ),
       'sex_mismatch' => (
@@ -565,7 +565,7 @@ class _JoinStatusStrip extends StatelessWidget {
       _ => (
         l10n.requestPending,
         Colors.white.withValues(alpha: 0.8),
-        const Color(0xFF475569),
+        AppColors.muted,
         const Color(0xFFE2E8F0),
       ),
     };
@@ -639,7 +639,7 @@ class _Pill extends StatelessWidget {
         style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
-          color: Color(0xFF4338CA),
+          color: AppColors.primaryDeep,
         ),
       ),
     );

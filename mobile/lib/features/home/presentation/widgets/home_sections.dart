@@ -327,7 +327,7 @@ class HomeSafetyCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(17),
         gradient: const LinearGradient(
-          colors: [Color(0xFF4338CA), Color(0xFF4F46E5)],
+          colors: [AppColors.primaryDeep, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

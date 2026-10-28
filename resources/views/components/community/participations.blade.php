@@ -20,21 +20,21 @@
 <section class="mt-10">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-3">
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/25">
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#7138F5] to-[#9E65BC] text-white shadow-lg shadow-[#7138F5]/30">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
                     <path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/>
                     <path stroke-linecap="round" d="M12 14v4M10 16h4"/>
                 </svg>
             </span>
-            <h2 class="text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl">
+            <h2 class="text-lg font-extrabold tracking-tight text-[#19213D] sm:text-xl">
                 {{ __('design.part_title') }}
             </h2>
-            <span class="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
+            <span class="rounded-full bg-[#F1EBFF] px-2.5 py-1 text-[11px] font-bold text-[#5825D6]">
                 {{ __('design.part_badge', ['count' => $showDemo ? 2 : $scheduledCount]) }}
             </span>
         </div>
-        <a href="{{ route('events.mine') }}" class="group flex items-center gap-1 text-sm font-bold text-indigo-600 transition hover:text-indigo-800">
+        <a href="{{ route('events.mine') }}" class="group flex items-center gap-1 text-sm font-bold text-[#7138F5] transition hover:text-[#5825D6]">
             {{ __('home.manage_all') }}
             <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>

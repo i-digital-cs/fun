@@ -45,3 +45,5 @@ flutter:
   assets:
     - assets/branding/funity-mark.svg
     - assets/branding/funity-app-icon.png
+    - assets/funnity-v2/hero-cairo-skyline.webp
+    - assets/funnity-v2/weather-sunset-skyline.webp

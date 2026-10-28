@@ -20,10 +20,31 @@
         $icon = $weather['icon'] ?? 'sun';
     @endphp
     <div
-        {{ $attributes->class(['weather-panel', 'weather-panel--'.$theme]) }}
+        {{ $attributes->class(['weather-panel', 'weather-panel--'.$theme, 'weather-panel--v2']) }}
         role="region"
         aria-label="{{ __('weather.'.$weather['condition']) }}"
     >
+        <div class="weather-panel__photo" aria-hidden="true">
+            <picture>
+                <source
+                    type="image/webp"
+                    srcset="{{ asset('assets/funnity-v2/weather/weather-sunset-skyline-480.webp') }} 480w,
+                            {{ asset('assets/funnity-v2/weather/weather-sunset-skyline-768.webp') }} 768w,
+                            {{ asset('assets/funnity-v2/weather/weather-sunset-skyline-1280.webp') }} 1280w"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                >
+                <img
+                    src="{{ asset('assets/funnity-v2/weather/weather-sunset-skyline-1280.jpg') }}"
+                    alt=""
+                    width="1280"
+                    height="720"
+                    loading="lazy"
+                    decoding="async"
+                    class="h-full w-full object-cover"
+                >
+            </picture>
+            <div class="weather-panel__photo-wash"></div>
+        </div>
         <div class="weather-panel__glow" aria-hidden="true"></div>
         <div class="weather-panel__top">
             <div class="weather-panel__condition">

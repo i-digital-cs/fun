@@ -9,19 +9,56 @@
     --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-primary: #4f46e5;
-    --color-primary-soft: #e0e7ff;
-    --color-primary-ink: #3730a3;
-    --color-accent: #f97316;
-    --color-success: #10b981;
-    --color-background: #f8fafc;
+    /* Funnity V2 — approved palette (APPROVED_V2_REFERENCE.png) */
+    --color-primary: #7138f5;
+    --color-primary-hover: #5825d6;
+    --color-primary-soft: #f1ebff;
+    --color-primary-ink: #3b1577;
+    --color-accent: #ff762e;
+    --color-accent-soft: #fff1e7;
+    --color-success: #159b76;
+    --color-background: #f8f9fe;
     --color-surface: #ffffff;
-    --color-text: #0f172a;
+    --color-text: #19213d;
     --color-muted: #64748b;
-    --color-border: #cbd5e1;
+    --color-border: #e8eaf2;
     --color-danger: #ef4444;
     --color-warning: #f59e0b;
     --color-info: #0ea5e9;
+
+    /* Remap utility scales so existing indigo/orange classes match V2 */
+    --color-indigo-50: #f1ebff;
+    --color-indigo-100: #e4d9ff;
+    --color-indigo-200: #c9b6ff;
+    --color-indigo-300: #a78bfa;
+    --color-indigo-400: #8b5cf6;
+    --color-indigo-500: #7c3aed;
+    --color-indigo-600: #7138f5;
+    --color-indigo-700: #5825d6;
+    --color-indigo-800: #4c1d95;
+    --color-indigo-900: #3b1577;
+    --color-indigo-950: #2e1065;
+
+    --color-violet-500: #8b5cf6;
+    --color-violet-600: #7c3aed;
+    --color-violet-700: #6d28d9;
+    --color-violet-800: #5b21b6;
+    --color-violet-900: #4c1d95;
+
+    --color-orange-400: #ff9a5c;
+    --color-orange-500: #ff762e;
+    --color-orange-600: #e85f1a;
+    --color-orange-700: #c44d14;
+
+    --color-emerald-500: #159b76;
+    --color-emerald-600: #128a68;
+    --color-emerald-700: #0f7357;
+
+    --color-slate-50: #f8f9fe;
+    --color-slate-900: #19213d;
+
+    --radius-card: 1.25rem;
+    --radius-button: 0.75rem;
 }
 
 @layer base {
@@ -854,7 +891,7 @@
 }
 
 
-/* Weather panel — Funity glass identity */
+/* Weather panel — Funnity V2 photographic glass */
 .weather-panel {
     position: relative;
     display: flex;
@@ -864,11 +901,36 @@
     min-height: 14.5rem;
     overflow: hidden;
     border-radius: 1.35rem;
-    border: 1px solid rgb(199 210 254 / 0.7);
-    background: linear-gradient(155deg, #4f46e5 0%, #6366f1 42%, #7c3aed 100%);
+    border: 1px solid rgb(255 255 255 / 0.35);
+    background: linear-gradient(155deg, #7138f5 0%, #7c3aed 42%, #5825d6 100%);
     color: #fff;
-    box-shadow: 0 16px 32px -18px rgb(79 70 229 / 0.45);
+    box-shadow: 0 18px 36px -18px rgb(113 56 245 / 0.45);
     padding: 1.15rem 1.15rem 1rem;
+}
+
+.weather-panel__photo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.weather-panel__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.weather-panel__photo-wash {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgb(255 118 46 / 0.72) 0%, rgb(113 56 245 / 0.55) 55%, rgb(25 33 61 / 0.45) 100%),
+        linear-gradient(to top, rgb(25 33 61 / 0.35), transparent 55%);
+}
+
+.weather-panel--v2 .weather-panel__glow {
+    opacity: 0.55;
 }
 
 .weather-panel__glow {
@@ -881,12 +943,18 @@
     background: rgb(255 255 255 / 0.18);
     filter: blur(28px);
     pointer-events: none;
+    z-index: 0;
 }
 
 .weather-panel--sunny {
-    background: linear-gradient(155deg, #f97316 0%, #fb923c 45%, #f59e0b 100%);
+    background: linear-gradient(155deg, #ff762e 0%, #ff9a5c 45%, #f59e0b 100%);
     border-color: rgb(253 186 116 / 0.55);
-    box-shadow: 0 16px 32px -18px rgb(249 115 22 / 0.4);
+    box-shadow: 0 16px 32px -18px rgb(255 118 46 / 0.4);
+}
+
+.weather-panel--sunny .weather-panel__photo-wash {
+    background:
+        linear-gradient(135deg, rgb(255 118 46 / 0.78) 0%, rgb(245 158 11 / 0.55) 50%, rgb(25 33 61 / 0.35) 100%);
 }
 
 .weather-panel--cloudy {
@@ -3493,13 +3561,12 @@ html[data-page-loading='1'] {
     flex-direction: column;
     height: 100%;
     min-height: 340px;
-    border-radius: 2.75rem;
-    background: linear-gradient(160deg, #eef2ff 0%, #e0e7ff 40%, #c7d2fe 100%);
-    transition: transform 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+    border-radius: 1.35rem;
+    background: #ffffff;
+    border: 1px solid #e8eaf2;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
     transform-style: preserve-3d;
-    box-shadow:
-        rgb(49 46 129 / 0) 40px 50px 25px -40px,
-        rgb(49 46 129 / 0.18) 0px 22px 24px -6px;
+    box-shadow: 0 18px 40px -28px rgb(25 33 61 / 0.35);
     /* overflow:hidden flattens preserve-3d — clip media only */
     color: inherit;
 }
@@ -3507,10 +3574,10 @@ html[data-page-loading='1'] {
 .event-3d__media {
     position: relative;
     z-index: 1;
-    height: 148px;
+    height: 168px;
     flex-shrink: 0;
     overflow: hidden;
-    border-radius: 2.75rem 2.75rem 0 0;
+    border-radius: 1.25rem 1.25rem 0 0;
     transform: translate3d(0, 0, 12px);
 }
 
@@ -3530,23 +3597,11 @@ html[data-page-loading='1'] {
     pointer-events: none;
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgb(238 242 255 / 0.95) 0%, transparent 45%);
+    background: linear-gradient(to top, rgb(25 33 61 / 0.35) 0%, transparent 50%);
 }
 
 .event-3d__glass {
-    transform-style: preserve-3d;
-    position: absolute;
-    inset: 8px;
-    top: 96px;
-    border-radius: 2.4rem;
-    border-start-end-radius: 100%;
-    background: linear-gradient(0deg, rgb(255 255 255 / 0.42) 0%, rgb(255 255 255 / 0.88) 100%);
-    transform: translate3d(0, 0, 25px);
-    border-inline-start: 1px solid #fff;
-    border-bottom: 1px solid #fff;
-    transition: all 0.5s ease-in-out;
-    z-index: 2;
-    pointer-events: none;
+    display: none;
 }
 
 .event-3d__body {
@@ -3561,7 +3616,7 @@ html[data-page-loading='1'] {
 
 .event-3d__title {
     margin: 0;
-    color: #312e81;
+    color: #19213d;
     font-weight: 900;
     font-size: 1.05rem;
     line-height: 1.3;
@@ -3580,13 +3635,13 @@ html[data-page-loading='1'] {
 }
 
 .event-3d__title a:hover {
-    color: #4f46e5;
+    color: #7138f5;
 }
 
 .event-3d__meta {
     display: block;
     margin-top: 0.45rem;
-    color: rgb(79 70 229 / 0.85);
+    color: #7138f5;
     font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -3596,7 +3651,7 @@ html[data-page-loading='1'] {
 .event-3d__text {
     display: block;
     margin-top: 0.4rem;
-    color: rgb(67 56 202 / 0.75);
+    color: #64748b;
     font-size: 0.8125rem;
     font-weight: 600;
     line-height: 1.35;
@@ -3610,8 +3665,8 @@ html[data-page-loading='1'] {
     margin-top: 0.75rem;
     padding: 0.55rem 0.65rem;
     border-radius: 0.85rem;
-    background: rgb(255 255 255 / 0.72);
-    border: 1px solid rgb(255 255 255 / 0.9);
+    background: #f8f9fe;
+    border: 1px solid #e8eaf2;
 }
 
 .event-3d__members-row {
@@ -3643,11 +3698,11 @@ html[data-page-loading='1'] {
 .event-3d__bar-fill {
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, #6366f1, #7c3aed);
+    background: linear-gradient(90deg, #7138f5, #9e65bc);
 }
 
 .event-3d__bar-fill--urgent {
-    background: linear-gradient(90deg, #f97316, #f59e0b);
+    background: linear-gradient(90deg, #ff762e, #ff9a5c);
 }
 
 .event-3d__bottom {
@@ -3667,18 +3722,22 @@ html[data-page-loading='1'] {
 .event-3d__view {
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.35rem;
     flex-shrink: 0;
-    transition: transform 0.2s ease-in-out;
-    color: #ea580c;
+    transition: transform 0.2s ease-in-out, background 0.15s ease, color 0.15s ease;
+    color: #5825d6;
     font-weight: 800;
     font-size: 0.75rem;
     text-decoration: none;
+    border-radius: 999px;
+    background: #f1ebff;
+    padding: 0.45rem 0.85rem;
 }
 
 .event-3d__view:hover {
-    transform: translate3d(0, 0, 10px);
-    color: #c2410c;
+    transform: translateY(-1px);
+    color: #fff;
+    background: #7138f5;
 }
 
 .event-3d__view svg {
@@ -3929,3 +3988,25 @@ html[data-page-loading='1'] {
     transform: rotate3d(1, -1, 0, 22deg);
 }
 
+
+/* Funnity V2 — motion + focus polish */
+@media (prefers-reduced-motion: reduce) {
+    .animate-aurora,
+    .animate-float {
+        animation: none !important;
+    }
+
+    .v2-hero,
+    .weather-panel,
+    .event-3d__card,
+    .event-3d__media img {
+        transition: none !important;
+    }
+}
+
+.v2-hero a:focus-visible,
+.v2-hero button:focus-visible,
+.weather-panel a:focus-visible {
+    outline: 2px solid #ff762e;
+    outline-offset: 2px;
+}

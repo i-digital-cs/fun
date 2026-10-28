@@ -58,17 +58,17 @@
             />
         @endforeach
 
-        <article class="group relative flex flex-col overflow-hidden rounded-[2.75rem] bg-gradient-to-br from-orange-500 via-orange-500 to-amber-600 p-6 text-white shadow-xl shadow-orange-500/25 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-orange-500/40">
+        <article class="group relative flex flex-col overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-[#FF762E] via-[#FF8A3D] to-[#E85F1A] p-6 text-white shadow-[0_22px_44px_-20px_rgba(255,118,46,0.55)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_50px_-18px_rgba(255,118,46,0.65)]">
             <div aria-hidden="true" class="absolute inset-0">
-                <div class="absolute -end-10 -top-10 h-44 w-44 rounded-full bg-white/10 blur-2xl"></div>
-                <div class="absolute -bottom-14 -start-10 h-48 w-48 rounded-full bg-amber-300/20 blur-2xl"></div>
-                <div class="absolute end-6 top-6 h-16 w-16 rounded-full border-2 border-dashed border-white/30 transition-transform duration-500 group-hover:rotate-45"></div>
+                <div class="absolute -end-10 -top-10 h-44 w-44 rounded-full bg-white/15 blur-2xl"></div>
+                <div class="absolute -bottom-14 -start-10 h-48 w-48 rounded-full bg-amber-200/25 blur-2xl"></div>
+                <div class="absolute end-6 top-6 h-16 w-16 rounded-full border-2 border-dashed border-white/35 transition-transform duration-500 group-hover:rotate-45"></div>
             </div>
 
             <div class="relative flex flex-1 flex-col gap-3">
                 <div class="flex items-center justify-between">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur transition-transform duration-300 group-hover:scale-110">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur transition-transform duration-300 group-hover:scale-110">
+                        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                             <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
                         </svg>
                     </span>
@@ -77,7 +77,7 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-extrabold leading-snug tracking-tight">{{ __('design.gather_title') }}</h3>
-                <p class="text-sm leading-relaxed text-orange-50/90">{{ __('design.gather_body') }}</p>
+                <p class="text-sm leading-relaxed text-orange-50/95">{{ __('design.gather_body') }}</p>
                 <ul class="mt-1 space-y-2">
                     @foreach (['gather_check1', 'gather_check2', 'gather_check3'] as $checkKey)
                         <li class="flex items-center gap-2 text-xs font-semibold text-orange-50">
@@ -91,9 +91,9 @@
                     @endforeach
                 </ul>
                 <a href="{{ $canCreate ? route('events.create') : route('register') }}"
-                   class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-extrabold text-orange-600 shadow-xl transition hover:scale-[1.02] active:scale-95">
+                   class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-extrabold text-[#E85F1A] shadow-xl transition hover:scale-[1.02] active:scale-95">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                        <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
                     </svg>
                     {{ __('design.gather_cta') }}
                 </a>
