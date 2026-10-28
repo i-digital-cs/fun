@@ -75,12 +75,35 @@ class HomePageTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee(__('dashboard.greeting_sub'), false)
-            ->assertSee(__('dashboard.nearby_title'), false)
+            ->assertSee(__('dashboard.hero_title_1'), false)
+            ->assertSee(__('dashboard.events_near_you'), false)
             ->assertSee(__('events.create_event'), false)
             ->assertSee('Kareem', false)
             ->assertSee('Obour', false)
-            ->assertSee(__('dashboard.safety_title'), false);
+            ->assertSee(__('dashboard.your_location'), false)
+            ->assertSee(__('dashboard.mood_placeholder'), false)
+            ->assertSee(__('dashboard.host_cta_title'), false)
+            ->assertSee(__('dashboard.social_circle_title'), false)
+            ->assertSee(__('dashboard.v3_search_placeholder'), false)
+            ->assertSee(route('friends.index'), false)
+            ->assertSee(route('settings.location.edit'), false);
+    }
+
+    public function test_authenticated_dashboard_arabic_rtl_shell(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Kareem',
+            'status' => AccountStatus::Active,
+            'locale' => 'ar',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['locale' => 'ar'])
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('dir="rtl"', false)
+            ->assertSee(__('dashboard.hero_title_1', [], 'ar'), false)
+            ->assertSee(__('dashboard.events_near_you', [], 'ar'), false);
     }
 
     public function test_home_shows_published_event_cards(): void
@@ -126,7 +149,7 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertSee('Evening Match Obour', false)
             ->assertSee(__('events.view_event'), false)
-            ->assertSee(__('dashboard.nearby_title'), false);
+            ->assertSee(__('dashboard.events_near_you'), false);
     }
 
     public function test_guest_home_does_not_show_dashboard_greeting(): void
@@ -155,11 +178,18 @@ class HomePageTest extends TestCase
     {
         $user = User::factory()->active()->create();
 
+        // V3 Social Home keeps safety accessible from the member shell footer nav /
+        // mobile nav; the rail focuses on location, upcoming, and create.
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee(__('dashboard.safety_cta'), false)
-            ->assertSee(route('safety.guidelines'), false);
+            ->assertSee(__('dashboard.events_near_you'), false)
+            ->assertSee(route('events.create'), false);
+
+        $this->actingAs($user)
+            ->get(route('safety.guidelines'))
+            ->assertOk()
+            ->assertSee(__('safety.guidelines_title'), false);
     }
 
     public function test_dashboard_falls_back_to_nationwide_when_nearby_empty(): void

@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/config/env.dart';
 import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
+import 'package:fun_mobile/core/utils/safe_url.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
@@ -415,7 +417,8 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                     markSize: 32,
                     maxNameWidth: 110,
                     dense: true,
-                    onTap: () => context.go('/home'),
+                    // V3: logo opens public marketing site `/`, not in-app home.
+                    onTap: () => launchSafeExternalUrl(Env.publicSiteOrigin),
                   ),
                   const Spacer(),
                   actionIcons,
@@ -443,7 +446,8 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
               markSize: 36,
               maxNameWidth: 160,
               dense: false,
-              onTap: () => context.go('/home'),
+              // V3: logo opens public marketing site `/`, not in-app home.
+              onTap: () => launchSafeExternalUrl(Env.publicSiteOrigin),
             ),
             const SizedBox(width: 12),
             Expanded(child: searchField),

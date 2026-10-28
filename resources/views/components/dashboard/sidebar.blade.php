@@ -9,7 +9,6 @@
     $createRoute = $canParticipate ? route('events.create') : route('identity.create');
     $cityLabel = $user?->city?->localizedName() ?? __('home.location_default');
     $distanceKm = $user?->distance_km ?? config('location.default_distance_km');
-    $exploreCategories = $categories->take(5);
     $isHome = request()->routeIs('dashboard');
     $isDiscover = request()->routeIs('events.index');
     $isMine = request()->routeIs('events.mine');
@@ -18,13 +17,12 @@
     $isNotifications = request()->routeIs('notifications.*');
     $isFavorites = request()->routeIs('events.favorites');
     $isCreate = request()->routeIs('events.create');
-    $isIdentity = request()->routeIs('identity.create');
-    $isBlocked = request()->routeIs('blocks.index');
     $needsIdentity = $user?->needsIdentityDocuments() === true;
 @endphp
 
 <aside class="dash-sidebar relative min-h-screen pb-28">
-    <a href="{{ route('dashboard') }}" class="mb-6 flex items-center gap-2.5 px-2.5 pb-1 no-underline">
+    {{-- V3: brand mark always opens the public marketing home `/` (never `/dashboard`). Auth is preserved. --}}
+    <a href="{{ route('home') }}" class="mb-6 flex items-center gap-2.5 px-2.5 pb-1 no-underline" aria-label="{{ $brand }}">
         @if ($siteLogoUrl ?? site_logo_url())
             <img src="{{ $siteLogoUrl ?? site_logo_url() }}" alt="{{ $brand }}" class="h-10 w-auto max-w-[2.75rem] rounded-[13px] object-contain shadow-lg shadow-indigo-600/20">
         @else
@@ -39,8 +37,8 @@
         <a href="{{ route('dashboard') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isHome,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isHome,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isHome,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isHome,
            ])
            @if ($isHome) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -52,8 +50,8 @@
         <a href="{{ route('events.index') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isDiscover,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isDiscover,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isDiscover,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isDiscover,
            ])
            @if ($isDiscover) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -66,8 +64,8 @@
         <a href="{{ route('events.mine') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isMine,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isMine,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isMine,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isMine,
            ])
            @if ($isMine) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -80,8 +78,8 @@
         <a href="{{ route('chats.index') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isChats,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isChats,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isChats,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isChats,
            ])
            @if ($isChats) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -93,8 +91,8 @@
         <a href="{{ route('friends.index') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isFriends,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isFriends,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isFriends,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isFriends,
            ])
            @if ($isFriends) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -108,8 +106,8 @@
         <a href="{{ route('notifications.index') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isNotifications,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isNotifications,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isNotifications,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isNotifications,
            ])
            @if ($isNotifications) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -121,90 +119,43 @@
         <a href="{{ route('events.favorites') }}"
            @class([
                'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isFavorites,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isFavorites,
+               'bg-[#F3EEFF] text-[#7138F5]' => $isFavorites,
+               'text-slate-500 hover:bg-[#F3EEFF] hover:text-[#7138F5]' => ! $isFavorites,
            ])
            @if ($isFavorites) aria-current="page" @endif>
             <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
                 <path d="M27 4v27a1 1 0 0 1-1.625.781L16 24.281l-9.375 7.5A1 1 0 0 1 5 31V4a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4z"/>
             </svg>
-            {{ __('dashboard.nav_favorites') }}
+            {{ __('dashboard.nav_saved') }}
         </a>
 
         <a href="{{ $createRoute }}"
            @class([
-               'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isCreate,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isCreate,
+               'mt-2 flex items-center justify-center gap-2 rounded-[11px] px-3 py-2.5 text-[13px] font-extrabold no-underline transition',
+               'bg-[#7138F5] text-white shadow-md shadow-[#7138F5]/25 hover:bg-[#5825D6]' => ! $isCreate,
+               'bg-[#5825D6] text-white' => $isCreate,
            ])>
-            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="18" rx="2"/>
-                <path stroke-linecap="round" d="M16 2v4M8 2v4M12 11v6M9 14h6"/>
+            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
             </svg>
             {{ __('dashboard.nav_create') }}
         </a>
-
-        <a href="{{ route('identity.create') }}"
-           @class([
-               'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isIdentity,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isIdentity,
-           ])
-           @if ($isIdentity) aria-current="page" @endif>
-            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <path stroke-linecap="round" d="M9 12l2 2 4-4"/>
-            </svg>
-            <span class="min-w-0 flex-1 truncate">{{ __('dashboard.nav_identity') }}</span>
-            @if ($needsIdentity)
-                <span class="h-2 w-2 shrink-0 rounded-full bg-orange-500" aria-hidden="true"></span>
-            @endif
-        </a>
-
-        <a href="{{ route('blocks.index') }}"
-           @class([
-               'flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold no-underline transition',
-               'bg-indigo-50 text-indigo-600' => $isBlocked,
-               'text-slate-500 hover:bg-indigo-50 hover:text-indigo-600' => ! $isBlocked,
-           ])
-           @if ($isBlocked) aria-current="page" @endif>
-            <svg class="h-[17px] w-[17px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="12" cy="12" r="9"/>
-                <path stroke-linecap="round" d="M7 7l10 10"/>
-            </svg>
-            {{ __('dashboard.nav_blocked') }}
-        </a>
-
-        @if ($exploreCategories->isNotEmpty())
-            <p class="px-3 pb-1.5 pt-4 text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400">
-                {{ __('dashboard.nav_explore') }}
-            </p>
-
-            @foreach ($exploreCategories as $category)
-                <a href="{{ route('events.index', ['category_id' => $category->id, 'city_id' => '']) }}"
-                   class="flex items-center gap-2.5 rounded-[11px] px-3 py-2.5 text-[13px] font-semibold text-slate-500 no-underline transition hover:bg-indigo-50 hover:text-indigo-600">
-                    <span class="flex h-[17px] w-[17px] shrink-0 items-center justify-center text-sm leading-none">{{ category_emoji($category->localizedName()) }}</span>
-                    <span class="min-w-0 flex-1 truncate">{{ $category->localizedName() }}</span>
-                    @if (($category->published_events_count ?? 0) > 0)
-                        <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">{{ $category->published_events_count }}</span>
-                    @endif
-                </a>
-            @endforeach
-        @endif
     </nav>
 
-    <a href="{{ route('settings.location.edit') }}"
-       data-location-modal-open
-       class="absolute inset-x-[0.95rem] bottom-[1.0625rem] block rounded-[14px] border border-[#dfe8fb] bg-[#f6f9ff] px-3 py-3 no-underline transition hover:border-indigo-200">
-        <span class="flex items-center gap-2 text-[13px] font-bold text-slate-800">
-            <svg class="h-4 w-4 shrink-0 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                <circle cx="12" cy="9" r="2.5"/>
-            </svg>
-            {{ $cityLabel }}
-        </span>
-        <small class="mt-1 block ps-6 text-[11px] text-slate-500">
-            {{ __('dashboard.showing_within', ['km' => $distanceKm]) }}
-        </small>
-    </a>
+    <div class="mt-auto px-1 pb-2 pt-6">
+        <div class="rounded-[1.1rem] bg-[#F3EEFF] p-3.5">
+            <p class="text-[13px] font-extrabold leading-snug text-[#19213D]">{{ __('dashboard.sidebar_promo_title') }}</p>
+            <a href="{{ $createRoute }}"
+               class="mt-3 inline-flex text-[12px] font-extrabold text-[#7138F5] no-underline hover:text-[#5825D6]">
+                {{ __('dashboard.sidebar_promo_cta') }}
+            </a>
+        </div>
+        @if ($needsIdentity)
+            <a href="{{ route('identity.create') }}"
+               class="mt-3 flex items-center gap-2 rounded-[11px] px-2 py-2 text-[12px] font-semibold text-orange-600 no-underline hover:bg-orange-50">
+                <span class="h-2 w-2 rounded-full bg-orange-500" aria-hidden="true"></span>
+                {{ __('dashboard.nav_identity') }}
+            </a>
+        @endif
+    </div>
 </aside>

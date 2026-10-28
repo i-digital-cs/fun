@@ -130,9 +130,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
+                              '${l10n.heroTitle1} ${l10n.heroTitle2}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.text,
+                                height: 1.25,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
                               l10n.greetingSub,
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: AppColors.muted,
                               ),
                             ),
@@ -389,6 +399,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     },
                   ),
                 ),
+                // V3: people discovery is first-class — before Worth the Trip.
+                const SliverToBoxAdapter(child: PeopleSuggestionsSection()),
                 if (nearby.worthTheTrip.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
@@ -435,7 +447,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ],
               ],
-              const SliverToBoxAdapter(child: PeopleSuggestionsSection()),
+              if (nearby.items.isEmpty)
+                const SliverToBoxAdapter(child: PeopleSuggestionsSection()),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
@@ -455,13 +468,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: HomeHowItWorksSection(brand: brand.displayName),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 100),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   child: HomeCreateBanner(
                     onCreate: () => _openCreate(canParticipate),
                   ),

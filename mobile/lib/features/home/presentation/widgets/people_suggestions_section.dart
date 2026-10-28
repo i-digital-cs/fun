@@ -380,7 +380,7 @@ class PeopleSuggestionCard extends StatelessWidget {
                   onPressed: onAdd,
                   style: buttonStyle.copyWith(
                     backgroundColor: const WidgetStatePropertyAll(
-                      Color(0xFFFF762E),
+                      Color(0xFF7138F5),
                     ),
                     foregroundColor: const WidgetStatePropertyAll(Colors.white),
                   ),
