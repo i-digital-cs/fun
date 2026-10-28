@@ -6,7 +6,7 @@ import 'package:fun_mobile/features/events/domain/events_repository.dart';
 
 class DiscoveryLocationState {
   const DiscoveryLocationState({
-    this.mode = DiscoveryLocationMode.manual,
+    this.mode = DiscoveryLocationMode.nationwide,
     this.cityId,
     this.cityName,
     this.distanceKm = 25,
@@ -16,6 +16,7 @@ class DiscoveryLocationState {
     this.isDetecting = false,
     this.error,
     this.lastDetectedAt,
+    this.isApproximate = false,
   });
 
   final DiscoveryLocationMode mode;
@@ -28,23 +29,33 @@ class DiscoveryLocationState {
   final bool isDetecting;
   final String? error;
   final DateTime? lastDetectedAt;
+  final bool isApproximate;
 
-  bool get hasManualCity => cityId != null && cityName != null;
-  bool get hasDeviceFix => deviceLat != null && deviceLng != null;
+  bool get hasManualCity =>
+      mode == DiscoveryLocationMode.manual && cityId != null && cityName != null;
+  bool get hasDeviceFix =>
+      mode == DiscoveryLocationMode.device &&
+      deviceLat != null &&
+      deviceLng != null;
 
   String get summaryLabel {
     if (mode == DiscoveryLocationMode.device) {
       if (hasDeviceFix) {
         final acc = accuracyM;
         if (acc != null && acc > 0) {
-          return 'Device · ±${acc.round()} m';
+          return 'Current location · ±${acc.round()} m';
         }
-        return 'Device location';
+        return 'Current location';
       }
-      return 'Device · locating…';
+      return 'Current location · locating…';
     }
     if (hasManualCity) return cityName!;
-    return 'All cities';
+    return 'All Egypt';
+  }
+
+  String radiusLabel() {
+    if (distanceKm == 0) return 'All distances';
+    return 'Within $distanceKm km';
   }
 
   DiscoveryLocationState copyWith({
@@ -58,6 +69,7 @@ class DiscoveryLocationState {
     bool? isDetecting,
     String? error,
     DateTime? lastDetectedAt,
+    bool? isApproximate,
     bool clearCity = false,
     bool clearDevice = false,
     bool clearError = false,
@@ -75,6 +87,9 @@ class DiscoveryLocationState {
       lastDetectedAt: clearDevice
           ? null
           : (lastDetectedAt ?? this.lastDetectedAt),
+      isApproximate: clearDevice
+          ? false
+          : (isApproximate ?? this.isApproximate),
     );
   }
 
@@ -87,6 +102,7 @@ class DiscoveryLocationState {
   }) {
     if (mode == DiscoveryLocationMode.device && hasDeviceFix) {
       return DiscoverFilters(
+        discoveryMode: 'device',
         distanceKm: distanceKm,
         latitude: deviceLat,
         longitude: deviceLng,
@@ -99,6 +115,7 @@ class DiscoveryLocationState {
     }
     if (mode == DiscoveryLocationMode.manual && cityId != null) {
       return DiscoverFilters(
+        discoveryMode: 'manual',
         cityId: cityId,
         distanceKm: distanceKm,
         q: q,
@@ -109,6 +126,7 @@ class DiscoveryLocationState {
       );
     }
     return DiscoverFilters(
+      discoveryMode: 'nationwide',
       allCities: true,
       distanceKm: distanceKm,
       q: q,
@@ -126,6 +144,8 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
 
   final Ref _ref;
 
+  static const lowAccuracyMeters = 500.0;
+
   DiscoveryLocationService get _service =>
       _ref.read(discoveryLocationServiceProvider);
 
@@ -133,15 +153,30 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     final auth = _ref.read(authControllerProvider);
     final user = auth is Authenticated ? auth.user : null;
     final service = _service;
-    final mode = service.mode;
-    final cityId = service.manualCityId ?? user?.cityId;
-    final cityName = service.manualCityName ?? user?.cityName;
-    final distance =
-        service.distanceKm ?? user?.distanceKm ?? 25;
+    var mode = service.mode;
+    final cityId = service.manualCityId;
+    final cityName = service.manualCityName;
+    final distance = service.distanceKm ?? user?.distanceKm ?? 25;
+
+    // Profile city seeds manual mode only when no explicit nationwide/device.
+    if (mode == DiscoveryLocationMode.manual && cityId == null && user?.cityId != null) {
+      state = DiscoveryLocationState(
+        mode: DiscoveryLocationMode.manual,
+        cityId: user!.cityId,
+        cityName: user.cityName,
+        distanceKm: distance,
+      );
+      return;
+    }
+
+    if (mode == DiscoveryLocationMode.manual && cityId == null) {
+      mode = DiscoveryLocationMode.nationwide;
+    }
+
     state = DiscoveryLocationState(
       mode: mode,
-      cityId: cityId,
-      cityName: cityName,
+      cityId: mode == DiscoveryLocationMode.manual ? cityId : null,
+      cityName: mode == DiscoveryLocationMode.manual ? cityName : null,
       distanceKm: distance,
     );
   }
@@ -167,10 +202,10 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
   Future<void> setNationwide({int? distanceKm}) async {
     final km = distanceKm ?? state.distanceKm;
     await _service.clearManualCity();
-    await _service.setMode(DiscoveryLocationMode.manual);
+    await _service.setMode(DiscoveryLocationMode.nationwide);
     await _service.setDistanceKm(km);
     state = state.copyWith(
-      mode: DiscoveryLocationMode.manual,
+      mode: DiscoveryLocationMode.nationwide,
       clearCity: true,
       clearDevice: true,
       distanceKm: km,
@@ -187,27 +222,42 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     state = state.copyWith(
       mode: DiscoveryLocationMode.device,
       isDetecting: true,
+      clearCity: true,
+      clearDevice: true,
       clearError: true,
     );
+    await _service.clearManualCity();
     await _service.setMode(DiscoveryLocationMode.device);
     final pos = await _service.obtainForegroundPosition();
-    if (pos == null) {
+    if (pos.failure != null) {
+      final message = switch (pos.failure) {
+        'denied' => 'Location permission denied. Pick a city manually or retry.',
+        'timeout' => 'Location request timed out. Retry or pick a city manually.',
+        'invalid' => 'Invalid coordinates received. Retry or pick a city manually.',
+        _ => 'Could not detect location. Check permissions and try again.',
+      };
       state = state.copyWith(
         isDetecting: false,
         clearDevice: true,
-        error: 'Could not detect location. Check permissions and try again.',
+        error: message,
       );
       return state.error;
     }
+    final approximate = pos.accuracyM > lowAccuracyMeters;
     state = state.copyWith(
       isDetecting: false,
       deviceLat: pos.lat,
       deviceLng: pos.lng,
       accuracyM: pos.accuracyM,
+      isApproximate: approximate,
       lastDetectedAt: DateTime.now(),
-      clearError: true,
+      clearCity: true,
+      clearError: !approximate,
+      error: approximate
+          ? 'Location is approximate (±${pos.accuracyM.round()} m). Retry or pick a city.'
+          : null,
     );
-    return null;
+    return approximate ? state.error : null;
   }
 
   Future<String?> retryDeviceLocation() => enableDeviceLocation();

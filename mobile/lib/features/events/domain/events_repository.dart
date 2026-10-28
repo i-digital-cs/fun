@@ -17,6 +17,9 @@ class DiscoverFilters {
     /// When true, send empty `city_id` so the API lists nationwide (Blade "All cities").
     /// When false and [cityId] is null, omit `city_id` (API may use the user's city).
     this.allCities = false,
+
+    /// `manual` | `device` | `nationwide` — exclusive origin for Laravel.
+    this.discoveryMode,
   });
 
   final String? q;
@@ -33,22 +36,32 @@ class DiscoverFilters {
   final int? perPage;
   final int page;
   final bool allCities;
+  final String? discoveryMode;
 
-  bool get isNationwide => allCities;
+  bool get isNationwide =>
+      allCities || discoveryMode == 'nationwide';
 
   bool get hasDeviceOrigin => latitude != null && longitude != null;
 
+  String get resolvedDiscoveryMode {
+    if (discoveryMode != null) return discoveryMode!;
+    if (hasDeviceOrigin && latitude != null) return 'device';
+    if (allCities) return 'nationwide';
+    if (cityId != null) return 'manual';
+    return 'nationwide';
+  }
+
   Map<String, dynamic> toQuery() {
+    final mode = resolvedDiscoveryMode;
     return {
+      'discovery_mode': mode,
       if (q != null && q!.trim().isNotEmpty) 'q': q!.trim(),
-      // Blade: empty city_id key → nationwide. Omitted city_id → user city fallback.
-      // Use a real empty string (not null) so Dio encodes `city_id=`.
-      if (allCities && !hasDeviceOrigin) 'city_id': '',
-      if (!allCities && cityId != null && !hasDeviceOrigin) 'city_id': cityId,
+      if (mode == 'nationwide') 'city_id': '',
+      if (mode == 'manual' && cityId != null) 'city_id': cityId,
       if (categoryId != null) 'category_id': categoryId,
       if (distanceKm != null) 'distance_km': distanceKm,
-      if (hasDeviceOrigin) 'latitude': latitude,
-      if (hasDeviceOrigin) 'longitude': longitude,
+      if (mode == 'device' && latitude != null) 'latitude': latitude,
+      if (mode == 'device' && longitude != null) 'longitude': longitude,
       if (when != null && when!.isNotEmpty) 'when': when,
       if (perPage != null) 'per_page': perPage,
       'page': page,
@@ -66,19 +79,19 @@ class DiscoverFilters {
       parts.add('$key=${Uri.encodeQueryComponent('$value')}');
     }
 
+    final mode = resolvedDiscoveryMode;
+    add('discovery_mode', mode);
     if (q != null && q!.trim().isNotEmpty) add('q', q!.trim());
-    if (hasDeviceOrigin) {
+    if (mode == 'device') {
       add('latitude', latitude);
       add('longitude', longitude);
-    } else if (allCities) {
+    } else if (mode == 'nationwide') {
       add('city_id', '');
     } else if (cityId != null) {
       add('city_id', cityId);
     }
     if (categoryId != null) add('category_id', categoryId);
-    if (distanceKm != null && (!allCities || hasDeviceOrigin)) {
-      add('distance_km', distanceKm);
-    }
+    if (distanceKm != null) add('distance_km', distanceKm);
     if (when != null && when!.isNotEmpty) add('when', when);
     if (perPage != null) add('per_page', perPage);
     add('page', page);
@@ -96,12 +109,14 @@ class DiscoverFilters {
     int? perPage,
     int? page,
     bool? allCities,
+    String? discoveryMode,
     bool clearQ = false,
     bool clearCity = false,
     bool clearCategory = false,
     bool clearDistance = false,
     bool clearWhen = false,
     bool clearDevice = false,
+    bool clearDiscoveryMode = false,
   }) {
     return DiscoverFilters(
       q: clearQ ? null : (q ?? this.q),
@@ -114,6 +129,9 @@ class DiscoverFilters {
       perPage: perPage ?? this.perPage,
       page: page ?? this.page,
       allCities: allCities ?? this.allCities,
+      discoveryMode: clearDiscoveryMode
+          ? null
+          : (discoveryMode ?? this.discoveryMode),
     );
   }
 }

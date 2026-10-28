@@ -96,11 +96,17 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
         .read(discoveryLocationControllerProvider.notifier)
         .enableDeviceLocation();
     if (!mounted) return;
-    if (err != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    final loc = ref.read(discoveryLocationControllerProvider);
+    if (loc.hasDeviceFix) {
+      if (err != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      }
+      Navigator.of(context).pop();
       return;
     }
-    Navigator.of(context).pop();
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+    }
   }
 
   @override
@@ -136,11 +142,7 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              loc.mode == DiscoveryLocationMode.device
-                  ? loc.summaryLabel
-                  : (loc.hasManualCity
-                        ? loc.cityName!
-                        : 'Nationwide browse'),
+              '${loc.summaryLabel} · ${loc.radiusLabel()}',
               style: const TextStyle(fontSize: 13, color: AppColors.muted),
             ),
             const SizedBox(height: 12),

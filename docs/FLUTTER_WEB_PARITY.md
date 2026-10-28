@@ -750,7 +750,7 @@ Also keep Location as a separate screen (`§2.16`).
 | **Manual** | Searchable city/area picker (`GET /api/cities/search`) — EN/AR + aliases (e.g. `6 October` / `٦ أكتوبر`). User selects a result; store stable `city_id` + display name + radius. GPS must not override. |
 | **Device** | Explicit “Use device location” only (foreground permission, one-shot). Show accuracy meters + retry. Coordinates are **ephemeral** — never persisted on the user. |
 
-Radius options remain **5 / 10 / 25 / 50 / 100 / 0=All**. Origin resolution (single Laravel path): explicit `city_id` wins over lat/lng; else device lat/lng; else profile city; else nationwide. Flutter: `DiscoveryLocationController` + Discover location chip → `location_picker_sheet`. Web: Discover chip + searchable filter + location modal. Docs: `docs/discovery/FUNNITY_LOCATION_DISCOVERY_V4.md`.
+Radius options remain **5 / 10 / 25 / 50 / 100 / 0=All**. Origin resolution (single Laravel path via `ResolveDiscoveryOriginService` + `discovery_mode=manual|device|nationwide`): modes are mutually exclusive — never mix `city_id` with device lat/lng. Flutter: `DiscoveryLocationController` + Discover location chip → `location_picker_sheet`. Web: sessionStorage-backed discovery state syncs chip + modal + query params. Docs: `docs/discovery/FUNNITY_LOCATION_DISCOVERY_V4.md` · `docs/discovery/FUNNITY_LOCATION_STATE_REPAIR.md`.
 
 **V2.1 foreground GPS:** Flutter `DiscoveryLocationService`; Web after user click (secure context). Denied → error + manual selection (do **not** silently swap modes). No background location. `meta.origin_type` is `device` vs `city`. Distance copy remains “approximate straight-line km”.
 

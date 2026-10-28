@@ -2,9 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum DiscoveryLocationMode { manual, device }
+enum DiscoveryLocationMode { manual, device, nationwide }
 
-/// Authoritative discovery-location preferences (manual city vs device GPS).
+/// Authoritative discovery-location preferences (manual / device / nationwide).
 ///
 /// Device coordinates are **never** persisted — only mode, city id/name, radius.
 class DiscoveryLocationService {
@@ -21,6 +21,7 @@ class DiscoveryLocationService {
   DiscoveryLocationMode get mode {
     final raw = _prefs.getString(_prefMode);
     if (raw == 'device') return DiscoveryLocationMode.device;
+    if (raw == 'nationwide') return DiscoveryLocationMode.nationwide;
     if (raw == 'manual') return DiscoveryLocationMode.manual;
     // Migrate legacy boolean.
     if (_prefs.getBool(_prefUseDevice) == true) {
@@ -76,7 +77,8 @@ class DiscoveryLocationService {
   }
 
   /// Request when-in-use permission and return a one-shot position, or null.
-  Future<({double lat, double lng, double accuracyM})?>
+  /// [failure] is set for diagnostics: denied | timeout | unavailable | invalid.
+  Future<({double lat, double lng, double accuracyM, String? failure})>
   obtainForegroundPosition() async {
     if (kIsWeb) {
       // Flutter web discovery prefers city unless Geolocator is configured.
@@ -84,7 +86,7 @@ class DiscoveryLocationService {
 
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return null;
+      return (lat: 0.0, lng: 0.0, accuracyM: 0.0, failure: 'unavailable');
     }
 
     var permission = await Geolocator.checkPermission();
@@ -93,28 +95,31 @@ class DiscoveryLocationService {
     }
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      return null;
+      return (lat: 0.0, lng: 0.0, accuracyM: 0.0, failure: 'denied');
     }
 
-    // Foreground one-shot only — no stream / background.
-    // Short timeout: home/discover must not block on cold GPS.
     try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-          timeLimit: Duration(seconds: 5),
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 12),
         ),
       );
 
       final lat = position.latitude;
       final lng = position.longitude;
       if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        return null;
+        return (lat: 0.0, lng: 0.0, accuracyM: 0.0, failure: 'invalid');
       }
 
-      return (lat: lat, lng: lng, accuracyM: position.accuracy);
-    } catch (_) {
-      return null;
+      return (
+        lat: lat,
+        lng: lng,
+        accuracyM: position.accuracy,
+        failure: null,
+      );
+    } on Exception {
+      return (lat: 0.0, lng: 0.0, accuracyM: 0.0, failure: 'timeout');
     }
   }
 }

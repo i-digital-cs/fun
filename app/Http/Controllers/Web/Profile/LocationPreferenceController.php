@@ -36,6 +36,18 @@ class LocationPreferenceController extends Controller
             return back()->withErrors(['city_id' => $exception->getMessage()]);
         }
 
+        $redirectTo = $request->input('redirect_to');
+        if (is_string($redirectTo) && $redirectTo !== '') {
+            $path = parse_url($redirectTo, PHP_URL_PATH) ?: '';
+            $query = parse_url($redirectTo, PHP_URL_QUERY);
+            // Same-origin relative redirects only.
+            if (str_starts_with($path, '/') && ! str_starts_with($path, '//')) {
+                $target = $path.($query ? '?'.$query : '');
+
+                return redirect($target)->with('status', __('location.preferences_saved'));
+            }
+        }
+
         return back()->with('status', __('location.preferences_saved'));
     }
 }

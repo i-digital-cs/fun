@@ -262,4 +262,63 @@ class DiscoverNearbyEventsTest extends TestCase
         $this->getJson('/api/events?latitude=999&longitude=31.4')
             ->assertStatus(422);
     }
+
+    public function test_discovery_mode_device_ignores_stale_city_id_query_param(): void
+    {
+        $obour = $this->city('Obour', 30.2285, 31.4769);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $near = $this->publishedIn($obour);
+        $far = $this->publishedIn($alex);
+
+        Sanctum::actingAs(User::factory()->active()->create([
+            'city_id' => $alex->id,
+            'distance_km' => 10,
+        ]));
+
+        $ids = collect($this->getJson(
+            '/api/events?discovery_mode=device&latitude=30.2285&longitude=31.4769&distance_km=10&city_id='.$alex->id
+        )->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($near->id));
+        $this->assertFalse($ids->contains($far->id));
+    }
+
+    public function test_discovery_mode_nationwide_ignores_profile_city(): void
+    {
+        $obour = $this->city('Obour', 30.2285, 31.4769);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $near = $this->publishedIn($obour);
+        $far = $this->publishedIn($alex);
+
+        Sanctum::actingAs(User::factory()->active()->create([
+            'city_id' => $obour->id,
+            'distance_km' => 5,
+        ]));
+
+        $ids = collect($this->getJson('/api/events?discovery_mode=nationwide&distance_km=0')
+            ->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($near->id));
+        $this->assertTrue($ids->contains($far->id));
+    }
+
+    public function test_discovery_mode_manual_ignores_device_coordinates(): void
+    {
+        $obour = $this->city('Obour', 30.2285, 31.4769);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $nearObour = $this->publishedIn($obour);
+        $nearAlex = $this->publishedIn($alex);
+
+        Sanctum::actingAs(User::factory()->active()->create());
+
+        $ids = collect($this->getJson(
+            '/api/events?discovery_mode=manual&city_id='.$alex->id.'&latitude=30.2285&longitude=31.4769&distance_km=10'
+        )->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($nearAlex->id));
+        $this->assertFalse($ids->contains($nearObour->id));
+    }
 }

@@ -40,21 +40,34 @@ class EventController extends Controller
         $filters = $request->filters();
         $events = $discover->discover($request->user(), $filters);
 
+        $discoveryMode = $filters['discovery_mode']
+            ?? (isset($filters['latitude'], $filters['longitude'])
+                ? 'device'
+                : (array_key_exists('city_id', $filters)
+                    ? ($filters['city_id'] === null ? 'nationwide' : 'manual')
+                    : null));
+
         $explicitCityFilter = array_key_exists('city_id', $filters);
-        $hasDeviceOrigin = isset($filters['latitude'], $filters['longitude']);
-        $hasNearbyOrigin = $explicitCityFilter
-            ? $filters['city_id'] !== null
-            : ($hasDeviceOrigin || $request->user()?->city_id !== null);
+        $hasDeviceOrigin = ($discoveryMode === 'device')
+            || (isset($filters['latitude'], $filters['longitude']) && $discoveryMode !== 'manual');
+        $hasNearbyOrigin = $hasDeviceOrigin
+            || ($explicitCityFilter
+                ? $filters['city_id'] !== null
+                : ($discoveryMode !== 'nationwide' && $request->user()?->city_id !== null));
 
         // Soft nationwide fallback only when using the member's saved city — never when
         // they explicitly picked a city (or All cities) on Discover.
         $nationwideFallback = false;
-        if ($hasNearbyOrigin && ! $explicitCityFilter && $events->total() === 0) {
-            $fallback = $discover->discover($request->user(), array_merge($filters, ['city_id' => null]));
+        if ($hasNearbyOrigin && ! $explicitCityFilter && $discoveryMode === null && $events->total() === 0) {
+            $fallback = $discover->discover($request->user(), array_merge($filters, [
+                'city_id' => null,
+                'discovery_mode' => 'nationwide',
+            ]));
             if ($fallback->total() > 0) {
                 $events = $fallback;
                 $nationwideFallback = true;
                 $hasNearbyOrigin = false;
+                $discoveryMode = 'nationwide';
             }
         }
 
@@ -63,15 +76,30 @@ class EventController extends Controller
             ? $favorites->favoritedIdsFor($request->user(), $events->getCollection())
             : [];
 
-        $filterCityId = array_key_exists('city_id', $filters)
-            ? $filters['city_id']
-            : ($nationwideFallback ? null : $request->user()?->city_id);
+        // Active discovery city — never fall back to profile city while device/nationwide.
+        if ($hasDeviceOrigin || $discoveryMode === 'nationwide') {
+            $filterCityId = null;
+        } elseif ($explicitCityFilter) {
+            $filterCityId = $filters['city_id'];
+        } elseif ($nationwideFallback) {
+            $filterCityId = null;
+        } else {
+            $filterCityId = $request->user()?->city_id;
+            $discoveryMode ??= ($filterCityId ? 'manual' : 'nationwide');
+        }
+
         $filterDistance = $filters['distance_km']
             ?? $request->user()?->distance_km
             ?? config('location.default_distance_km');
         $filterCity = $filterCityId
             ? City::query()->find($filterCityId)
             : null;
+
+        if ($discoveryMode === null) {
+            $discoveryMode = $hasDeviceOrigin
+                ? 'device'
+                : ($filterCityId ? 'manual' : 'nationwide');
+        }
 
         $payload = [
             'events' => $events,
@@ -94,19 +122,22 @@ class EventController extends Controller
                 'city_id' => $filterCityId,
                 'distance_km' => $filterDistance,
                 'q' => $filters['q'] ?? null,
-                'latitude' => $filters['latitude'] ?? null,
-                'longitude' => $filters['longitude'] ?? null,
+                'latitude' => $hasDeviceOrigin ? ($filters['latitude'] ?? null) : null,
+                'longitude' => $hasDeviceOrigin ? ($filters['longitude'] ?? null) : null,
+                'accuracy_m' => $hasDeviceOrigin ? ($filters['accuracy_m'] ?? null) : null,
+                'discovery_mode' => $discoveryMode,
             ],
             'filterCity' => $filterCity,
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'hasDeviceOrigin' => $hasDeviceOrigin,
+            'discoveryMode' => $discoveryMode,
             'nationwideFallback' => $nationwideFallback,
             'explicitCityFilter' => $explicitCityFilter,
             'landingCities' => $landings->eligibleCities(),
             'landingCategories' => $landings->eligibleCategories(),
             'seo' => Seo::forDiscover(
                 page: (int) $events->currentPage(),
-                hasFilters: $request->hasAny(['q', 'category_id', 'city_id', 'distance_km', 'when']),
+                hasFilters: $request->hasAny(['q', 'category_id', 'city_id', 'distance_km', 'when', 'discovery_mode', 'latitude']),
             ),
         ];
 

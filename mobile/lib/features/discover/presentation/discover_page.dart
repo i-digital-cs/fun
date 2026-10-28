@@ -213,9 +213,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final loc = ref.watch(discoveryLocationControllerProvider);
     final canCreate = auth is Authenticated && auth.user.canParticipate;
     final isAuthed = auth is Authenticated;
-    final radiusLabel = loc.distanceKm == 0
-        ? 'All distances'
-        : 'Within ${loc.distanceKm} km';
+    final radiusLabel = loc.radiusLabel();
 
     return Scaffold(
       backgroundColor: AppColors.canvas,

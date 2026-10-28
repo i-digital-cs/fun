@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Models\City;
 use App\Models\Event;
 use App\Models\User;
+use App\Services\Location\ResolveDiscoveryOriginService;
 use App\Services\Safety\UserBlockService;
 use App\Support\GeoDistance;
 use Carbon\CarbonInterface;
@@ -16,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class DiscoverNearbyEventsService
 {
-    public function __construct(private readonly UserBlockService $blocks) {}
+    public function __construct(
+        private readonly UserBlockService $blocks,
+        private readonly ResolveDiscoveryOriginService $origins,
+    ) {}
 
     /**
      * @param  array{category_id?: int|null, q?: string|null, per_page?: int}  $filters
@@ -25,7 +29,7 @@ class DiscoverNearbyEventsService
     {
         $perPage = (int) ($filters['per_page'] ?? 12);
 
-        $origin = $this->resolveOrigin($user, $filters);
+        $origin = $this->origins->resolve($user, $filters);
 
         $query = Event::query()
             ->with(['category', 'city', 'creator'])
@@ -123,90 +127,6 @@ class DiscoverNearbyEventsService
         }
 
         return $events;
-    }
-
-    /**
-     * Same origin rules as EventDiscoveryService: explicit city → city center;
-     * else ephemeral device lat/lng → device origin; else null (nationwide).
-     *
-     * @param  array{city_id?: int|null, distance_km?: int|null, latitude?: float, longitude?: float}  $filters
-     * @return array{latitude: float, longitude: float, distance_km: int, city: ?City, origin_type: string}|null
-     */
-    private function resolveOrigin(?User $user, array $filters): ?array
-    {
-        $allowedDistances = config('location.distances_km');
-        $distance = (int) ($filters['distance_km']
-            ?? $user?->distance_km
-            ?? config('location.default_distance_km'));
-
-        if (! in_array($distance, $allowedDistances, true)) {
-            throw ValidationException::withMessages([
-                'distance_km' => [__('location.invalid_distance')],
-            ]);
-        }
-
-        // Manual city selection wins when city_id is explicitly provided (including
-        // empty = nationwide). Device GPS is only used when city_id is omitted.
-        $hasCityKey = array_key_exists('city_id', $filters);
-
-        if ($hasCityKey) {
-            $cityId = $filters['city_id'];
-            if ($cityId === null) {
-                return null;
-            }
-
-            $city = City::query()->active()->find($cityId);
-            if ($city === null) {
-                throw ValidationException::withMessages([
-                    'city_id' => [__('location.city_unavailable')],
-                ]);
-            }
-
-            return [
-                'latitude' => (float) $city->latitude,
-                'longitude' => (float) $city->longitude,
-                'distance_km' => $distance,
-                'city' => $city,
-                'origin_type' => 'city',
-            ];
-        }
-
-        // Ephemeral device GPS — never persisted; only when caller did not set city_id.
-        if (isset($filters['latitude'], $filters['longitude'])
-            && is_numeric($filters['latitude'])
-            && is_numeric($filters['longitude'])) {
-            $lat = (float) $filters['latitude'];
-            $lng = (float) $filters['longitude'];
-            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
-                return [
-                    'latitude' => $lat,
-                    'longitude' => $lng,
-                    'distance_km' => $distance,
-                    'city' => null,
-                    'origin_type' => 'device',
-                ];
-            }
-        }
-
-        $cityId = $user?->city_id;
-        if ($cityId === null) {
-            return null;
-        }
-
-        $city = City::query()->active()->find($cityId);
-        if ($city === null) {
-            throw ValidationException::withMessages([
-                'city_id' => [__('location.city_unavailable')],
-            ]);
-        }
-
-        return [
-            'latitude' => (float) $city->latitude,
-            'longitude' => (float) $city->longitude,
-            'distance_km' => $distance,
-            'city' => $city,
-            'origin_type' => 'city',
-        ];
     }
 
     /**

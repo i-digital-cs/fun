@@ -20,6 +20,7 @@ class UpdateLocationPreferenceRequest extends FormRequest
         return [
             'city_id' => ['required', 'integer', Rule::exists('cities', 'id')->where('is_active', true)],
             'distance_km' => ['required', 'integer', Rule::in(config('location.distances_km'))],
+            'redirect_to' => ['sometimes', 'nullable', 'string', 'max:500'],
         ];
     }
 }

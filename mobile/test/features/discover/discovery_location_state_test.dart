@@ -16,11 +16,14 @@ void main() {
 
       final filters = state.toDiscoverFilters();
 
+      expect(filters.discoveryMode, 'manual');
       expect(filters.cityId, 12);
       expect(filters.allCities, isFalse);
       expect(filters.distanceKm, 25);
       expect(filters.latitude, isNull);
       expect(filters.longitude, isNull);
+      expect(filters.toQuery().containsKey('latitude'), isFalse);
+      expect(filters.toQuery()['city_id'], 12);
     });
 
     test('device mode with fix sends lat/lng without city_id', () {
@@ -35,28 +38,33 @@ void main() {
       );
 
       final filters = state.toDiscoverFilters();
+      final query = filters.toQuery();
 
-      expect(filters.cityId, isNull);
-      expect(filters.latitude, 30.2285);
-      expect(filters.longitude, 31.4769);
-      expect(filters.distanceKm, 10);
-      expect(filters.allCities, isFalse);
+      expect(filters.discoveryMode, 'device');
+      expect(query['discovery_mode'], 'device');
+      expect(query.containsKey('city_id'), isFalse);
+      expect(query['latitude'], 30.2285);
+      expect(query['longitude'], 31.4769);
+      expect(query['distance_km'], 10);
     });
 
-    test('device mode without fix falls back to nationwide filters', () {
+    test('nationwide mode clears city and coords', () {
       const state = DiscoveryLocationState(
-        mode: DiscoveryLocationMode.device,
-        distanceKm: 25,
+        mode: DiscoveryLocationMode.nationwide,
+        distanceKm: 0,
       );
 
       final filters = state.toDiscoverFilters();
+      final query = filters.toQuery();
 
-      expect(filters.allCities, isTrue);
-      expect(filters.latitude, isNull);
-      expect(filters.cityId, isNull);
+      expect(filters.discoveryMode, 'nationwide');
+      expect(query['discovery_mode'], 'nationwide');
+      expect(query['city_id'], '');
+      expect(query.containsKey('latitude'), isFalse);
+      expect(state.summaryLabel, 'All Egypt');
     });
 
-    test('summaryLabel distinguishes device accuracy from city name', () {
+    test('summaryLabel distinguishes current location from city name', () {
       const device = DiscoveryLocationState(
         mode: DiscoveryLocationMode.device,
         deviceLat: 1,
@@ -69,9 +77,10 @@ void main() {
         cityName: 'Giza',
       );
 
-      expect(device.summaryLabel, contains('Device'));
+      expect(device.summaryLabel, contains('Current location'));
       expect(device.summaryLabel, contains('40'));
       expect(manual.summaryLabel, 'Giza');
+      expect(manual.radiusLabel(), 'Within 25 km');
     });
   });
 }

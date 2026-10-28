@@ -89,16 +89,18 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       final km = location.distanceKm ?? user?.distanceKm ?? 25;
       if (location.mode == DiscoveryLocationMode.device) {
         final pos = await location.obtainForegroundPosition();
-        if (pos != null) {
+        if (pos.failure == null) {
           homeFilters = DiscoverFilters(
+            discoveryMode: 'device',
             distanceKm: km,
             latitude: pos.lat,
             longitude: pos.lng,
             page: 1,
           );
         } else {
-          // Stay in device mode semantically: nationwide browse + surface error.
+          // Stay in device preference: nationwide browse + surface error (no city swap).
           homeFilters = DiscoverFilters(
+            discoveryMode: 'nationwide',
             allCities: true,
             distanceKm: km,
             page: 1,
@@ -108,15 +110,22 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
                 'Could not detect device location. Retry or pick a city manually.',
           );
         }
-      } else if (location.manualCityId != null || user?.cityId != null) {
+      } else if (location.mode == DiscoveryLocationMode.manual &&
+          (location.manualCityId != null || user?.cityId != null)) {
         homeFilters = DiscoverFilters(
+          discoveryMode: 'manual',
           cityId: location.manualCityId ?? user!.cityId,
           distanceKm: km,
           page: 1,
           allCities: false,
         );
       } else {
-        homeFilters = DiscoverFilters(allCities: true, distanceKm: km, page: 1);
+        homeFilters = DiscoverFilters(
+          discoveryMode: 'nationwide',
+          allCities: true,
+          distanceKm: km,
+          page: 1,
+        );
       }
 
       final hasCity = homeFilters.cityId != null;

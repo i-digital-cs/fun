@@ -4,6 +4,7 @@ import { initAttachmentFolders } from './attachment-folder';
 import { initConfirmDialog } from './confirm-dialog';
 import { initChatToasts } from './chat-toast';
 import { initPageLoader } from './page-loader';
+import { initDiscoveryLocationUi } from './discovery-location';
 
 window.Echo = null;
 
@@ -18,6 +19,9 @@ document.documentElement.dataset.confirmDialogReady = '1';
 
 initPageLoader();
 document.documentElement.dataset.pageLoaderReady = '1';
+
+initDiscoveryLocationUi();
+document.documentElement.dataset.discoveryLocationReady = '1';
 
 const needsRealtime =
     document.body?.dataset?.realtime === '1' ||

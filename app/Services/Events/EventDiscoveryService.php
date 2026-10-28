@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Models\City;
 use App\Models\Event;
 use App\Models\User;
+use App\Services\Location\ResolveDiscoveryOriginService;
 use App\Services\Safety\UserBlockService;
 use App\Support\GeoDistance;
 use Illuminate\Support\Collection;
@@ -21,6 +22,7 @@ class EventDiscoveryService
 {
     public function __construct(
         private readonly UserBlockService $blocks,
+        private readonly ResolveDiscoveryOriginService $origins,
     ) {}
 
     /**
@@ -41,7 +43,7 @@ class EventDiscoveryService
      */
     public function homeBundle(?User $user, array $filters = [], int $nearbyLimit = 8, int $worthLimit = 6): array
     {
-        $origin = $this->resolveOrigin($user, $filters);
+        $origin = $this->origins->resolve($user, $filters);
         $requested = $origin['distance_km'] ?? null;
         $effective = $requested;
         $expanded = false;
@@ -100,89 +102,6 @@ class EventDiscoveryService
             ],
             'nearby' => $nearbyEvents->values()->all(),
             'worth_the_trip' => $worth->values()->all(),
-        ];
-    }
-
-    /**
-     * @param  array{city_id?: int|null, distance_km?: int|null, latitude?: float, longitude?: float}  $filters
-     * @return array{latitude: float, longitude: float, distance_km: int, city: ?City, origin_type: string}|null
-     */
-    private function resolveOrigin(?User $user, array $filters): ?array
-    {
-        $allowedDistances = config('location.distances_km');
-        $distance = (int) ($filters['distance_km']
-            ?? $user?->distance_km
-            ?? config('location.default_distance_km'));
-
-        if (! in_array($distance, $allowedDistances, true)) {
-            throw ValidationException::withMessages([
-                'distance_km' => [__('location.invalid_distance')],
-            ]);
-        }
-
-        // Explicit city_id (including empty nationwide) wins over device GPS so
-        // manual discovery is never overridden by a stale lat/lng query param.
-        $hasCityKey = array_key_exists('city_id', $filters);
-
-        if ($hasCityKey) {
-            $cityId = $filters['city_id'];
-            if ($cityId === null) {
-                return null;
-            }
-
-            $city = City::query()->active()->find($cityId);
-            if ($city === null) {
-                throw ValidationException::withMessages([
-                    'city_id' => [__('location.city_unavailable')],
-                ]);
-            }
-
-            return [
-                'latitude' => (float) $city->latitude,
-                'longitude' => (float) $city->longitude,
-                'distance_km' => $distance,
-                'city' => $city,
-                'origin_type' => 'city',
-            ];
-        }
-
-        // Ephemeral device GPS (validated request only). Never stored on users.
-        if (isset($filters['latitude'], $filters['longitude'])
-            && is_numeric($filters['latitude'])
-            && is_numeric($filters['longitude'])) {
-            $lat = (float) $filters['latitude'];
-            $lng = (float) $filters['longitude'];
-            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
-                return [
-                    'latitude' => $lat,
-                    'longitude' => $lng,
-                    'distance_km' => $distance,
-                    'city' => null,
-                    'origin_type' => 'device',
-                ];
-            }
-        }
-
-        $cityId = $user?->city_id;
-
-        if ($cityId === null) {
-            return null;
-        }
-
-        $city = City::query()->active()->find($cityId);
-
-        if ($city === null) {
-            throw ValidationException::withMessages([
-                'city_id' => [__('location.city_unavailable')],
-            ]);
-        }
-
-        return [
-            'latitude' => (float) $city->latitude,
-            'longitude' => (float) $city->longitude,
-            'distance_km' => $distance,
-            'city' => $city,
-            'origin_type' => 'city',
         ];
     }
 
