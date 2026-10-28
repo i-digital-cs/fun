@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Auth\PasswordResetController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\CategoryListController;
 use App\Http\Controllers\Api\CityListController;
+use App\Http\Controllers\Api\CitySearchController;
 use App\Http\Controllers\Api\Events\EventChatController as ApiEventChatController;
 use App\Http\Controllers\Api\Chat\ChatInboxController as ApiChatInboxController;
 use App\Http\Controllers\Api\Events\EventController as ApiEventController;
@@ -48,6 +49,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/site', SiteBrandingController::class);
 Route::get('/cities', CityListController::class);
+Route::get('/cities/search', CitySearchController::class)->middleware('throttle:60,1');
 Route::get('/categories', CategoryListController::class);
 Route::get('/search/suggest', SearchSuggestController::class)->middleware('throttle:60,1');
 Route::get('/events', [ApiEventController::class, 'index']);

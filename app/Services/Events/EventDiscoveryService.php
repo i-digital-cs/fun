@@ -120,6 +120,32 @@ class EventDiscoveryService
             ]);
         }
 
+        // Explicit city_id (including empty nationwide) wins over device GPS so
+        // manual discovery is never overridden by a stale lat/lng query param.
+        $hasCityKey = array_key_exists('city_id', $filters);
+
+        if ($hasCityKey) {
+            $cityId = $filters['city_id'];
+            if ($cityId === null) {
+                return null;
+            }
+
+            $city = City::query()->active()->find($cityId);
+            if ($city === null) {
+                throw ValidationException::withMessages([
+                    'city_id' => [__('location.city_unavailable')],
+                ]);
+            }
+
+            return [
+                'latitude' => (float) $city->latitude,
+                'longitude' => (float) $city->longitude,
+                'distance_km' => $distance,
+                'city' => $city,
+                'origin_type' => 'city',
+            ];
+        }
+
         // Ephemeral device GPS (validated request only). Never stored on users.
         if (isset($filters['latitude'], $filters['longitude'])
             && is_numeric($filters['latitude'])
@@ -137,9 +163,7 @@ class EventDiscoveryService
             }
         }
 
-        $cityId = array_key_exists('city_id', $filters)
-            ? $filters['city_id']
-            : $user?->city_id;
+        $cityId = $user?->city_id;
 
         if ($cityId === null) {
             return null;

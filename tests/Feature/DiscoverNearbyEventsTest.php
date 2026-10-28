@@ -213,4 +213,53 @@ class DiscoverNearbyEventsTest extends TestCase
             ]), false)
             ->assertDontSee(__('events.nationwide_notice'), false);
     }
+
+    public function test_device_coordinates_filter_nearby_without_city_id(): void
+    {
+        $obour = $this->city('Obour', 30.2285, 31.4769);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $near = $this->publishedIn($obour);
+        $far = $this->publishedIn($alex);
+
+        $user = User::factory()->active()->create([
+            'city_id' => $alex->id,
+            'distance_km' => 10,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        // Device near Obour — must not fall back to saved Alexandria city.
+        $ids = collect($this->getJson('/api/events?latitude=30.2285&longitude=31.4769&distance_km=10')
+            ->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($near->id));
+        $this->assertFalse($ids->contains($far->id));
+    }
+
+    public function test_explicit_city_id_wins_over_device_coordinates(): void
+    {
+        $obour = $this->city('Obour', 30.2285, 31.4769);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $nearObour = $this->publishedIn($obour);
+        $nearAlex = $this->publishedIn($alex);
+
+        Sanctum::actingAs(User::factory()->active()->create());
+
+        $ids = collect($this->getJson(
+            '/api/events?city_id='.$alex->id.'&latitude=30.2285&longitude=31.4769&distance_km=10'
+        )->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($nearAlex->id));
+        $this->assertFalse($ids->contains($nearObour->id));
+    }
+
+    public function test_invalid_coordinates_are_rejected(): void
+    {
+        Sanctum::actingAs(User::factory()->active()->create());
+
+        $this->getJson('/api/events?latitude=999&longitude=31.4')
+            ->assertStatus(422);
+    }
 }

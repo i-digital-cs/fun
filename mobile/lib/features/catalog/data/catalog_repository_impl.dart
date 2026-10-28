@@ -14,5 +14,9 @@ class CatalogRepositoryImpl implements CatalogRepository {
   Future<Result<List<CityItem>>> cities() => _remote.cities();
 
   @override
+  Future<Result<List<CityItem>>> searchCities(String query, {int limit = 12}) =>
+      _remote.searchCities(query, limit: limit);
+
+  @override
   Future<Result<List<CategoryItem>>> categories() => _remote.categories();
 }

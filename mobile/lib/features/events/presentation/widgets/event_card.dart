@@ -133,10 +133,11 @@ class _EventCardState extends State<EventCard> {
                         if (hasImage)
                           AppNetworkImage(
                             url: event.imageUrl!,
-                            logicalWidth: 420,
+                            // List thumbs: decode for phone width, not full cover art.
+                            logicalWidth: 390,
                             logicalHeight: imageHeight,
-                            maxCacheWidth: 900,
-                            maxCacheHeight: 500,
+                            maxCacheWidth: 720,
+                            maxCacheHeight: 360,
                             fit: BoxFit.cover,
                           )
                         else

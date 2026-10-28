@@ -41,9 +41,10 @@ class EventController extends Controller
         $events = $discover->discover($request->user(), $filters);
 
         $explicitCityFilter = array_key_exists('city_id', $filters);
+        $hasDeviceOrigin = isset($filters['latitude'], $filters['longitude']);
         $hasNearbyOrigin = $explicitCityFilter
             ? $filters['city_id'] !== null
-            : $request->user()?->city_id !== null;
+            : ($hasDeviceOrigin || $request->user()?->city_id !== null);
 
         // Soft nationwide fallback only when using the member's saved city — never when
         // they explicitly picked a city (or All cities) on Discover.
@@ -93,9 +94,12 @@ class EventController extends Controller
                 'city_id' => $filterCityId,
                 'distance_km' => $filterDistance,
                 'q' => $filters['q'] ?? null,
+                'latitude' => $filters['latitude'] ?? null,
+                'longitude' => $filters['longitude'] ?? null,
             ],
             'filterCity' => $filterCity,
             'hasNearbyOrigin' => $hasNearbyOrigin,
+            'hasDeviceOrigin' => $hasDeviceOrigin,
             'nationwideFallback' => $nationwideFallback,
             'explicitCityFilter' => $explicitCityFilter,
             'landingCities' => $landings->eligibleCities(),

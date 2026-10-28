@@ -50,7 +50,7 @@ For each screen:
 | Me | `GET /api/user` (`email_verified`, `needs_email_verification`, `needs_identity_documents`, `has_identity_documents`, `identity_resubmit_required`, `sex`, `needs_sex`, `can_participate`, `has_password`, city…) |
 | Profile | `GET /api/users/{publicId}` (public) · `PUT /api/settings/profile` · `PUT /api/settings/location` |
 | Home | `GET /api/home/participations` · `GET /api/events` · `GET /api/categories` (includes `published_events_count`) · `GET /api/weather` |
-| Catalog | `GET /api/cities` · `GET /api/categories` |
+| Catalog | `GET /api/cities` · `GET /api/cities/search?q=` (EN/AR aliases) · `GET /api/categories` |
 | Events | `GET/POST /api/events` · `GET/PUT /api/events/{id}` · `GET /api/my-events` · `GET /api/favorites` · `POST /api/events/{id}/favorite` · publish/cancel/complete · `GET /api/events/{id}/ticket` · `GET /api/events/now-playing` · search via `?q=` (show Searching while awaiting); covers: `image_url` (card) + `image_url_detail`; `slug` on event payloads |
 | Join | `POST .../join` · `POST .../join/cancel` (withdraw pending) · `POST .../leave` · requests accept/reject · members promote/demote/transfer |
 | Chat | `GET/POST /api/events/{id}/messages` |
@@ -743,9 +743,16 @@ Also keep Location as a separate screen (`§2.16`).
 | **Blade** | `profile/location.blade.php` (+ location modal on web) |
 | **API** | `PUT /api/settings/location` |
 
-City select + distance_km (5 / 10 / 25 / 50 / **100** / **0=All**). Orange save. Feeds Discover/Home filters. Home uses `GET /api/events/discover/home` (Option B).
+**V4 searchable discovery location (web+Flutter):** mutually exclusive **manual** vs **device** modes.
 
-**V2.1 foreground GPS (optional):** Flutter `DiscoveryLocationService` + location settings switch; Web “Use my location” after user click (secure context). When granted, home discover sends ephemeral `latitude`/`longitude` (never stored on the user; never returned on public profiles or people/friendship APIs). Denied / permanently denied falls back to saved city or nationwide. No background location. Server validates coordinate bounds; response `meta.origin_type` is `device` vs `city` so UI can distinguish centroid vs device distances. Distance copy remains “approximate straight-line km”.
+| Mode | Behavior |
+|------|----------|
+| **Manual** | Searchable city/area picker (`GET /api/cities/search`) — EN/AR + aliases (e.g. `6 October` / `٦ أكتوبر`). User selects a result; store stable `city_id` + display name + radius. GPS must not override. |
+| **Device** | Explicit “Use device location” only (foreground permission, one-shot). Show accuracy meters + retry. Coordinates are **ephemeral** — never persisted on the user. |
+
+Radius options remain **5 / 10 / 25 / 50 / 100 / 0=All**. Origin resolution (single Laravel path): explicit `city_id` wins over lat/lng; else device lat/lng; else profile city; else nationwide. Flutter: `DiscoveryLocationController` + Discover location chip → `location_picker_sheet`. Web: Discover chip + searchable filter + location modal. Docs: `docs/discovery/FUNNITY_LOCATION_DISCOVERY_V4.md`.
+
+**V2.1 foreground GPS:** Flutter `DiscoveryLocationService`; Web after user click (secure context). Denied → error + manual selection (do **not** silently swap modes). No background location. `meta.origin_type` is `device` vs `city`. Distance copy remains “approximate straight-line km”.
 
 ---
 
@@ -1355,6 +1362,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 19. **Store compliance (Play + App Store)** — master checklist [`docs/STORE_COMPLIANCE.md`](STORE_COMPLIANCE.md): Terms `/terms`, Support `/support`, account deletion (API + web + Flutter + `/account-deletion` help), Sign in with Apple (iOS + `POST /api/auth/apple`), iOS usage strings, Profile/auth legal links, console Data Safety / App Privacy answers.
 20. **Friends + 1:1 DM (web+Flutter)** — `/friends` hub (list + requests + public ID search); public profile friendship CTAs; `/chats?tab=direct` inbox; `/dms/{id}` thread (composer, `dms.{id}` live + poll); realtime user toasts: `.friend.requested`, `.friend.accepted`, `.dm.message`; `notify_friend_events` in `/settings/notifications`. Flutter: `lib/features/friends/`, routes `/friends`, `/dms/:conversationId`, `/settings/notifications`.
 21. **V2.1 discovery + people (web+Flutter)** — Option B home bundle (`GET /api/events/discover/home`), optional foreground GPS origin, radii 100/All, Worth the Trip UI, people suggestions (`GET /api/people/suggestions` + home strip). Device Flow A–H navigation matrix still needs emulator/hardware sign-off (code + unit tests landed; not a product gap invent).
+22. **Location discovery V4 (web+Flutter)** — searchable manual locations + explicit device mode, shared `SearchCitiesService` / `GET /api/cities/search`, Discover location chip, radius from selected center, no silent GPS override. Performance recovery notes: `docs/performance/FUNNITY_PERFORMANCE_RECOVERY.md`. **DEVICE PASS** still requires owner profile-mode measurements on hardware.
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 

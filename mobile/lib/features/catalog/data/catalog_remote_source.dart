@@ -26,6 +26,33 @@ class CatalogRemoteSource {
     return (failure: null, data: result.data!.cities);
   }
 
+  Future<({Failure? failure, List<CityItem>? data})> searchCities(
+    String query, {
+    int limit = 12,
+  }) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/cities/search',
+        queryParameters: {'q': query, 'limit': limit},
+      );
+      final list = (response.data!['data'] as List<dynamic>? ?? []).map((e) {
+        final m = e as Map<String, dynamic>;
+        return CityItem(
+          id: m['id'] as int,
+          name: m['name'] as String? ?? m['name_en'] as String? ?? '',
+          nameEn: m['name_en'] as String?,
+          nameAr: m['name_ar'] as String?,
+          latitude: (m['latitude'] as num?)?.toDouble(),
+          longitude: (m['longitude'] as num?)?.toDouble(),
+          subtitle: m['subtitle'] as String?,
+        );
+      }).toList();
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
   CatalogBundle _parseCatalog(Map<String, dynamic> body) {
     final list = (body['cities'] as List<dynamic>? ?? []).map((e) {
       final m = e as Map<String, dynamic>;
