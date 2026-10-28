@@ -568,6 +568,8 @@ Codes expire in **15 minutes**. Gate Identity / create / join until `email_verif
 
 Email field + send code. Response always looks successful (no email enumeration).
 
+**Social-only fallback:** if the account exists but has no password (Google/Apple only), the API still emails a 4-digit code so the member can **set** a password when social login is unavailable. Flutter copy should mention this on the forgot-password screen (`forgotPasswordSub`).
+
 ```json
 { "email": "user@example.com" }
 ```
@@ -1315,7 +1317,7 @@ Copy this into PRs:
 
 Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
-1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API)  
+1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API); **forgot-password OTP for social-only accounts** (set password when Google/Apple is down) — web+API+Flutter copy (§2.12b)  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  
@@ -1328,7 +1330,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 10. **Chat** — inbox `/chats` + thread list/post; web + Flutter share layout (Recent/Unread, cards, avatars, indigo mine bubbles, in-bubble time); live `events.{id}.chat` + user-channel toasts (Pusher/Reverb); Flutter poll fallback; avatars → public profile; View Event CTA
 11. **Home** — participations + weather glass panel + category counts + nearby; equal-width weather + light `NowPlayingCard` (API ready, compose on home)  
 12. **Event place** — pin picker / Maps share link / place autocomplete without Google credentials (web+Flutter+API); open → Google Maps  
-13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety · **privacy policy**; Flutter mirrors privacy as in-app static copy (`/privacy-policy`).  
+13. **Web technical SEO (web-only crawl surface)** — `/robots.txt`, `/sitemap.xml`, OG/JSON-LD on home · discover · event show · public profile · safety · **privacy policy**; Flutter mirrors privacy as in-app static copy (`/privacy-policy`). Canonical origin is `https://funnity.com`. Homepage document title and Organization description are web HTML only (no Flutter screen, no API field). Public profiles stay `index,follow` unless `SEO_PUBLIC_PROFILES_INDEXABLE=false` (`config/seo.php`). That flag is web HTML only; the public profile API payload does not change. Profiles are not in the sitemap. `events.search_indexable` (default true) is also web-only: false removes the event from `sitemap.xml` and sets the public HTML page to `noindex,follow`. Discover, bookings, chat, and `EventResource` stay unchanged. Indexable city and activity pages (`/events/in/{slug}`, `/events/activity/{slug}`) are web HTML only and appear only when at least three genuine indexable events exist. The API has no landing-page route.  
 14. **Cover media variants** — web serves WebP srcset; API `image_url` is card-sized, `image_url_detail` for full hero/share. Flutter should prefer `image_url` on lists and can use `image_url_detail` on detail/share.  
 15. **Web event slugs** — public web URL is `/events/{id}/{slug}` with 301 from `/events/{id}`; **all member web actions** use `/events/{id}/{slug}/…` (edit, chat, ticket, members, requests, join, …) via `event_route()` / `event_show_url()`. Legacy `/events/{id}/edit|chat|…` **301** to the slug form. API stays `/api/events/{id}/…` (Flutter GoRouter can stay `/events/:id`).  
 16. **Publish SEO soft-warn** — `POST /api/events/{id}/publish` may include `seo_warning: true` + `message` when description is empty (still publishes). Flutter can toast the message; non-blocking.
@@ -1343,7 +1345,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 
 ## 11. Reference URLs (local QA)
 
-Base: `https://www.funnity.com`
+Base: `https://funnity.com`
 
 | Page | URL |
 |------|-----|

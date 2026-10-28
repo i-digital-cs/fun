@@ -2063,7 +2063,7 @@ abstract class AppLocalizations {
   /// No description provided for @forgotPasswordSub.
   ///
   /// In en, this message translates to:
-  /// **'Enter your email and we’ll send a 4-digit code.'**
+  /// **'Enter your email and we’ll send a 4-digit code. Works for Google/Apple accounts too — you can set a password.'**
   String get forgotPasswordSub;
 
   /// No description provided for @verifyResetCodeSub.

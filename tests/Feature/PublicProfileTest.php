@@ -37,7 +37,30 @@ class PublicProfileTest extends TestCase
             ->assertSee('Host Person')
             ->assertSee('Funity-F001007')
             ->assertSee('Public Hosted Event')
+            ->assertSee('name="robots" content="index,follow"', false)
+            ->assertSee('"@type":"Person"', false)
             ->assertDontSee($user->email);
+    }
+
+    public function test_public_profiles_stay_indexable_unless_the_owner_flag_is_off(): void
+    {
+        $user = User::factory()->active()->create([
+            'name' => 'Indexed Neighbor',
+            'public_id' => 'Funity-F001008',
+        ]);
+
+        config(['seo.public_profiles_indexable' => false]);
+
+        $this->get(route('users.public.show', $user->public_id))
+            ->assertOk()
+            ->assertSee('Indexed Neighbor')
+            ->assertSee('name="robots" content="noindex,follow"', false)
+            ->assertDontSee('"@type":"Person"', false)
+            ->assertDontSee($user->email);
+
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertDontSee('/u/'.$user->public_id, false);
     }
 
     public function test_api_public_profile_returns_payload(): void

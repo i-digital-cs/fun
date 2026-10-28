@@ -30,7 +30,8 @@ class PasswordResetController extends Controller
         $user = User::query()->where('email', strtolower($validated['email']))->first();
 
         // Always look successful to avoid email enumeration.
-        if ($user && $user->password !== null) {
+        // Social-only accounts (null password) can also receive a code to set one.
+        if ($user !== null) {
             $codes->issueAndSend($user, EmailAuthPurpose::PasswordReset);
             $request->session()->put('password_reset_email', $user->email);
         }
@@ -164,7 +165,7 @@ class PasswordResetController extends Controller
 
         $user = User::query()->where('email', strtolower($email))->first();
 
-        if ($user && $user->password !== null) {
+        if ($user !== null) {
             $codes->issueAndSend($user, EmailAuthPurpose::PasswordReset);
         }
 

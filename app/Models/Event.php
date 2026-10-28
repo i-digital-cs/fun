@@ -21,6 +21,22 @@ class Event extends Model
     use HasFactory;
 
     /**
+     * Crawl flag. Hidden so API resources stay on their explicit field list.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'search_indexable',
+    ];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'search_indexable' => true,
+    ];
+
+    /**
      * @var list<string>
      */
     protected $fillable = [
@@ -142,6 +158,7 @@ class Event extends Model
             'longitude' => 'float',
             'status' => EventStatus::class,
             'sex' => UserSex::class,
+            'search_indexable' => 'boolean',
         ];
     }
 

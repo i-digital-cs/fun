@@ -23,6 +23,7 @@
         :type="$seo['type'] ?? 'website'"
         :robots="$seo['robots'] ?? 'index,follow'"
         :json-ld="$seo['jsonLd'] ?? null"
+        :absolute-title="$seo['absoluteTitle'] ?? false"
     />
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
     <link rel="preload" as="style" href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap">

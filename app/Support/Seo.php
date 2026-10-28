@@ -17,7 +17,8 @@ class Seo
      *     url: ?string,
      *     type: string,
      *     robots: string,
-     *     jsonLd: array<string, mixed>|null
+     *     jsonLd: array<string, mixed>|null,
+     *     absoluteTitle: bool
      * }
      */
     public static function make(
@@ -28,6 +29,7 @@ class Seo
         string $type = 'website',
         string $robots = 'index,follow',
         ?array $jsonLd = null,
+        bool $absoluteTitle = false,
     ): array {
         return [
             'title' => $title,
@@ -37,6 +39,7 @@ class Seo
             'type' => $type,
             'robots' => $robots,
             'jsonLd' => $jsonLd,
+            'absoluteTitle' => $absoluteTitle,
         ];
     }
 
@@ -90,12 +93,11 @@ class Seo
      *     jsonLd: array<string, mixed>|null
      * }
      */
-    public static function forHome(?string $cityName = null, ?string $highlightImage = null): array
+    public static function forHome(?string $highlightImage = null): array
     {
         $brand = site_display_name();
-        $description = $cityName
-            ? __('design.welcome_sub_design', ['city' => $cityName])
-            : __('design.welcome_sub_generic');
+        $description = __('design.home_meta_description');
+        $homeUrl = route('home');
 
         $jsonLd = [
             '@context' => 'https://schema.org',
@@ -103,13 +105,23 @@ class Seo
                 [
                     '@type' => 'Organization',
                     'name' => $brand,
-                    'url' => route('home'),
+                    'alternateName' => ['فانتي', 'فانيتي'],
+                    'url' => $homeUrl,
+                    'description' => $description,
                     'logo' => self::absoluteUrl(site_logo_url() ?: asset('logo.svg')),
+                    'contactPoint' => [
+                        '@type' => 'ContactPoint',
+                        'contactType' => 'customer support',
+                        'email' => __('privacy.contact_email'),
+                        'url' => route('legal.support'),
+                    ],
                 ],
                 [
                     '@type' => 'WebSite',
                     'name' => $brand,
-                    'url' => route('home'),
+                    'alternateName' => ['فانتي', 'فانيتي'],
+                    'url' => $homeUrl,
+                    'description' => $description,
                     'potentialAction' => [
                         '@type' => 'SearchAction',
                         'target' => [
@@ -123,11 +135,12 @@ class Seo
         ];
 
         return self::make(
-            title: __('design.welcome_guest'),
+            title: __('design.home_document_title'),
             description: $description,
             image: $highlightImage ?: (site_logo_url() ?: asset('logo.svg')),
-            url: route('home'),
+            url: $homeUrl,
             jsonLd: $jsonLd,
+            absoluteTitle: true,
         );
     }
 
@@ -147,11 +160,67 @@ class Seo
         $robots = ($page > 1 || $hasFilters) ? 'noindex,follow' : 'index,follow';
 
         return self::make(
-            title: __('events.discover'),
-            description: __('events.discover_subtitle'),
+            title: __('events.discover_document_title'),
+            description: __('events.discover_intro'),
             image: site_logo_url() ?: asset('logo.svg'),
             url: route('events.index'),
             robots: $robots,
+        );
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return array{
+     *     title: ?string,
+     *     description: ?string,
+     *     image: ?string,
+     *     url: ?string,
+     *     type: string,
+     *     robots: string,
+     *     jsonLd: array<string, mixed>|null
+     * }
+     */
+    public static function forLanding(string $title, string $description, string $url, int $page, array $items): array
+    {
+        return self::make(
+            title: $title,
+            description: $description,
+            image: site_logo_url() ?: asset('logo.svg'),
+            url: $url,
+            robots: $page > 1 ? 'noindex,follow' : 'index,follow',
+            jsonLd: [
+                '@context' => 'https://schema.org',
+                '@graph' => [
+                    [
+                        '@type' => 'ItemList',
+                        'name' => $title,
+                        'itemListElement' => $items,
+                    ],
+                    [
+                        '@type' => 'BreadcrumbList',
+                        'itemListElement' => [
+                            [
+                                '@type' => 'ListItem',
+                                'position' => 1,
+                                'name' => site_display_name(),
+                                'item' => route('home'),
+                            ],
+                            [
+                                '@type' => 'ListItem',
+                                'position' => 2,
+                                'name' => __('events.discover'),
+                                'item' => route('events.index'),
+                            ],
+                            [
+                                '@type' => 'ListItem',
+                                'position' => 3,
+                                'name' => $title,
+                                'item' => $url,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         );
     }
 
@@ -169,9 +238,10 @@ class Seo
     public static function forEvent(Event $event): array
     {
         $title = filled($event->title) ? $event->title : __('events.view_event');
-        $description = filled($event->description)
+        $description = self::eventMetaDescription($event);
+        $schemaDescription = filled($event->description)
             ? $event->description
-            : __('events.discover_subtitle');
+            : $description;
         $url = event_show_url($event);
         $image = $event->coverUrl('detail');
 
@@ -190,6 +260,14 @@ class Seo
             ];
         }
 
+        $locality = $event->city?->localizedName();
+        if (filled($locality)) {
+            $location['address'] = [
+                '@type' => 'PostalAddress',
+                'addressLocality' => $locality,
+            ];
+        }
+
         $status = match ($event->status) {
             EventStatus::Cancelled => 'https://schema.org/EventCancelled',
             EventStatus::Completed => 'https://schema.org/EventScheduled',
@@ -199,7 +277,7 @@ class Seo
         $eventSchema = [
             '@type' => 'Event',
             'name' => $title,
-            'description' => self::truncateDescription($description, 500),
+            'description' => self::truncateDescription($schemaDescription, 500),
             'image' => [self::absoluteUrl($image)],
             'url' => $url,
             'eventStatus' => $status,
@@ -212,6 +290,26 @@ class Seo
         }
         if ($event->ends_at !== null) {
             $eventSchema['endDate'] = $event->ends_at->toIso8601String();
+        }
+
+        $eventSchema['maximumAttendeeCapacity'] = (int) $event->max_participants;
+        $eventSchema['remainingAttendeeCapacity'] = $event->remainingCapacity();
+
+        if ($event->cost_per_person !== null && $event->cost_per_person !== '') {
+            $offer = [
+                '@type' => 'Offer',
+                'price' => number_format((float) $event->cost_per_person, 2, '.', ''),
+                'priceCurrency' => 'EGP',
+                'url' => $url,
+            ];
+            $stillOpen = $event->status === EventStatus::Published
+                && ($event->ends_at?->isFuture() ?? $event->starts_at?->isFuture());
+            if ($stillOpen) {
+                $offer['availability'] = $event->isFull()
+                    ? 'https://schema.org/SoldOut'
+                    : 'https://schema.org/InStock';
+            }
+            $eventSchema['offers'] = $offer;
         }
 
         if ($event->creator !== null) {
@@ -255,7 +353,8 @@ class Seo
             ],
         ];
 
-        $indexable = in_array($event->status, [EventStatus::Published, EventStatus::Completed], true);
+        $public = in_array($event->status, [EventStatus::Published, EventStatus::Completed], true);
+        $searchable = $event->search_indexable !== false;
 
         return self::make(
             title: $title,
@@ -263,9 +362,38 @@ class Seo
             image: $image,
             url: $url,
             type: 'article',
-            robots: $indexable ? 'index,follow' : 'noindex,nofollow',
+            robots: match (true) {
+                $public && ! $searchable => 'noindex,follow',
+                $public => 'index,follow',
+                default => 'noindex,nofollow',
+            },
             jsonLd: $jsonLd,
         );
+    }
+
+    /**
+     * Meta description uses the organizer's text plus the stored city and date.
+     * It does not invent a place or a time that is not on the event.
+     */
+    private static function eventMetaDescription(Event $event): string
+    {
+        $suffixParts = array_values(array_filter([
+            $event->city?->localizedName(),
+            $event->starts_at?->timezone((string) config('app.timezone'))->translatedFormat('j M Y'),
+        ], fn ($value) => filled($value)));
+        $suffix = $suffixParts === [] ? '' : ' · '.implode(' · ', $suffixParts);
+
+        $body = trim(preg_replace('/\s+/u', ' ', strip_tags((string) $event->description)) ?? '');
+        if ($body === '') {
+            $body = filled($event->title) ? trim((string) $event->title) : (string) __('events.discover_subtitle');
+        }
+
+        $limit = 155;
+        if ($suffix !== '' && mb_strlen($suffix) < $limit - 20) {
+            return trim(Str::limit($body, $limit - mb_strlen($suffix), '').$suffix);
+        }
+
+        return Str::limit($body, $limit, '');
     }
 
     /**
@@ -288,14 +416,18 @@ class Seo
         $description = __('profile.public_profile').' · '.$name
             .(filled($profile['public_id'] ?? null) ? ' ('.$profile['public_id'].')' : '');
 
-        $jsonLd = [
-            '@context' => 'https://schema.org',
-            '@type' => 'Person',
-            'name' => $name,
-            'url' => $url,
-        ];
-        if (filled($image)) {
-            $jsonLd['image'] = self::absoluteUrl($image);
+        $indexable = (bool) config('seo.public_profiles_indexable', true);
+        $jsonLd = null;
+        if ($indexable) {
+            $jsonLd = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Person',
+                'name' => $name,
+                'url' => $url,
+            ];
+            if (filled($image)) {
+                $jsonLd['image'] = self::absoluteUrl($image);
+            }
         }
 
         return self::make(
@@ -304,7 +436,7 @@ class Seo
             image: $image ?: (site_logo_url() ?: asset('logo.svg')),
             url: $url,
             type: 'profile',
-            robots: 'index,follow',
+            robots: $indexable ? 'index,follow' : 'noindex,follow',
             jsonLd: $jsonLd,
         );
     }

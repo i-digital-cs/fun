@@ -81,6 +81,43 @@ class ApiAuthFlowsTest extends TestCase
         $this->assertTrue(Hash::check('Password2!', $user->fresh()->password));
     }
 
+    public function test_api_forgot_password_sends_code_for_social_only_user(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->active()->create([
+            'email' => 'google-only@example.com',
+            'password' => null,
+            'google_id' => 'google-subject-123',
+        ]);
+
+        $this->assertNull($user->password);
+
+        $this->postJson('/api/forgot-password', ['email' => 'google-only@example.com'])
+            ->assertOk();
+
+        $code = null;
+        Mail::assertSent(AuthCodeMail::class, function (AuthCodeMail $mail) use (&$code, $user) {
+            $code = $mail->code;
+
+            return $mail->user->is($user) && $mail->purpose === 'password_reset';
+        });
+
+        $verify = $this->postJson('/api/forgot-password/verify', [
+            'email' => 'google-only@example.com',
+            'code' => $code,
+        ])->assertOk();
+
+        $this->postJson('/api/reset-password', [
+            'email' => 'google-only@example.com',
+            'reset_token' => $verify->json('reset_token'),
+            'password' => 'Password2!',
+            'password_confirmation' => 'Password2!',
+        ])->assertOk()->assertJsonStructure(['token', 'user']);
+
+        $this->assertTrue(Hash::check('Password2!', $user->fresh()->password));
+    }
+
     public function test_api_profile_password_change(): void
     {
         $user = User::factory()->active()->create([

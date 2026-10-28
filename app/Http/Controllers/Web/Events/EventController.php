@@ -21,6 +21,7 @@ use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ToggleEventFavoriteService;
 use App\Services\Events\TransitionEventStatusService;
 use App\Services\Events\UpdateEventService;
+use App\Services\Seo\LandingPageCatalog;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class EventController extends Controller
         DiscoverNearbyEventsService $discover,
         ResolveEventJoinActionService $joinActions,
         ToggleEventFavoriteService $favorites,
+        LandingPageCatalog $landings,
     ): View|Response {
         $filters = $request->filters();
         $events = $discover->discover($request->user(), $filters);
@@ -96,6 +98,8 @@ class EventController extends Controller
             'hasNearbyOrigin' => $hasNearbyOrigin,
             'nationwideFallback' => $nationwideFallback,
             'explicitCityFilter' => $explicitCityFilter,
+            'landingCities' => $landings->eligibleCities(),
+            'landingCategories' => $landings->eligibleCategories(),
             'seo' => Seo::forDiscover(
                 page: (int) $events->currentPage(),
                 hasFilters: $request->hasAny(['q', 'category_id', 'city_id', 'distance_km', 'when']),
