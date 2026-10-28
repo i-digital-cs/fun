@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
@@ -279,7 +280,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
               tooltip: l10n.notificationsTitle,
               onPressed: () {
                 if (user == null) {
-                  context.push('/login');
+                  context.push(loginLocation(returnTo: '/notifications'));
                   return;
                 }
                 context.push('/notifications');
@@ -299,7 +300,7 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
               tooltip: l10n.chatsTitle,
               onPressed: () {
                 if (user == null) {
-                  context.push('/login');
+                  context.push(loginLocation(returnTo: '/chats'));
                   return;
                 }
                 context.push('/chats');
@@ -317,7 +318,10 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
             ),
             if (user == null)
               TextButton(
-                onPressed: () => context.push('/login'),
+                onPressed: () {
+                  final here = GoRouterState.of(context).uri.toString();
+                  context.push(loginLocation(returnTo: here));
+                },
                 child: Text(l10n.login),
               )
             else if (widget.compact)

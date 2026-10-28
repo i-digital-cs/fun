@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/upload_validator.dart';
 import 'package:fun_mobile/core/widgets/attachment_folder_picker.dart';
@@ -146,7 +147,11 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
       _selfiePath = null;
       _thumbBytes.clear();
     });
-    if (mounted) context.go('/home');
+    if (!mounted) return;
+    final returnTo = sanitizeReturnTo(
+      GoRouterState.of(context).uri.queryParameters['returnTo'],
+    );
+    context.go(returnTo ?? '/home');
   }
 
   String _chipLabel(AppLocalizations l10n, String chip) {
@@ -356,7 +361,12 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
               const SizedBox(height: 24),
               GradientButton.indigo(
                 label: l10n.navHome,
-                onPressed: () => context.go('/home'),
+                onPressed: () {
+                  final returnTo = sanitizeReturnTo(
+                    GoRouterState.of(context).uri.queryParameters['returnTo'],
+                  );
+                  context.go(returnTo ?? '/home');
+                },
               ),
             ],
           ],

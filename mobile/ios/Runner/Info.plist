@@ -49,6 +49,8 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Funnity uses your location once, while the app is open, to show nearby events. You can keep using city selection instead. We do not track you in the background.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Funnity needs camera access so you can take a selfie and photos for identity verification and your profile.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

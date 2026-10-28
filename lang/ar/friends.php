@@ -2,6 +2,8 @@
 
 return [
     'title' => 'الأصدقاء',
+    'people_you_may_like' => 'ناس ممكن تحب تتعرف عليهم',
+    'people_you_may_like_sub' => 'أعضاء قريبون يمكنك التواصل معهم — بدون مشاركة مواقع دقيقة.',
     'requests_title' => 'طلبات الصداقة',
     'search_title' => 'البحث عن أشخاص',
     'search_placeholder' => 'المعرّف أو الرقم (مثل 001108)…',

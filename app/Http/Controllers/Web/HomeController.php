@@ -7,11 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
-use App\Services\Events\DiscoverNearbyEventsService;
+use App\Services\Events\EventDiscoveryService;
 use App\Services\Events\ListEventNowPlayingService;
 use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ToggleEventFavoriteService;
+use App\Services\Friends\PeopleDiscoveryService;
 use App\Services\Weather\OpenMeteoWeatherService;
 use App\Support\Seo;
 use Illuminate\Http\Request;
@@ -22,12 +23,13 @@ class HomeController extends Controller
 {
     public function __invoke(
         Request $request,
-        DiscoverNearbyEventsService $discover,
+        EventDiscoveryService $eventDiscovery,
         ResolveEventJoinActionService $joinActions,
         ListUserHomeParticipationsService $participations,
         OpenMeteoWeatherService $weatherService,
         ListEventNowPlayingService $nowPlaying,
         ToggleEventFavoriteService $favorites,
+        PeopleDiscoveryService $peopleDiscovery,
     ): View {
         $user = auth()->user();
 
@@ -47,26 +49,37 @@ class HomeController extends Controller
         }
 
         $when = $request->query('when');
-        $filters = ['per_page' => 8];
+        $filters = [];
         if (is_string($when) && in_array($when, ['today', 'tomorrow', 'weekend'], true)) {
             $filters['when'] = $when;
         }
 
-        $events = $discover->discover($user, $filters);
-        $hasNearbyOrigin = $user?->city_id !== null;
-        $nationwideFallback = false;
-
-        if ($hasNearbyOrigin && $events->total() === 0) {
-            $fallback = $discover->discover($user, array_merge($filters, ['city_id' => null]));
-            if ($fallback->total() > 0) {
-                $events = $fallback;
-                $nationwideFallback = true;
+        // Ephemeral browser GPS (secure context + user gesture). Never stored.
+        if ($request->filled('latitude') && $request->filled('longitude')) {
+            $lat = (float) $request->query('latitude');
+            $lng = (float) $request->query('longitude');
+            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                $filters['latitude'] = $lat;
+                $filters['longitude'] = $lng;
             }
         }
 
-        $joinActionsById = $joinActions->resolveMany($user, $events->getCollection());
+        $bundle = $eventDiscovery->homeBundle($user, $filters);
+        $events = collect($bundle['nearby']);
+        $worthTheTrip = collect($bundle['worth_the_trip']);
+        $discoveryMeta = $bundle['meta'];
+        $hasNearbyOrigin = ($discoveryMeta['origin_city_id'] ?? null) !== null;
+        $nationwideFallback = (bool) ($discoveryMeta['nationwide'] ?? false);
+        $discoveryExpanded = (bool) ($discoveryMeta['expanded'] ?? false);
+
+        $allForActions = $events->concat($worthTheTrip)->unique('id')->values();
+        $joinActionsById = $joinActions->resolveMany($user, $allForActions);
         $favoritedIds = $user !== null
-            ? $favorites->favoritedIdsFor($user, $events->getCollection())
+            ? $favorites->favoritedIdsFor($user, $allForActions)
+            : [];
+
+        $peopleSuggestions = $user !== null && $user->canParticipate()
+            ? $peopleDiscovery->suggest($user, 8)
             : [];
 
         $cityName = $user?->city?->localizedName();
@@ -126,6 +139,10 @@ class HomeController extends Controller
             'cityName' => $cityName,
             'when' => is_string($when) ? $when : null,
             'events' => $events,
+            'worthTheTrip' => $worthTheTrip,
+            'discoveryMeta' => $discoveryMeta,
+            'discoveryExpanded' => $discoveryExpanded,
+            'peopleSuggestions' => $peopleSuggestions,
             'joinActionsById' => $joinActionsById,
             'favoritedIds' => $favoritedIds,
             'hasNearbyOrigin' => $hasNearbyOrigin,

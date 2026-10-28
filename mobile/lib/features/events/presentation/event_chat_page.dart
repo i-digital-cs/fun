@@ -416,7 +416,9 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
         ),
         actions: [
           TextButton.icon(
-            onPressed: () => context.push('/events/${widget.eventId}'),
+            // NAV-F9: replace chat with detail to avoid Event→Chat→Event duplicate.
+            onPressed: () =>
+                context.pushReplacement('/events/${widget.eventId}'),
             icon: const Icon(Icons.event_outlined, size: 18),
             label: Text(l10n.viewEvent),
           ),

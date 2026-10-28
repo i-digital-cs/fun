@@ -18,7 +18,7 @@ class EmailVerificationController extends Controller
         $user = $request->user();
 
         if ($user?->email_verified_at !== null) {
-            return redirect()->intended($this->postVerifyRedirect($user));
+            return $this->postVerifyRedirectResponse($user);
         }
 
         return view('auth.verify-email', [
@@ -35,11 +35,11 @@ class EmailVerificationController extends Controller
         }
 
         if ($user->email_verified_at !== null) {
-            $url = $this->postVerifyRedirect($user);
+            $redirect = $this->postVerifyRedirectResponse($user);
 
             return $request->expectsJson()
-                ? response()->json(['redirect' => $url])
-                : redirect()->to($url);
+                ? response()->json(['redirect' => $redirect->getTargetUrl()])
+                : $redirect;
         }
 
         $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
@@ -60,11 +60,11 @@ class EmailVerificationController extends Controller
         }
 
         if ($user->email_verified_at !== null) {
-            $url = $this->postVerifyRedirect($user);
+            $redirect = $this->postVerifyRedirectResponse($user);
 
             return $request->expectsJson()
-                ? response()->json(['redirect' => $url])
-                : redirect()->to($url);
+                ? response()->json(['redirect' => $redirect->getTargetUrl()])
+                : $redirect;
         }
 
         $validated = $request->validate([
@@ -87,24 +87,26 @@ class EmailVerificationController extends Controller
         $user->forceFill(['email_verified_at' => now()])->save();
         $request->session()->forget('verification_email');
 
-        $url = $this->postVerifyRedirect($user);
+        $redirect = $this->postVerifyRedirectResponse($user)
+            ->with('status', __('auth.email_verified'));
 
         return $request->expectsJson()
-            ? response()->json(['redirect' => $url])
-            : redirect()->to($url)->with('status', __('auth.email_verified'));
+            ? response()->json(['redirect' => $redirect->getTargetUrl()])
+            : $redirect;
     }
 
-    private function postVerifyRedirect($user): string
+    private function postVerifyRedirectResponse($user): RedirectResponse
     {
         if ($user->isDeactivated()) {
-            return route('account.deactivated');
+            return redirect()->to(route('account.deactivated'));
         }
 
         if (! $user->isPlatformAdmin() && $user->needsIdentityDocuments()) {
-            return route('identity.create');
+            // Keep session intended for after identity submit (NAV-W3).
+            return redirect()->to(route('identity.create'));
         }
 
-        return route($user->defaultHomeRoute());
+        return redirect()->intended(route($user->defaultHomeRoute()));
     }
 
     private function jsonOrRedirect(Request $request, string $message, bool $ok): RedirectResponse|JsonResponse

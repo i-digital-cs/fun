@@ -1,10 +1,13 @@
 @props([
     'events',
+    'worthTheTrip' => [],
     'joinActionsById' => [],
     'favoritedIds' => [],
     'user' => null,
     'cityName' => null,
     'nationwideFallback' => false,
+    'discoveryExpanded' => false,
+    'discoveryMeta' => [],
 ])
 
 @php
@@ -15,10 +18,20 @@
     $eventItems = $events instanceof \Illuminate\Contracts\Pagination\Paginator || $events instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
         ? $events->getCollection()
         : collect($events);
+    $worthItems = collect($worthTheTrip);
+    $requestedKm = $discoveryMeta['requested_radius_km'] ?? null;
+    $effectiveKm = $discoveryMeta['effective_radius_km'] ?? null;
 @endphp
 
 <section class="mt-12">
-    @if ($nationwideFallback)
+    @if ($discoveryExpanded && $requestedKm !== null && $effectiveKm !== null)
+        <p class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {{ __('events.expanded_notice', [
+                'requested' => (int) $requestedKm === 0 ? __('location.all_distances') : ((int) $requestedKm.' '.__('location.km')),
+                'effective' => (int) $effectiveKm === 0 ? __('location.all_distances') : ((int) $effectiveKm.' '.__('location.km')),
+            ]) }}
+        </p>
+    @elseif ($nationwideFallback)
         <p class="mb-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">{{ __('events.nationwide_notice') }}</p>
     @endif
 
@@ -31,9 +44,17 @@
                     <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
                 </span>
             </h2>
-            <p class="mt-1 text-sm text-slate-500">{{ __('design.discover_sub') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('design.discover_sub') }} · {{ __('events.distance_approx_note') }}</p>
+            @if (($discoveryMeta['origin_type'] ?? null) === 'device')
+                <p class="mt-1 text-xs font-semibold text-[#7138F5]">{{ __('events.using_device_location') }}</p>
+            @endif
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
+            <button type="button"
+                    data-discovery-use-gps
+                    class="flex items-center gap-1.5 rounded-full border border-[#7138F5]/30 bg-[#7138F5]/5 px-4 py-2 text-xs font-bold text-[#7138F5] transition hover:bg-[#7138F5]/10">
+                {{ __('events.use_my_location') }}
+            </button>
             <a href="{{ route('events.index') }}" class="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-bold text-slate-600 backdrop-blur transition hover:border-indigo-300 hover:text-indigo-700">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" d="M4 6h16M7 12h10M10 18h4"/>
@@ -58,17 +79,17 @@
             />
         @endforeach
 
-        <article class="group relative flex flex-col overflow-hidden rounded-[2.75rem] bg-gradient-to-br from-orange-500 via-orange-500 to-amber-600 p-6 text-white shadow-xl shadow-orange-500/25 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-orange-500/40">
+        <article class="group relative flex flex-col overflow-hidden rounded-[1.35rem] bg-gradient-to-br from-[#FF762E] via-[#FF8A3D] to-[#E85F1A] p-6 text-white shadow-[0_22px_44px_-20px_rgba(255,118,46,0.55)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_50px_-18px_rgba(255,118,46,0.65)]">
             <div aria-hidden="true" class="absolute inset-0">
-                <div class="absolute -end-10 -top-10 h-44 w-44 rounded-full bg-white/10 blur-2xl"></div>
-                <div class="absolute -bottom-14 -start-10 h-48 w-48 rounded-full bg-amber-300/20 blur-2xl"></div>
-                <div class="absolute end-6 top-6 h-16 w-16 rounded-full border-2 border-dashed border-white/30 transition-transform duration-500 group-hover:rotate-45"></div>
+                <div class="absolute -end-10 -top-10 h-44 w-44 rounded-full bg-white/15 blur-2xl"></div>
+                <div class="absolute -bottom-14 -start-10 h-48 w-48 rounded-full bg-amber-200/25 blur-2xl"></div>
+                <div class="absolute end-6 top-6 h-16 w-16 rounded-full border-2 border-dashed border-white/35 transition-transform duration-500 group-hover:rotate-45"></div>
             </div>
 
             <div class="relative flex flex-1 flex-col gap-3">
                 <div class="flex items-center justify-between">
-                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur transition-transform duration-300 group-hover:scale-110">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <span class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur transition-transform duration-300 group-hover:scale-110">
+                        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                             <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
                         </svg>
                     </span>
@@ -77,7 +98,7 @@
                     </span>
                 </div>
                 <h3 class="text-xl font-extrabold leading-snug tracking-tight">{{ __('design.gather_title') }}</h3>
-                <p class="text-sm leading-relaxed text-orange-50/90">{{ __('design.gather_body') }}</p>
+                <p class="text-sm leading-relaxed text-orange-50/95">{{ __('design.gather_body') }}</p>
                 <ul class="mt-1 space-y-2">
                     @foreach (['gather_check1', 'gather_check2', 'gather_check3'] as $checkKey)
                         <li class="flex items-center gap-2 text-xs font-semibold text-orange-50">
@@ -91,13 +112,62 @@
                     @endforeach
                 </ul>
                 <a href="{{ $canCreate ? route('events.create') : route('register') }}"
-                   class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-extrabold text-orange-600 shadow-xl transition hover:scale-[1.02] active:scale-95">
+                   class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-extrabold text-[#E85F1A] shadow-xl transition hover:scale-[1.02] active:scale-95">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                        <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
                     </svg>
                     {{ __('design.gather_cta') }}
                 </a>
             </div>
         </article>
     </div>
+
+    @if ($worthItems->isNotEmpty())
+        <div class="mt-10">
+            <div class="mb-4">
+                <h3 class="text-lg font-extrabold tracking-tight text-[#19213D] sm:text-xl">
+                    {{ __('events.worth_the_trip_title') }}
+                </h3>
+                <p class="mt-1 text-sm text-[#64748B]">{{ __('events.worth_the_trip_sub') }}</p>
+            </div>
+            <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach ($worthItems as $event)
+                    <x-events.card
+                        :event="$event"
+                        :join-action="$joinActionsById[$event->id] ?? null"
+                        :favorited="isset($favoritedIds[$event->id])"
+                    />
+                @endforeach
+            </div>
+        </div>
+    @endif
 </section>
+
+<script>
+(() => {
+    const btn = document.querySelector('[data-discovery-use-gps]');
+    if (!btn) return;
+    const deniedMsg = @json(__('events.location_permission_denied'));
+    const unavailableMsg = @json(__('events.location_unavailable'));
+    btn.addEventListener('click', () => {
+        if (!window.isSecureContext || !navigator.geolocation) {
+            window.alert(unavailableMsg);
+            return;
+        }
+        btn.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('latitude', String(pos.coords.latitude));
+                url.searchParams.set('longitude', String(pos.coords.longitude));
+                window.location.assign(url.toString());
+            },
+            () => {
+                btn.disabled = false;
+                window.alert(deniedMsg);
+            },
+            { enableHighAccuracy: false, maximumAge: 60000, timeout: 12000 }
+        );
+    });
+})();
+</script>

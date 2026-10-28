@@ -57,12 +57,14 @@ class IdentityDocumentController extends Controller
             return back()->withErrors(['identity' => $exception->getMessage()]);
         }
 
-        $url = route($user->defaultHomeRoute());
+        // NAV-W3: honor session intended URL through the identity gate.
+        $redirect = redirect()->intended(route($user->defaultHomeRoute()))
+            ->with('status', __('identity.activated'));
 
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => __('identity.activated'),
-                'redirect' => $url,
+                'redirect' => $redirect->getTargetUrl(),
                 'user' => [
                     'id' => $user->id,
                     'status' => $user->status->value,
@@ -73,7 +75,7 @@ class IdentityDocumentController extends Controller
             ]);
         }
 
-        return redirect()->to($url)->with('status', __('identity.activated'));
+        return $redirect;
     }
 
     public function showDocument(

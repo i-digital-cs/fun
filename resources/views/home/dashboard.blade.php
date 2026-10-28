@@ -13,11 +13,19 @@
     };
     $canParticipate = $user?->canParticipate() === true;
     $createRoute = $canParticipate ? route('events.create') : route('identity.create');
-    $eventItems = $events->getCollection();
+    $eventItems = $events instanceof \Illuminate\Support\Collection
+        ? $events
+        : ($events instanceof \Illuminate\Contracts\Pagination\Paginator
+            ? $events->getCollection()
+            : collect($events));
+    $worthItems = collect($worthTheTrip ?? []);
     $selectedCityId = $user?->city_id;
     $selectedDistance = $distanceKm ?? config('location.default_distance_km');
     $nearbySub = $cityName
-        ? __('dashboard.nearby_sub', ['city' => $cityName, 'km' => $selectedDistance])
+        ? __('dashboard.nearby_sub', [
+            'city' => $cityName,
+            'km' => (int) $selectedDistance === 0 ? __('location.all_distances') : $selectedDistance,
+        ])
         : __('dashboard.nearby_sub_generic');
 @endphp
 
@@ -75,7 +83,11 @@
                     class="min-w-0 rounded-[10px] border-0 bg-[#f7f9fc] px-3 py-3 text-xs text-slate-700 outline-none">
                 @foreach ($distances as $km)
                     <option value="{{ $km }}" @selected((int) $selectedDistance === (int) $km)>
-                        {{ __('dashboard.within_km', ['km' => $km]) }}
+                        @if ((int) $km === 0)
+                            {{ __('location.all_distances') }}
+                        @else
+                            {{ __('dashboard.within_km', ['km' => $km]) }}
+                        @endif
                     </option>
                 @endforeach
             </select>
@@ -189,7 +201,18 @@
         </a>
     </div>
 
-    @if ($nationwideFallback)
+    @if (!empty($discoveryExpanded) && !empty($discoveryMeta))
+        <p class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {{ __('events.expanded_notice', [
+                'requested' => (int) ($discoveryMeta['requested_radius_km'] ?? 0) === 0
+                    ? __('location.all_distances')
+                    : ((int) $discoveryMeta['requested_radius_km'].' '.__('location.km')),
+                'effective' => (int) ($discoveryMeta['effective_radius_km'] ?? 0) === 0
+                    ? __('location.all_distances')
+                    : ((int) $discoveryMeta['effective_radius_km'].' '.__('location.km')),
+            ]) }}
+        </p>
+    @elseif ($nationwideFallback)
         <p class="mb-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">{{ __('events.nationwide_notice') }}</p>
     @endif
 
@@ -210,6 +233,24 @@
                     @endforeach
                 </div>
             @endif
+
+            @if ($worthItems->isNotEmpty())
+                <div class="mt-8">
+                    <h3 class="text-[17px] font-extrabold tracking-tight text-slate-900">{{ __('events.worth_the_trip_title') }}</h3>
+                    <p class="mt-0.5 text-[11px] text-slate-500">{{ __('events.worth_the_trip_sub') }}</p>
+                    <div class="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($worthItems as $event)
+                            <x-dashboard.event-card
+                                :event="$event"
+                                :join-action="$joinActionsById[$event->id] ?? null"
+                                :favorited="isset($favoritedIds[$event->id])"
+                            />
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <x-community.people-suggestions :suggestions="$peopleSuggestions ?? []" />
         </div>
 
         <aside class="mt-4 grid gap-4 sm:grid-cols-2 xl:mt-0 xl:grid-cols-1">

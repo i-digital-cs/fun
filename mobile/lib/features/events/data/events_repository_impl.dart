@@ -14,6 +14,10 @@ class EventsRepositoryImpl implements EventsRepository {
       _remote.discover(filters);
 
   @override
+  Future<Result<HomeDiscoveryBundle>> discoverHome(DiscoverFilters filters) =>
+      _remote.discoverHome(filters);
+
+  @override
   Future<Result<PaginatedEvents>> mine({int page = 1}) =>
       _remote.mine(page: page);
 

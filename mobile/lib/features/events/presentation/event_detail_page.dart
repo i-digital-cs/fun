@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
@@ -46,7 +47,7 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
     final l10n = AppLocalizations.of(context);
     switch (result.gate) {
       case EventDetailGate.needLogin:
-        context.push('/login');
+        context.push(loginLocation(returnTo: '/events/${widget.eventId}'));
         return;
       case EventDetailGate.needIdentity:
         ScaffoldMessenger.of(context)
@@ -233,7 +234,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                   else if (ref.watch(authControllerProvider) is! Authenticated)
                     GradientButton.indigo(
                       label: l10n.loginRequired,
-                      onPressed: () => context.push('/login'),
+                      onPressed: () => context.push(
+                        loginLocation(returnTo: '/events/${widget.eventId}'),
+                      ),
                       icon: Icons.login,
                     )
                   else if (!canParticipate)

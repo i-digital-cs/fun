@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/category_emoji.dart';
 import 'package:fun_mobile/core/widgets/site_brand_mark.dart';
@@ -27,7 +28,7 @@ class MainShell extends ConsumerWidget {
   void _onBranchTap(BuildContext context, WidgetRef ref, int index) {
     final auth = ref.read(authControllerProvider);
     if (auth is! Authenticated && index != 1) {
-      context.push('/login');
+      context.push(loginLocation(returnTo: shellPathForBranch(index)));
       return;
     }
     navigationShell.goBranch(
@@ -44,7 +45,7 @@ class MainShell extends ConsumerWidget {
   }) {
     final auth = ref.read(authControllerProvider);
     if (auth is! Authenticated && !guestsAllowed) {
-      context.push('/login');
+      context.push(loginLocation(returnTo: path));
       return;
     }
     context.push(path);

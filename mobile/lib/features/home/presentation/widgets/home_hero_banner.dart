@@ -74,18 +74,38 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
     final onFind = widget.onFind;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(23),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         constraints: const BoxConstraints(minHeight: 280),
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF08132C), Color(0xFF1E1B4B), Color(0xFF312E81)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          gradient: AppColors.heroGradient,
         ),
         child: Stack(
           children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/funnity-v2/hero-cairo-skyline.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
+              ),
+            ),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.heroOverlayStart,
+                      AppColors.heroOverlayMid,
+                      AppColors.heroOverlayEnd,
+                    ],
+                  ),
+                ),
+              ),
+            ),
             const EspiralAnchorEnd(
               tone: EspiralTone.amber,
               size: EspiralSize.lg,
@@ -108,10 +128,10 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.25),
                       ),
                     ),
                     child: Text(
@@ -138,7 +158,7 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                   Text(
                     l10n.heroBody,
                     style: TextStyle(
-                      color: Colors.blue.shade100,
+                      color: Colors.white.withValues(alpha: 0.82),
                       fontSize: 13,
                       height: 1.45,
                     ),
@@ -147,11 +167,14 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.28),
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withValues(alpha: 0.18),
                           blurRadius: 24,
                           offset: const Offset(0, 10),
                         ),
@@ -194,7 +217,7 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                             ),
                             const SizedBox(width: 8),
                             Material(
-                              color: AppColors.primary,
+                              color: AppColors.accent,
                               borderRadius: BorderRadius.circular(10),
                               child: InkWell(
                                 onTap: onFind,

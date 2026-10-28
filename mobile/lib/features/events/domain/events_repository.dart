@@ -8,6 +8,8 @@ class DiscoverFilters {
     this.cityId,
     this.categoryId,
     this.distanceKm,
+    this.latitude,
+    this.longitude,
     this.when,
     this.perPage,
     this.page = 1,
@@ -22,6 +24,10 @@ class DiscoverFilters {
   final int? categoryId;
   final int? distanceKm;
 
+  /// Ephemeral device GPS (never stored). Both required for device origin.
+  final double? latitude;
+  final double? longitude;
+
   /// API: `today` | `tomorrow` | `weekend`
   final String? when;
   final int? perPage;
@@ -30,15 +36,19 @@ class DiscoverFilters {
 
   bool get isNationwide => allCities;
 
+  bool get hasDeviceOrigin => latitude != null && longitude != null;
+
   Map<String, dynamic> toQuery() {
     return {
       if (q != null && q!.trim().isNotEmpty) 'q': q!.trim(),
       // Blade: empty city_id key → nationwide. Omitted city_id → user city fallback.
       // Use a real empty string (not null) so Dio encodes `city_id=`.
-      if (allCities) 'city_id': '',
-      if (!allCities && cityId != null) 'city_id': cityId,
+      if (allCities && !hasDeviceOrigin) 'city_id': '',
+      if (!allCities && cityId != null && !hasDeviceOrigin) 'city_id': cityId,
       if (categoryId != null) 'category_id': categoryId,
-      if (distanceKm != null && !allCities) 'distance_km': distanceKm,
+      if (distanceKm != null) 'distance_km': distanceKm,
+      if (hasDeviceOrigin) 'latitude': latitude,
+      if (hasDeviceOrigin) 'longitude': longitude,
       if (when != null && when!.isNotEmpty) 'when': when,
       if (perPage != null) 'per_page': perPage,
       'page': page,
@@ -75,6 +85,8 @@ class DiscoverFilters {
     int? cityId,
     int? categoryId,
     int? distanceKm,
+    double? latitude,
+    double? longitude,
     String? when,
     int? perPage,
     int? page,
@@ -84,12 +96,15 @@ class DiscoverFilters {
     bool clearCategory = false,
     bool clearDistance = false,
     bool clearWhen = false,
+    bool clearDevice = false,
   }) {
     return DiscoverFilters(
       q: clearQ ? null : (q ?? this.q),
       cityId: clearCity ? null : (cityId ?? this.cityId),
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
       distanceKm: clearDistance ? null : (distanceKm ?? this.distanceKm),
+      latitude: clearDevice ? null : (latitude ?? this.latitude),
+      longitude: clearDevice ? null : (longitude ?? this.longitude),
       when: clearWhen ? null : (when ?? this.when),
       perPage: perPage ?? this.perPage,
       page: page ?? this.page,
@@ -98,8 +113,29 @@ class DiscoverFilters {
   }
 }
 
+class HomeDiscoveryBundle {
+  const HomeDiscoveryBundle({
+    required this.nearby,
+    required this.worthTheTrip,
+    required this.expanded,
+    required this.nationwide,
+    this.requestedRadiusKm,
+    this.effectiveRadiusKm,
+  });
+
+  final List<EventItem> nearby;
+  final List<EventItem> worthTheTrip;
+  final bool expanded;
+  final bool nationwide;
+  final int? requestedRadiusKm;
+  final int? effectiveRadiusKm;
+}
+
 abstract class EventsRepository {
   Future<Result<PaginatedEvents>> discover(DiscoverFilters filters);
+
+  /// Option B homepage bundle (API SoT).
+  Future<Result<HomeDiscoveryBundle>> discoverHome(DiscoverFilters filters);
   Future<Result<PaginatedEvents>> mine({int page = 1});
   Future<Result<EventDetail>> show(int id);
   Future<Result<EventItem>> create(EventDraft draft);

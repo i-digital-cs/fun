@@ -94,15 +94,17 @@ Do not reintroduce the old flat `site-header` / `site-footer` on member pages.
 
 | Token | Role | Value |
 |------|------|-------|
-| Primary | Trust, nav active, progress | Indigo `#4F46E5` |
-| Primary deep | Hero gradients | Indigo/Violet `#4338CA` → `#6D28D9` |
-| Accent | High-conversion CTAs | Orange `#F97316` → Amber `#F59E0B` gradients |
-| Success / trust | Verified, positive | Emerald `#10B981` / teal trust banners |
-| Background | Page (under ambient) | Slate `#F8FAFC` |
-| Surface | Cards | White / `white/80` glass |
-| Text | Primary text | Slate `#0F172A` |
+| Primary | Trust, nav active, progress | Purple `#7138F5` (hover `#5825D6`, soft `#F1EBFF`) |
+| Primary deep | Hero gradients | Purple `#3B1577` → `#7138F5` → accent wash |
+| Accent | High-conversion CTAs | Orange `#FF762E` → `#FF9A5C` gradients |
+| Success / trust | Verified, positive | Emerald `#159B76` / teal trust banners |
+| Background | Page (under ambient) | Soft `#F8F9FE` |
+| Surface | Cards | White / glass |
+| Text | Primary text | `#19213D` |
 | Muted | Secondary | Slate `#64748B` |
-| Border | Dividers | Slate `#CBD5E1` / soft `slate-200/70` |
+| Border | Dividers | `#E8EAF2` |
+
+Visual source of truth for homepage: `docs/design/funnity-v2/references/APPROVED_V2_REFERENCE.png`. Photography lives under `public/assets/funnity-v2/`.
 
 **Usage rules**
 

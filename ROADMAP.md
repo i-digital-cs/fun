@@ -219,10 +219,17 @@ Workflow per task (mandatory): PLAN → ASK → CONFIRM → IMPLEMENT → TEST �
 
 ## Explicitly NOT in V1 (do not implement)
 
-- Follow / followers / friend suggestions / group DMs
+- Follow / followers / **group DMs**
 - In-app payments / wallet / escrow
-- Complex recommendations / social ranking
+- Complex recommendations / social ranking / fabricated compatibility scores
 - Speculative tables/columns without an approved task
+
+### Superseded by Funnity V2.1 (owner-approved — implemented on `feature/funnity-v2-1-discovery-nav`)
+
+- **People suggestions** (“People You May Like to Meet”): city-peer suggestions via `GET /api/people/suggestions` + web Blade + Flutter home strip — **not** follow/followers, **not** ranking scores, **not** coordinate exposure
+- **Smart geo discovery Option B**: nearby + expansion + Worth the Trip; optional **foreground** GPS origin after consent (never background tracking; city selection remains primary)
+
+See `docs/design/funnity-v2/FUNNITY_V2_1_IMPLEMENTATION_REPORT.md` for CONDITIONAL readiness (device Flow A–H still open).
 
 ---
 

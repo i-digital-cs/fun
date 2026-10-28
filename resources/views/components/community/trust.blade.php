@@ -3,20 +3,21 @@
     $canReport = $user?->canParticipate() === true;
 @endphp
 
-<section class="relative mt-12 overflow-hidden rounded-[2rem] bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 p-6 text-white shadow-2xl shadow-emerald-600/25 sm:p-8">
+<section class="relative mt-12 overflow-hidden rounded-[1.35rem] bg-gradient-to-r from-[#0F7357] via-[#159B76] to-[#0D9488] p-6 text-white shadow-[0_22px_50px_-24px_rgba(21,155,118,0.55)] sm:rounded-[2rem] sm:p-8">
     <div aria-hidden="true" class="absolute inset-0">
-        <div class="absolute -end-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute -end-16 -top-16 h-64 w-64 rounded-full bg-white/15 blur-3xl"></div>
+        <div class="absolute -start-10 bottom-0 h-40 w-40 rounded-full bg-emerald-200/20 blur-3xl"></div>
         <svg class="animate-float absolute end-8 top-1/2 hidden h-40 w-40 -translate-y-1/2 text-white/10 lg:block" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.06 14.54l-3.48-3.48 1.41-1.41 2.07 2.07 4.24-4.24 1.41 1.41-5.65 5.65z"/>
         </svg>
-        <div class="bg-dots absolute inset-0 opacity-40"></div>
+        <div class="bg-dots absolute inset-0 opacity-35"></div>
     </div>
 
     <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex items-start gap-4">
-            <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
+            <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/15 shadow-lg backdrop-blur-xl">
                 <svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.06 14.54l-3.48-3.48 1.41-1.41 2.07 2.07 4.24-4.24 1.41 1.41-5.65 5.65z"/>
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
             </span>
             <div>

@@ -27,7 +27,11 @@
                 <select id="distance_km" name="distance_km" required class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
                     @foreach ($distances as $distance)
                         <option value="{{ $distance }}" @selected((int) old('distance_km', $user->distance_km ?? config('location.default_distance_km')) === $distance)>
-                            {{ $distance }} {{ __('location.km') }}
+                            @if ((int) $distance === 0)
+                                {{ __('location.all_distances') }}
+                            @else
+                                {{ $distance }} {{ __('location.km') }}
+                            @endif
                         </option>
                     @endforeach
                 </select>

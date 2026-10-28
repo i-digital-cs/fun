@@ -34,6 +34,50 @@ class EventsRemoteSource {
     }
   }
 
+  Future<({Failure? failure, HomeDiscoveryBundle? data})> discoverHome(
+    DiscoverFilters filters,
+  ) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/events/discover/home',
+        queryParameters: filters.toQuery(),
+      );
+      final body = response.data;
+      if (body == null) {
+        return (
+          failure: const ServerFailure('Empty response from server'),
+          data: null,
+        );
+      }
+      final meta = body['meta'] is Map
+          ? Map<String, dynamic>.from(body['meta'] as Map)
+          : const <String, dynamic>{};
+      List<EventItem> parseList(Object? raw) {
+        if (raw is! List) return const [];
+        return raw
+            .whereType<Map>()
+            .map((e) => parseEvent(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+
+      return (
+        failure: null,
+        data: HomeDiscoveryBundle(
+          nearby: parseList(body['nearby']),
+          worthTheTrip: parseList(body['worth_the_trip']),
+          expanded: meta['expanded'] == true,
+          nationwide: meta['nationwide'] == true,
+          requestedRadiusKm: (meta['requested_radius_km'] as num?)?.toInt(),
+          effectiveRadiusKm: (meta['effective_radius_km'] as num?)?.toInt(),
+        ),
+      );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: mapUnexpectedError(e), data: null);
+    }
+  }
+
   Future<({Failure? failure, PaginatedEvents? data})> mine({
     int page = 1,
   }) async {

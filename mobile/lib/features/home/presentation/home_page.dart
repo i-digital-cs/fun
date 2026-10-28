@@ -16,6 +16,7 @@ import 'package:fun_mobile/features/home/presentation/widgets/home_hero_banner.d
 import 'package:fun_mobile/features/home/presentation/widgets/home_sections.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/location_shortcut_card.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/participations_section.dart';
+import 'package:fun_mobile/features/home/presentation/widgets/people_suggestions_section.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/weather_card.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -34,9 +35,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(homeNearbyControllerProvider.notifier).load(),
-    );
+    Future.microtask(() async {
+      await ref.read(homeNearbyControllerProvider.notifier).load();
+      if (!mounted) return;
+      await ref.read(peopleSuggestionsControllerProvider.notifier).load();
+    });
   }
 
   @override
@@ -343,7 +346,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 )
               else ...[
-                if (nearby.nationwideFallback)
+                if (nearby.discoveryExpanded)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: NationwideNotice(
+                        text: Localizations.localeOf(context).languageCode ==
+                                'ar'
+                            ? 'لا توجد فعاليات ضمن النطاق المحدد. هذه أقرب الفعاليات المتاحة.'
+                            : 'No events within your selected radius. Showing the nearest available.',
+                      ),
+                    ),
+                  )
+                else if (nearby.nationwideFallback)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -374,7 +389,53 @@ class _HomePageState extends ConsumerState<HomePage> {
                     },
                   ),
                 ),
+                if (nearby.worthTheTrip.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'تستاهل الرحلة'
+                                : 'Worth the trip',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'فعاليات أبعد قليلًا — مسافات تقريبية'
+                                : 'Farther events — approximate straight-line distance',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    sliver: SliverList.separated(
+                      itemCount: nearby.worthTheTrip.take(4).length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final event = nearby.worthTheTrip[index];
+                        return EventCard(
+                          event: event,
+                          onView: () => context.push('/events/${event.id}'),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
+              const SliverToBoxAdapter(child: PeopleSuggestionsSection()),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),

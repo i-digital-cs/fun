@@ -66,7 +66,13 @@
                 <label for="distance_km" class="mb-1.5 block text-xs font-medium text-slate-500">{{ __('location.discovery_distance') }}</label>
                 <select id="distance_km" name="distance_km" class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
                     @foreach ($distances as $distance)
-                        <option value="{{ $distance }}" @selected((int) $filters['distance_km'] === $distance)>{{ $distance }} {{ __('location.km') }}</option>
+                        <option value="{{ $distance }}" @selected((int) $filters['distance_km'] === $distance)>
+                            @if ((int) $distance === 0)
+                                {{ __('location.all_distances') }}
+                            @else
+                                {{ $distance }} {{ __('location.km') }}
+                            @endif
+                        </option>
                     @endforeach
                 </select>
             </div>

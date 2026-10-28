@@ -62,6 +62,32 @@ class FriendsRemoteSource {
     }
   }
 
+  Future<({Failure? failure, List<FriendUser> data})> peopleSuggestions({
+    int limit = 8,
+  }) async {
+    try {
+      final response = await _client.dio.get<Map<String, dynamic>>(
+        '/people/suggestions',
+        queryParameters: {'limit': limit},
+      );
+      final raw = response.data?['data'];
+      if (raw is! List) {
+        return (failure: null, data: const <FriendUser>[]);
+      }
+      final list = raw
+          .whereType<Map>()
+          .map(
+            (row) =>
+                FriendUser.fromSuggestionRow(Map<String, dynamic>.from(row)),
+          )
+          .where((u) => u.id > 0)
+          .toList();
+      return (failure: null, data: list);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: const <FriendUser>[]);
+    }
+  }
+
   Future<({Failure? failure, void data})> requestFriend(String publicId) async {
     try {
       await _client.dio.post<void>(

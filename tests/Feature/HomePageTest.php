@@ -193,7 +193,10 @@ class HomePageTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Far Away Meetup', false)
-            ->assertSee(__('events.nationwide_notice'), false);
+            ->assertSee(__('events.expanded_notice', [
+                'requested' => '10 '.__('location.km'),
+                'effective' => __('location.all_distances'),
+            ]), false);
     }
 
     public function test_health_endpoint_is_available(): void
