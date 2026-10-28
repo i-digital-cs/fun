@@ -73,11 +73,13 @@
                     class="h-full w-full object-cover object-center"
                 >
             </picture>
-            <div class="absolute inset-0 bg-gradient-to-br from-[#3B1577]/92 via-[#7138F5]/78 to-[#FF762E]/55"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-[#19213D]/55 via-transparent to-[#7138F5]/25"></div>
-            <div class="absolute -top-32 -end-24 h-96 w-96 rounded-full bg-orange-400/30 blur-3xl"></div>
-            <div class="absolute -bottom-40 -start-20 h-96 w-96 rounded-full bg-fuchsia-400/25 blur-3xl"></div>
-            <div class="bg-dots absolute inset-0 opacity-40"></div>
+            {{-- Lighter wash so Cairo photography remains readable (APPROVED_V2_REFERENCE) --}}
+            <div class="absolute inset-0 bg-gradient-to-br from-[#3B1577]/78 via-[#7138F5]/58 to-[#FF762E]/42"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#19213D]/50 via-transparent to-[#7138F5]/15"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#3B1577]/45 via-transparent to-transparent"></div>
+            <div class="absolute -top-32 -end-24 h-96 w-96 rounded-full bg-orange-400/35 blur-3xl"></div>
+            <div class="absolute -bottom-40 -start-20 h-96 w-96 rounded-full bg-fuchsia-400/20 blur-3xl"></div>
+            <div class="bg-dots absolute inset-0 opacity-30"></div>
         </div>
 
         <div class="relative grid gap-8 p-6 sm:p-10 lg:grid-cols-[1fr_340px] lg:p-12">

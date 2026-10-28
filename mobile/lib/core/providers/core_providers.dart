@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
 import 'package:fun_mobile/core/storage/token_storage.dart';
 import 'package:fun_mobile/features/auth/data/auth_remote_source.dart';
@@ -43,6 +44,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('Override sharedPreferencesProvider in main()');
+});
+
+final discoveryLocationServiceProvider = Provider<DiscoveryLocationService>((
+  ref,
+) {
+  return DiscoveryLocationService(ref.watch(sharedPreferencesProvider));
 });
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) {

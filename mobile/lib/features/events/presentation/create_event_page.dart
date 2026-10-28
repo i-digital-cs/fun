@@ -266,7 +266,13 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       }
     }
 
-    if (mounted) context.go('/events/${event.id}');
+    // NAV-F3: land on shell then push detail so Back is not an orphan root route.
+    if (!mounted) return;
+    context.go('/my-events');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.push('/events/${event.id}');
+    });
   }
 
   @override

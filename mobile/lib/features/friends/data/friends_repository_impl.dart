@@ -21,6 +21,12 @@ class FriendsRepositoryImpl implements FriendsRepository {
       _remote.search(query);
 
   @override
+  Future<({Failure? failure, List<FriendUser> data})> peopleSuggestions({
+    int limit = 8,
+  }) =>
+      _remote.peopleSuggestions(limit: limit);
+
+  @override
   Future<({Failure? failure, void data})> requestFriend(String publicId) =>
       _remote.requestFriend(publicId);
 

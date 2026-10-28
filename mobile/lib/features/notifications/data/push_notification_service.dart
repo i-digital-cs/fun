@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/domain/chat_toast_payload.dart';
@@ -33,12 +34,25 @@ class PushNotificationService {
   String? _token;
   StreamSubscription<String>? _tokenRefreshSub;
   StreamSubscription<RemoteMessage>? _foregroundSub;
+  StreamSubscription<RemoteMessage>? _openedSub;
   final _toastBus = StreamController<InAppToastPayload>.broadcast();
+  final _openPathBus = StreamController<String>.broadcast();
+  String? _pendingOpenPath;
 
   bool get isReady => _ready;
 
   /// Foreground FCM → in-app toast stream (deduped by [ChatToastListener]).
   Stream<InAppToastPayload> get foregroundToasts => _toastBus.stream;
+
+  /// Cold / background tray tap → allowlisted app path (NAV-F7).
+  Stream<String> get openPaths => _openPathBus.stream;
+
+  /// Path from [getInitialMessage] if UI was not ready yet.
+  String? consumePendingOpenPath() {
+    final path = _pendingOpenPath;
+    _pendingOpenPath = null;
+    return path;
+  }
 
   Future<void> initialize() async {
     if (kIsWeb) return;
@@ -69,6 +83,29 @@ class PushNotificationService {
     }
 
     _foregroundSub = FirebaseMessaging.onMessage.listen(_onForegroundMessage);
+    _openedSub = FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
+
+    final initial = await FirebaseMessaging.instance.getInitialMessage();
+    if (initial != null) {
+      _onMessageOpened(initial);
+    }
+  }
+
+  void _onMessageOpened(RemoteMessage message) {
+    final data = Map<String, dynamic>.from(message.data);
+    final notification = message.notification;
+    if (notification != null) {
+      data.putIfAbsent('title', () => notification.title ?? '');
+      data.putIfAbsent('body', () => notification.body ?? '');
+    }
+    final toast = InAppToastPayload.tryFromFcmData(data);
+    final path = toast?.resolvedOpenPath;
+    if (path == null || path.isEmpty) return;
+    if (_openPathBus.hasListener) {
+      _openPathBus.add(path);
+    } else {
+      _pendingOpenPath = path;
+    }
   }
 
   void _onForegroundMessage(RemoteMessage message) {
@@ -137,8 +174,10 @@ class PushNotificationService {
 
   Future<void> dispose() async {
     await _foregroundSub?.cancel();
+    await _openedSub?.cancel();
     await _tokenRefreshSub?.cancel();
     await _toastBus.close();
+    await _openPathBus.close();
   }
 }
 
@@ -165,13 +204,32 @@ class PushNotificationBinder extends ConsumerStatefulWidget {
 
 class _PushNotificationBinderState
     extends ConsumerState<PushNotificationBinder> {
+  StreamSubscription<String>? _openSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(pushNotificationServiceProvider).initialize();
-      await ref.read(pushNotificationServiceProvider).syncForSession();
+      final push = ref.read(pushNotificationServiceProvider);
+      await push.initialize();
+      await push.syncForSession();
+      _openSub = push.openPaths.listen(_openPath);
+      final pending = push.consumePendingOpenPath();
+      if (pending != null) _openPath(pending);
     });
+  }
+
+  void _openPath(String path) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      openAppPath(context, path);
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_openSub?.cancel() ?? Future<void>.value());
+    super.dispose();
   }
 
   @override

@@ -85,8 +85,10 @@ class DiscoverNearbyEventsService
             // Text search is nationwide unless the user explicitly picked a city filter.
             $explicitCity = array_key_exists('city_id', $filters) && $filters['city_id'] !== null;
             $skipGeoForTextSearch = $hasTextSearch && ! $explicitCity;
+            // distance_km = 0 → "All distances" (no city radius filter).
+            $allDistances = (int) $origin['distance_km'] === 0;
 
-            if (! $skipGeoForTextSearch) {
+            if (! $skipGeoForTextSearch && ! $allDistances) {
                 $cityIds = $this->nearbyCityIds(
                     $origin['latitude'],
                     $origin['longitude'],
@@ -94,7 +96,7 @@ class DiscoverNearbyEventsService
                 );
 
                 $query->whereIn('city_id', $cityIds->all());
-            } else {
+            } elseif ($skipGeoForTextSearch) {
                 $origin = null;
             }
         }

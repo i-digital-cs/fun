@@ -1,10 +1,13 @@
 @props([
     'events',
+    'worthTheTrip' => [],
     'joinActionsById' => [],
     'favoritedIds' => [],
     'user' => null,
     'cityName' => null,
     'nationwideFallback' => false,
+    'discoveryExpanded' => false,
+    'discoveryMeta' => [],
 ])
 
 @php
@@ -15,10 +18,20 @@
     $eventItems = $events instanceof \Illuminate\Contracts\Pagination\Paginator || $events instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
         ? $events->getCollection()
         : collect($events);
+    $worthItems = collect($worthTheTrip);
+    $requestedKm = $discoveryMeta['requested_radius_km'] ?? null;
+    $effectiveKm = $discoveryMeta['effective_radius_km'] ?? null;
 @endphp
 
 <section class="mt-12">
-    @if ($nationwideFallback)
+    @if ($discoveryExpanded && $requestedKm !== null && $effectiveKm !== null)
+        <p class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {{ __('events.expanded_notice', [
+                'requested' => (int) $requestedKm === 0 ? __('location.all_distances') : ((int) $requestedKm.' '.__('location.km')),
+                'effective' => (int) $effectiveKm === 0 ? __('location.all_distances') : ((int) $effectiveKm.' '.__('location.km')),
+            ]) }}
+        </p>
+    @elseif ($nationwideFallback)
         <p class="mb-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">{{ __('events.nationwide_notice') }}</p>
     @endif
 
@@ -31,9 +44,17 @@
                     <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
                 </span>
             </h2>
-            <p class="mt-1 text-sm text-slate-500">{{ __('design.discover_sub') }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ __('design.discover_sub') }} · {{ __('events.distance_approx_note') }}</p>
+            @if (($discoveryMeta['origin_type'] ?? null) === 'device')
+                <p class="mt-1 text-xs font-semibold text-[#7138F5]">{{ __('events.using_device_location') }}</p>
+            @endif
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
+            <button type="button"
+                    data-discovery-use-gps
+                    class="flex items-center gap-1.5 rounded-full border border-[#7138F5]/30 bg-[#7138F5]/5 px-4 py-2 text-xs font-bold text-[#7138F5] transition hover:bg-[#7138F5]/10">
+                {{ __('events.use_my_location') }}
+            </button>
             <a href="{{ route('events.index') }}" class="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-bold text-slate-600 backdrop-blur transition hover:border-indigo-300 hover:text-indigo-700">
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" d="M4 6h16M7 12h10M10 18h4"/>
@@ -100,4 +121,53 @@
             </div>
         </article>
     </div>
+
+    @if ($worthItems->isNotEmpty())
+        <div class="mt-10">
+            <div class="mb-4">
+                <h3 class="text-lg font-extrabold tracking-tight text-[#19213D] sm:text-xl">
+                    {{ __('events.worth_the_trip_title') }}
+                </h3>
+                <p class="mt-1 text-sm text-[#64748B]">{{ __('events.worth_the_trip_sub') }}</p>
+            </div>
+            <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach ($worthItems as $event)
+                    <x-events.card
+                        :event="$event"
+                        :join-action="$joinActionsById[$event->id] ?? null"
+                        :favorited="isset($favoritedIds[$event->id])"
+                    />
+                @endforeach
+            </div>
+        </div>
+    @endif
 </section>
+
+<script>
+(() => {
+    const btn = document.querySelector('[data-discovery-use-gps]');
+    if (!btn) return;
+    const deniedMsg = @json(__('events.location_permission_denied'));
+    const unavailableMsg = @json(__('events.location_unavailable'));
+    btn.addEventListener('click', () => {
+        if (!window.isSecureContext || !navigator.geolocation) {
+            window.alert(unavailableMsg);
+            return;
+        }
+        btn.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('latitude', String(pos.coords.latitude));
+                url.searchParams.set('longitude', String(pos.coords.longitude));
+                window.location.assign(url.toString());
+            },
+            () => {
+                btn.disabled = false;
+                window.alert(deniedMsg);
+            },
+            { enableHighAccuracy: false, maximumAge: 60000, timeout: 12000 }
+        );
+    });
+})();
+</script>

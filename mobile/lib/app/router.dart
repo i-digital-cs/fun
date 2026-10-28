@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/features/auth/presentation/account_deactivated_page.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/forgot_password_page.dart';
@@ -43,29 +44,29 @@ import 'package:go_router/go_router.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
+/// Root navigator for overlays (events, friends, settings). Exposed for FCM.
+GlobalKey<NavigatorState> get appRootNavigatorKey => _rootKey;
+
+/// GoRouter is created **once** per ProviderContainer lifetime.
+/// Auth changes notify via [refreshListenable] only — do not `ref.watch` auth
+/// here (NAV-F8 / P0-00).
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authControllerProvider);
+  final refresh = _AuthRefresh(ref);
 
   return GoRouter(
     navigatorKey: _rootKey,
     initialLocation: '/splash',
-    refreshListenable: _AuthRefresh(ref),
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final auth = ref.read(authControllerProvider);
       final loc = state.matchedLocation;
       final isAuthRoute = loc == '/login' || loc == '/register';
       final isPasswordResetRoute =
           loc == '/forgot-password' ||
           loc == '/forgot-password/verify' ||
           loc == '/reset-password';
-      final isGuestBrowse =
-          loc == '/discover' ||
-          loc == '/safety/guidelines' ||
-          loc == '/privacy-policy' ||
-          loc == '/terms' ||
-          loc == '/support' ||
-          loc == '/account-deletion' ||
-          loc.startsWith('/u/') ||
-          _isGuestEventShow(loc);
+      final isGuestBrowse = isGuestBrowsableLocation(loc) ||
+          isGuestBrowsableLocation(state.uri.path);
 
       if (auth is AuthInitial ||
           auth is AuthLoading ||
@@ -76,11 +77,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth is Unauthenticated) {
         if (loc == '/splash') return '/discover';
         if (isAuthRoute || isPasswordResetRoute || isGuestBrowse) return null;
-        return '/login';
+        return _loginRedirect(state);
       }
 
       if (auth is Authenticated) {
         final user = auth.user;
+        final returnTo = sanitizeReturnTo(state.uri.queryParameters['returnTo']);
 
         if (user.isDeactivated) {
           if (loc == '/account/deactivated') return null;
@@ -88,37 +90,60 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
 
         if (loc == '/account/deactivated') {
-          return user.routeAfterAuth;
+          return _postGateLocation(user.routeAfterAuth, returnTo);
         }
 
         final needsEmail = user.needsEmailVerification || !user.emailVerified;
         if (needsEmail) {
           if (loc == '/email/verify') return null;
-          return '/email/verify';
+          return locationWithReturnTo(
+            '/email/verify',
+            returnTo: returnTo,
+            from: state.uri,
+          );
         }
 
         if (loc == '/email/verify') {
-          return user.routeAfterAuth;
+          if (user.needsIdentity) {
+            return locationWithReturnTo(
+              '/identity',
+              returnTo: returnTo,
+              from: state.uri,
+            );
+          }
+          return _postGateLocation(user.routeAfterAuth, returnTo);
         }
 
         if (user.needsIdentity) {
           if (_isIdentityBlockedRoute(loc)) {
-            return '/identity';
+            return locationWithReturnTo(
+              '/identity',
+              returnTo: returnTo,
+              from: state.uri,
+            );
           }
           if (loc == '/login' ||
               loc == '/register' ||
               loc == '/splash' ||
               isPasswordResetRoute) {
-            return user.routeAfterAuth;
+            return locationWithReturnTo(
+              user.routeAfterAuth,
+              returnTo: returnTo,
+              from: state.uri,
+            );
           }
           return null;
+        }
+
+        if (loc == '/identity') {
+          return _postGateLocation('/home', returnTo);
         }
 
         if (loc == '/login' ||
             loc == '/register' ||
             loc == '/splash' ||
             isPasswordResetRoute) {
-          return user.routeAfterAuth;
+          return _postGateLocation(user.routeAfterAuth, returnTo);
         }
       }
 
@@ -185,7 +210,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootKey,
         builder: (context, state) {
           final search = state.uri.queryParameters['search'];
-          return FriendsPage(focusSearch: search == '1');
+          final tab = state.uri.queryParameters['tab'];
+          return FriendsPage(
+            focusSearch: search == '1',
+            openRequestsTab: tab == 'requests',
+          );
         },
         routes: [
           GoRoute(
@@ -414,8 +443,17 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-bool _isGuestEventShow(String loc) {
-  return RegExp(r'^/events/\d+$').hasMatch(loc);
+String _loginRedirect(GoRouterState state) {
+  final existing = state.uri.queryParameters['returnTo'];
+  if (existing != null) {
+    return loginLocation(returnTo: existing);
+  }
+  final candidate = state.uri.toString();
+  return loginLocation(returnTo: candidate);
+}
+
+String _postGateLocation(String fallback, String? returnTo) {
+  return returnTo ?? fallback;
 }
 
 /// Create / chat / manage routes blocked until identity docs are submitted.
@@ -475,5 +513,3 @@ class _InvalidRoutePage extends StatelessWidget {
     );
   }
 }
-
-

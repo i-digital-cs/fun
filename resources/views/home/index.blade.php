@@ -51,12 +51,21 @@
 
     <x-community.discover
         :events="$events"
+        :worth-the-trip="$worthTheTrip ?? []"
         :join-actions-by-id="$joinActionsById"
         :favorited-ids="$favoritedIds ?? []"
         :user="$user"
         :city-name="$cityName"
         :nationwide-fallback="$nationwideFallback"
+        :discovery-expanded="$discoveryExpanded ?? false"
+        :discovery-meta="$discoveryMeta ?? []"
     />
+
+    @auth
+        @if ($user?->canParticipate())
+            <x-community.people-suggestions :suggestions="$peopleSuggestions ?? []" />
+        @endif
+    @endauth
 
     <x-community.trust />
 @endsection

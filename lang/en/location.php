@@ -31,4 +31,5 @@ return [
     'save' => 'Save preferences',
     'save_short' => 'Save',
     'km' => 'km',
+    'all_distances' => 'All distances',
 ];

@@ -8,6 +8,11 @@ abstract class FriendsRepository {
 
   Future<({Failure? failure, List<FriendUser> data})> search(String query);
 
+  /// Homepage people discovery (`GET /api/people/suggestions`).
+  Future<({Failure? failure, List<FriendUser> data})> peopleSuggestions({
+    int limit = 8,
+  });
+
   Future<({Failure? failure, void data})> requestFriend(String publicId);
 
   Future<({Failure? failure, void data})> accept(int userId);

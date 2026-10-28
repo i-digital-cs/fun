@@ -87,7 +87,8 @@ class _HomeHeroBannerState extends ConsumerState<HomeHeroBanner> {
                 'assets/funnity-v2/hero-cairo-skyline.webp',
                 fit: BoxFit.cover,
                 alignment: Alignment.center,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
             ),
             const Positioned.fill(

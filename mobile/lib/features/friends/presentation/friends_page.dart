@@ -27,9 +27,16 @@ final friendRequestsProvider =
     });
 
 class FriendsPage extends ConsumerStatefulWidget {
-  const FriendsPage({super.key, this.focusSearch = false});
+  const FriendsPage({
+    super.key,
+    this.focusSearch = false,
+    this.openRequestsTab = false,
+  });
 
   final bool focusSearch;
+
+  /// When true (e.g. `/friends?tab=requests`), open the Requests tab (NAV-F6).
+  final bool openRequestsTab;
 
   @override
   ConsumerState<FriendsPage> createState() => _FriendsPageState();
@@ -46,10 +53,15 @@ class _FriendsPageState extends ConsumerState<FriendsPage>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
+    final initialIndex = widget.openRequestsTab && !widget.focusSearch ? 1 : 0;
+    _tabs = TabController(length: 2, vsync: this, initialIndex: initialIndex);
     if (widget.focusSearch) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _tabs.animateTo(0);
+      });
+    } else if (widget.openRequestsTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_tabs.index != 1) _tabs.animateTo(1);
       });
     }
   }

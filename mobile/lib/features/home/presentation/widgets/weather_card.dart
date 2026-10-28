@@ -101,7 +101,8 @@ class WeatherCard extends StatelessWidget {
             child: Image.asset(
               'assets/funnity-v2/weather-sunset-skyline.webp',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              errorBuilder: (context, error, stackTrace) =>
+                  const SizedBox.shrink(),
             ),
           ),
           Positioned.fill(

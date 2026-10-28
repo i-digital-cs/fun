@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+// discoveryLocationServiceProvider is exported from core_providers.
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
@@ -10,6 +11,7 @@ import 'package:fun_mobile/features/home/domain/weather.dart';
 class HomeNearbyState {
   const HomeNearbyState({
     this.items = const [],
+    this.worthTheTrip = const [],
     this.startingSoon = const [],
     this.categories = const [],
     this.weather,
@@ -18,9 +20,11 @@ class HomeNearbyState {
     this.isLoading = false,
     this.error,
     this.nationwideFallback = false,
+    this.discoveryExpanded = false,
   });
 
   final List<EventItem> items;
+  final List<EventItem> worthTheTrip;
   final List<EventItem> startingSoon;
   final List<CategoryItem> categories;
   final WeatherSnapshot? weather;
@@ -31,9 +35,11 @@ class HomeNearbyState {
 
   /// Blade dashboard: nearby empty → show nationwide + notice.
   final bool nationwideFallback;
+  final bool discoveryExpanded;
 
   HomeNearbyState copyWith({
     List<EventItem>? items,
+    List<EventItem>? worthTheTrip,
     List<EventItem>? startingSoon,
     List<CategoryItem>? categories,
     WeatherSnapshot? weather,
@@ -44,9 +50,11 @@ class HomeNearbyState {
     bool clearError = false,
     bool clearWeather = false,
     bool? nationwideFallback,
+    bool? discoveryExpanded,
   }) {
     return HomeNearbyState(
       items: items ?? this.items,
+      worthTheTrip: worthTheTrip ?? this.worthTheTrip,
       startingSoon: startingSoon ?? this.startingSoon,
       categories: categories ?? this.categories,
       weather: clearWeather ? null : (weather ?? this.weather),
@@ -55,6 +63,7 @@ class HomeNearbyState {
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       nationwideFallback: nationwideFallback ?? this.nationwideFallback,
+      discoveryExpanded: discoveryExpanded ?? this.discoveryExpanded,
     );
   }
 }
@@ -74,7 +83,25 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       final home = _ref.read(homeRepositoryProvider);
 
       final hasCity = user?.cityId != null;
-      final nearbyFilters = hasCity
+      final location = _ref.read(discoveryLocationServiceProvider);
+      double? deviceLat;
+      double? deviceLng;
+      if (location.useDeviceLocationPreferred) {
+        final pos = await location.obtainForegroundPosition();
+        if (pos != null) {
+          deviceLat = pos.lat;
+          deviceLng = pos.lng;
+        }
+      }
+
+      final homeFilters = deviceLat != null && deviceLng != null
+          ? DiscoverFilters(
+              distanceKm: user?.distanceKm,
+              latitude: deviceLat,
+              longitude: deviceLng,
+              page: 1,
+            )
+          : hasCity
           ? DiscoverFilters(
               cityId: user!.cityId,
               distanceKm: user.distanceKm,
@@ -89,7 +116,7 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
         perPage: 30,
       );
 
-      final nearbyResult = await repo.discover(nearbyFilters);
+      final bundleResult = await repo.discoverHome(homeFilters);
       final soonResult = await repo.discover(soonFilters);
       final categoriesResult = await catalog.categories();
       final nowPlayingResult = await repo.nowPlaying(cityId: user?.cityId);
@@ -107,26 +134,12 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       }
 
       final categories = categoriesResult.data ?? state.categories;
-
-      var items = nearbyResult.data?.items ?? const <EventItem>[];
-      var nationwideFallback = false;
-      String? error = nearbyResult.failure?.message;
-
-      // Nearby failed or empty (with a city set) → nationwide fallback (Blade).
-      final shouldFallback =
-          hasCity && (items.isEmpty || nearbyResult.failure != null);
-      if (shouldFallback) {
-        final fallback = await repo.discover(
-          const DiscoverFilters(allCities: true, page: 1),
-        );
-        if (fallback.data != null && fallback.data!.items.isNotEmpty) {
-          items = fallback.data!.items;
-          nationwideFallback = true;
-          error = null;
-        } else if (items.isEmpty) {
-          error = fallback.failure?.message ?? error;
-        }
-      }
+      final bundle = bundleResult.data;
+      final items = bundle?.nearby ?? const <EventItem>[];
+      final worth = bundle?.worthTheTrip ?? const <EventItem>[];
+      final nationwideFallback = bundle?.nationwide ?? false;
+      final discoveryExpanded = bundle?.expanded ?? false;
+      final error = bundleResult.failure?.message;
 
       final now = DateTime.now();
       final cutoff = now.add(const Duration(hours: 48));
@@ -140,6 +153,7 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
       state = state.copyWith(
         isLoading: false,
         items: items,
+        worthTheTrip: worth,
         startingSoon: soonItems.take(4).toList(),
         categories: categories,
         weather: weather,
@@ -147,6 +161,7 @@ class HomeNearbyController extends StateNotifier<HomeNearbyState> {
         nowPlaying: nowPlayingResult.data,
         participations: participations,
         nationwideFallback: nationwideFallback,
+        discoveryExpanded: discoveryExpanded,
         error: error,
         clearError: error == null,
       );

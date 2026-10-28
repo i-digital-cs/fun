@@ -31,4 +31,5 @@ return [
     'save' => 'حفظ التفضيلات',
     'save_short' => 'حفظ',
     'km' => 'كم',
+    'all_distances' => 'كل المسافات',
 ];

@@ -1,183 +1,156 @@
-# Funnity V2 — implementation report
+# Funnity V2 — implementation report (visual acceptance)
 
 Date: 28 October 2026  
 Branch: `feature/funnity-v2-homepage`  
-**Verdict: IMPLEMENTED (local) — not deployed**
+**Final verdict: CONDITIONAL**
 
-Visual Source of Truth verified readable:
-
-- `docs/design/funnity-v2/references/APPROVED_V2_REFERENCE.png` (943×1668 PNG)
-- `docs/design/funnity-v2/references/CURRENT_WEB_BASELINE.png` (1156×2047 PNG)
-
-Production was **not** deployed. No production database changes. No auth/ticket/payment/notification business-rule changes.
+Production deploy: **not approved / not performed**.  
+Commit / PR: **not created** (awaiting owner visual approval).
 
 ---
 
-## 1. Files changed
+## Verdict evidence
 
-### Design system & docs
-
-- `resources/css/app.css` — V2 `@theme` tokens; indigo/orange/emerald remaps; weather photo layer; event-card white premium surface; reduced-motion helpers
-- `DESIGN.md` — token table updated to V2 palette + reference path
-- `docs/FLUTTER_WEB_PARITY.md` — §10 item 11 Funnity V2 visual parity
-- `docs/design/funnity-v2/IMPLEMENTATION_REPORT.md` — this file
-- `docs/design/funnity-v2/screenshots/*` — comparison copies + capture notes
-- `public/assets/funnity-v2/**` — local WebP/JPEG photography + `ASSETS.md`
-- `public/build/**` — Vite rebuild of CSS/JS
-
-### Web (Blade)
-
-- `resources/views/components/community/ambient.blade.php`
-- `resources/views/components/community/hero.blade.php` — Cairo skyline photo hero + glass search/stats/highlight
-- `resources/views/components/community/navbar.blade.php`
-- `resources/views/components/community/discover.blade.php` — orange create card
-- `resources/views/components/community/participations.blade.php`
-- `resources/views/components/community/trust.blade.php` — emerald glass trust bar
-- `resources/views/components/community/footer.blade.php`
-- `resources/views/components/dashboard/weather-card.blade.php` — sunset photography wash
-- `resources/views/home/index.blade.php` — weather/now-playing shell polish
-
-### Flutter
-
-- `mobile/lib/app/theme/app_colors.dart` — V2 tokens
-- `mobile/lib/features/home/presentation/widgets/home_hero_banner.dart` — photo + purple/orange wash + orange search CTA
-- `mobile/lib/features/home/presentation/widgets/weather_card.dart` — photo + glass forecast chips
-- `mobile/lib/features/home/presentation/widgets/home_sections.dart`
-- `mobile/lib/features/events/presentation/widgets/event_card.dart` — tokenized colors
-- `mobile/pubspec.yaml` — V2 image assets
-- `mobile/assets/funnity-v2/*.webp`
-
----
-
-## 2. Design decisions
-
-1. **Tokens first.** Remapped Tailwind indigo/orange/emerald scales toward approved `#7138F5` / `#FF762E` / `#159B76` so existing utility classes inherit V2 without rewriting every page.
-2. **Photography, not flat gradients.** Hero and weather use locally stored Unsplash images with purple/orange washes matching the reference atmosphere.
-3. **Preserve structure.** Homepage sections unchanged: hero → weather/now-playing → participations → discover → trust → footer.
-4. **No invented product.** Reference “Communities / People” nav, dark-mode toggle, and community-count stats were **not** added. Existing nav + real stats (`events` / `going` / `left`) retained.
-5. **Light-only.** No dark theme.
-6. **Web + Flutter.** Shared tokens and photographic hero/weather treatment; Flutter layouts remain mobile-native.
-
----
-
-## 3. Asset sources and licenses
-
-See `public/assets/funnity-v2/ASSETS.md`.
-
-| Asset | Source | License |
+| Area | Result | Evidence |
 | --- | --- | --- |
-| `hero/hero-cairo-skyline-*` | Unsplash `photo-1572252009286-268acec5ca0a` | Unsplash License |
-| `hero/hero-cafe-interior-*` | Unsplash `photo-1495474472287-4d71bcdd2085` | Unsplash License |
-| `ambient/ambient-friends-gathering-*` | Unsplash `photo-1529156069898-49953e39b3ac` | Unsplash License |
-| `weather/weather-sunset-skyline-*` | Unsplash `photo-1495616811223-4d98c6e9c869` | Unsplash License |
+| Web visual (durable screenshots) | Pass with documented gaps | `docs/design/funnity-v2/screenshots/web-*.png` vs `references/APPROVED_V2_REFERENCE.png` |
+| Flutter SDK compatibility | Resolved via side-by-side SDK | `/home/d14098/flutter-3.47` → Flutter **3.47.8**, Dart **3.13.7** (satisfies `sdk: ^3.13.1` without changing `pubspec.yaml`) |
+| Flutter analyze | Pass for app code; pre-existing test mock errors | See § Flutter verification |
+| Flutter unit tests (relevant) | **22 passed** | `test/core`, `event_join_actions_test`, `user_test` |
+| Flutter build | **bundle OK**; APK debug **failed** (AAPT2) | See § Flutter verification |
+| Flutter homepage screenshot | **Partial** | `flutter-home-hero.png` golden of V2 hero tokens — **not** full app on emulator/device |
+| Emulator / physical device | **Unavailable** | `flutter devices` → Linux desktop only; no Android emulator image started; `DISPLAY` empty |
+| Functional regression (web) | Pass (smoke + PHPUnit slice) | See § Functional regression |
+| Production safety | Pass | No deploy; no production data changes |
 
-Responsive WebP (480/768/1280/1920) + JPEG fallback. No hotlinking.
-
-**Note:** Cairo Tower photography in the approved mock may differ from the Unsplash cityscape substitute. Documented as a visual replacement pending owner-owned photography.
+**Why not PASS:** Flutter full-homepage visual verification on emulator/device was not achieved.  
+**Why not BLOCKED:** Web implementation is screenshot-verified at required viewports; Flutter tokens/hero compile and unit-test under a compatible SDK; no critical functional break found on the homepage smoke path.
 
 ---
 
-## 4. Web changes (summary)
+## 1. Web visual verification
 
-| Section | Change |
+### Screenshots saved
+
+| File | Size |
 | --- | --- |
-| Ambient | Soft lavender canvas + purple/orange/emerald orbs |
-| Nav | Cleaner white glass bar; V2 purple active via token remap; orange Register/Create preserved |
-| Hero | Rounded photo container, purple→orange wash, glass search, real stats, glass featured card |
-| Categories | Existing pills; active uses V2 purple |
-| Weather | Photographic sunset base + glass forecast chips; real weather API data |
-| Participations | Header/icon polish; rules unchanged |
-| Event cards | White premium surface, taller media, purple progress, soft Join pill |
-| Create card | Stronger orange gradient + large + affordance |
-| Trust | Emerald glass heart treatment; safety CTAs preserved |
-| Footer | Spacing/typography polish |
+| `screenshots/web-desktop-1440.png` | 1440×1600 |
+| `screenshots/web-desktop-1440-tall.png` | 1440×3200 |
+| `screenshots/web-laptop-1280.png` | 1280×1400 |
+| `screenshots/web-tablet-768.png` | 768×1400 |
+| `screenshots/web-mobile-390.png` | 390×1200 |
+
+Tool: Chrome for Testing 156 headless → files written directly under `docs/design/funnity-v2/screenshots/`.
+
+### Comparison vs `APPROVED_V2_REFERENCE.png`
+
+| Check | Finding |
+| --- | --- |
+| Hero photography | Present (Cairo skyline asset + purple/orange wash). Reference is warmer sunset skyline + authenticated Arabic welcome — guest EN hero copy retained. |
+| Typography / hierarchy | Match direction: bold white hero title, amber brand line, glass search. |
+| Gradients / glass | Match: purple hero, glass stats/highlight, soft lavender ambient. |
+| Cards / spacing | White premium event cards with purple progress + soft Join/View pill; good spacing at 1440/1280. |
+| Weather | Photographic sunset wash + glass forecast chips; real API data (27°, city, forecast). |
+| Active participations | Guest session has no participations (expected). Authenticated card chrome exists in Blade; not visible in guest screenshots. |
+| Event grid | 3-column desktop; photography + badges + members bar present. |
+| Create Event CTA | Strong orange gradient card present. |
+| Trust | Emerald/teal glass bar with safety CTAs (reference interest-tagger not invented). |
+| Nav / footer | White glass nav, orange Register, refined footer. |
+
+### Visual differences found
+
+1. Reference is **authenticated Arabic RTL** with Communities/People — **not implemented** (no product feature).
+2. Reference hero photography is warmer/more prominent; first pass wash was too heavy.
+3. Reference bottom green bar is interest discovery; product keeps **safety trust** content.
+4. Category chips use emoji + labels (existing) vs icon-only mock style.
+5. Guest EN screenshots vs Arabic reference language — locale switch verified (`dir=rtl`, `lang=ar`) but acceptance shots are EN guest.
+
+### Fixes applied during acceptance
+
+- Lightened hero gradient wash so Cairo photography reads more clearly (`resources/views/components/community/hero.blade.php`).
+- Rebuilt Vite CSS assets; re-captured durable screenshots after the fix.
 
 ---
 
-## 5. Flutter changes (summary)
+## 2. Flutter verification
 
-- `AppColors` aligned to V2 hex values and hero gradient helpers.
-- Home hero uses `assets/funnity-v2/hero-cairo-skyline.webp` + overlay + orange find CTA.
-- Weather card uses sunset asset + glass day chips.
-- Event card hard-coded indigo/orange replaced with `AppColors`.
-- State management, APIs, routing, join/ticket/chat untouched.
+### SDK investigation
 
----
+| Item | Value |
+| --- | --- |
+| Default host SDK | `/home/d14098/flutter` → Flutter 3.35.5 / **Dart 3.9.2** (too old for `^3.13.1`) |
+| Project constraint | `mobile/pubspec.yaml` → `sdk: ^3.13.1` (**unchanged**) |
+| Compatible SDK used | Cloned side-by-side `/home/d14098/flutter-3.47` @ tag **3.47.8** → **Dart 3.13.7** |
 
-## 6. Functional regression results
-
-Executed:
+### Commands run (compatible SDK)
 
 ```text
-php artisan test --filter='Home|Discover|Organic|Seo'
+flutter pub get                         → OK
+flutter analyze                         → app OK; 4 pre-existing test mock errors (AuthRepository)
+flutter test test/core … join/user      → 22 passed
+flutter test --update-goldens visual…   → passed; wrote flutter-home-hero.png
+flutter build bundle                    → OK
+flutter build apk --debug               → FAILED (AAPT2 daemon startup in Gradle transforms)
+flutter devices                         → Linux desktop only; no emulator/device
 ```
 
-**Result: 49 passed (225 assertions).** Duration ~5.4s.
+### Flutter screenshot
 
-Covered: home event cards, trust/safety, organic discovery SEO, weather card on home, SEO meta/sitemap-related suites in that filter.
+- Saved: `docs/design/funnity-v2/screenshots/flutter-home-hero.png`
+- Method: headless golden render of V2 hero gradient + orange Search CTA using `AppColors` (not a running app screenshot on emulator).
+- **Explicit:** No full Flutter homepage screenshot from emulator/device — none available in this environment (`DISPLAY` empty; no emulator booted).
 
-**Not claimed as run:** full suite (247), Flutter unit tests (SDK blocked), manual join/cancel/ticket/chat deep QA on production.
+### Analyze note
 
-Manual local smoke (`http://127.0.0.1:8765/`): homepage 200; V2 WebP assets 200; search/categories/nav links present in DOM; real events and weather rendered.
-
----
-
-## 7. Visual comparison findings
-
-Compared local implementation against `APPROVED_V2_REFERENCE.png` in Cursor browser:
-
-| Area | Match quality | Notes |
-| --- | --- | --- |
-| Soft lavender page atmosphere | Good | Ambient orbs present |
-| Purple hero with skyline photography | Good | Photo + wash; silhouette strength depends on asset |
-| Orange Register / Search CTAs | Good | Token remap + hero CTA |
-| Glass search / stats | Good | Semi-transparent glass |
-| Featured highlight card | Good | Glass aside; uses live highlight or cafe fallback |
-| Category pills | Fair–Good | Existing emoji pills; not icon-only mock style |
-| Weather photography | Good | Sunset wash + glass days |
-| Event cards white body | Good | CSS rewrite toward reference |
-| Orange create card | Good | Stronger V2 orange |
-| Emerald bottom bar | Fair–Good | Trust/safety content kept (not interest-tagger from mock) |
-| Authenticated RTL Arabic mock density | Partial | Guest LTR verified; Arabic locale switch needs session POST (APP_URL) |
-
-Desktop + mobile (390) implementation screenshots were captured in the Cursor browser session; durable copies should be dropped into `docs/design/funnity-v2/screenshots/` from the IDE temp folder (see that folder’s README).
+Pre-existing failures in test fakes missing `loginWithApple` / account-deletion methods — **not introduced by V2**. V2 files only had style infos (underscores) which were cleaned.
 
 ---
 
-## 8. Remaining differences
+## 3. Functional regression
 
-1. Reference shows authenticated Arabic dashboard chrome (Communities/People). Product does not have those member features — intentionally omitted.
-2. Reference interest-pill green bar vs existing safety trust section — trust content preserved with green glass styling.
-3. Hero photography is Unsplash-compatible substitute, not the exact mockplate.
-4. Event card “Join” vs web “View Event” wording preserved from existing join-action matrix.
-5. Flutter device screenshot pending SDK upgrade (`^3.13.1` required; host has Dart 3.9.2).
-6. Production still serves previous build until owner-approved deploy.
+Local server smoke (`127.0.0.1:8765`):
 
----
-
-## 9. Known limitations
-
-- **No production deploy** in this task.
-- **Flutter analyze/test** blocked by SDK mismatch on this host.
-- **Screenshot durability:** Cursor browser saves PNGs on the IDE client; repo currently holds approved/baseline copies + capture instructions.
-- **Locale switch from automation** briefly hit `https://funnity.com/locale` (APP_URL) — local artisan should use matching APP_URL for isolated QA.
-- **Dark mode** deliberately not implemented.
-
----
-
-## 10. Acceptance checklist
-
-| Criterion | Status |
+| Check | Result |
 | --- | --- |
-| Visual direction follows approved reference | Met (local) with documented gaps |
-| Light-only | Met |
-| Homepage structure preserved | Met |
-| No new product sections | Met |
-| Real application data | Met |
-| Local photography assets | Met |
-| Web + Flutter implemented | Met (Flutter QA pending SDK) |
-| EN/AR + RTL/LTR supported | Met in code; AR visual QA partial |
-| Responsive verified (desktop + 390) | Met locally |
-| Actual screenshots | Captured in session; durable repo copies pending IDE export |
-| Tests reported honestly | Met |
-| Not deployed without approval | Met |
+| Home | 200 |
+| Search `?q=football` | 200 |
+| Category filter | 200 |
+| Event show `/events/414/local-fifa-cup-414` | 200 |
+| Login / Register pages | 200 |
+| Notifications / Chats (guest) | 302 → login (auth gate preserved) |
+| Locale → `ar` | 302 then home `dir=rtl` `lang=ar` |
+| V2 hero/weather assets in HTML | Present |
+| Search input `name=q` | Present |
+
+PHPUnit slice: **OrganicDiscovery + WeatherApi → 11 passed (66 assertions).**
+
+Business logic / APIs / tickets / payments: **not modified**.
+
+---
+
+## 4. Remaining limitations
+
+1. No production deploy; APP_URL still points absolute links at `https://funnity.com` in local HTML.
+2. Flutter APK debug failed (AAPT2); bundle succeeded.
+3. No Android emulator / physical device / GUI session for full Flutter homepage screenshot.
+4. Authenticated participation cards and Arabic chrome not in guest EN acceptance screenshots.
+5. Reference Communities/People/interest-tagger deliberately omitted.
+6. Hero photo is licensed Unsplash substitute, not the exact mock plate.
+
+---
+
+## 5. Files touched in this acceptance pass
+
+- `resources/views/components/community/hero.blade.php` (lighter wash)
+- `docs/design/funnity-v2/screenshots/*` (durable captures)
+- `docs/design/funnity-v2/IMPLEMENTATION_REPORT.md` (this update)
+- `mobile/test/visual/v2_home_hero_capture_test.dart` + golden
+- Vite `public/build/*` rebuilt
+
+---
+
+## 6. Owner next steps (no commit yet)
+
+1. Review durable web screenshots under `docs/design/funnity-v2/screenshots/`.
+2. Optionally provide emulator or approve Flutter hero golden as sufficient interim evidence.
+3. Approve visual result → then commit / PR / deploy as separate explicit requests.

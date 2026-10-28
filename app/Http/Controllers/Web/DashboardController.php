@@ -7,31 +7,34 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
-use App\Services\Events\DiscoverNearbyEventsService;
+use App\Services\Events\EventDiscoveryService;
 use App\Services\Events\ListEventNowPlayingService;
 use App\Services\Events\ListUserHomeParticipationsService;
 use App\Services\Events\ResolveEventJoinActionService;
 use App\Services\Events\ToggleEventFavoriteService;
+use App\Services\Friends\PeopleDiscoveryService;
 use App\Services\Weather\OpenMeteoWeatherService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function __invoke(
         Request $request,
-        DiscoverNearbyEventsService $discover,
+        EventDiscoveryService $eventDiscovery,
         ResolveEventJoinActionService $joinActions,
         ListUserHomeParticipationsService $participations,
         OpenMeteoWeatherService $weatherService,
         ListEventNowPlayingService $nowPlaying,
         ToggleEventFavoriteService $favorites,
+        PeopleDiscoveryService $peopleDiscovery,
     ): View {
         $user = $request->user();
         $user->loadMissing('city');
 
         $when = $request->query('when');
-        $filters = ['per_page' => 8];
+        $filters = [];
         if (is_string($when) && in_array($when, ['today', 'tomorrow', 'weekend'], true)) {
             $filters['when'] = $when;
         }
@@ -42,27 +45,26 @@ class DashboardController extends Controller
             $filters['city_id'] = ($cityId !== null && $cityId !== '') ? (int) $cityId : null;
         }
 
-        $distanceKm = $request->integer('distance_km') ?: null;
-        if ($distanceKm) {
+        $distanceKm = null;
+        if (array_key_exists('distance_km', $request->query()) && $request->query('distance_km') !== null && $request->query('distance_km') !== '') {
+            $distanceKm = (int) $request->query('distance_km');
             $filters['distance_km'] = $distanceKm;
         }
 
-        $events = $discover->discover($user, $filters);
-        $hasNearbyOrigin = $explicitCityFilter
-            ? ($filters['city_id'] ?? null) !== null
-            : $user->city_id !== null;
-        $nationwideFallback = false;
+        $bundle = $eventDiscovery->homeBundle($user, $filters);
+        $events = Collection::make($bundle['nearby']);
+        $worthTheTrip = Collection::make($bundle['worth_the_trip']);
+        $discoveryMeta = $bundle['meta'];
+        $hasNearbyOrigin = ($discoveryMeta['origin_city_id'] ?? null) !== null;
+        $nationwideFallback = (bool) ($discoveryMeta['nationwide'] ?? false);
+        $discoveryExpanded = (bool) ($discoveryMeta['expanded'] ?? false);
 
-        if ($hasNearbyOrigin && ! $explicitCityFilter && $events->total() === 0) {
-            $fallback = $discover->discover($user, array_merge($filters, ['city_id' => null]));
-            if ($fallback->total() > 0) {
-                $events = $fallback;
-                $nationwideFallback = true;
-            }
-        }
-
-        $joinActionsById = $joinActions->resolveMany($user, $events->getCollection());
-        $favoritedIds = $favorites->favoritedIdsFor($user, $events->getCollection());
+        $allForActions = $events->concat($worthTheTrip)->unique('id')->values();
+        $joinActionsById = $joinActions->resolveMany($user, $allForActions);
+        $favoritedIds = $favorites->favoritedIdsFor($user, $allForActions);
+        $peopleSuggestions = $user->canParticipate()
+            ? $peopleDiscovery->suggest($user, 8)
+            : [];
 
         $categories = Category::query()
             ->active()
@@ -113,6 +115,10 @@ class DashboardController extends Controller
             'cities' => City::query()->active()->orderBy('name_en')->get(),
             'distances' => config('location.distances_km'),
             'events' => $events,
+            'worthTheTrip' => $worthTheTrip,
+            'discoveryMeta' => $discoveryMeta,
+            'discoveryExpanded' => $discoveryExpanded,
+            'peopleSuggestions' => $peopleSuggestions,
             'joinActionsById' => $joinActionsById,
             'favoritedIds' => $favoritedIds,
             'startingSoon' => $startingSoon,

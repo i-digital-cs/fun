@@ -58,7 +58,8 @@ For each screen:
 | Identity | `GET/POST /api/identity` · `GET /api/identity/documents/{id}` |
 | Safety | `POST /api/reports` (`description` not `details`) · `GET /api/blocks` · block/unblock user |
 | Notifications | `GET /api/notifications` · `GET /api/notifications/unread-count` · `POST /api/notifications/{id}/read` · `POST /api/notifications/read-all` · `POST/DELETE /api/device-tokens` (FCM) |
-| Friends | `GET /api/users/search?q=` · `GET /api/friends` · `GET /api/friends/requests` · `POST /api/friends` · `POST /api/friends/{user}/accept|decline|cancel` · `DELETE /api/friends/{user}` |
+| Friends | `GET /api/users/search?q=` · `GET /api/friends` · `GET /api/friends/requests` · `POST /api/friends` · `POST /api/friends/{user}/accept|decline|cancel` · `DELETE /api/friends/{user}` · `GET /api/people/suggestions` (V2.1) |
+| Discovery home | `GET /api/events/discover/home` — nearby + expansion meta + worth_the_trip (V2.1 Option B) |
 | Direct messages | `GET /api/dms` · `POST /api/dms/with/{userId}` · `GET/POST /api/dms/{conversation}/messages` · `POST /api/dms/{conversation}/read` · Pusher `private-dms.{id}` `.message.posted` · user `.dm.message` toast · web `dm-chat.js` waits for Echo · Flutter `subscribeDm` + shell `ChatToastListener` |
 | Friend prefs | `GET /api/user` (`notify_friend_events`) · `PUT /api/settings/notifications` |
 
@@ -742,7 +743,21 @@ Also keep Location as a separate screen (`§2.16`).
 | **Blade** | `profile/location.blade.php` (+ location modal on web) |
 | **API** | `PUT /api/settings/location` |
 
-City select + distance_km (5 / 10 / 25 / 50). Orange save. Feeds Discover/Home filters.
+City select + distance_km (5 / 10 / 25 / 50 / **100** / **0=All**). Orange save. Feeds Discover/Home filters. Home uses `GET /api/events/discover/home` (Option B).
+
+**V2.1 foreground GPS (optional):** Flutter `DiscoveryLocationService` + location settings switch; Web “Use my location” after user click (secure context). When granted, home discover sends ephemeral `latitude`/`longitude` (never stored on the user; never returned on public profiles or people/friendship APIs). Denied / permanently denied falls back to saved city or nationwide. No background location. Server validates coordinate bounds; response `meta.origin_type` is `device` vs `city` so UI can distinguish centroid vs device distances. Distance copy remains “approximate straight-line km”.
+
+---
+
+### 2.16a People suggestions (home)
+
+| | |
+|--|--|
+| **Blade** | `x-community.people-suggestions` on marketing home + dashboard (hidden when empty) |
+| **Flutter** | `PeopleSuggestionsSection` on `home_page.dart` |
+| **API** | `GET /api/people/suggestions` (Sanctum + active account) |
+
+Same-city active peers; excludes self / friends / pending / blocked. Cards: photo, name, shared interests when present, friendship state CTAs (Add Friend / pending / View Profile). Reuses existing friendship endpoints — **no** follow graph, **no** fabricated scores, **no** coordinates.
 
 ---
 
@@ -1339,6 +1354,7 @@ Close these in Flutter against **current** web + API (no “skip for later” on
 18. **Mixed AR/EN titles (BiDi)** — web `bidi_dir` + `.bidi-text` isolate; Flutter `bidiTextDirection` on cards, detail, search, chats, now-playing, participations. Prefer Arabic-first titles when seeding mixed content.
 19. **Store compliance (Play + App Store)** — master checklist [`docs/STORE_COMPLIANCE.md`](STORE_COMPLIANCE.md): Terms `/terms`, Support `/support`, account deletion (API + web + Flutter + `/account-deletion` help), Sign in with Apple (iOS + `POST /api/auth/apple`), iOS usage strings, Profile/auth legal links, console Data Safety / App Privacy answers.
 20. **Friends + 1:1 DM (web+Flutter)** — `/friends` hub (list + requests + public ID search); public profile friendship CTAs; `/chats?tab=direct` inbox; `/dms/{id}` thread (composer, `dms.{id}` live + poll); realtime user toasts: `.friend.requested`, `.friend.accepted`, `.dm.message`; `notify_friend_events` in `/settings/notifications`. Flutter: `lib/features/friends/`, routes `/friends`, `/dms/:conversationId`, `/settings/notifications`.
+21. **V2.1 discovery + people (web+Flutter)** — Option B home bundle (`GET /api/events/discover/home`), optional foreground GPS origin, radii 100/All, Worth the Trip UI, people suggestions (`GET /api/people/suggestions` + home strip). Device Flow A–H navigation matrix still needs emulator/hardware sign-off (code + unit tests landed; not a product gap invent).
 
 **Explicitly web-only (OK to skip in member app):** `/admin/*` only (except shared branding / app version via `GET /api/site`). Web HTTP error pages (404/500/…) use a branded runner screen — Flutter should map status codes to native empty/error UI, not load those Blade pages. Crawl/SEO head tags and sitemap are web-only.
 

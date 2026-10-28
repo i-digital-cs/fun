@@ -51,6 +51,8 @@ Route::get('/cities', CityListController::class);
 Route::get('/categories', CategoryListController::class);
 Route::get('/search/suggest', SearchSuggestController::class)->middleware('throttle:60,1');
 Route::get('/events', [ApiEventController::class, 'index']);
+Route::get('/events/discover/home', [\App\Http\Controllers\Api\Events\EventDiscoveryController::class, 'home'])
+    ->middleware('throttle:60,1');
 Route::get('/events/now-playing', ApiEventNowPlayingController::class);
 Route::get('/events/{event}', [ApiEventController::class, 'show'])->whereNumber('event');
 Route::get('/events/{event}/ratings', [ApiEventRatingController::class, 'index'])->whereNumber('event');
@@ -108,6 +110,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/settings/notifications', [ApiNotificationSettingsController::class, 'update']);
 
         Route::get('/users/search', ApiUserSearchController::class)->middleware('throttle:60,1');
+        Route::get('/people/suggestions', \App\Http\Controllers\Api\Friends\PeopleSuggestionController::class)
+            ->middleware('throttle:60,1');
 
         Route::get('/friends', [ApiFriendController::class, 'index']);
         Route::get('/friends/requests', [ApiFriendController::class, 'requests']);
