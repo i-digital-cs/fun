@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
@@ -49,6 +50,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   void _goAfterAuth() {
     ref.read(authControllerProvider.notifier).commitPendingSession();
+    if (!mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth is Authenticated) {
+      goAfterSuccessfulAuth(context, auth.user);
+    }
+  }
+
+  void _goAfterSocialAuth() {
+    if (!mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth is Authenticated) {
+      goAfterSuccessfulAuth(context, auth.user);
+    }
   }
 
   void _startTheater() {
@@ -98,7 +112,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         return;
       }
       setState(() => _submitting = false);
-      _goAfterAuth();
+      _goAfterSocialAuth();
     } on SignInWithAppleAuthorizationException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -154,7 +168,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         _submitting = false;
         _error = error;
       });
-      if (error == null) _goAfterAuth();
+      if (error == null) _goAfterSocialAuth();
     } on PlatformException catch (e) {
       if (!mounted) return;
       setState(() {

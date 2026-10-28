@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_mobile/core/navigation/app_navigation.dart';
+import 'package:fun_mobile/features/auth/domain/user.dart';
 
 void main() {
   group('sanitizeReturnTo', () {
@@ -29,6 +30,67 @@ void main() {
         '/login?returnTo=${Uri.encodeComponent('/events/7')}',
       );
       expect(loginLocation(returnTo: 'https://evil'), '/login');
+    });
+  });
+
+  group('resolvePostAuthLocation', () {
+    const active = User(
+      id: 1,
+      name: 'A',
+      email: 'a@x.com',
+      status: 'active',
+      locale: 'en',
+      emailVerified: true,
+      canParticipateFlag: true,
+    );
+
+    test('honors deep-link returnTo for active users', () {
+      expect(
+        resolvePostAuthLocation(active, returnTo: '/events/42'),
+        '/events/42',
+      );
+      expect(
+        resolvePostAuthLocation(active, returnTo: '/friends'),
+        '/friends',
+      );
+    });
+
+    test('falls back to home without returnTo', () {
+      expect(resolvePostAuthLocation(active), '/home');
+      expect(resolvePostAuthLocation(active, returnTo: 'https://evil'), '/home');
+    });
+
+    test('chains returnTo through email verify gate', () {
+      const pendingEmail = User(
+        id: 2,
+        name: 'B',
+        email: 'b@x.com',
+        status: 'pending_documents',
+        locale: 'en',
+        emailVerified: false,
+        needsEmailVerification: true,
+        needsIdentityDocuments: true,
+      );
+      expect(
+        resolvePostAuthLocation(pendingEmail, returnTo: '/events/9'),
+        '/email/verify?returnTo=${Uri.encodeComponent('/events/9')}',
+      );
+    });
+
+    test('chains returnTo through identity gate', () {
+      const pendingId = User(
+        id: 3,
+        name: 'C',
+        email: 'c@x.com',
+        status: 'pending_documents',
+        locale: 'en',
+        emailVerified: true,
+        needsIdentityDocuments: true,
+      );
+      expect(
+        resolvePostAuthLocation(pendingId, returnTo: '/create'),
+        '/identity?returnTo=${Uri.encodeComponent('/create')}',
+      );
     });
   });
 }

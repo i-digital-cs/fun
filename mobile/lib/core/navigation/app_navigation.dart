@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:go_router/go_router.dart';
 
 /// Shared navigation helpers (Funnity V2.1 contract).
@@ -10,6 +11,31 @@ import 'package:go_router/go_router.dart';
 /// - **pop** — dialogs/sheets; AppBar back when [GoRouter.canPop]
 ///
 /// See `docs/audits/FUNNITY_V2_1_NAVIGATION_CONTRACT.md`.
+
+/// Resolve where to land after a successful login/register commit.
+///
+/// Honors allowlisted [returnTo] (deep links). Never forces `/home` when a
+/// safe return path exists. Email/identity gates keep [returnTo] chained.
+String resolvePostAuthLocation(User user, {String? returnTo}) {
+  final safe = sanitizeReturnTo(returnTo);
+  if (user.isDeactivated) return '/account/deactivated';
+  if (user.needsEmailVerification || !user.emailVerified) {
+    return locationWithReturnTo('/email/verify', returnTo: safe);
+  }
+  if (user.needsIdentity) {
+    return locationWithReturnTo('/identity', returnTo: safe);
+  }
+  return safe ?? user.routeAfterAuth;
+}
+
+/// Explicit post-auth navigation (complements GoRouter [redirect]).
+///
+/// Call after [AuthController.commitPendingSession] or social login success
+/// so the user leaves `/login` even if a refresh race delays redirect.
+void goAfterSuccessfulAuth(BuildContext context, User user) {
+  final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
+  context.go(resolvePostAuthLocation(user, returnTo: returnTo));
+}
 
 /// Paths guests may browse without auth (keep in sync with [router.dart]).
 bool isGuestBrowsableLocation(String location) {

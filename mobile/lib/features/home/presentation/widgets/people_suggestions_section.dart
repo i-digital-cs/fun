@@ -201,39 +201,34 @@ class PeopleSuggestionsSection extends ConsumerWidget {
               ),
             )
           else
-            // Intrinsic height — never clip with a fixed SizedBox (overflow root cause).
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (var i = 0; i < state.items.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 10),
-                    PeopleSuggestionCard(
-                      user: state.items[i],
-                      onProfile: () =>
-                          context.push('/u/${state.items[i].publicId}'),
-                      onAdd: state.items[i].friendship.canRequest
-                          ? () async {
-                              final err = await ref
-                                  .read(
-                                    peopleSuggestionsControllerProvider
-                                        .notifier,
-                                  )
-                                  .requestFriend(state.items[i]);
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    err ?? l10n.friendsRequestSent,
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                    ),
-                  ],
-                ],
+            SizedBox(
+              height: PeopleSuggestionCard.cardHeight,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.items.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                itemBuilder: (context, i) {
+                  final item = state.items[i];
+                  return PeopleSuggestionCard(
+                    user: item,
+                    onProfile: () => context.push('/u/${item.publicId}'),
+                    onAdd: item.friendship.canRequest
+                        ? () async {
+                            final err = await ref
+                                .read(
+                                  peopleSuggestionsControllerProvider.notifier,
+                                )
+                                .requestFriend(item);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(err ?? l10n.friendsRequestSent),
+                              ),
+                            );
+                          }
+                        : null,
+                  );
+                },
               ),
             ),
         ],
@@ -259,8 +254,10 @@ class PeopleSuggestionCard extends StatelessWidget {
   /// Optional interest labels when API provides them; null/empty → muted hint.
   final List<String>? sharedInterests;
 
-  static const double cardWidth = 148;
+  static const double cardWidth = 152;
+  static const double cardHeight = 248;
   static const double avatarSize = 56;
+  static const double actionHeight = 36;
 
   @override
   Widget build(BuildContext context) {
@@ -272,13 +269,15 @@ class PeopleSuggestionCard extends StatelessWidget {
     final interests = (sharedInterests ?? const [])
         .where((s) => s.trim().isNotEmpty)
         .toList();
+    final city = user.cityName?.trim() ?? '';
 
     final buttonStyle = ButtonStyle(
       visualDensity: VisualDensity.compact,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      minimumSize: const WidgetStatePropertyAll(Size(0, 36)),
+      minimumSize: const WidgetStatePropertyAll(Size.fromHeight(actionHeight)),
+      maximumSize: const WidgetStatePropertyAll(Size.fromHeight(actionHeight)),
       padding: const WidgetStatePropertyAll(
-        EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        EdgeInsets.symmetric(horizontal: 8),
       ),
       textStyle: const WidgetStatePropertyAll(
         TextStyle(fontSize: 11, fontWeight: FontWeight.w800, height: 1.1),
@@ -287,6 +286,7 @@ class PeopleSuggestionCard extends StatelessWidget {
 
     return SizedBox(
       width: cardWidth,
+      height: cardHeight,
       child: Material(
         color: Colors.white,
         elevation: 0,
@@ -294,10 +294,10 @@ class PeopleSuggestionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: Color(0xFFE8EAF2)),
         ),
+        clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               InkWell(
@@ -307,106 +307,119 @@ class PeopleSuggestionCard extends StatelessWidget {
                   children: [
                     _Avatar(user: user, size: avatarSize),
                     const SizedBox(height: 8),
-                    Text(
-                      user.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        height: 1.2,
-                        color: Color(0xFF19213D),
-                      ),
-                    ),
-                    if (user.cityName != null && user.cityName!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        user.cityName!,
-                        maxLines: 1,
+                    SizedBox(
+                      height: 32,
+                      child: Text(
+                        user.name,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          height: 1.2,
+                          color: Color(0xFF19213D),
                         ),
                       ),
-                    ],
+                    ),
+                    SizedBox(
+                      height: 16,
+                      child: Text(
+                        city.isEmpty ? ' ' : city,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: city.isEmpty
+                              ? Colors.transparent
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                interests.isEmpty
-                    ? (isAr
-                          ? 'لا اهتمامات مشتركة محفوظة بعد'
-                          : 'No shared interests yet')
-                    : interests.take(2).join(' · '),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 10,
-                  height: 1.25,
-                  color: interests.isEmpty
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF64748B),
+              const SizedBox(height: 4),
+              SizedBox(
+                height: 28,
+                child: Text(
+                  interests.isEmpty
+                      ? (isAr
+                            ? 'لا اهتمامات مشتركة محفوظة بعد'
+                            : 'No shared interests yet')
+                      : interests.take(2).join(' · '),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    height: 1.25,
+                    color: interests.isEmpty
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B),
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              if (pendingOut)
-                Container(
-                  alignment: Alignment.center,
-                  constraints: const BoxConstraints(minHeight: 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    isAr ? 'تم إرسال الطلب' : 'Request sent',
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                )
-              else if (onAdd != null)
-                FilledButton(
-                  onPressed: onAdd,
-                  style: buttonStyle.copyWith(
-                    backgroundColor: const WidgetStatePropertyAll(
-                      Color(0xFF7138F5),
-                    ),
-                    foregroundColor: const WidgetStatePropertyAll(Colors.white),
-                  ),
-                  child: Text(
-                    l10n.friendsAdd,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              else
-                const SizedBox(height: 36),
+              const Spacer(),
+              SizedBox(
+                height: actionHeight,
+                child: pendingOut
+                    ? Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          isAr ? 'تم إرسال الطلب' : 'Request sent',
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      )
+                    : onAdd != null
+                    ? FilledButton(
+                        onPressed: onAdd,
+                        style: buttonStyle.copyWith(
+                          backgroundColor: const WidgetStatePropertyAll(
+                            Color(0xFF7138F5),
+                          ),
+                          foregroundColor: const WidgetStatePropertyAll(
+                            Colors.white,
+                          ),
+                        ),
+                        child: Text(
+                          l10n.friendsAdd,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               const SizedBox(height: 6),
-              OutlinedButton(
-                onPressed: onProfile,
-                style: buttonStyle.copyWith(
-                  side: const WidgetStatePropertyAll(
-                    BorderSide(color: Color(0xFFE8EAF2)),
+              SizedBox(
+                height: actionHeight,
+                child: OutlinedButton(
+                  onPressed: onProfile,
+                  style: buttonStyle.copyWith(
+                    side: const WidgetStatePropertyAll(
+                      BorderSide(color: Color(0xFFE8EAF2)),
+                    ),
+                    foregroundColor: const WidgetStatePropertyAll(
+                      Color(0xFF19213D),
+                    ),
                   ),
-                  foregroundColor: const WidgetStatePropertyAll(
-                    Color(0xFF19213D),
+                  child: Text(
+                    isAr ? 'الملف' : 'Profile',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                child: Text(
-                  isAr ? 'الملف' : 'Profile',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -426,27 +439,30 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final photo = user.profileImagePath;
-    if (photo != null && photo.isNotEmpty) {
-      return ClipOval(
-        child: AppNetworkImage(
-          url: photo,
-          logicalWidth: size,
-          logicalHeight: size,
-          fit: BoxFit.cover,
-        ),
-      );
-    }
-    return CircleAvatar(
-      radius: size / 2,
-      backgroundColor: const Color(0xFF7138F5).withValues(alpha: 0.12),
-      foregroundColor: const Color(0xFF7138F5),
-      child: Text(
-        user.initials,
-        style: TextStyle(
-          fontWeight: FontWeight.w800,
-          fontSize: size * 0.28,
-        ),
-      ),
+    return SizedBox(
+      width: size,
+      height: size,
+      child: photo != null && photo.isNotEmpty
+          ? ClipOval(
+              child: AppNetworkImage(
+                url: photo,
+                logicalWidth: size,
+                logicalHeight: size,
+                fit: BoxFit.cover,
+              ),
+            )
+          : CircleAvatar(
+              radius: size / 2,
+              backgroundColor: const Color(0xFF7138F5).withValues(alpha: 0.12),
+              foregroundColor: const Color(0xFF7138F5),
+              child: Text(
+                user.initials,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: size * 0.28,
+                ),
+              ),
+            ),
     );
   }
 }

@@ -55,7 +55,7 @@ void main() {
   testWidgets('people card lays out without overflow at phone widths', (
     tester,
   ) async {
-    for (final width in [360.0, 390.0, 412.0, 430.0]) {
+    for (final width in [320.0, 360.0, 390.0, 412.0, 430.0]) {
       await tester.pumpWidget(
         _wrap(
           PeopleSuggestionCard(
@@ -71,6 +71,9 @@ void main() {
       await tester.pump();
       expect(tester.takeException(), isNull);
       expect(find.byType(PeopleSuggestionCard), findsOneWidget);
+      final size = tester.getSize(find.byType(PeopleSuggestionCard));
+      expect(size.width, PeopleSuggestionCard.cardWidth);
+      expect(size.height, PeopleSuggestionCard.cardHeight);
       final overflow = find.byWidgetPredicate(
         (w) =>
             w is Text &&
@@ -78,6 +81,46 @@ void main() {
       );
       expect(overflow, findsNothing);
     }
+  });
+
+  testWidgets('people cards share uniform dimensions in a carousel row', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        SizedBox(
+          height: PeopleSuggestionCard.cardHeight,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              PeopleSuggestionCard(
+                user: _user(name: 'Short', city: null),
+                onProfile: () {},
+                onAdd: () {},
+              ),
+              const SizedBox(width: 10),
+              PeopleSuggestionCard(
+                user: _user(
+                  name: 'A Much Longer Name That Wraps Two Lines',
+                  city: '6th of October',
+                ),
+                onProfile: () {},
+                onAdd: () {},
+              ),
+            ],
+          ),
+        ),
+        width: 320,
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    final cards = find.byType(PeopleSuggestionCard);
+    expect(cards, findsNWidgets(2));
+    final a = tester.getSize(cards.at(0));
+    final b = tester.getSize(cards.at(1));
+    expect(a, b);
+    expect(a.height, PeopleSuggestionCard.cardHeight);
   });
 
   testWidgets('people card handles large Arabic text scale', (tester) async {

@@ -9,6 +9,7 @@ import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
+import 'package:fun_mobile/features/discover/presentation/discover_header_scroll.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +24,7 @@ class DiscoverPage extends ConsumerStatefulWidget {
 
 class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   final _search = TextEditingController();
+  final _scroll = ScrollController();
   List<CityItem> _cities = const [];
   List<CategoryItem> _categories = const [];
   List<int> _distances = const [5, 10, 25, 50];
@@ -32,10 +34,15 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   String? _draftWhen;
   bool _draftAllCities = true;
   bool _catalogLoaded = false;
+  bool _headerVisible = true;
+  double _lastScroll = 0;
+
+  static const _headerScrollKey = PageStorageKey<String>('discover-scroll');
 
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     Future.microtask(() async {
       await _loadCatalog();
       await ref.read(discoverControllerProvider.notifier).ensureLoaded();
@@ -45,8 +52,25 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   void dispose() {
+    _scroll.removeListener(_onScroll);
+    _scroll.dispose();
     _search.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+    final offset = _scroll.offset;
+    final delta = offset - _lastScroll;
+    _lastScroll = offset;
+    final next = discoverHeaderVisibleAfterScroll(
+      currentlyVisible: _headerVisible,
+      offset: offset,
+      delta: delta,
+    );
+    if (next != _headerVisible) {
+      setState(() => _headerVisible = next);
+    }
   }
 
   Future<void> _loadCatalog() async {
@@ -150,42 +174,49 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.discoverTitle,
-                          style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: _headerVisible
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.discoverTitle,
+                                  style: const TextStyle(
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.discoverSub,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.discoverSub,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (canCreate)
-                    GradientButton(
-                      label: l10n.createEvent,
-                      icon: Icons.add,
-                      onPressed: () => context.go('/create'),
-                    ),
-                ],
-              ),
+                          if (canCreate)
+                            GradientButton(
+                              label: l10n.createEvent,
+                              icon: Icons.add,
+                              onPressed: () => context.go('/create'),
+                            ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
             Expanded(
               child: RefreshIndicator(
@@ -193,10 +224,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                 onRefresh: () =>
                     ref.read(discoverControllerProvider.notifier).load(),
                 child: CustomScrollView(
+                  key: _headerScrollKey,
+                  controller: _scroll,
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                         child: DiscoverFilterPanel(
                           searchController: _search,
                           catalogLoaded: _catalogLoaded,
