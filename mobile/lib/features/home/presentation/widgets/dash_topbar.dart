@@ -124,6 +124,311 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
     final oppositeGlyph = locale == 'en' ? 'ع' : 'EN';
     final oppositeLabel = locale == 'en' ? 'AR' : 'EN';
 
+    final searchField = OverlayPortal(
+      controller: _portal,
+      overlayChildBuilder: (context) {
+        return UnconstrainedBox(
+          alignment: AlignmentDirectional.topStart,
+          child: CompositedTransformFollower(
+            link: _link,
+            showWhenUnlinked: false,
+            offset: const Offset(0, 46),
+            child: Material(
+              elevation: 8,
+              borderRadius: BorderRadius.circular(14),
+              color: Colors.white,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: widget.compact ? 280 : 280,
+                  maxWidth: widget.compact
+                      ? MediaQuery.sizeOf(context).width - 24
+                      : 540,
+                  maxHeight: 320,
+                ),
+                child: _SuggestPanel(
+                  suggesting: _suggesting,
+                  suggestions: _suggestions,
+                  lastQ: _lastQ,
+                  onTapItem: (id) {
+                    _portal.hide();
+                    _focus.unfocus();
+                    context.push('/events/$id');
+                  },
+                  onSeeAll: _seeAll,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      child: CompositedTransformTarget(
+        link: _link,
+        child: Container(
+          height: 42,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F9FC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.borderSoft),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              const Icon(Icons.search, size: 18, color: AppColors.muted),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _search,
+                  focusNode: _focus,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _seeAll(),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: l10n.searchPlaceholder,
+                    hintStyle: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.muted,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  style: const TextStyle(fontSize: 13, color: AppColors.text),
+                ),
+              ),
+              if (_suggesting)
+                const Padding(
+                  padding: EdgeInsetsDirectional.only(start: 4),
+                  child: FunSearching(
+                    size: FunSearchingSize.sm,
+                    showLabel: false,
+                    compact: true,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final localeChip = Semantics(
+      button: true,
+      label: oppositeLabel,
+      child: InkWell(
+        onTap: _toggleLocale,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                oppositeGlyph,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                oppositeLabel,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF475569),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final actionIcons = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!widget.compact) ...[localeChip, const SizedBox(width: 8)],
+        if (widget.compact) ...[
+          IconButton(
+            tooltip: oppositeLabel,
+            visualDensity: VisualDensity.compact,
+            onPressed: _toggleLocale,
+            icon: Text(
+              oppositeGlyph,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+        IconButton(
+          tooltip: l10n.notificationsTitle,
+          visualDensity: widget.compact ? VisualDensity.compact : null,
+          onPressed: () {
+            if (user == null) {
+              context.push(loginLocation(returnTo: '/notifications'));
+              return;
+            }
+            context.push('/notifications');
+          },
+          icon: Badge(
+            isLabelVisible: notifyUnread > 0,
+            smallSize: 8,
+            backgroundColor: const Color(0xFFF97316),
+            child: const Icon(
+              Icons.notifications_outlined,
+              size: 20,
+              color: Color(0xFF64748B),
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.chatsTitle,
+          visualDensity: widget.compact ? VisualDensity.compact : null,
+          onPressed: () {
+            if (user == null) {
+              context.push(loginLocation(returnTo: '/chats'));
+              return;
+            }
+            context.push('/chats');
+          },
+          icon: Badge(
+            isLabelVisible: unread > 0,
+            smallSize: 8,
+            backgroundColor: AppColors.primary,
+            child: const Icon(
+              Icons.chat_bubble_outline,
+              size: 20,
+              color: Color(0xFF64748B),
+            ),
+          ),
+        ),
+        if (user == null)
+          TextButton(
+            onPressed: () {
+              final here = GoRouterState.of(context).uri.toString();
+              context.push(loginLocation(returnTo: here));
+            },
+            child: Text(l10n.login),
+          )
+        else if (widget.compact)
+          IconButton(
+            tooltip: l10n.navProfile,
+            visualDensity: VisualDensity.compact,
+            onPressed: () => context.go('/profile'),
+            icon: _Avatar(user: user),
+          )
+        else
+          PopupMenuButton<String>(
+            offset: const Offset(0, 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (value) async {
+              switch (value) {
+                case 'home':
+                  context.go('/home');
+                case 'profile':
+                  context.push('/settings/profile');
+                case 'location':
+                  context.push('/settings/location');
+                case 'identity':
+                  context.push('/identity');
+                case 'blocks':
+                  context.push('/blocks');
+                case 'logout':
+                  await _logout();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'home', child: Text(l10n.navHome)),
+              PopupMenuItem(value: 'profile', child: Text(l10n.navProfile)),
+              PopupMenuItem(value: 'location', child: Text(l10n.location)),
+              PopupMenuItem(
+                value: 'identity',
+                child: Row(
+                  children: [
+                    Text(l10n.identity),
+                    if (user.needsIdentity) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              PopupMenuItem(value: 'blocks', child: Text(l10n.blocks)),
+              const PopupMenuDivider(),
+              PopupMenuItem(value: 'logout', child: Text(l10n.logout)),
+            ],
+            child: Row(
+              children: [
+                _Avatar(user: user),
+                const SizedBox(width: 8),
+                Text(
+                  user.firstName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
+                  ),
+                ),
+                const Icon(
+                  Icons.expand_more,
+                  size: 16,
+                  color: AppColors.muted,
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+
+    // Phone: brand + actions on row 1, full-width search on row 2.
+    if (widget.compact) {
+      return Material(
+        color: Colors.white.withValues(alpha: 0.92),
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.borderSoft)),
+          ),
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  SiteBrandLockup(
+                    markSize: 32,
+                    maxNameWidth: 110,
+                    dense: true,
+                    onTap: () => context.go('/home'),
+                  ),
+                  const Spacer(),
+                  actionIcons,
+                ],
+              ),
+              const SizedBox(height: 8),
+              searchField,
+            ],
+          ),
+        ),
+      );
+    }
+
     return Material(
       color: Colors.white.withValues(alpha: 0.92),
       child: Container(
@@ -131,274 +436,19 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
         decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: AppColors.borderSoft)),
         ),
-        padding: EdgeInsets.symmetric(horizontal: widget.compact ? 12 : 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           children: [
             SiteBrandLockup(
-              markSize: widget.compact ? 34 : 36,
-              maxNameWidth: widget.compact ? 96 : 160,
-              dense: widget.compact,
+              markSize: 36,
+              maxNameWidth: 160,
+              dense: false,
               onTap: () => context.go('/home'),
             ),
-            SizedBox(width: widget.compact ? 8 : 12),
-            Expanded(
-              child: OverlayPortal(
-                controller: _portal,
-                overlayChildBuilder: (context) {
-                  return UnconstrainedBox(
-                    alignment: AlignmentDirectional.topStart,
-                    child: CompositedTransformFollower(
-                      link: _link,
-                      showWhenUnlinked: false,
-                      offset: const Offset(0, 46),
-                      child: Material(
-                        elevation: 8,
-                        borderRadius: BorderRadius.circular(14),
-                        color: Colors.white,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            minWidth: 280,
-                            maxWidth: 540,
-                            maxHeight: 320,
-                          ),
-                          child: _SuggestPanel(
-                            suggesting: _suggesting,
-                            suggestions: _suggestions,
-                            lastQ: _lastQ,
-                            onTapItem: (id) {
-                              _portal.hide();
-                              _focus.unfocus();
-                              context.push('/events/$id');
-                            },
-                            onSeeAll: _seeAll,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-                child: CompositedTransformTarget(
-                  link: _link,
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F9FC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.borderSoft),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.search,
-                          size: 18,
-                          color: AppColors.muted,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: _search,
-                            focusNode: _focus,
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: (_) => _seeAll(),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              hintText: l10n.searchPlaceholder,
-                              hintStyle: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.muted,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                              ),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ),
-                        if (_suggesting)
-                          const Padding(
-                            padding: EdgeInsetsDirectional.only(start: 4),
-                            child: FunSearching(
-                              size: FunSearchingSize.sm,
-                              showLabel: false,
-                              compact: true,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(width: 12),
+            Expanded(child: searchField),
             const SizedBox(width: 10),
-            if (!widget.compact) ...[
-              Semantics(
-                button: true,
-                label: oppositeLabel,
-                child: InkWell(
-                  onTap: _toggleLocale,
-                  borderRadius: BorderRadius.circular(999),
-                  child: Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          oppositeGlyph,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          oppositeLabel,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF475569),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            IconButton(
-              tooltip: l10n.notificationsTitle,
-              onPressed: () {
-                if (user == null) {
-                  context.push(loginLocation(returnTo: '/notifications'));
-                  return;
-                }
-                context.push('/notifications');
-              },
-              icon: Badge(
-                isLabelVisible: notifyUnread > 0,
-                smallSize: 8,
-                backgroundColor: const Color(0xFFF97316),
-                child: const Icon(
-                  Icons.notifications_outlined,
-                  size: 20,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ),
-            IconButton(
-              tooltip: l10n.chatsTitle,
-              onPressed: () {
-                if (user == null) {
-                  context.push(loginLocation(returnTo: '/chats'));
-                  return;
-                }
-                context.push('/chats');
-              },
-              icon: Badge(
-                isLabelVisible: unread > 0,
-                smallSize: 8,
-                backgroundColor: AppColors.primary,
-                child: const Icon(
-                  Icons.chat_bubble_outline,
-                  size: 20,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ),
-            if (user == null)
-              TextButton(
-                onPressed: () {
-                  final here = GoRouterState.of(context).uri.toString();
-                  context.push(loginLocation(returnTo: here));
-                },
-                child: Text(l10n.login),
-              )
-            else if (widget.compact)
-              IconButton(
-                tooltip: l10n.navProfile,
-                onPressed: () => context.go('/profile'),
-                icon: _Avatar(user: user),
-              )
-            else
-              PopupMenuButton<String>(
-                offset: const Offset(0, 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                onSelected: (value) async {
-                  switch (value) {
-                    case 'home':
-                      context.go('/home');
-                    case 'profile':
-                      context.push('/settings/profile');
-                    case 'location':
-                      context.push('/settings/location');
-                    case 'identity':
-                      context.push('/identity');
-                    case 'blocks':
-                      context.push('/blocks');
-                    case 'logout':
-                      await _logout();
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(value: 'home', child: Text(l10n.navHome)),
-                  PopupMenuItem(value: 'profile', child: Text(l10n.navProfile)),
-                  PopupMenuItem(value: 'location', child: Text(l10n.location)),
-                  PopupMenuItem(
-                    value: 'identity',
-                    child: Row(
-                      children: [
-                        Text(l10n.identity),
-                        if (user.needsIdentity) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(value: 'blocks', child: Text(l10n.blocks)),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(value: 'logout', child: Text(l10n.logout)),
-                ],
-                child: Row(
-                  children: [
-                    _Avatar(user: user),
-                    const SizedBox(width: 8),
-                    Text(
-                      user.firstName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.expand_more,
-                      size: 16,
-                      color: AppColors.muted,
-                    ),
-                  ],
-                ),
-              ),
+            actionIcons,
           ],
         ),
       ),

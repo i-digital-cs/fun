@@ -112,7 +112,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -123,7 +123,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             Text(
                               _greeting(l10n, firstName),
                               style: const TextStyle(
-                                fontSize: 25,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.4,
                               ),
@@ -151,7 +151,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: LocationShortcutCard(
                     cityName: user?.cityName,
                     distanceKm: user?.distanceKm ?? 25,
@@ -167,7 +167,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: HomeHeroBanner(
                     searchController: _search,
                     onFind: () => _openDiscoverAll(
@@ -181,7 +181,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               if (canParticipate)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                     child: ParticipationsSection(
                       data: nearby.participations ?? const HomeParticipations(),
                       onDiscover: () => _openDiscoverAll(),
@@ -195,7 +195,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               if (nearby.categories.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                     child: HomeCategoriesSection(
                       categories: nearby.categories,
                       onViewAll: () => _openDiscoverAll(),
@@ -205,7 +205,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final sideBySide = constraints.maxWidth >= 640;
@@ -252,7 +252,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                   child: Row(
                     children: [
                       Expanded(
@@ -369,7 +369,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   sliver: SliverList.separated(
                     itemCount: nearby.items.take(6).length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final event = nearby.items[index];
                       final authed = user != null;
@@ -392,7 +392,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 if (nearby.worthTheTrip.isNotEmpty) ...[
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -423,7 +423,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                     sliver: SliverList.separated(
                       itemCount: nearby.worthTheTrip.take(4).length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 16),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final event = nearby.worthTheTrip[index];
                         return EventCard(
@@ -438,7 +438,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SliverToBoxAdapter(child: PeopleSuggestionsSection()),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: Column(
                     children: [
                       HomeStartingSoonCard(
@@ -455,7 +455,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: HomeHowItWorksSection(brand: brand.displayName),
                 ),
               ),

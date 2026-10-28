@@ -9,7 +9,7 @@ import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
-/// Glass event card (Blade `.event-3d` without logo rings).
+/// Compact premium event card for mobile (V2 glass language, reduced height).
 class EventCard extends StatefulWidget {
   const EventCard({
     super.key,
@@ -23,12 +23,12 @@ class EventCard extends StatefulWidget {
   final EventItem event;
   final VoidCallback onView;
   final VoidCallback? onFavorite;
-
-  /// Cancel pending join request (Blade card cancel under status).
   final VoidCallback? onCancelJoin;
-
-  /// Optional chip stacked above category (e.g. Published) — never overlays text.
   final Widget? statusBadge;
+
+  /// Controlled cover aspect for mobile lists (~16:9 on typical phone widths).
+  static const double imageAspectRatio = 16 / 9;
+  static const double imageMaxHeight = 140;
 
   @override
   State<EventCard> createState() => _EventCardState();
@@ -45,7 +45,6 @@ class _EventCardState extends State<EventCard> {
   String _amountLabel(AppLocalizations l10n, EventItem event) {
     if (event.isFree) return l10n.free;
     final n = event.costPerPerson;
-    // Match web: "25.00 EGP / person"
     final amount = n == null ? '0.00' : n.toStringAsFixed(2);
     return l10n.costPerPersonAmount(amount);
   }
@@ -64,7 +63,6 @@ class _EventCardState extends State<EventCard> {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final event = widget.event;
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final hasImage = event.imageUrl != null && event.imageUrl!.isNotEmpty;
     final categoryName = event.category?.name ?? '';
     final emoji = categoryEmoji(categoryName);
@@ -76,17 +74,13 @@ class _EventCardState extends State<EventCard> {
           ).format(event.startsAt!.toLocal()).toUpperCase()
         : '';
     final priceChip = _amountLabel(l10n, event);
-    final currencyPill = event.isFree ? '✓' : l10n.currencyShort;
     final venueLine = event.placeLine;
-    final tilt = _pressed ? 0.28 : 0.0;
+    final distance = event.distanceKm;
     final action = event.joinAction;
     final showJoinStatus = _showsJoinStatus(action);
     final showCancel =
         action == 'request_pending' && widget.onCancelJoin != null;
     final hasAudience = event.sex != null && event.sex!.isNotEmpty;
-    final cardHeight = 360.0 +
-        (hasAudience ? 18.0 : 0.0) +
-        (showCancel ? 78.0 : (showJoinStatus ? 40.0 : 0.0));
 
     return GestureDetector(
       onTapDown: (_) => _setPressed(true),
@@ -96,405 +90,251 @@ class _EventCardState extends State<EventCard> {
       },
       onTapCancel: () => _setPressed(false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 480),
-        curve: Curves.easeInOut,
-        transformAlignment: Alignment.center,
-        height: cardHeight,
-        transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.001)
-          ..rotateX(tilt)
-          ..rotateY(isRtl ? -tilt : tilt),
-        child: Container(
-          height: cardHeight,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(44),
-            gradient: const LinearGradient(
-              begin: Alignment(-0.8, -1),
-              end: Alignment(0.8, 1),
-              colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF), Color(0xFFC7D2FE)],
-              stops: [0.0, 0.4, 1.0],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF312E81)
-                    .withValues(alpha: _pressed ? 0.32 : 0.0),
-                blurRadius: 36,
-                offset: const Offset(28, 48),
-                spreadRadius: -36,
-              ),
-              BoxShadow(
-                color: const Color(0xFF312E81)
-                    .withValues(alpha: _pressed ? 0.14 : 0.18),
-                blurRadius: _pressed ? 28 : 24,
-                offset: Offset(0, _pressed ? 22 : 18),
-                spreadRadius: -6,
-              ),
-            ],
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        // No 3D tilt — it inflated layout bounds on mobile and wasted vertical space.
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: const LinearGradient(
+            begin: Alignment(-0.8, -1),
+            end: Alignment(0.8, 1),
+            colors: [Color(0xFFEEF2FF), Color(0xFFE8EDFF), Color(0xFFDDE4FF)],
           ),
-          // Web: do not overflow:hidden on the card (clips logo rings / 3D).
-          child: Stack(
-            clipBehavior: Clip.none,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF312E81).withValues(alpha: 0.12),
+              blurRadius: _pressed ? 16 : 12,
+              offset: Offset(0, _pressed ? 10 : 6),
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Media 148px
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 148,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(44),
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (hasImage)
-                        AppNetworkImage(
-                          url: event.imageUrl!,
-                          logicalWidth: 420,
-                          logicalHeight: 148,
-                          maxCacheWidth: 900,
-                          maxCacheHeight: 400,
-                        )
-                      else
-                        const ColoredBox(color: AppColors.primarySoft),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [Color(0xF2EEF2FF), Colors.transparent],
-                            stops: [0.0, 0.45],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Glass — CSS border-start-end-radius: 100%
-              Positioned(
-                left: 8,
-                right: 8,
-                top: 96,
-                bottom: 8,
-                child: IgnorePointer(
-                  child: LayoutBuilder(
-                    builder: (context, box) {
-                      final w = box.maxWidth;
-                      final h = box.maxHeight;
-                      // Deep top-end scoop like CSS 100%, but clamped so the
-                      // cover photo still reads on the start side (web look).
-                      final endRadius = Radius.elliptical(
-                        (w * 0.55).clamp(100.0, 200.0),
-                        (h * 0.40).clamp(90.0, 140.0),
-                      );
-                      return DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            topLeft: isRtl
-                                ? endRadius
-                                : const Radius.circular(38),
-                            topRight: isRtl
-                                ? const Radius.circular(38)
-                                : endRadius,
-                            bottomLeft: const Radius.circular(38),
-                            bottomRight: const Radius.circular(38),
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.white.withValues(alpha: 0.42),
-                              Colors.white.withValues(alpha: 0.90),
-                            ],
-                          ),
-                          border: Border(
-                            left: isRtl
-                                ? BorderSide.none
-                                : BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                  ),
-                            right: isRtl
-                                ? BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.95),
-                                  )
-                                : BorderSide.none,
-                            bottom: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.95),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth.isFinite
+                      ? constraints.maxWidth
+                      : MediaQuery.sizeOf(context).width;
+                  final ideal =
+                      width / EventCard.imageAspectRatio;
+                  final imageHeight =
+                      ideal.clamp(120.0, EventCard.imageMaxHeight);
+                  return SizedBox(
+                    height: imageHeight,
+                    width: width,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (hasImage)
+                          AppNetworkImage(
+                            url: event.imageUrl!,
+                            logicalWidth: 420,
+                            logicalHeight: imageHeight,
+                            maxCacheWidth: 900,
+                            maxCacheHeight: 500,
+                            fit: BoxFit.cover,
+                          )
+                        else
+                          const ColoredBox(color: AppColors.primarySoft),
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Color(0x9919213D),
+                                Colors.transparent,
+                              ],
+                              stops: [0.0, 0.55],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
+                        PositionedDirectional(
+                          top: 10,
+                          start: 10,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.statusBadge != null) ...[
+                                widget.statusBadge!,
+                                const SizedBox(height: 6),
+                              ],
+                              if (categoryName.isNotEmpty)
+                                _Chip(
+                                  label: '$emoji $categoryName'.trim(),
+                                  filled: false,
+                                ),
+                              if (categoryName.isNotEmpty)
+                                const SizedBox(height: 6),
+                              _Chip(
+                                label: priceChip,
+                                filled: true,
+                                free: event.isFree,
+                                key: const ValueKey('event-card-price-chip'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (widget.onFavorite != null)
+                          PositionedDirectional(
+                            top: 10,
+                            end: 10,
+                            child: Material(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: widget.onFavorite,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Icon(
+                                    event.isFavorited
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                    size: 18,
+                                    color: event.isFavorited
+                                        ? AppColors.accentAmber
+                                        : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
               ),
-
-              // Category + price
-              PositionedDirectional(
-                top: 14,
-                start: 14,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (widget.statusBadge != null) ...[
-                      widget.statusBadge!,
-                      const SizedBox(height: 6),
+                    Text(
+                      event.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: bidiTextDirection(event.title),
+                      style: const TextStyle(
+                        color: Color(0xFF312E81),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                        height: 1.2,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    if (schedule.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        schedule,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.primary.withValues(alpha: 0.9),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
                     ],
-                    if (categoryName.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
+                    if (venueLine.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        venueLine,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.primaryDeep.withValues(alpha: 0.75),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(999),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                      ),
+                    ],
+                    if (distance != null || hasAudience) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        [
+                          if (distance != null)
+                            '~${distance.toStringAsFixed(distance >= 10 ? 0 : 1)} km',
+                          if (hasAudience)
+                            '${l10n.eventSex}: ${switch (event.sex) {
+                              'male' => l10n.sexMale,
+                              'female' => l10n.sexFemale,
+                              _ => l10n.sexMix,
+                            }}',
+                        ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.primary.withValues(alpha: 0.8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                         ),
-                        child: Text(
-                          '$emoji $categoryName'.trim(),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          l10n.members,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${event.membersCount} / ${event.maxParticipants}',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: AppColors.text,
                           ),
                         ),
-                      ),
-                    if (categoryName.isNotEmpty) const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: event.isFree
-                            ? AppColors.emeraldGradient
-                            : AppColors.orangeGradient,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        priceChip,
-                        key: const ValueKey('event-card-price-chip'),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                        const SizedBox(width: 8),
+                        Text(
+                          '$pct%',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryDeep,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: SizedBox(
+                        height: 4,
+                        child: LinearProgressIndicator(
+                          value: (event.fillPercent / 100).clamp(0.0, 1.0),
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            event.isUrgent
+                                ? AppColors.accent
+                                : const Color(0xFF6366F1),
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // Favorite — top-end (logo rings removed)
-              if (widget.onFavorite != null)
-                PositionedDirectional(
-                  top: 14,
-                  end: 14,
-                  child: Material(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    shape: const CircleBorder(),
-                    elevation: 2,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: widget.onFavorite,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          event.isFavorited
-                              ? Icons.bookmark
-                              : Icons.bookmark_border,
-                          size: 18,
-                          color: event.isFavorited
-                              ? AppColors.accentAmber
-                              : const Color(0xFF64748B),
-                        ),
+                    if (showJoinStatus) ...[
+                      const SizedBox(height: 6),
+                      _JoinStatusStrip(
+                        action: action!,
+                        onCancelJoin: showCancel ? widget.onCancelJoin : null,
                       ),
-                    ),
-                  ),
-                ),
-
-              // Body
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 148,
-                bottom: 52,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textDirection: bidiTextDirection(event.title),
-                        style: const TextStyle(
-                          color: Color(0xFF312E81),
-                          fontWeight: FontWeight.w900,
-                          fontSize: 17,
-                          height: 1.3,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      if (schedule.isNotEmpty) ...[
-                        const SizedBox(height: 7),
-                        Text(
-                          schedule,
-                          style: TextStyle(
-                            color: AppColors.primary
-                                .withValues(alpha: 0.85),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                      if (venueLine.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          venueLine,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColors.primaryDeep
-                                .withValues(alpha: 0.75),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                      if (hasAudience) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          '${l10n.eventSex}: ${switch (event.sex) {
-                            'male' => l10n.sexMale,
-                            'female' => l10n.sexFemale,
-                            _ => l10n.sexMix,
-                          }}',
-                          style: TextStyle(
-                            color: AppColors.primary
-                                .withValues(alpha: 0.85),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 9,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  l10n.members,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF64748B),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  '${event.membersCount} / ${event.maxParticipants}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.text,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(999),
-                              child: SizedBox(
-                                height: 6,
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    const ColoredBox(color: Color(0xFFE2E8F0)),
-                                    FractionallySizedBox(
-                                      alignment:
-                                          AlignmentDirectional.centerStart,
-                                      widthFactor: (event.fillPercent / 100)
-                                          .clamp(0.0, 1.0),
-                                      child: DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: event.isUrgent
-                                                ? const [
-                                                    AppColors.accent,
-                                                    Color(0xFFF59E0B),
-                                                  ]
-                                                : const [
-                                                    Color(0xFF6366F1),
-                                                    Color(0xFF7C3AED),
-                                                  ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (showJoinStatus) ...[
-                        const SizedBox(height: 10),
-                        _JoinStatusStrip(
-                          action: action!,
-                          onCancelJoin: showCancel ? widget.onCancelJoin : null,
-                        ),
-                      ],
                     ],
-                  ),
-                ),
-              ),
-
-              // Bottom pills + view
-              Positioned(
-                left: 14,
-                right: 14,
-                bottom: 14,
-                child: Row(
-                  children: [
-                    _Pill(
-                      label: '${event.membersCount}/${event.maxParticipants}',
-                      wide: true,
-                      pressed: _pressed,
-                    ),
-                    const SizedBox(width: 8),
-                    _Pill(label: currencyPill, pressed: _pressed),
-                    const SizedBox(width: 8),
-                    _Pill(label: '$pct%', pressed: _pressed),
-                    const Spacer(),
+                    const SizedBox(height: 8),
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        const Spacer(),
                         Text(
                           l10n.viewEvent,
                           style: const TextStyle(
@@ -515,6 +355,48 @@ class _EventCardState extends State<EventCard> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    super.key,
+    required this.label,
+    required this.filled,
+    this.free = false,
+  });
+
+  final String label;
+  final bool filled;
+  final bool free;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: filled ? null : Colors.white.withValues(alpha: 0.92),
+        gradient: filled
+            ? (free ? AppColors.emeraldGradient : AppColors.orangeGradient)
+            : null,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: filled ? Colors.white : AppColors.text,
         ),
       ),
     );
@@ -552,7 +434,7 @@ class _JoinStatusStrip extends StatelessWidget {
       ),
       'event_full' => (
         l10n.eventFull,
-        Colors.white.withValues(alpha: 0.8),
+        const Color(0xFFF8FAFC),
         AppColors.muted,
         const Color(0xFFE2E8F0),
       ),
@@ -564,7 +446,7 @@ class _JoinStatusStrip extends StatelessWidget {
       ),
       _ => (
         l10n.requestPending,
-        Colors.white.withValues(alpha: 0.8),
+        const Color(0xFFF8FAFC),
         AppColors.muted,
         const Color(0xFFE2E8F0),
       ),
@@ -574,17 +456,19 @@ class _JoinStatusStrip extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: border),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
               color: fg,
             ),
@@ -592,56 +476,13 @@ class _JoinStatusStrip extends StatelessWidget {
         ),
         if (onCancelJoin != null) ...[
           const SizedBox(height: 6),
-          GestureDetector(
-            onTap: () {},
-            onTapDown: (_) {},
-            child: CancelStopButton(
-              label: l10n.cancelJoin,
-              size: CancelStopSize.sm,
-              onPressed: onCancelJoin,
-            ),
+          CancelStopButton(
+            label: l10n.cancelJoin,
+            size: CancelStopSize.sm,
+            onPressed: onCancelJoin,
           ),
         ],
       ],
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.pressed, this.wide = false});
-
-  final String label;
-  final bool pressed;
-  final bool wide;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      transform: Matrix4.translationValues(0, 0, pressed ? 50 : 0),
-      constraints: BoxConstraints(minWidth: wide ? 42 : 30, minHeight: 30),
-      padding: EdgeInsets.symmetric(horizontal: wide ? 9 : 6),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF312E81)
-                .withValues(alpha: pressed ? 0.22 : 0.3),
-            blurRadius: pressed ? 12 : 8,
-            offset: Offset(pressed ? -5 : 0, pressed ? 14 : 5),
-          ),
-        ],
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: AppColors.primaryDeep,
-        ),
-      ),
     );
   }
 }

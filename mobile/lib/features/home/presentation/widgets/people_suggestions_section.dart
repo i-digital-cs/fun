@@ -96,7 +96,7 @@ final peopleSuggestionsControllerProvider =
       (ref) => PeopleSuggestionsController(ref),
     );
 
-/// Homepage “People You May Like to Meet” (V2.1).
+/// Homepage “People You May Like to Meet” (V2.1) — mobile-compact cards.
 class PeopleSuggestionsSection extends ConsumerWidget {
   const PeopleSuggestionsSection({super.key});
 
@@ -117,11 +117,12 @@ class PeopleSuggestionsSection extends ConsumerWidget {
         : 'Nearby members you can connect with — no precise locations shared.';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -130,16 +131,17 @@ class PeopleSuggestionsSection extends ConsumerWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
                         color: AppColors.text,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       sub,
                       style: const TextStyle(
                         fontSize: 12,
+                        height: 1.35,
                         color: AppColors.muted,
                       ),
                     ),
@@ -148,19 +150,23 @@ class PeopleSuggestionsSection extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () => context.push('/friends'),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
                 child: Text(l10n.friendsTitle),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           if (state.isLoading && state.items.isEmpty)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
+              padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(child: FunLoader()),
             )
           else if (state.error != null && state.items.isEmpty)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
@@ -180,7 +186,7 @@ class PeopleSuggestionsSection extends ConsumerWidget {
             )
           else if (state.items.isEmpty)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
@@ -195,36 +201,39 @@ class PeopleSuggestionsSection extends ConsumerWidget {
               ),
             )
           else
-            SizedBox(
-              height: 188,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.items.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  final user = state.items[index];
-                  return _PeopleCard(
-                    user: user,
-                    onProfile: () => context.push('/u/${user.publicId}'),
-                    onAdd: user.friendship.canRequest
-                        ? () async {
-                            final err = await ref
-                                .read(
-                                  peopleSuggestionsControllerProvider.notifier,
-                                )
-                                .requestFriend(user);
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  err ?? l10n.friendsRequestSent,
+            // Intrinsic height — never clip with a fixed SizedBox (overflow root cause).
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < state.items.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 10),
+                    PeopleSuggestionCard(
+                      user: state.items[i],
+                      onProfile: () =>
+                          context.push('/u/${state.items[i].publicId}'),
+                      onAdd: state.items[i].friendship.canRequest
+                          ? () async {
+                              final err = await ref
+                                  .read(
+                                    peopleSuggestionsControllerProvider
+                                        .notifier,
+                                  )
+                                  .requestFriend(state.items[i]);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    err ?? l10n.friendsRequestSent,
+                                  ),
                                 ),
-                              ),
-                            );
-                          }
-                        : null,
-                  );
-                },
+                              );
+                            }
+                          : null,
+                    ),
+                  ],
+                ],
               ),
             ),
         ],
@@ -233,16 +242,25 @@ class PeopleSuggestionsSection extends ConsumerWidget {
   }
 }
 
-class _PeopleCard extends StatelessWidget {
-  const _PeopleCard({
+/// Compact suggestion card — public for widget tests.
+class PeopleSuggestionCard extends StatelessWidget {
+  const PeopleSuggestionCard({
+    super.key,
     required this.user,
     required this.onProfile,
     this.onAdd,
+    this.sharedInterests,
   });
 
   final FriendUser user;
   final VoidCallback onProfile;
   final VoidCallback? onAdd;
+
+  /// Optional interest labels when API provides them; null/empty → muted hint.
+  final List<String>? sharedInterests;
+
+  static const double cardWidth = 148;
+  static const double avatarSize = 56;
 
   @override
   Widget build(BuildContext context) {
@@ -251,128 +269,159 @@ class _PeopleCard extends StatelessWidget {
     final pendingOut =
         user.friendship.status == 'pending' &&
         user.friendship.direction == 'outgoing';
+    final interests = (sharedInterests ?? const [])
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
 
-    return Container(
-      width: 168,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EAF2)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF19213D).withValues(alpha: 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    final buttonStyle = ButtonStyle(
+      visualDensity: VisualDensity.compact,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      minimumSize: const WidgetStatePropertyAll(Size(0, 36)),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: onProfile,
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
-              children: [
-                _Avatar(user: user),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+      textStyle: const WidgetStatePropertyAll(
+        TextStyle(fontSize: 11, fontWeight: FontWeight.w800, height: 1.1),
+      ),
+    );
+
+    return SizedBox(
+      width: cardWidth,
+      child: Material(
+        color: Colors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: Color(0xFFE8EAF2)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              InkWell(
+                onTap: onProfile,
+                borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  children: [
+                    _Avatar(user: user, size: avatarSize),
+                    const SizedBox(height: 8),
+                    Text(
+                      user.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        height: 1.2,
+                        color: Color(0xFF19213D),
+                      ),
+                    ),
+                    if (user.cityName != null && user.cityName!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        user.name,
+                        user.cityName!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          color: Color(0xFF19213D),
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
                         ),
                       ),
-                      if (user.cityName != null && user.cityName!.isNotEmpty)
-                        Text(
-                          user.cityName!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
                     ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          // Shared interests intentionally omitted until a real interests schema exists.
-          Text(
-            isAr ? 'لا اهتمامات مشتركة محفوظة بعد' : 'No shared interests yet',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onProfile,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    side: const BorderSide(color: Color(0xFFE8EAF2)),
-                    foregroundColor: const Color(0xFF19213D),
-                    textStyle: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  child: Text(isAr ? 'الملف' : 'Profile'),
+                  ],
                 ),
               ),
-              if (onAdd != null || pendingOut) ...[
-                const SizedBox(width: 6),
-                Expanded(
-                  child: pendingOut
-                      ? Text(
-                          isAr ? 'تم إرسال الطلب' : 'Request sent',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.muted,
-                          ),
-                        )
-                      : FilledButton(
-                          onPressed: onAdd,
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            backgroundColor: const Color(0xFFFF762E),
-                            foregroundColor: Colors.white,
-                            textStyle: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          child: Text(l10n.friendsAdd),
-                        ),
+              const SizedBox(height: 6),
+              Text(
+                interests.isEmpty
+                    ? (isAr
+                          ? 'لا اهتمامات مشتركة محفوظة بعد'
+                          : 'No shared interests yet')
+                    : interests.take(2).join(' · '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  height: 1.25,
+                  color: interests.isEmpty
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
                 ),
-              ],
+              ),
+              const SizedBox(height: 10),
+              if (pendingOut)
+                Container(
+                  alignment: Alignment.center,
+                  constraints: const BoxConstraints(minHeight: 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    isAr ? 'تم إرسال الطلب' : 'Request sent',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                )
+              else if (onAdd != null)
+                FilledButton(
+                  onPressed: onAdd,
+                  style: buttonStyle.copyWith(
+                    backgroundColor: const WidgetStatePropertyAll(
+                      Color(0xFFFF762E),
+                    ),
+                    foregroundColor: const WidgetStatePropertyAll(Colors.white),
+                  ),
+                  child: Text(
+                    l10n.friendsAdd,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                const SizedBox(height: 36),
+              const SizedBox(height: 6),
+              OutlinedButton(
+                onPressed: onProfile,
+                style: buttonStyle.copyWith(
+                  side: const WidgetStatePropertyAll(
+                    BorderSide(color: Color(0xFFE8EAF2)),
+                  ),
+                  foregroundColor: const WidgetStatePropertyAll(
+                    Color(0xFF19213D),
+                  ),
+                ),
+                child: Text(
+                  isAr ? 'الملف' : 'Profile',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.user});
+  const _Avatar({required this.user, required this.size});
 
   final FriendUser user;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -381,19 +430,22 @@ class _Avatar extends StatelessWidget {
       return ClipOval(
         child: AppNetworkImage(
           url: photo,
-          logicalWidth: 44,
-          logicalHeight: 44,
+          logicalWidth: size,
+          logicalHeight: size,
           fit: BoxFit.cover,
         ),
       );
     }
     return CircleAvatar(
-      radius: 22,
+      radius: size / 2,
       backgroundColor: const Color(0xFF7138F5).withValues(alpha: 0.12),
       foregroundColor: const Color(0xFF7138F5),
       child: Text(
         user.initials,
-        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: size * 0.28,
+        ),
       ),
     );
   }
