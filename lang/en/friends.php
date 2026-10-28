@@ -2,8 +2,9 @@
 
 return [
     'title' => 'Friends',
-    'people_you_may_like' => 'People You May Like to Meet',
+    'people_you_may_like' => 'People you may like to meet',
     'people_you_may_like_sub' => 'Nearby members you can connect with — no precise locations shared.',
+    'no_shared_interests_yet' => 'No shared interests yet',
     'requests_title' => 'Friend requests',
     'search_title' => 'Find people',
     'search_placeholder' => 'Public ID or number (e.g. 001108)…',

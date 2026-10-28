@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/config/env.dart';
 import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
+import 'package:fun_mobile/core/utils/safe_url.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
@@ -252,22 +254,8 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
     final actionIcons = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Language stays on wide topbar; mobile uses Profile account settings.
         if (!widget.compact) ...[localeChip, const SizedBox(width: 8)],
-        if (widget.compact) ...[
-          IconButton(
-            tooltip: oppositeLabel,
-            visualDensity: VisualDensity.compact,
-            onPressed: _toggleLocale,
-            icon: Text(
-              oppositeGlyph,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
         IconButton(
           tooltip: l10n.notificationsTitle,
           visualDensity: widget.compact ? VisualDensity.compact : null,
@@ -397,7 +385,8 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
       ],
     );
 
-    // Phone: brand + actions on row 1, full-width search on row 2.
+    // Phone: Row1 logo + notify/chat/profile; Row2 full-width search + filter.
+    // Language lives under Profile (account settings) — not in this crowded bar.
     if (widget.compact) {
       return Material(
         color: Colors.white.withValues(alpha: 0.92),
@@ -413,16 +402,36 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
                 children: [
                   SiteBrandLockup(
                     markSize: 32,
-                    maxNameWidth: 110,
+                    maxNameWidth: 120,
                     dense: true,
-                    onTap: () => context.go('/home'),
+                    // V3: logo opens public marketing site `/`, not in-app home.
+                    onTap: () => launchSafeExternalUrl(Env.publicSiteOrigin),
                   ),
                   const Spacer(),
                   actionIcons,
                 ],
               ),
               const SizedBox(height: 8),
-              searchField,
+              Row(
+                children: [
+                  Expanded(child: searchField),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    tooltip: l10n.discoverTitle,
+                    visualDensity: VisualDensity.compact,
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFFF7F9FC),
+                      side: const BorderSide(color: AppColors.borderSoft),
+                    ),
+                    onPressed: () => context.go('/discover'),
+                    icon: const Icon(
+                      Icons.tune_rounded,
+                      size: 20,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -443,7 +452,8 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
               markSize: 36,
               maxNameWidth: 160,
               dense: false,
-              onTap: () => context.go('/home'),
+              // V3: logo opens public marketing site `/`, not in-app home.
+              onTap: () => launchSafeExternalUrl(Env.publicSiteOrigin),
             ),
             const SizedBox(width: 12),
             Expanded(child: searchField),

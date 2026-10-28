@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
@@ -42,6 +43,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   void _goAfterAuth() {
     ref.read(authControllerProvider.notifier).commitPendingSession();
+    if (!mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth is Authenticated) {
+      goAfterSuccessfulAuth(context, auth.user);
+    }
   }
 
   void _startTheater() {

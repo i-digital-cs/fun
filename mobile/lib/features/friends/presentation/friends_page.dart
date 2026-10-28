@@ -442,12 +442,41 @@ class _FriendSearchRow extends ConsumerWidget {
     final fs = user.friendship;
 
     return Card(
-      child: ListTile(
-        leading: _Avatar(user: user),
-        title: Text(user.name),
-        subtitle: Text(user.publicId),
-        onTap: () => context.push('/u/${user.publicId}'),
-        trailing: _FriendshipActionChip(user: user, friendship: fs, l10n: l10n),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            _Avatar(user: user),
+            const SizedBox(width: 12),
+            Expanded(
+              child: InkWell(
+                onTap: () => context.push('/u/${user.publicId}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      user.publicId,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _FriendshipActionChip(user: user, friendship: fs, l10n: l10n),
+          ],
+        ),
       ),
     );
   }
@@ -552,22 +581,33 @@ class _Avatar extends StatelessWidget {
   const _Avatar({required this.user});
 
   final FriendUser user;
+  static const double size = 40;
 
   @override
   Widget build(BuildContext context) {
     final photo = user.profileImagePath;
-    if (photo != null && photo.isNotEmpty) {
-      return CircleAvatar(
-        child: ClipOval(
-          child: AppNetworkImage(
-            url: photo,
-            logicalWidth: 40,
-            logicalHeight: 40,
-            fit: BoxFit.cover,
-          ),
-        ),
-      );
-    }
-    return CircleAvatar(child: Text(user.initials));
+    return SizedBox(
+      width: size,
+      height: size,
+      child: photo != null && photo.isNotEmpty
+          ? ClipOval(
+              child: AppNetworkImage(
+                url: photo,
+                logicalWidth: size,
+                logicalHeight: size,
+                fit: BoxFit.cover,
+              ),
+            )
+          : CircleAvatar(
+              radius: size / 2,
+              child: Text(
+                user.initials,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+    );
   }
 }

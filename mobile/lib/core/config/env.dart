@@ -23,6 +23,34 @@ abstract final class Env {
     defaultValue: 'https://funnity.com/api',
   );
 
+  /// Public marketing site origin (web `/`). Derived from [apiBaseUrl] by
+  /// stripping a trailing `/api` segment. Used by the brand logo (V3 policy).
+  static String get publicSiteOrigin {
+    final raw = apiBaseUrl.trim();
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      return 'https://funnity.com';
+    }
+    var path = uri.path;
+    while (path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    if (path.endsWith('/api')) {
+      path = path.substring(0, path.length - 4);
+    }
+    final origin = Uri(
+      scheme: uri.scheme,
+      host: uri.host,
+      port: uri.hasPort ? uri.port : null,
+      path: path.isEmpty ? null : path,
+    );
+    var out = origin.toString();
+    if (out.endsWith('/')) {
+      out = out.substring(0, out.length - 1);
+    }
+    return out;
+  }
+
   static const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'prod');
 
   /// Web OAuth client ID for Google Sign-In `serverClientId` (id_token audience).

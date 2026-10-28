@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -73,6 +74,11 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
   void _onSuccess() {
     ref.read(authControllerProvider.notifier).commitPendingSession();
+    if (!mounted) return;
+    final auth = ref.read(authControllerProvider);
+    if (auth is Authenticated) {
+      goAfterSuccessfulAuth(context, auth.user);
+    }
   }
 
   @override

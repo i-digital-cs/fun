@@ -27,8 +27,8 @@
             <input type="search"
                    name="q"
                    value="{{ request('q') }}"
-                   placeholder="{{ __('dashboard.search_placeholder') }}"
-                   aria-label="{{ __('dashboard.search_placeholder') }}"
+                   placeholder="{{ __('dashboard.v3_search_placeholder') }}"
+                   aria-label="{{ __('dashboard.v3_search_placeholder') }}"
                    autocomplete="off"
                    data-live-search-input
                    class="min-w-0 flex-1 border-0 bg-transparent text-[13px] text-slate-700 outline-none placeholder:text-slate-400">
@@ -41,7 +41,22 @@
         </div>
     </div>
 
-    <div class="relative z-10 ms-3 flex shrink-0 items-center gap-3 sm:gap-4">
+    <div class="relative z-10 ms-3 flex shrink-0 items-center gap-2.5 sm:gap-3">
+        {{-- V3: location chip beside search (opens location settings / modal) --}}
+        @php
+            $topbarCity = $user?->city?->localizedName();
+        @endphp
+        <a href="{{ route('settings.location.edit') }}"
+           data-location-modal-open
+           class="hidden max-w-[11rem] items-center gap-1.5 rounded-full border border-[#e7ebf3] bg-[#f7f9fc] px-2.5 py-1.5 text-[11px] font-bold text-slate-600 no-underline transition hover:border-[#7138F5]/35 hover:text-[#7138F5] lg:inline-flex"
+           aria-label="{{ __('dashboard.nav_location') }}">
+            <svg class="h-3.5 w-3.5 shrink-0 text-[#7138F5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                <circle cx="12" cy="9" r="2.5"/>
+            </svg>
+            <span class="truncate">{{ $topbarCity ?: __('home.location_default') }}</span>
+        </a>
+
         <form method="POST" action="{{ route('locale.update') }}" class="hidden sm:inline-flex">
             @csrf
             <input type="hidden" name="locale" value="{{ $oppositeLocale }}">
