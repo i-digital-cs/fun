@@ -75,6 +75,14 @@
           }
         },
         {
+          "client_id": "51496053622-koa2cfaabn2itrdjolkquav7muahqn78.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.funnity.app",
+            "certificate_hash": "000e76b5229afb1d60e10399c3f1d944c831fa06"
+          }
+        },
+        {
           "client_id": "51496053622-4fu1e7u5v06cuf2omc0i39r4smn9ottl.apps.googleusercontent.com",
           "client_type": 3
         }
