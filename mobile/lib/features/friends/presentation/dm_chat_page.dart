@@ -37,6 +37,8 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
   String? _error;
   bool _loading = true;
   bool _sending = false;
+  bool _sendFailed = false;
+  String? _pendingClientUuid;
   DmMessage? _replyingTo;
   String? _mediaPath;
   String? _voicePath;
@@ -210,13 +212,20 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
       return;
     }
     final voicePath = _voicePath;
-    setState(() => _sending = true);
+    // Reuse client_uuid across retries so Sanctum idempotency returns the
+    // same message instead of uploading duplicate media.
+    final clientUuid = _pendingClientUuid ?? _clientUuid();
+    setState(() {
+      _sending = true;
+      _sendFailed = false;
+      _pendingClientUuid = clientUuid;
+    });
     final result = await ref
         .read(dmsRepositoryProvider)
         .postMessage(
           widget.conversationId,
           body,
-          clientUuid: _clientUuid(),
+          clientUuid: clientUuid,
           replyToId: _replyingTo?.id,
           mediaPath: voicePath ?? _mediaPath,
           mediaKind: voicePath != null
@@ -227,9 +236,18 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
     if (!mounted) return;
     setState(() => _sending = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.failure!.message)));
+      setState(() => _sendFailed = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.failure!.message),
+          action: SnackBarAction(
+            label: AppLocalizations.of(context).retry,
+            onPressed: () {
+              if (!_sending) unawaited(_send());
+            },
+          ),
+        ),
+      );
       return;
     }
     _text.clear();
@@ -238,13 +256,21 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
       _mediaPath = null;
       _voicePath = null;
       _voiceDurationMs = null;
+      _pendingClientUuid = null;
+      _sendFailed = false;
     });
     if (voicePath != null) unawaited(_deleteVoiceFile(voicePath));
     final posted = result.data;
-    if (posted != null && !_messages.any((m) => m.id == posted.id)) {
+    if (posted != null) {
       setState(() {
-        _messages = [..._messages, posted]
-          ..sort((a, b) => a.id.compareTo(b.id));
+        _messages = [
+          for (final m in _messages)
+            if (m.id != posted.id &&
+                (posted.clientUuid == null ||
+                    m.clientUuid != posted.clientUuid))
+              m,
+          posted,
+        ]..sort((a, b) => a.id.compareTo(b.id));
       });
       _scrollToBottom();
     } else {
@@ -278,9 +304,8 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
         'uploadBadType' => l10n.uploadBadType,
         _ => l10n.uploadMissing,
       };
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
       return;
     }
     await _cancelVoicePreview();
@@ -392,6 +417,8 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
     setState(() {
       _voicePath = null;
       _voiceDurationMs = null;
+      _pendingClientUuid = null;
+      _sendFailed = false;
     });
   }
 
@@ -467,9 +494,8 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
         .read(dmsRepositoryProvider)
         .react(widget.conversationId, message.id, emoji);
     if (!mounted || result.failure == null) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(result.failure!.message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(result.failure!.message)));
   }
 
   void _jumpTo(int messageId) {
@@ -566,6 +592,26 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
                         message: _replyingTo!,
                         onClose: () => setState(() => _replyingTo = null),
                       ),
+                    if (_sendFailed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.retry,
+                                style: const TextStyle(color: AppColors.danger),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _sending
+                                  ? null
+                                  : () => unawaited(_send()),
+                              child: Text(l10n.retry),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_mediaPath != null)
                       ListTile(
                         dense: true,
@@ -574,7 +620,11 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
                         title: Text(l10n.imageSelected),
                         trailing: IconButton(
                           tooltip: l10n.cancel,
-                          onPressed: () => setState(() => _mediaPath = null),
+                          onPressed: () => setState(() {
+                            _mediaPath = null;
+                            _pendingClientUuid = null;
+                            _sendFailed = false;
+                          }),
                           icon: const Icon(Icons.close),
                         ),
                       ),

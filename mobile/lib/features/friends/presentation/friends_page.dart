@@ -19,12 +19,13 @@ final friendsListProvider = FutureProvider.autoDispose<List<FriendUser>>((
   return result.data;
 });
 
-final friendRequestsProvider =
-    FutureProvider.autoDispose<FriendRequestsBundle>((ref) async {
-      final result = await ref.watch(friendsRepositoryProvider).listRequests();
-      if (result.failure != null) throw result.failure!;
-      return result.data ?? const FriendRequestsBundle();
-    });
+final friendRequestsProvider = FutureProvider.autoDispose<FriendRequestsBundle>(
+  (ref) async {
+    final result = await ref.watch(friendsRepositoryProvider).listRequests();
+    if (result.failure != null) throw result.failure!;
+    return result.data ?? const FriendRequestsBundle();
+  },
+);
 
 class FriendsPage extends ConsumerStatefulWidget {
   const FriendsPage({
@@ -245,9 +246,7 @@ class _FriendsList extends ConsumerWidget {
     if (result.failure != null || result.data == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            result.failure?.message ?? l10n.failedToLoadEvents,
-          ),
+          content: Text(result.failure?.message ?? l10n.failedToLoadEvents),
         ),
       );
       return;
@@ -261,12 +260,13 @@ class _FriendsList extends ConsumerWidget {
     FriendUser friend,
     Future<void> Function() onChanged,
   ) async {
-    final result = await ref.read(friendsRepositoryProvider).unfriend(friend.id);
+    final result = await ref
+        .read(friendsRepositoryProvider)
+        .unfriend(friend.id);
     if (!context.mounted) return;
     if (result.failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     await onChanged();
@@ -544,7 +544,9 @@ class _FriendshipActionChip extends ConsumerWidget {
         tooltip: l10n.friendsMessage,
         icon: const Icon(Icons.chat_bubble_outline),
         onPressed: () async {
-          final result = await ref.read(dmsRepositoryProvider).openWith(user.id);
+          final result = await ref
+              .read(dmsRepositoryProvider)
+              .openWith(user.id);
           if (!context.mounted || result.data == null) return;
           context.push('/dms/${result.data!.conversationId}');
         },
@@ -565,9 +567,8 @@ class _FriendshipActionChip extends ConsumerWidget {
               .read(friendsRepositoryProvider)
               .requestFriend(user.publicId);
           if (context.mounted && r.failure == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.friendsRequestSent)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(l10n.friendsRequestSent)));
           }
         },
         child: Text(l10n.friendsAdd),

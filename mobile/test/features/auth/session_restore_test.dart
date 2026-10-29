@@ -40,6 +40,23 @@ class _FakeAuthRepository implements AuthRepository {
   }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
+  Future<Result<User>> loginWithApple({
+    required String idToken,
+    String? name,
+    String? locale,
+  }) async => (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<void>> requestAccountDeletion({
+    String? password,
+    bool providerReauth = false,
+  }) async => (failure: const ValidationFailure('unused'), data: null);
+
+  @override
+  Future<Result<void>> cancelAccountDeletion() async =>
+      (failure: const ValidationFailure('unused'), data: null);
+
+  @override
   Future<Result<User>> register({
     required String name,
     required String email,

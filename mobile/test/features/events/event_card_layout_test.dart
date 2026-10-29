@@ -34,10 +34,7 @@ Widget _wrap(
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: child,
-          ),
+          child: Padding(padding: const EdgeInsets.all(16), child: child),
         ),
       ),
     ),
@@ -74,9 +71,7 @@ void main() {
   });
 
   testWidgets('event card shows title and price chip', (tester) async {
-    await tester.pumpWidget(
-      _wrap(EventCard(event: _event(), onView: () {})),
-    );
+    await tester.pumpWidget(_wrap(EventCard(event: _event(), onView: () {})));
     await tester.pump();
     expect(find.text('Local padel meetup'), findsOneWidget);
     expect(find.byKey(const ValueKey('event-card-price-chip')), findsOneWidget);

@@ -5,6 +5,7 @@ import 'package:fun_mobile/core/network/api_client.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
+import 'package:http_parser/http_parser.dart';
 
 class EventsRemoteSource {
   EventsRemoteSource(this._client);
@@ -378,19 +379,55 @@ class EventsRemoteSource {
     String body, {
     int? replyToId,
     String? clientUuid,
+    String? mediaPath,
+    String? mediaKind,
+    int? durationMs,
   }) async {
     try {
+      final fields = <String, dynamic>{
+        'body': body,
+        'reply_to_id': ?replyToId,
+        'client_uuid': ?clientUuid,
+        'media_kind': ?mediaKind,
+        'duration_ms': ?durationMs,
+      };
+      if (mediaPath != null) {
+        fields['media'] = await MultipartFile.fromFile(
+          mediaPath,
+          filename: mediaKind == 'voice' ? 'voice.m4a' : 'image.jpg',
+          contentType: mediaKind == 'voice'
+              ? MediaType('audio', 'mp4')
+              : MediaType('image', 'jpeg'),
+        );
+      }
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/events/$id/messages',
-        data: {
-          'body': body,
-          'reply_to_id': ?replyToId,
-          'client_uuid': ?clientUuid,
-        },
+        data: mediaPath == null ? fields : FormData.fromMap(fields),
+        options: mediaPath == null
+            ? null
+            : Options(
+                sendTimeout: const Duration(seconds: 90),
+                receiveTimeout: const Duration(seconds: 90),
+              ),
       );
       final data =
           response.data!['data'] as Map<String, dynamic>? ?? response.data!;
       return (failure: null, data: _parseMessage(data));
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<int>? data})> messageMedia(
+    int eventId,
+    int messageId,
+  ) async {
+    try {
+      final response = await _client.dio.get<List<int>>(
+        '/events/$eventId/messages/$messageId/media',
+        options: Options(responseType: ResponseType.bytes),
+      );
+      return (failure: null, data: response.data);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }

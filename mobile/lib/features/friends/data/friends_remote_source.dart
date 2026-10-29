@@ -48,7 +48,9 @@ class FriendsRemoteSource {
     }
   }
 
-  Future<({Failure? failure, List<FriendUser> data})> search(String query) async {
+  Future<({Failure? failure, List<FriendUser> data})> search(
+    String query,
+  ) async {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/users/search',
@@ -90,10 +92,7 @@ class FriendsRemoteSource {
 
   Future<({Failure? failure, void data})> requestFriend(String publicId) async {
     try {
-      await _client.dio.post<void>(
-        '/friends',
-        data: {'public_id': publicId},
-      );
+      await _client.dio.post<void>('/friends', data: {'public_id': publicId});
       return (failure: null, data: null);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);

@@ -61,8 +61,7 @@ void main() {
           'venue_raw': 'Abd Al Aziz Al Seoud Street · Cairo',
           'latitude': 30.0265968,
           'longitude': 31.2234449,
-          'maps_url':
-              'https://www.openstreetmap.org/?mlat=30.02&mlon=31.22',
+          'maps_url': 'https://www.openstreetmap.org/?mlat=30.02&mlon=31.22',
           'maps_open_url':
               'https://www.openstreetmap.org/?mlat=30.02&mlon=31.22',
           'has_place_pin': true,

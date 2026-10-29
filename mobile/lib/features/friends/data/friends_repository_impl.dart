@@ -23,8 +23,7 @@ class FriendsRepositoryImpl implements FriendsRepository {
   @override
   Future<({Failure? failure, List<FriendUser> data})> peopleSuggestions({
     int limit = 8,
-  }) =>
-      _remote.peopleSuggestions(limit: limit);
+  }) => _remote.peopleSuggestions(limit: limit);
 
   @override
   Future<({Failure? failure, void data})> requestFriend(String publicId) =>

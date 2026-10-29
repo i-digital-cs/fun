@@ -88,12 +88,22 @@ class EventsRepositoryImpl implements EventsRepository {
     String body, {
     int? replyToId,
     String? clientUuid,
+    String? mediaPath,
+    String? mediaKind,
+    int? durationMs,
   }) => _remote.postMessage(
     id,
     body,
     replyToId: replyToId,
     clientUuid: clientUuid,
+    mediaPath: mediaPath,
+    mediaKind: mediaKind,
+    durationMs: durationMs,
   );
+
+  @override
+  Future<Result<List<int>>> messageMedia(int eventId, int messageId) =>
+      _remote.messageMedia(eventId, messageId);
 
   @override
   Future<Result<ChatMessage>> reactToMessage(

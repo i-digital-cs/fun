@@ -186,7 +186,11 @@ abstract class EventsRepository {
     String body, {
     int? replyToId,
     String? clientUuid,
+    String? mediaPath,
+    String? mediaKind,
+    int? durationMs,
   });
+  Future<Result<List<int>>> messageMedia(int eventId, int messageId);
   Future<Result<ChatMessage>> reactToMessage(
     int eventId,
     int messageId, {

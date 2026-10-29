@@ -363,15 +363,27 @@ abstract class AppLocalizations {
   String get voiceUnavailable;
 
   /// No description provided for @voicePause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
   String get voicePause;
 
   /// No description provided for @voiceResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
   String get voiceResume;
 
   /// No description provided for @voiceStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
   String get voiceStop;
 
   /// No description provided for @voicePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
   String get voicePending;
 
   /// No description provided for @homeMapTitle.

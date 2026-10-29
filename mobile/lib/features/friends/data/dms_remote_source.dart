@@ -3,6 +3,7 @@ import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
 import 'package:fun_mobile/features/friends/domain/dm_models.dart';
+import 'package:http_parser/http_parser.dart';
 
 class DmsRemoteSource {
   DmsRemoteSource(this._client);
@@ -97,11 +98,23 @@ class DmsRemoteSource {
         'duration_ms': ?durationMs,
       };
       if (mediaPath != null) {
-        fields['media'] = await MultipartFile.fromFile(mediaPath);
+        fields['media'] = await MultipartFile.fromFile(
+          mediaPath,
+          filename: mediaKind == 'voice' ? 'voice.m4a' : 'image.jpg',
+          contentType: mediaKind == 'voice'
+              ? MediaType('audio', 'mp4')
+              : MediaType('image', 'jpeg'),
+        );
       }
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/dms/$conversationId/messages',
         data: mediaPath == null ? fields : FormData.fromMap(fields),
+        options: mediaPath == null
+            ? null
+            : Options(
+                sendTimeout: const Duration(seconds: 90),
+                receiveTimeout: const Duration(seconds: 90),
+              ),
       );
       final data = response.data?['data'] as Map<String, dynamic>?;
       return (

@@ -3,7 +3,7 @@ import 'package:fun_mobile/features/events/domain/events_repository.dart';
 
 void main() {
   group('DiscoverFilters.toQuery', () {
-    test('nationwide sends empty city_id and omits distance', () {
+    test('nationwide sends empty city_id and discovery_mode', () {
       const filters = DiscoverFilters(
         allCities: true,
         cityId: 3,
@@ -11,8 +11,9 @@ void main() {
         page: 2,
       );
       final q = filters.toQuery();
+      expect(q['discovery_mode'], 'nationwide');
       expect(q['city_id'], '');
-      expect(q.containsKey('distance_km'), isFalse);
+      expect(q['distance_km'], 25);
       expect(q['page'], 2);
     });
 
@@ -25,6 +26,7 @@ void main() {
         q: ' hike ',
       );
       final q = filters.toQuery();
+      expect(q['discovery_mode'], 'manual');
       expect(q['city_id'], 7);
       expect(q['distance_km'], 50);
       expect(q['category_id'], 2);
@@ -32,9 +34,11 @@ void main() {
       expect(q['q'], 'hike');
     });
 
-    test('omitted city without allCities leaves city_id out', () {
+    test('omitted city without allCities defaults to nationwide city_id=', () {
       const filters = DiscoverFilters(allCities: false);
-      expect(filters.toQuery().containsKey('city_id'), isFalse);
+      final q = filters.toQuery();
+      expect(q['discovery_mode'], 'nationwide');
+      expect(q['city_id'], '');
     });
   });
 

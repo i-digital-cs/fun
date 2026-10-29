@@ -10,20 +10,20 @@ class ApiClient {
     OnUnauthorized? onUnauthorized,
     String? locale,
     String? baseUrl,
-  }) :
-        // ignore: prefer_initializing_formals
-        _tokenStorage = tokenStorage,
-        // ignore: prefer_initializing_formals
-        _onUnauthorized = onUnauthorized {
+  }) : // ignore: prefer_initializing_formals
+       _tokenStorage = tokenStorage,
+       // ignore: prefer_initializing_formals
+       _onUnauthorized = onUnauthorized {
     dio = Dio(
       BaseOptions(
         baseUrl: baseUrl ?? Env.apiBaseUrl,
         connectTimeout: const Duration(seconds: 20),
-        sendTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 20),
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          // Do not force Content-Type globally — FormData uploads need a
+          // multipart boundary. JSON posts set application/json below.
           'Accept-Language': ?locale,
         },
       ),
@@ -35,6 +35,15 @@ class ApiClient {
           final token = await _tokenStorage.read();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+          }
+          // FormData must own Content-Type (multipart boundary). JSON bodies
+          // default to application/json when unset.
+          if (options.data is FormData) {
+            options.headers.remove(Headers.contentTypeHeader);
+          } else if (options.data != null &&
+              options.headers[Headers.contentTypeHeader] == null) {
+            options.headers[Headers.contentTypeHeader] =
+                Headers.jsonContentType;
           }
           return handler.next(options);
         },

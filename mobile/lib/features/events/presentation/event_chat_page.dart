@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,17 +10,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
+import 'package:fun_mobile/core/utils/upload_validator.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
+import 'package:fun_mobile/features/events/domain/events_repository.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:record/record.dart';
 
 class EventChatPage extends ConsumerStatefulWidget {
   const EventChatPage({super.key, required this.eventId});
@@ -34,13 +40,25 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   String? _error;
   bool _loading = true;
   bool _sending = false;
+  bool _sendFailed = false;
+  String? _pendingClientUuid;
   ChatMessage? _replyingTo;
+  String? _mediaPath;
+  String? _voicePath;
+  int? _voiceDurationMs;
+  int _recordingDurationMs = 0;
+  bool _recording = false;
+  bool _recordingPaused = false;
+  bool _previewPlaying = false;
   String? _eventTitle;
   EventCreator? _host;
   int? _ownerId;
   final _text = TextEditingController();
   final _scroll = ScrollController();
+  final _recorder = AudioRecorder();
+  final _previewPlayer = AudioPlayer();
   Timer? _poll;
+  Timer? _recordingTimer;
   CancelToken? _cancel;
   StreamSubscription<ChatMessage>? _threadSub;
   StreamSubscription<ChatMessageReaction>? _threadReactSub;
@@ -49,6 +67,10 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   @override
   void initState() {
     super.initState();
+    _previewPlayer.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() => _previewPlaying = state == PlayerState.playing);
+    });
     _load();
     _loadEventMeta();
     _startPoll(const Duration(seconds: 8));
@@ -60,7 +82,12 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   @override
   void dispose() {
     _poll?.cancel();
+    _recordingTimer?.cancel();
     _cancel?.cancel();
+    final voicePath = _voicePath;
+    if (voicePath != null) unawaited(_deleteVoiceFile(voicePath));
+    unawaited(_recorder.dispose());
+    unawaited(_previewPlayer.dispose());
     unawaited(_threadSub?.cancel());
     unawaited(_threadReactSub?.cancel());
     unawaited(_realtime?.unsubscribeEventChat() ?? Future<void>.value());
@@ -267,30 +294,67 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
 
   Future<void> _send() async {
     final body = _text.text.trim();
-    if (body.isEmpty || _sending) return;
-    setState(() => _sending = true);
+    if (body.isEmpty && _mediaPath == null && _voicePath == null || _sending) {
+      return;
+    }
+    final voicePath = _voicePath;
+    final clientUuid = _pendingClientUuid ?? _clientUuid();
+    setState(() {
+      _sending = true;
+      _sendFailed = false;
+      _pendingClientUuid = clientUuid;
+    });
     final result = await ref
         .read(eventsRepositoryProvider)
         .postMessage(
           widget.eventId,
           body,
           replyToId: _replyingTo?.id,
-          clientUuid: _clientUuid(),
+          clientUuid: clientUuid,
+          mediaPath: voicePath ?? _mediaPath,
+          mediaKind: voicePath != null
+              ? 'voice'
+              : (_mediaPath == null ? null : 'image'),
+          durationMs: voicePath == null ? null : _voiceDurationMs,
         );
     if (!mounted) return;
     setState(() => _sending = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
+      setState(() => _sendFailed = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.failure!.message),
+          action: SnackBarAction(
+            label: AppLocalizations.of(context).retry,
+            onPressed: () {
+              if (!_sending) unawaited(_send());
+            },
+          ),
+        ),
+      );
       return;
     }
     _text.clear();
-    setState(() => _replyingTo = null);
+    setState(() {
+      _replyingTo = null;
+      _mediaPath = null;
+      _voicePath = null;
+      _voiceDurationMs = null;
+      _pendingClientUuid = null;
+      _sendFailed = false;
+    });
+    if (voicePath != null) unawaited(_deleteVoiceFile(voicePath));
     final posted = result.data;
-    if (posted != null && !_messages.any((m) => m.id == posted.id)) {
+    if (posted != null) {
       setState(() {
-        _messages = [..._messages, posted]
-          ..sort((a, b) => a.id.compareTo(b.id));
+        _messages = [
+          for (final m in _messages)
+            if (m.id != posted.id &&
+                (posted.clientUuid == null ||
+                    m.clientUuid != posted.clientUuid))
+              m,
+          posted,
+        ]..sort((a, b) => a.id.compareTo(b.id));
       });
       _scrollToBottom();
     } else {
@@ -306,6 +370,154 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     ).join();
     return '${hex(8)}-${hex(4)}-4${hex(3)}-'
         '${(8 + random.nextInt(4)).toRadixString(16)}${hex(3)}-${hex(12)}';
+  }
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+      maxWidth: 1920,
+    );
+    if (picked == null) return;
+    final validation = await UploadValidator.validateImageFile(picked.path);
+    if (!mounted) return;
+    if (!validation.ok) {
+      final l10n = AppLocalizations.of(context);
+      final message = switch (validation.errorKey) {
+        'uploadTooLarge' => l10n.uploadTooLarge,
+        'uploadBadType' => l10n.uploadBadType,
+        _ => l10n.uploadMissing,
+      };
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
+    await _cancelVoicePreview();
+    if (!mounted) return;
+    setState(() {
+      _mediaPath = picked.path;
+      _pendingClientUuid = null;
+      _sendFailed = false;
+    });
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_recording) {
+      await _stopRecording();
+      return;
+    }
+    try {
+      if (!await _recorder.hasPermission()) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).voiceUnavailable),
+          ),
+        );
+        return;
+      }
+      await _cancelVoicePreview();
+      final path =
+          '${Directory.systemTemp.path}/event_voice_${DateTime.now().microsecondsSinceEpoch}.m4a';
+      await _recorder.start(
+        const RecordConfig(encoder: AudioEncoder.aacLc),
+        path: path,
+      );
+      if (!mounted) return;
+      setState(() {
+        _mediaPath = null;
+        _recording = true;
+        _recordingPaused = false;
+        _recordingDurationMs = 0;
+        _pendingClientUuid = null;
+        _sendFailed = false;
+      });
+      _recordingTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        if (!mounted || !_recording || _recordingPaused) return;
+        final next = _recordingDurationMs + 250;
+        if (next >= 120000) {
+          setState(() => _recordingDurationMs = 120000);
+          unawaited(_stopRecording());
+        } else {
+          setState(() => _recordingDurationMs = next);
+        }
+      });
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).voiceUnavailable)),
+      );
+    }
+  }
+
+  Future<void> _pauseOrResumeRecording() async {
+    if (!_recording) return;
+    try {
+      if (_recordingPaused) {
+        await _recorder.resume();
+        if (!mounted) return;
+        setState(() => _recordingPaused = false);
+      } else {
+        await _recorder.pause();
+        if (!mounted) return;
+        setState(() => _recordingPaused = true);
+      }
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).voiceUnavailable)),
+      );
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    if (!_recording) return;
+    _recordingTimer?.cancel();
+    setState(() {
+      _recording = false;
+      _recordingPaused = false;
+    });
+    final path = await _recorder.stop();
+    if (!mounted) {
+      if (path != null) await _deleteVoiceFile(path);
+      return;
+    }
+    setState(() {
+      _voicePath = path;
+      _voiceDurationMs = _recordingDurationMs.clamp(1, 120000);
+    });
+  }
+
+  Future<void> _toggleVoicePreview() async {
+    final path = _voicePath;
+    if (path == null) return;
+    if (_previewPlaying) {
+      await _previewPlayer.pause();
+    } else {
+      await _previewPlayer.play(DeviceFileSource(path));
+    }
+  }
+
+  Future<void> _cancelVoicePreview() async {
+    await _previewPlayer.stop();
+    final path = _voicePath;
+    if (path != null) await _deleteVoiceFile(path);
+    if (!mounted) return;
+    setState(() {
+      _voicePath = null;
+      _voiceDurationMs = null;
+      _pendingClientUuid = null;
+      _sendFailed = false;
+    });
+  }
+
+  Future<void> _deleteVoiceFile(String path) async {
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } on Exception {
+      // Best-effort temp cleanup.
+    }
   }
 
   void _jumpTo(int messageId) {
@@ -554,6 +766,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                     message: message,
                     isMine: mine,
                     isHost: isHost,
+                    repository: ref.read(eventsRepositoryProvider),
                     hostLabel: l10n.participationHost,
                     likeLabel: l10n.chatLike,
                     dislikeLabel: l10n.chatDislike,
@@ -580,7 +793,27 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
           ChatComposer(
             controller: _text,
             sending: _sending,
+            sendFailed: _sendFailed,
+            recording: _recording,
+            recordingPaused: _recordingPaused,
+            recordingDurationMs: _recordingDurationMs,
+            mediaPath: _mediaPath,
+            voicePath: _voicePath,
+            voiceDurationMs: _voiceDurationMs,
+            previewPlaying: _previewPlaying,
             onSend: _send,
+            onRetry: () => unawaited(_send()),
+            onPickImage: () => unawaited(_pickImage()),
+            onToggleRecording: () => unawaited(_toggleRecording()),
+            onPauseOrResume: () => unawaited(_pauseOrResumeRecording()),
+            onStopRecording: () => unawaited(_stopRecording()),
+            onTogglePreview: () => unawaited(_toggleVoicePreview()),
+            onCancelMedia: () => setState(() {
+              _mediaPath = null;
+              _pendingClientUuid = null;
+              _sendFailed = false;
+            }),
+            onCancelVoice: () => unawaited(_cancelVoicePreview()),
             replyingTo: _replyingTo,
             onCancelReply: () => setState(() => _replyingTo = null),
           ),
@@ -595,6 +828,7 @@ class ChatBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.isMine,
+    required this.repository,
     this.isHost = false,
     this.hostLabel,
     this.likeLabel,
@@ -608,6 +842,7 @@ class ChatBubble extends StatelessWidget {
 
   final ChatMessage message;
   final bool isMine;
+  final EventsRepository repository;
   final bool isHost;
   final String? hostLabel;
   final String? likeLabel;
@@ -775,13 +1010,32 @@ class ChatBubble extends StatelessWidget {
                     ),
                   ),
                 ),
-              Text(
-                message.body,
-                style: TextStyle(
-                  height: 1.4,
-                  color: isMine ? Colors.white : AppColors.text,
+              if (message.messageType == 'image') ...[
+                _EventChatMediaImage(
+                  eventId: message.eventId,
+                  messageId: message.id,
+                  repository: repository,
                 ),
-              ),
+                if (message.body.isNotEmpty) const SizedBox(height: 7),
+              ],
+              if (message.messageType == 'voice') ...[
+                _EventChatVoicePlayer(
+                  eventId: message.eventId,
+                  messageId: message.id,
+                  durationMs: message.mediaDurationMs,
+                  repository: repository,
+                  foregroundColor: isMine ? Colors.white : AppColors.text,
+                ),
+                if (message.body.isNotEmpty) const SizedBox(height: 7),
+              ],
+              if (message.body.isNotEmpty)
+                Text(
+                  message.body,
+                  style: TextStyle(
+                    height: 1.4,
+                    color: isMine ? Colors.white : AppColors.text,
+                  ),
+                ),
               if (!message.isSystem && onReact != null) ...[
                 const SizedBox(height: 6),
                 Row(
@@ -1251,13 +1505,45 @@ class ChatComposer extends StatelessWidget {
     required this.controller,
     required this.sending,
     required this.onSend,
+    this.sendFailed = false,
+    this.recording = false,
+    this.recordingPaused = false,
+    this.recordingDurationMs = 0,
+    this.mediaPath,
+    this.voicePath,
+    this.voiceDurationMs,
+    this.previewPlaying = false,
+    this.onRetry,
+    this.onPickImage,
+    this.onToggleRecording,
+    this.onPauseOrResume,
+    this.onStopRecording,
+    this.onTogglePreview,
+    this.onCancelMedia,
+    this.onCancelVoice,
     this.replyingTo,
     this.onCancelReply,
   });
 
   final TextEditingController controller;
   final bool sending;
+  final bool sendFailed;
+  final bool recording;
+  final bool recordingPaused;
+  final int recordingDurationMs;
+  final String? mediaPath;
+  final String? voicePath;
+  final int? voiceDurationMs;
+  final bool previewPlaying;
   final VoidCallback onSend;
+  final VoidCallback? onRetry;
+  final VoidCallback? onPickImage;
+  final VoidCallback? onToggleRecording;
+  final VoidCallback? onPauseOrResume;
+  final VoidCallback? onStopRecording;
+  final VoidCallback? onTogglePreview;
+  final VoidCallback? onCancelMedia;
+  final VoidCallback? onCancelVoice;
   final ChatMessage? replyingTo;
   final VoidCallback? onCancelReply;
 
@@ -1305,6 +1591,98 @@ class ChatComposer extends StatelessWidget {
                   ],
                 ),
               ),
+            if (sendFailed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.retry,
+                        style: const TextStyle(color: AppColors.danger),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: sending ? null : onRetry,
+                      child: Text(l10n.retry),
+                    ),
+                  ],
+                ),
+              ),
+            if (mediaPath != null)
+              ListTile(
+                dense: true,
+                textColor: Colors.white,
+                iconColor: Colors.white70,
+                leading: const Icon(Icons.image_outlined),
+                title: Text(l10n.imageSelected),
+                trailing: IconButton(
+                  tooltip: l10n.cancel,
+                  onPressed: onCancelMedia,
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+            if (voicePath != null)
+              ListTile(
+                dense: true,
+                textColor: Colors.white,
+                iconColor: Colors.white70,
+                leading: IconButton(
+                  tooltip: l10n.voiceMessage,
+                  onPressed: onTogglePreview,
+                  icon: Icon(
+                    previewPlaying
+                        ? Icons.pause_circle_outline
+                        : Icons.play_circle_outline,
+                  ),
+                ),
+                title: Text(
+                  '${l10n.voiceMessage} · ${((voiceDurationMs ?? 0) / 1000).ceil()}s',
+                ),
+                trailing: IconButton(
+                  tooltip: l10n.cancel,
+                  onPressed: onCancelVoice,
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+            if (recording)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${recordingPaused ? l10n.voicePause : l10n.voiceMessage} · ${(recordingDurationMs / 1000).ceil()}s / 120s',
+                        style: TextStyle(
+                          color: recordingPaused
+                              ? AppColors.warning
+                              : AppColors.danger,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: recordingPaused
+                          ? l10n.voiceResume
+                          : l10n.voicePause,
+                      onPressed: onPauseOrResume,
+                      icon: Icon(
+                        recordingPaused
+                            ? Icons.play_arrow_rounded
+                            : Icons.pause_rounded,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: l10n.voiceStop,
+                      onPressed: onStopRecording,
+                      icon: const Icon(
+                        Icons.stop_rounded,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             TextField(
               controller: controller,
               minLines: 1,
@@ -1347,12 +1725,15 @@ class ChatComposer extends StatelessWidget {
               child: Row(
                 children: [
                   _ComposerIconButton(
-                    icon: Icons.attach_file_rounded,
-                    onPressed: () {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(l10n.attachSoon)));
-                    },
+                    icon: Icons.image_outlined,
+                    onPressed: sending || recording ? null : onPickImage,
+                  ),
+                  const SizedBox(width: 4),
+                  _ComposerIconButton(
+                    icon: recording
+                        ? Icons.stop_circle_outlined
+                        : Icons.mic_none_rounded,
+                    onPressed: sending ? null : onToggleRecording,
                   ),
                   const SizedBox(width: 8),
                   Container(
@@ -1387,7 +1768,7 @@ class ChatComposer extends StatelessWidget {
                   _ComposerIconButton(
                     icon: Icons.send_rounded,
                     highlight: true,
-                    onPressed: sending ? null : onSend,
+                    onPressed: sending || recording ? null : onSend,
                   ),
                 ],
               ),
@@ -1428,6 +1809,163 @@ class _ComposerIconButton extends StatelessWidget {
                 : Colors.white.withValues(alpha: 0.45),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _EventChatVoicePlayer extends StatefulWidget {
+  const _EventChatVoicePlayer({
+    required this.eventId,
+    required this.messageId,
+    required this.durationMs,
+    required this.repository,
+    required this.foregroundColor,
+  });
+
+  final int eventId;
+  final int messageId;
+  final int? durationMs;
+  final EventsRepository repository;
+  final Color foregroundColor;
+
+  @override
+  State<_EventChatVoicePlayer> createState() => _EventChatVoicePlayerState();
+}
+
+class _EventChatVoicePlayerState extends State<_EventChatVoicePlayer> {
+  final _player = AudioPlayer();
+  bool _loading = false;
+  bool _loaded = false;
+  bool _playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() => _playing = state == PlayerState.playing);
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_player.dispose());
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    if (_playing) {
+      await _player.pause();
+      return;
+    }
+    if (!_loaded) {
+      setState(() => _loading = true);
+      final result = await widget.repository.messageMedia(
+        widget.eventId,
+        widget.messageId,
+      );
+      if (!mounted) return;
+      if (result.data == null || result.data!.isEmpty) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.failure?.message ??
+                  AppLocalizations.of(context).voiceUnavailable,
+            ),
+          ),
+        );
+        return;
+      }
+      await _player.setSourceBytes(Uint8List.fromList(result.data!));
+      if (!mounted) return;
+      setState(() {
+        _loaded = true;
+        _loading = false;
+      });
+    }
+    await _player.resume();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: AppLocalizations.of(context).voiceMessage,
+          visualDensity: VisualDensity.compact,
+          onPressed: _loading ? null : _toggle,
+          color: widget.foregroundColor,
+          icon: _loading
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  _playing
+                      ? Icons.pause_circle_outline
+                      : Icons.play_circle_outline,
+                ),
+        ),
+        Text(
+          widget.durationMs == null
+              ? AppLocalizations.of(context).voiceMessage
+              : '${(widget.durationMs! / 1000).ceil()}s',
+          style: TextStyle(color: widget.foregroundColor),
+        ),
+      ],
+    );
+  }
+}
+
+class _EventChatMediaImage extends StatefulWidget {
+  const _EventChatMediaImage({
+    required this.eventId,
+    required this.messageId,
+    required this.repository,
+  });
+
+  final int eventId;
+  final int messageId;
+  final EventsRepository repository;
+
+  @override
+  State<_EventChatMediaImage> createState() => _EventChatMediaImageState();
+}
+
+class _EventChatMediaImageState extends State<_EventChatMediaImage> {
+  Uint8List? _bytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final result = await widget.repository.messageMedia(
+      widget.eventId,
+      widget.messageId,
+    );
+    if (!mounted || result.data == null || result.data!.isEmpty) return;
+    setState(() => _bytes = Uint8List.fromList(result.data!));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 220,
+        height: 160,
+        child: _bytes == null
+            ? const ColoredBox(
+                color: AppColors.primarySoft,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : Image.memory(_bytes!, fit: BoxFit.cover),
       ),
     );
   }
