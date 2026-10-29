@@ -17,6 +17,9 @@ class DiscoveryLocationService {
   static const _prefCityId = 'discovery_manual_city_id';
   static const _prefCityName = 'discovery_manual_city_name';
   static const _prefDistanceKm = 'discovery_distance_km';
+  static const _prefPlaceLat = 'discovery_manual_place_lat';
+  static const _prefPlaceLng = 'discovery_manual_place_lng';
+  static const _prefPlaceName = 'discovery_manual_place_name';
 
   DiscoveryLocationMode get mode {
     final raw = _prefs.getString(_prefMode);
@@ -47,6 +50,15 @@ class DiscoveryLocationService {
     return km;
   }
 
+  double? get manualPlaceLat => _prefs.getDouble(_prefPlaceLat);
+
+  double? get manualPlaceLng => _prefs.getDouble(_prefPlaceLng);
+
+  String? get manualPlaceName {
+    final name = _prefs.getString(_prefPlaceName);
+    return (name == null || name.isEmpty) ? null : name;
+  }
+
   Future<void> setMode(DiscoveryLocationMode mode) async {
     await _prefs.setString(_prefMode, mode.name);
     await _prefs.setBool(
@@ -65,6 +77,23 @@ class DiscoveryLocationService {
     await _prefs.setInt(_prefCityId, cityId);
     await _prefs.setString(_prefCityName, name);
     await setMode(DiscoveryLocationMode.manual);
+  }
+
+  Future<void> setManualPlace({
+    required String name,
+    required double latitude,
+    required double longitude,
+  }) async {
+    await _prefs.setString(_prefPlaceName, name);
+    await _prefs.setDouble(_prefPlaceLat, latitude);
+    await _prefs.setDouble(_prefPlaceLng, longitude);
+    await setMode(DiscoveryLocationMode.manual);
+  }
+
+  Future<void> clearManualPlace() async {
+    await _prefs.remove(_prefPlaceName);
+    await _prefs.remove(_prefPlaceLat);
+    await _prefs.remove(_prefPlaceLng);
   }
 
   Future<void> setDistanceKm(int km) async {

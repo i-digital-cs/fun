@@ -499,6 +499,7 @@ class EventsRemoteSource {
       }
     }
     final meta = _asStringKeyedMap(body['meta']);
+    final discovery = _asStringKeyedMap(body['discovery']);
     final currentPage =
         _asInt(meta['current_page']) ?? _asInt(body['current_page']) ?? 1;
     final lastPage =
@@ -507,6 +508,9 @@ class EventsRemoteSource {
       items: list,
       currentPage: currentPage,
       lastPage: lastPage,
+      isSuggestion: discovery['is_suggestion'] == true,
+      selectedRadiusKm: _asInt(discovery['selected_radius_km']),
+      effectiveRadiusKm: _asInt(discovery['effective_radius_km']),
     );
   }
 
@@ -798,6 +802,7 @@ class EventsRemoteSource {
       imageUrl: json['image_url'] as String?,
       status: json['status'] as String?,
       distanceKm: _asNum(json['distance_km'])?.toDouble(),
+      distancePrecision: json['distance_precision'] as String?,
       joinAction: json['join_action'] as String?,
       createdBy: _asInt(json['created_by']),
       readyForRatings: json['ready_for_ratings'] as bool? ?? false,

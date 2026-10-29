@@ -261,7 +261,11 @@ class _EventCardState extends State<EventCard> {
                       Text(
                         [
                           if (distance != null)
-                            '~${distance.toStringAsFixed(distance >= 10 ? 0 : 1)} km',
+                            event.distancePrecision == 'city_level'
+                                ? '≈${distance.toStringAsFixed(distance >= 10 ? 0 : 1)} km · city-level'
+                                : event.distancePrecision == 'exact'
+                                ? '${distance.toStringAsFixed(distance >= 10 ? 0 : 1)} km'
+                                : '~${distance.toStringAsFixed(distance >= 10 ? 0 : 1)} km',
                           if (hasAudience)
                             '${l10n.eventSex}: ${switch (event.sex) {
                               'male' => l10n.sexMale,

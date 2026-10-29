@@ -66,11 +66,36 @@ class ResolveDiscoveryOriginService
     }
 
     /**
-     * @param  array{city_id?: int|null}  $filters
-     * @return array{latitude: float, longitude: float, distance_km: int, city: City, origin_type: string}|null
+     * Manual discovery center: selected place coordinates preferred over city_id.
+     * Place coords do not require a cities-table row.
+     *
+     * @param  array{city_id?: int|null, latitude?: float, longitude?: float}  $filters
+     * @return array{latitude: float, longitude: float, distance_km: int, city: ?City, origin_type: string}|null
      */
     private function manualOrigin(array $filters, int $distance): ?array
     {
+        // Selected geographic place (Photon/Nominatim/cities search) — not device GPS.
+        if (isset($filters['latitude'], $filters['longitude'])
+            && is_numeric($filters['latitude'])
+            && is_numeric($filters['longitude'])) {
+            $lat = (float) $filters['latitude'];
+            $lng = (float) $filters['longitude'];
+            if ($lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                $city = null;
+                if (! empty($filters['city_id'])) {
+                    $city = City::query()->active()->find($filters['city_id']);
+                }
+
+                return [
+                    'latitude' => $lat,
+                    'longitude' => $lng,
+                    'distance_km' => $distance,
+                    'city' => $city,
+                    'origin_type' => 'place',
+                ];
+            }
+        }
+
         if (! array_key_exists('city_id', $filters) || $filters['city_id'] === null) {
             return null;
         }

@@ -12,6 +12,9 @@ class DiscoverState {
     this.isSearching = false,
     this.error,
     this.hasMore = false,
+    this.isSuggestion = false,
+    this.selectedRadiusKm,
+    this.effectiveRadiusKm,
   });
 
   final List<EventItem> items;
@@ -22,6 +25,9 @@ class DiscoverState {
   final bool isSearching;
   final String? error;
   final bool hasMore;
+  final bool isSuggestion;
+  final int? selectedRadiusKm;
+  final int? effectiveRadiusKm;
 
   bool get isNationwide => filters.allCities;
 
@@ -33,6 +39,10 @@ class DiscoverState {
     String? error,
     bool clearError = false,
     bool? hasMore,
+    bool? isSuggestion,
+    int? selectedRadiusKm,
+    int? effectiveRadiusKm,
+    bool clearSuggestion = false,
   }) {
     return DiscoverState(
       items: items ?? this.items,
@@ -41,6 +51,15 @@ class DiscoverState {
       isSearching: isSearching ?? this.isSearching,
       error: clearError ? null : (error ?? this.error),
       hasMore: hasMore ?? this.hasMore,
+      isSuggestion: clearSuggestion
+          ? false
+          : (isSuggestion ?? this.isSuggestion),
+      selectedRadiusKm: clearSuggestion
+          ? null
+          : (selectedRadiusKm ?? this.selectedRadiusKm),
+      effectiveRadiusKm: clearSuggestion
+          ? null
+          : (effectiveRadiusKm ?? this.effectiveRadiusKm),
     );
   }
 }
@@ -85,6 +104,7 @@ class DiscoverController extends StateNotifier<DiscoverState> {
         isSearching: false,
         error: result.failure?.message,
         hasMore: append ? false : state.hasMore,
+        clearSuggestion: !append,
       );
       return;
     }
@@ -96,6 +116,11 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       items: append ? [...state.items, ...page.items] : page.items,
       hasMore: page.hasMore,
       filters: nextFilters,
+      isSuggestion: append ? state.isSuggestion : page.isSuggestion,
+      selectedRadiusKm:
+          append ? state.selectedRadiusKm : page.selectedRadiusKm,
+      effectiveRadiusKm:
+          append ? state.effectiveRadiusKm : page.effectiveRadiusKm,
     );
   }
 

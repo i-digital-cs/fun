@@ -3,33 +3,93 @@
 namespace App\Services\Events;
 
 use App\Enums\EventStatus;
-use App\Models\City;
 use App\Models\Event;
 use App\Models\User;
+use App\Services\Location\NearbyDiscoveryGeography;
 use App\Services\Location\ResolveDiscoveryOriginService;
 use App\Services\Safety\UserBlockService;
 use App\Support\GeoDistance;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class DiscoverNearbyEventsService
 {
+    /**
+     * Meta from the last discover() call (suggestion radius, etc.).
+     *
+     * @var array{
+     *     selected_radius_km: int|null,
+     *     effective_radius_km: int|null,
+     *     is_suggestion: bool,
+     *     suggestion_message_key: string|null,
+     *     origin_type: string|null
+     * }|null
+     */
+    public ?array $lastMeta = null;
+
     public function __construct(
         private readonly UserBlockService $blocks,
         private readonly ResolveDiscoveryOriginService $origins,
+        private readonly NearbyDiscoveryGeography $geography,
     ) {}
 
     /**
-     * @param  array{category_id?: int|null, q?: string|null, per_page?: int}  $filters
+     * @param  array{category_id?: int|null, q?: string|null, per_page?: int, progressive?: bool}  $filters
      */
     public function discover(?User $user, array $filters = []): LengthAwarePaginator
     {
-        $perPage = (int) ($filters['per_page'] ?? 12);
+        $this->lastMeta = [
+            'selected_radius_km' => null,
+            'effective_radius_km' => null,
+            'is_suggestion' => false,
+            'suggestion_message_key' => null,
+            'origin_type' => null,
+        ];
 
         $origin = $this->origins->resolve($user, $filters);
+        $selectedKm = $origin !== null ? (int) $origin['distance_km'] : null;
+        $this->lastMeta['selected_radius_km'] = $selectedKm;
+        $this->lastMeta['effective_radius_km'] = $selectedKm;
+        $this->lastMeta['origin_type'] = $origin['origin_type'] ?? null;
+
+        $events = $this->runQuery($user, $filters, $origin);
+
+        // Progressive nearest-event expansion is for GPS/place origins only.
+        // Explicit city picks keep a hard empty state (do not leak other cities).
+        $originType = $origin['origin_type'] ?? null;
+        $allowProgressive = ($filters['progressive'] ?? true) === true
+            && empty($filters['q'])
+            && $origin !== null
+            && in_array($originType, ['device', 'place'], true)
+            && $selectedKm !== null
+            && $selectedKm > 0
+            && $events->total() === 0;
+
+        if ($allowProgressive) {
+            foreach ($this->geography->progressiveRadii($selectedKm) as $tryKm) {
+                $tryOrigin = array_merge($origin, ['distance_km' => $tryKm]);
+                $candidate = $this->runQuery($user, $filters, $tryOrigin);
+                if ($candidate->total() > 0) {
+                    $this->lastMeta['effective_radius_km'] = $tryKm;
+                    $this->lastMeta['is_suggestion'] = true;
+                    $this->lastMeta['suggestion_message_key'] = 'events.nearby_suggestions_banner';
+
+                    return $candidate;
+                }
+            }
+        }
+
+        return $events;
+    }
+
+    /**
+     * @param  array{latitude: float, longitude: float, distance_km: int, city: mixed, origin_type?: string}|null  $origin
+     */
+    private function runQuery(?User $user, array $filters, ?array $origin): LengthAwarePaginator
+    {
+        $perPage = (int) ($filters['per_page'] ?? 12);
 
         $query = Event::query()
             ->with(['category', 'city', 'creator'])
@@ -38,7 +98,6 @@ class DiscoverNearbyEventsService
         $hasTextSearch = ! empty($filters['q']) && trim((string) $filters['q']) !== '';
 
         if ($hasTextSearch) {
-            // Name search: include published + completed (recent enough to be useful).
             $query->whereIn('status', [EventStatus::Published, EventStatus::Completed])
                 ->where(function (Builder $builder) {
                     $builder->where('starts_at', '>=', now()->subDays(90))
@@ -49,14 +108,12 @@ class DiscoverNearbyEventsService
                         });
                 });
         } else {
-            // Browse: live/upcoming published only.
             $query->where('status', EventStatus::Published)
                 ->where('starts_at', '>=', now()->subDay());
         }
 
         if ($user !== null) {
             $blockedIds = $this->blocks->blockedUserIdsFor($user);
-
             if ($blockedIds !== []) {
                 $query->whereNotIn('created_by', $blockedIds);
             }
@@ -85,42 +142,55 @@ class DiscoverNearbyEventsService
             });
         }
 
-        if ($origin !== null) {
-            // Text search is nationwide unless the user explicitly picked a city filter.
+        $activeOrigin = $origin;
+        if ($activeOrigin !== null) {
             $explicitCity = array_key_exists('city_id', $filters) && $filters['city_id'] !== null;
             $skipGeoForTextSearch = $hasTextSearch && ! $explicitCity;
-            // distance_km = 0 → "All distances" (no city radius filter).
-            $allDistances = (int) $origin['distance_km'] === 0;
+            $allDistances = (int) $activeOrigin['distance_km'] === 0;
 
             if (! $skipGeoForTextSearch && ! $allDistances) {
-                $cityIds = $this->nearbyCityIds(
-                    $origin['latitude'],
-                    $origin['longitude'],
-                    $origin['distance_km']
+                $selectedKm = (int) $activeOrigin['distance_km'];
+                // City-only venues: uncertainty-buffered radius. A city centroid
+                // inside the chip radius is not proof the venue is inside it.
+                // citySearchRadiusKm === 0 means no city-only cities qualify
+                // (must NOT call nearbyCityIds(0), which means nationwide).
+                // Floor at 1 km so the origin city still qualifies when uncertainty
+                // zeroes the buffered radius (e.g. 10 km chip − 10 km uncertainty).
+                $cityKm = max(1, $this->geography->citySearchRadiusKm($selectedKm));
+                $cityIds = $this->geography->nearbyCityIds(
+                    $activeOrigin['latitude'],
+                    $activeOrigin['longitude'],
+                    $cityKm
                 );
-
-                $query->whereIn('city_id', $cityIds->all());
+                $box = $this->geography->boundsForRadius(
+                    $activeOrigin['latitude'],
+                    $activeOrigin['longitude'],
+                    $selectedKm,
+                    1.0
+                );
+                // City-only via uncertainty-buffered cities OR exact pins in radius bbox.
+                $query->where(function (Builder $builder) use ($cityIds, $box) {
+                    if ($cityIds->isNotEmpty()) {
+                        $builder->whereIn('city_id', $cityIds->all());
+                    }
+                    $builder->orWhere(function (Builder $exact) use ($box) {
+                        $exact->whereNotNull('latitude')
+                            ->whereNotNull('longitude')
+                            ->whereBetween('latitude', [$box['south'], $box['north']])
+                            ->whereBetween('longitude', [$box['west'], $box['east']]);
+                    });
+                });
             } elseif ($skipGeoForTextSearch) {
-                $origin = null;
+                $activeOrigin = null;
             }
         }
 
         /** @var LengthAwarePaginator $events */
         $events = $query->orderBy('starts_at')->paginate($perPage)->withQueryString();
 
-        if ($origin !== null) {
-            $events->getCollection()->transform(function (Event $event) use ($origin) {
-                if ($event->city) {
-                    $event->setAttribute(
-                        'distance_km',
-                        round(GeoDistance::kilometers(
-                            $origin['latitude'],
-                            $origin['longitude'],
-                            (float) $event->city->latitude,
-                            (float) $event->city->longitude
-                        ), 1)
-                    );
-                }
+        if ($activeOrigin !== null) {
+            $events->getCollection()->transform(function (Event $event) use ($activeOrigin) {
+                $this->attachDistance($event, $activeOrigin);
 
                 return $event;
             });
@@ -130,40 +200,38 @@ class DiscoverNearbyEventsService
     }
 
     /**
-     * @return Collection<int, int>
+     * @param  array{latitude: float, longitude: float, distance_km: int, city: mixed}  $origin
      */
-    private function nearbyCityIds(float $latitude, float $longitude, int $maxKm): Collection
+    private function attachDistance(Event $event, array $origin): void
     {
-        $version = (int) cache()->get('nearby_cities_version', 0);
-        $cacheKey = sprintf('nearby_cities:v%d:%.5f:%.5f:%d', $version, $latitude, $longitude, $maxKm);
+        if ($event->hasPlacePin()) {
+            $km = GeoDistance::kilometers(
+                $origin['latitude'],
+                $origin['longitude'],
+                (float) $event->latitude,
+                (float) $event->longitude
+            );
+            $event->setAttribute('distance_km', round($km, 1));
+            $event->setAttribute('distance_precision', 'exact');
 
-        return cache()->remember($cacheKey, now()->addMinutes(10), function () use ($latitude, $longitude, $maxKm) {
-            $ids = City::query()
-                ->active()
-                ->get(['id', 'latitude', 'longitude'])
-                ->filter(fn (City $city) => GeoDistance::isWithinKm(
-                    $latitude,
-                    $longitude,
-                    (float) $city->latitude,
-                    (float) $city->longitude,
-                    $maxKm
-                ))
-                ->pluck('id')
-                ->values();
+            return;
+        }
 
-            // Always keep the origin city itself (0 km), even if coords were missing/cached oddly.
-            $originId = City::query()
-                ->active()
-                ->where('latitude', $latitude)
-                ->where('longitude', $longitude)
-                ->value('id');
+        if ($event->city && $event->city->latitude !== null && $event->city->longitude !== null) {
+            $km = GeoDistance::kilometers(
+                $origin['latitude'],
+                $origin['longitude'],
+                (float) $event->city->latitude,
+                (float) $event->city->longitude
+            );
+            $event->setAttribute('distance_km', round($km, 1));
+            $event->setAttribute('distance_precision', 'city_level');
 
-            if ($originId !== null && ! $ids->contains($originId)) {
-                $ids->prepend((int) $originId);
-            }
+            return;
+        }
 
-            return $ids->unique()->values();
-        });
+        $event->setAttribute('distance_km', null);
+        $event->setAttribute('distance_precision', 'none');
     }
 
     private function applyWhenFilter(Builder $query, string $when): void
@@ -202,8 +270,6 @@ class DiscoverNearbyEventsService
     }
 
     /**
-     * Expand common EN/AR place/team aliases so "zamalek" finds "الزمالك".
-     *
      * @return list<string>
      */
     private function searchTermVariants(string $term): array

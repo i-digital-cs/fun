@@ -61,6 +61,10 @@ class EventResource extends JsonResource
                 $this->distance_km !== null,
                 fn () => (float) $this->distance_km
             ),
+            'distance_precision' => $this->when(
+                $this->distance_precision !== null,
+                fn () => (string) $this->distance_precision
+            ),
             'join_action' => $this->when(
                 $this->join_action !== null,
                 fn () => $this->join_action

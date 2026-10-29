@@ -23,6 +23,17 @@ document.documentElement.dataset.pageLoaderReady = '1';
 initDiscoveryLocationUi();
 document.documentElement.dataset.discoveryLocationReady = '1';
 
+if (document.querySelector('[data-discover-map]')) {
+    import('./discover-map')
+        .then(({ initDiscoverMap }) => {
+            initDiscoverMap();
+            document.documentElement.dataset.discoverMapReady = '1';
+        })
+        .catch(() => {
+            // Map is progressive enhancement.
+        });
+}
+
 const needsRealtime =
     document.body?.dataset?.realtime === '1' ||
     Boolean(document.getElementById('chat-toast-host'));

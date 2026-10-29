@@ -9,7 +9,7 @@
 <dialog id="location-modal"
         class="location-modal fixed inset-0 m-auto h-fit max-h-[min(90vh,44rem)] w-[min(100%-2rem,26rem)] overflow-visible rounded-3xl border-0 bg-transparent p-0 shadow-none outline-none backdrop:bg-slate-950/50"
         aria-labelledby="location-modal-title"
-        data-cities-search-url="{{ url('/api/cities/search') }}"
+        data-cities-search-url="{{ url('/api/places/search') }}"
         data-discover-url="{{ route('events.index') }}"
         data-selected-prefix="{{ __('location.selected') }}: "
         data-location-unavailable="{{ __('events.location_unavailable') }}"
@@ -96,6 +96,7 @@
 
             <div data-location-device-panel hidden class="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-3">
                 <p class="text-sm font-semibold text-indigo-900">{{ __('location.current_location') }}</p>
+                <p class="mt-1 text-sm text-indigo-950" data-location-place-name hidden></p>
                 <p class="mt-1 text-xs text-indigo-800" data-location-accuracy hidden></p>
                 <p class="mt-1 text-xs text-indigo-700">{{ __('location.device_hint') }}</p>
             </div>

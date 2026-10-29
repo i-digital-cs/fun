@@ -50,6 +50,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/site', SiteBrandingController::class);
 Route::get('/cities', CityListController::class);
 Route::get('/cities/search', CitySearchController::class)->middleware('throttle:60,1');
+Route::get('/places/search', \App\Http\Controllers\Api\Discovery\PlaceSearchController::class)
+    ->middleware('throttle:40,1');
+Route::get('/places/reverse', \App\Http\Controllers\Api\Discovery\ReverseGeocodeController::class)
+    ->middleware('throttle:30,1');
+Route::get('/discovery/map', \App\Http\Controllers\Api\Discovery\DiscoverMapController::class)
+    ->middleware('throttle:60,1');
+Route::get('/discovery/city-events', \App\Http\Controllers\Api\Discovery\DiscoverCityEventsController::class)
+    ->middleware('throttle:60,1');
 Route::get('/categories', CategoryListController::class);
 Route::get('/search/suggest', SearchSuggestController::class)->middleware('throttle:60,1');
 Route::get('/events', [ApiEventController::class, 'index']);

@@ -142,7 +142,9 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${loc.summaryLabel} · ${loc.radiusLabel()}',
+              loc.mode == DiscoveryLocationMode.nationwide
+                  ? loc.summaryLabel
+                  : '${loc.summaryLabel} · ${loc.radiusLabel()}',
               style: const TextStyle(fontSize: 13, color: AppColors.muted),
             ),
             const SizedBox(height: 12),

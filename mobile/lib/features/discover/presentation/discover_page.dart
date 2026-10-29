@@ -12,12 +12,16 @@ import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_header_scroll.dart';
 import 'package:fun_mobile/features/discover/presentation/discovery_location_controller.dart';
+import 'package:fun_mobile/features/discover/presentation/widgets/discover_map_view.dart';
 import 'package:fun_mobile/features/discover/presentation/widgets/location_picker_sheet.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
+enum _DiscoverViewMode { map, list }
+
 /// Mirrors Blade `events/index` discover filters + nationwide notice.
+/// Explore V4 defaults to map-first with list toggle.
 class DiscoverPage extends ConsumerStatefulWidget {
   const DiscoverPage({super.key});
 
@@ -39,6 +43,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   bool _catalogLoaded = false;
   final _headerVisible = ValueNotifier<bool>(true);
   double _lastScroll = 0;
+  _DiscoverViewMode _viewMode = _DiscoverViewMode.map;
 
   static const _headerScrollKey = PageStorageKey<String>('discover-scroll');
 
@@ -261,12 +266,32 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                         ],
                       ),
                     ),
-                    if (canCreate)
+                    SegmentedButton<_DiscoverViewMode>(
+                      segments: const [
+                        ButtonSegment(
+                          value: _DiscoverViewMode.map,
+                          icon: Icon(Icons.map_outlined, size: 18),
+                          label: Text('Map'),
+                        ),
+                        ButtonSegment(
+                          value: _DiscoverViewMode.list,
+                          icon: Icon(Icons.view_list_outlined, size: 18),
+                          label: Text('List'),
+                        ),
+                      ],
+                      selected: {_viewMode},
+                      onSelectionChanged: (next) {
+                        setState(() => _viewMode = next.first);
+                      },
+                    ),
+                    if (canCreate) ...[
+                      const SizedBox(width: 8),
                       GradientButton(
                         label: l10n.createEvent,
                         icon: Icons.add,
                         onPressed: () => context.go('/create'),
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -296,7 +321,9 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${loc.summaryLabel} · $radiusLabel',
+                          loc.mode == DiscoveryLocationMode.nationwide
+                              ? loc.summaryLabel
+                              : '${loc.summaryLabel} · $radiusLabel',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -315,7 +342,15 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
               ),
             ),
             Expanded(
-              child: RefreshIndicator(
+              child: _viewMode == _DiscoverViewMode.map
+                  ? DiscoverMapView(
+                      categoryId: _draftCategoryId,
+                      query: _search.text.trim().isEmpty
+                          ? null
+                          : _search.text.trim(),
+                      when: _draftWhen,
+                    )
+                  : RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () =>
                     ref.read(discoverControllerProvider.notifier).load(),
@@ -367,7 +402,30 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                           ),
                         ),
                       ),
-                    if (state.isNationwide)
+                    if (state.isSuggestion)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                          child: Material(
+                            color: const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Text(
+                                (state.effectiveRadiusKm ?? 0) == 0
+                                    ? 'No events within ${state.selectedRadiusKm ?? 25} km. Showing nearest available events across Egypt.'
+                                    : 'No events within ${state.selectedRadiusKm ?? 25} km. Showing nearest available within ${state.effectiveRadiusKm} km.',
+                                style: const TextStyle(
+                                  color: Color(0xFF78350F),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else if (state.isNationwide)
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),

@@ -1,0 +1,8 @@
+SIMULATED geolocation (29.96, 30.92 ±25m) — not real GPS evidence.
+{
+  "url": "http://127.0.0.1:8770/events?view=map&discovery_mode=device&distance_km=5&latitude=29.96&longitude=30.92&accuracy_m=25",
+  "chip": "Current location · 6th of October · Within 5 km",
+  "status": "Current location\n\n10th District, 6th of October, Aj Jiza, Egypt\n\nAccuracy: ±25 m\n\nLocation detected successfully\n\nRetry\nSearch location",
+  "statusHidden": false,
+  "storage": "{\"mode\":\"device\",\"cityId\":null,\"cityName\":null,\"distanceKm\":5,\"lat\":29.96,\"lng\":30.92,\"accuracyM\":25,\"locationLabel\":\"10th District, 6th of October, Aj Jiza, Egypt\",\"shortLabel\":\"6th of October\",\"updatedAt\":1793208404123}"
+}

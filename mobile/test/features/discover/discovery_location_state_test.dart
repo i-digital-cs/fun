@@ -4,14 +4,12 @@ import 'package:fun_mobile/features/discover/presentation/discovery_location_con
 
 void main() {
   group('DiscoveryLocationState.toDiscoverFilters', () {
-    test('manual city uses city_id and never sends device coords', () {
+    test('manual city without place coords uses city_id only', () {
       const state = DiscoveryLocationState(
         mode: DiscoveryLocationMode.manual,
         cityId: 12,
         cityName: '6th of October City',
         distanceKm: 25,
-        deviceLat: 30.0,
-        deviceLng: 31.0,
       );
 
       final filters = state.toDiscoverFilters();
@@ -24,6 +22,22 @@ void main() {
       expect(filters.longitude, isNull);
       expect(filters.toQuery().containsKey('latitude'), isFalse);
       expect(filters.toQuery()['city_id'], 12);
+    });
+
+    test('manual place coords are sent as discovery_mode=manual lat/lng', () {
+      const state = DiscoveryLocationState(
+        mode: DiscoveryLocationMode.manual,
+        cityId: 12,
+        cityName: 'Hadayek October',
+        distanceKm: 25,
+        deviceLat: 29.95,
+        deviceLng: 30.91,
+      );
+
+      final query = state.toDiscoverFilters().toQuery();
+      expect(query['discovery_mode'], 'manual');
+      expect(query['latitude'], 29.95);
+      expect(query['longitude'], 30.91);
     });
 
     test('device mode with fix sends lat/lng without city_id', () {
@@ -71,14 +85,21 @@ void main() {
         deviceLng: 2,
         accuracyM: 40,
       );
+      const deviceNamed = DiscoveryLocationState(
+        mode: DiscoveryLocationMode.device,
+        deviceLat: 1,
+        deviceLng: 2,
+        accuracyM: 40,
+        shortLabel: '6th of October',
+      );
       const manual = DiscoveryLocationState(
         mode: DiscoveryLocationMode.manual,
         cityId: 1,
         cityName: 'Giza',
       );
 
-      expect(device.summaryLabel, contains('Current location'));
-      expect(device.summaryLabel, contains('40'));
+      expect(device.summaryLabel, 'Current location');
+      expect(deviceNamed.summaryLabel, 'Current location · 6th of October');
       expect(manual.summaryLabel, 'Giza');
       expect(manual.radiusLabel(), 'Within 25 km');
     });

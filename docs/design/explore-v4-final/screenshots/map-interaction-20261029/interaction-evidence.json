@@ -1,0 +1,11 @@
+{
+  "verified_at": "2026-10-29T12:20:00Z",
+  "nationwide_chip": "All Egypt",
+  "nationwide_heading": "Events in Egypt (58)",
+  "radius_in_nationwide": false,
+  "map_markers_at_zoom5": {"city_aggregates": 5, "city_clusters": 3, "exact": 1, "count_sum": 57},
+  "exact_card_selection": "PASS — بولينج opened map popup + zoom",
+  "city_card_selection": "PASS — city panel Events in 6th of October (5) from /api/discovery/city-events",
+  "city_events_api": {"city_id": 6, "events": 5, "http": 200},
+  "note": "Verify build temporarily swapped into public/build for interactive check; restoring prior live assets after evidence capture."
+}

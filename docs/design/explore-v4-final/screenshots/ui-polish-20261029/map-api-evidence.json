@@ -1,0 +1,114 @@
+{
+    "queried_at": "2026-10-29T08:57:36+00:00",
+    "city_aggregates": 15,
+    "markers": 0,
+    "clusters": 1,
+    "meta": {
+        "zoom": 5,
+        "clustered": true,
+        "point_count": 1,
+        "city_aggregate_count": 15,
+        "include_approximate": false,
+        "bounds": {
+            "north": 31.65,
+            "south": 22.2,
+            "east": 34.9,
+            "west": 25
+        },
+        "bounds_clamped": false,
+        "nationwide_mode": false,
+        "max_markers": 250
+    },
+    "aggregate_sample": [
+        {
+            "city": "6th of October",
+            "count": 5,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Hurghada",
+            "count": 4,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "New Cairo",
+            "count": 5,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Ismailia",
+            "count": 5,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Tanta",
+            "count": 3,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Port Said",
+            "count": 4,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Alexandria",
+            "count": 5,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Zagazig",
+            "count": 6,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Suez",
+            "count": 4,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Giza",
+            "count": 5,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Cairo",
+            "count": 3,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Damietta",
+            "count": 3,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Obour",
+            "count": 2,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Mansoura",
+            "count": 2,
+            "lat": null,
+            "lng": null
+        },
+        {
+            "city": "Sheikh Zayed",
+            "count": 1,
+            "lat": null,
+            "lng": null
+        }
+    ]
+}

@@ -10,67 +10,59 @@
         $activeDevice = $discoveryMode === 'device' && $activeLat !== null && $activeLng !== null;
         $activeCityName = $filterCity?->localizedName();
         $activeKm = (int) ($filters['distance_km'] ?? config('location.default_distance_km'));
+        if ($discoveryMode === 'nationwide') {
+            $activeKm = 0;
+        }
         $radiusLabel = $activeKm === 0
             ? __('location.all_distances')
             : __('location.within_km', ['km' => $activeKm]);
         if ($activeDevice) {
-            $acc = $filters['accuracy_m'] ?? null;
-            $accSuffix = ($acc !== null && (float) $acc > 0)
-                ? ' (±'.(int) round((float) $acc).' m)'
-                : '';
-            $locationChipLabel = __('location.current_location').$accSuffix.' · '.$radiusLabel;
+            $locationChipLabel = __('location.current_location').' · '.$radiusLabel;
         } elseif ($discoveryMode === 'manual' && $activeCityName) {
             $locationChipLabel = $activeCityName.' · '.$radiusLabel;
         } else {
-            $locationChipLabel = __('location.all_egypt').' · '.$radiusLabel;
+            // Nationwide: never append a radius label.
+            $locationChipLabel = __('location.all_egypt');
+        }
+
+        if ($activeDevice) {
+            $resultsHeading = __('events.nearby_events');
+        } elseif ($discoveryMode === 'manual' && $activeCityName) {
+            $resultsHeading = __('events.events_near_place', ['place' => $activeCityName]);
+        } else {
+            $resultsHeading = __('events.events_in_egypt');
         }
 
         $discoveryBoot = [
             'mode' => $discoveryMode,
             'cityId' => $filters['city_id'] ?? null,
             'cityName' => $activeCityName,
-            'distanceKm' => $activeKm,
+            'distanceKm' => $discoveryMode === 'nationwide' ? 0 : $activeKm,
             'lat' => $activeDevice ? $activeLat : null,
             'lng' => $activeDevice ? $activeLng : null,
             'accuracyM' => $activeDevice ? ($filters['accuracy_m'] ?? null) : null,
+            'locationLabel' => null,
+            'shortLabel' => null,
         ];
+        $viewMode = request('view', 'map') === 'list' ? 'list' : 'map';
+        $sort = request('sort', 'soonest');
+        $resultCount = method_exists($events, 'total') ? $events->total() : $events->count();
+        $control = 'h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100';
     @endphp
 
     <script type="application/json" id="discovery-location-boot"
             data-label-current="{{ __('location.current_location') }}"
             data-label-nationwide="{{ __('location.all_egypt') }}"
             data-label-all-distances="{{ __('location.all_distances') }}"
-            data-label-within="{{ __('location.within_km') }}">{!! json_encode($discoveryBoot, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
-
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{{ __('events.discover_document_title') }}</h1>
-            <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">{{ __('events.discover_intro') }}</p>
-            <button type="button"
-                    @auth data-location-modal-open @else onclick="document.getElementById('city_q')?.focus()" @endauth
-                    class="mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-indigo-300 hover:text-indigo-700">
-                <span aria-hidden="true">📍</span>
-                <span class="truncate" data-discovery-chip-label>{{ $locationChipLabel }}</span>
-            </button>
-            @if (($landingCities ?? collect())->isNotEmpty() || ($landingCategories ?? collect())->isNotEmpty())
-                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                    @foreach ($landingCities as $landingCity)
-                        <a href="{{ route('events.city', $landingCity) }}" class="font-semibold text-indigo-700 hover:text-indigo-900">{{ $landingCity->localizedName() }}</a>
-                    @endforeach
-                    @foreach ($landingCategories as $landingCategory)
-                        <a href="{{ route('events.activity', $landingCategory) }}" class="font-semibold text-indigo-700 hover:text-indigo-900">{{ $landingCategory->localizedName() }}</a>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-        @auth
-            @if (auth()->user()->canParticipate())
-                <a href="{{ route('events.create') }}" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:shadow-xl hover:shadow-orange-500/45 hover:brightness-105">
-                    {{ __('events.create_event') }}
-                </a>
-            @endif
-        @endauth
-    </div>
+            data-label-within="{{ __('location.within_km') }}"
+            data-label-chip-place="{{ __('location.chip_current_with_place') }}"
+            data-label-detecting="{{ __('location.detecting_location') }}"
+            data-label-detected="{{ __('location.location_detected') }}"
+            data-label-area-unavailable="{{ __('location.area_name_unavailable') }}"
+            data-label-accuracy="{{ __('location.accuracy_meters') }}"
+            data-label-low-accuracy="{{ __('location.gps_low_accuracy') }}"
+            data-reverse-url="{{ url('/api/places/reverse') }}"
+    >{!! json_encode($discoveryBoot, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
 
     <div
         data-live-search
@@ -78,9 +70,18 @@
         data-live-search-target="#discover-results"
         data-live-search-url="{{ route('search.suggest') }}"
         data-live-search-searching-label="{{ __('ui.searching') }}"
+        class="flex min-h-0 flex-col gap-2"
+        data-discover-workspace
+        data-discover-view="{{ $viewMode }}"
     >
-        <form method="GET" action="{{ route('events.index') }}" class="relative mb-6 grid gap-4 rounded-3xl border border-slate-200/70 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-5" data-discover-filters>
+        {{-- One coherent toolbar: Search | Location | Radius | Category | Apply | Map/List --}}
+        <form method="GET" action="{{ route('events.index') }}"
+              class="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white p-1.5 shadow-sm sm:flex-nowrap"
+              data-discover-filters
+              data-discover-toolbar>
             <input type="hidden" name="discovery_mode" value="{{ $discoveryMode }}">
+            <input type="hidden" name="view" value="{{ $viewMode }}" data-discover-view-input>
+            <input type="hidden" name="city_id" id="city_id" value="{{ $filters['city_id'] }}" @if ($activeDevice || $discoveryMode === 'nationwide') disabled @endif>
             @if ($activeDevice)
                 <input type="hidden" name="latitude" value="{{ $activeLat }}">
                 <input type="hidden" name="longitude" value="{{ $activeLng }}">
@@ -88,76 +89,175 @@
                     <input type="hidden" name="accuracy_m" value="{{ $filters['accuracy_m'] }}">
                 @endif
             @endif
-            <div class="lg:col-span-2">
-                <label for="q" class="mb-1.5 block text-xs font-medium text-slate-500">{{ __('events.search') }}</label>
-                <input id="q" name="q" type="search" value="{{ $filters['q'] }}" placeholder="{{ __('events.search_placeholder') }}" autocomplete="off" data-live-search-input class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
+
+            <div class="relative min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[11rem]">
+                <label for="q" class="sr-only">{{ __('events.search') }}</label>
+                <input id="q" name="q" type="search" value="{{ $filters['q'] }}"
+                       placeholder="{{ __('events.search_placeholder') }}"
+                       autocomplete="off" data-live-search-input
+                       class="{{ $control }} w-full bg-slate-50/70">
             </div>
-            <div>
-                <label for="category_id" class="mb-1.5 block text-xs font-medium text-slate-500">{{ __('events.category') }}</label>
-                <select id="category_id" name="category_id" class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
+
+            <button type="button"
+                    @auth data-location-modal-open @else data-discover-use-gps @endauth
+                    data-location-unavailable="{{ __('events.location_unavailable') }}"
+                    data-location-denied="{{ __('events.location_permission_denied') }}"
+                    data-location-timeout="{{ __('location.gps_timeout') }}"
+                    class="inline-flex h-9 max-w-[13rem] shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-semibold text-slate-800 hover:border-indigo-300 hover:text-indigo-700"
+                    title="{{ __('location.location_settings') }}">
+                <svg class="h-3.5 w-3.5 shrink-0 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                <span class="truncate" data-discovery-chip-label>{{ $locationChipLabel }}</span>
+            </button>
+
+            <div class="shrink-0">
+                <label for="distance_km" class="sr-only">{{ __('location.discovery_distance') }}</label>
+                @if ($discoveryMode === 'nationwide')
+                    <input type="hidden" name="distance_km" value="0">
+                    <span class="inline-flex h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-sm text-slate-500" title="{{ __('location.all_egypt') }}">
+                        {{ __('location.all_egypt') }}
+                    </span>
+                @else
+                    <select id="distance_km" name="distance_km" class="{{ $control }}">
+                        @foreach ($distances as $distance)
+                            <option value="{{ $distance }}" @selected((int) $filters['distance_km'] === $distance)>
+                                @if ((int) $distance === 0)
+                                    {{ __('location.all_distances') }}
+                                @else
+                                    {{ $distance }} {{ __('location.km') }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
+            </div>
+
+            <div class="shrink-0">
+                <label for="category_id" class="sr-only">{{ __('events.category') }}</label>
+                <select id="category_id" name="category_id" class="{{ $control }} max-w-[9rem]">
                     <option value="">{{ __('events.all_categories') }}</option>
                     @foreach ($categories as $category)
                         <option value="{{ $category->id }}" @selected((int) $filters['category_id'] === $category->id)>
                             {{ $category->localizedName() }}
-                            @if (isset($category->published_events_count))
-                                ({{ $category->published_events_count }})
-                            @endif
                         </option>
                     @endforeach
                 </select>
             </div>
-            <div class="relative" data-discover-city-search data-cities-search-url="{{ url('/api/cities/search') }}">
-                <label for="city_q" class="mb-1.5 block text-xs font-medium text-slate-500">{{ __('events.city') }}</label>
-                <input type="hidden" name="city_id" id="city_id" value="{{ $filters['city_id'] }}" @if ($activeDevice || $discoveryMode === 'nationwide') disabled @endif>
-                <input id="city_q" type="search" autocomplete="off"
-                       value="{{ $discoveryMode === 'manual' ? ($activeCityName ?? '') : '' }}"
-                       placeholder="{{ __('location.search_placeholder') }}"
-                       data-discover-city-input
-                       class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
-                <ul class="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-slate-200 bg-white text-sm shadow-lg empty:hidden"
-                    data-discover-city-results
-                    role="listbox"
-                    hidden></ul>
-            </div>
-            <div>
-                <label for="distance_km" class="mb-1.5 block text-xs font-medium text-slate-500">{{ __('location.discovery_distance') }}</label>
-                <select id="distance_km" name="distance_km" class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
-                    @foreach ($distances as $distance)
-                        <option value="{{ $distance }}" @selected((int) $filters['distance_km'] === $distance)>
-                            @if ((int) $distance === 0)
-                                {{ __('location.all_distances') }}
-                            @else
-                                {{ $distance }} {{ __('location.km') }}
-                            @endif
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-5">
-                <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 transition hover:brightness-105">{{ __('events.apply_filters') }}</button>
-                <a href="{{ route('events.index', ['discovery_mode' => 'nationwide', 'city_id' => '', 'distance_km' => 0]) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200/70 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700">{{ __('events.clear_filters') }}</a>
-                <button type="button"
-                        data-discover-use-gps
-                        data-location-unavailable="{{ __('events.location_unavailable') }}"
-                        data-location-denied="{{ __('events.location_permission_denied') }}"
-                        data-location-timeout="{{ __('location.gps_timeout') }}"
-                        class="inline-flex items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-100">
-                    {{ __('location.detect_my_location') }}
+
+            <button type="submit"
+                    class="inline-flex h-9 shrink-0 items-center justify-center rounded-lg bg-[#7138F5] px-3 text-sm font-semibold text-white hover:brightness-105">
+                {{ __('events.apply_filters') }}
+            </button>
+
+            <div class="ms-auto inline-flex h-9 shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-0.5" role="group" aria-label="Map or list">
+                <button type="button" data-discover-view-toggle="map"
+                        class="rounded-md px-2.5 text-xs font-bold {{ $viewMode === 'map' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600' }}">
+                    Map
                 </button>
-                @auth
-                    <a href="{{ route('settings.location.edit') }}"
-                       data-location-modal-open
-                       class="text-sm font-medium text-indigo-600 hover:text-indigo-800">{{ __('events.set_location_cta') }}</a>
-                @endauth
+                <button type="button" data-discover-view-toggle="list"
+                        class="rounded-md px-2.5 text-xs font-bold {{ $viewMode === 'list' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600' }}">
+                    List
+                </button>
             </div>
         </form>
+
+        {{-- Hidden place-search mount for modal/JS parity (not shown in toolbar) --}}
+        <div class="hidden" data-discover-city-search data-cities-search-url="{{ url('/api/places/search') }}" data-places-search="1" aria-hidden="true">
+            <input id="city_q" type="search" data-discover-city-input value="{{ $discoveryMode === 'manual' ? ($activeCityName ?? '') : '' }}" tabindex="-1">
+            <ul data-discover-city-results role="listbox" hidden></ul>
+        </div>
+
+        <div data-discover-location-status
+             class="hidden rounded-lg border border-indigo-100 bg-indigo-50/80 px-3 py-1.5 text-sm text-indigo-950"
+             role="status"
+             aria-live="polite">
+            <p class="font-semibold" data-location-status-title></p>
+            <p class="mt-0.5 text-indigo-900/90" data-location-status-place></p>
+            <p class="mt-0.5 text-xs text-indigo-800/80" data-location-status-accuracy></p>
+            <p class="mt-0.5 text-xs font-medium text-emerald-700" data-location-status-ok hidden></p>
+            <div class="mt-1.5 flex flex-wrap gap-2">
+                <button type="button" data-discover-use-gps class="text-xs font-semibold text-indigo-700 underline">{{ __('location.retry_location') }}</button>
+                @auth
+                    <button type="button" data-location-modal-open class="text-xs font-semibold text-indigo-700 underline">{{ __('location.search_location') }}</button>
+                @endauth
+            </div>
+        </div>
 
         <div class="hidden" data-live-search-searching data-live-search-searching-template aria-hidden="true">
             <x-ui.searching />
         </div>
 
-        <div id="discover-results" class="live-search-page-target relative min-h-[12rem]">
-            @include('events.partials.results')
+        <div class="discover-split-grid grid min-h-[20rem] gap-2 lg:grid-cols-12 lg:items-stretch lg:overflow-hidden"
+             data-discover-split
+             style="--discover-split-h: min(70vh, 40rem)">
+            <style>
+                @media (min-width: 1024px) {
+                    [data-discover-split].discover-split-grid {
+                        height: var(--discover-split-h);
+                        max-height: var(--discover-split-h);
+                        overflow: hidden;
+                    }
+                    [data-discover-split] [data-discover-map-pane],
+                    [data-discover-split] [data-discover-map-list],
+                    [data-discover-split] [data-discover-map] {
+                        min-height: 0 !important;
+                        height: 100%;
+                    }
+                    [data-discover-split] #discover-results {
+                        min-height: 0 !important;
+                    }
+                }
+            </style>
+            <div @class([
+                'order-1 flex min-h-0 flex-col',
+                'lg:col-span-8' => $viewMode === 'map',
+                'hidden lg:col-span-8' => $viewMode === 'list',
+            ]) data-discover-map-pane>
+                <div data-discover-map
+                     class="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm lg:min-h-0 lg:h-full"
+                     data-discover-i18n-exact-unavailable="{{ __('events.exact_venue_unavailable') }}"
+                     data-discover-i18n-show-all="{{ __('events.show_all_results') }}"
+                     data-discover-i18n-city-heading="{{ __('events.city_events_heading') }}"
+                     data-discover-i18n-city-level="{{ __('events.city_level_preview') }}"
+                     data-discover-i18n-not-on-map="{{ __('events.event_not_on_map') }}"
+                     data-discover-i18n-no-events-radius="{{ __('events.map_no_events_in_radius') }}"
+                     data-discover-i18n-no-events-viewport="{{ __('events.map_no_events_viewport') }}">
+                    <button type="button"
+                            hidden
+                            data-discover-map-search-area
+                            class="absolute start-1/2 top-3 z-[500] -translate-x-1/2 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-indigo-700 shadow-md rtl:translate-x-1/2">
+                        {{ __('location.search_this_area') }}
+                    </button>
+                    <div data-discover-map-canvas class="absolute inset-0 h-full w-full" style="min-height: 20rem;"></div>
+                    <p class="pointer-events-none absolute bottom-0 inset-x-0 z-[400] bg-white/90 px-3 py-1 text-[10px] text-slate-500">
+                        © OpenStreetMap · Purple = city-level · Orange pin = exact venue
+                    </p>
+                </div>
+            </div>
+
+            <div @class([
+                'order-2 flex min-h-0 flex-col overflow-hidden',
+                'lg:col-span-4' => $viewMode === 'map',
+                'lg:col-span-12' => $viewMode === 'list',
+            ]) data-discover-map-list>
+                <div class="mb-1.5 flex shrink-0 items-center justify-between gap-2">
+                    <h2 class="text-sm font-bold text-slate-900" data-discover-results-heading>
+                        {{ $resultsHeading }}
+                        <span class="font-semibold text-slate-500" data-discover-results-count>({{ $resultCount }})</span>
+                    </h2>
+                    <label class="sr-only" for="discover_sort">Sort</label>
+                    <select id="discover_sort" data-discover-sort
+                            class="h-7 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] text-slate-700">
+                        <option value="soonest" @selected($sort === 'soonest')>Soonest</option>
+                        @if ($activeDevice || ($discoveryMode === 'manual' && $activeCityName))
+                            <option value="nearest" @selected($sort === 'nearest')>Nearest</option>
+                        @endif
+                        <option value="newest" @selected($sort === 'newest')>Newest</option>
+                    </select>
+                </div>
+                <div id="discover-results" class="live-search-page-target relative min-h-[10rem] flex-1 overflow-y-auto fancy-scroll rounded-xl border border-slate-200/70 bg-[#F8F9FE] p-1.5 lg:min-h-0">
+                    @include('events.partials.results')
+                </div>
+            </div>
         </div>
     </div>
 @endsection

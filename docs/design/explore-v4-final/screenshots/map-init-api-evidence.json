@@ -1,0 +1,24 @@
+{
+  "ui": {
+    "interactive": 16,
+    "errorHidden": true,
+    "errorText": "",
+    "leaflet": true
+  },
+  "mapReqs": [
+    {
+      "status": 200,
+      "aggs": 15,
+      "clusters": 1,
+      "markers": 0,
+      "clamped": true,
+      "nationwide": true,
+      "bounds": {
+        "north": 32,
+        "south": 21.5,
+        "east": 37,
+        "west": 24.5
+      }
+    }
+  ]
+}

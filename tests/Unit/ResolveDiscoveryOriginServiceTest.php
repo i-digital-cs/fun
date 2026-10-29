@@ -28,14 +28,22 @@ class ResolveDiscoveryOriginServiceTest extends TestCase
             'longitude' => 31.0,
         ]);
 
-        $origin = $this->origins->resolve(null, [
+        // Place coordinates win for manual mode when both city_id and lat/lng present.
+        $place = $this->origins->resolve(null, [
             'discovery_mode' => 'manual',
             'city_id' => $city->id,
             'distance_km' => 25,
             'latitude' => 29.0,
             'longitude' => 30.0,
         ]);
+        $this->assertSame('place', $place['origin_type']);
+        $this->assertSame(29.0, $place['latitude']);
 
+        $origin = $this->origins->resolve(null, [
+            'discovery_mode' => 'manual',
+            'city_id' => $city->id,
+            'distance_km' => 25,
+        ]);
         $this->assertSame('city', $origin['origin_type']);
         $this->assertSame(30.0, $origin['latitude']);
         $this->assertTrue($origin['city']->is($city));

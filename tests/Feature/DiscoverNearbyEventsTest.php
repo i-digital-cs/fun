@@ -164,7 +164,7 @@ class DiscoverNearbyEventsTest extends TestCase
             ->assertSee(__('events.discover'))
             ->assertSee('Football Night')
             ->assertSee('Al Ahly Club Playground')
-            ->assertSee(__('events.view_event'))
+            ->assertSee(__('events.view_details'))
             ->assertSee('80.00 EGP / person');
     }
 
@@ -304,7 +304,7 @@ class DiscoverNearbyEventsTest extends TestCase
         $this->assertTrue($ids->contains($far->id));
     }
 
-    public function test_discovery_mode_manual_ignores_device_coordinates(): void
+    public function test_discovery_mode_manual_city_only_uses_city_center(): void
     {
         $obour = $this->city('Obour', 30.2285, 31.4769);
         $alex = $this->city('Alexandria', 31.2001, 29.9187);
@@ -315,10 +315,99 @@ class DiscoverNearbyEventsTest extends TestCase
         Sanctum::actingAs(User::factory()->active()->create());
 
         $ids = collect($this->getJson(
-            '/api/events?discovery_mode=manual&city_id='.$alex->id.'&latitude=30.2285&longitude=31.4769&distance_km=10'
+            '/api/events?discovery_mode=manual&city_id='.$alex->id.'&distance_km=10'
         )->json('data'))->pluck('id');
 
         $this->assertTrue($ids->contains($nearAlex->id));
         $this->assertFalse($ids->contains($nearObour->id));
+    }
+
+    public function test_discovery_mode_manual_place_coords_override_city_id(): void
+    {
+        $obour = $this->city('Obour', 30.2285, 31.4769);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $nearObour = $this->publishedIn($obour);
+        $nearAlex = $this->publishedIn($alex);
+
+        Sanctum::actingAs(User::factory()->active()->create());
+
+        // Manual place near Obour even if city_id points at Alexandria.
+        $ids = collect($this->getJson(
+            '/api/events?discovery_mode=manual&city_id='.$alex->id.'&latitude=30.2285&longitude=31.4769&distance_km=10'
+        )->json('data'))->pluck('id');
+
+        $this->assertTrue($ids->contains($nearObour->id));
+        $this->assertFalse($ids->contains($nearAlex->id));
+    }
+
+    public function test_device_progressive_suggestions_for_city_only_beyond_uncertainty(): void
+    {
+        // Al Ibrahimeya ≈ 30.729, 31.598 → Zagazig city ~18.2 km.
+        // With uncertainty 10 km, city-only Zagazig is not strict at 25 km.
+        config(['location.city_location_uncertainty_km' => 10]);
+        config(['location.progressive_radii_km' => [50, 100, 200, 0]]);
+
+        $zagazig = $this->city('Zagazig', 30.5877, 31.5020);
+        $alex = $this->city('Alexandria', 31.2001, 29.9187);
+
+        $nearish = $this->publishedIn($zagazig, null, [
+            'title' => 'Zagazig Meetup',
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+        $far = $this->publishedIn($alex, null, [
+            'title' => 'Alex Far',
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+
+        Sanctum::actingAs(User::factory()->active()->create());
+
+        $response = $this->getJson('/api/events?'.http_build_query([
+            'discovery_mode' => 'device',
+            'latitude' => 30.729,
+            'longitude' => 31.598,
+            'distance_km' => 25,
+        ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($nearish->id));
+        $this->assertFalse($ids->contains($far->id));
+        $this->assertTrue((bool) $response->json('discovery.is_suggestion'));
+        $this->assertSame(25, (int) $response->json('discovery.selected_radius_km'));
+        $this->assertSame(50, (int) $response->json('discovery.effective_radius_km'));
+        $this->assertSame('city_level', collect($response->json('data'))
+            ->firstWhere('id', $nearish->id)['distance_precision'] ?? null);
+    }
+
+    public function test_exact_coordinate_event_qualifies_without_city_uncertainty(): void
+    {
+        config(['location.city_location_uncertainty_km' => 10]);
+
+        // Far city record, but exact pin at the device origin.
+        $city = $this->city('Somewhere Far', 30.0, 31.0);
+        $exact = $this->publishedIn($city, null, [
+            'title' => 'Exact Pin',
+            'latitude' => 30.729,
+            'longitude' => 31.598,
+        ]);
+
+        Sanctum::actingAs(User::factory()->active()->create());
+
+        $response = $this->getJson('/api/events?'.http_build_query([
+            'discovery_mode' => 'device',
+            'latitude' => 30.729,
+            'longitude' => 31.598,
+            'distance_km' => 25,
+        ]));
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($exact->id));
+        $row = collect($response->json('data'))->firstWhere('id', $exact->id);
+        $this->assertSame('exact', $row['distance_precision'] ?? null);
+        $this->assertFalse((bool) $response->json('discovery.is_suggestion'));
     }
 }

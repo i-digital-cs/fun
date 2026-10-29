@@ -53,6 +53,8 @@ class DiscoverFilters {
 
   Map<String, dynamic> toQuery() {
     final mode = resolvedDiscoveryMode;
+    final sendCoords =
+        (mode == 'device' || mode == 'manual') && hasDeviceOrigin;
     return {
       'discovery_mode': mode,
       if (q != null && q!.trim().isNotEmpty) 'q': q!.trim(),
@@ -60,8 +62,8 @@ class DiscoverFilters {
       if (mode == 'manual' && cityId != null) 'city_id': cityId,
       if (categoryId != null) 'category_id': categoryId,
       if (distanceKm != null) 'distance_km': distanceKm,
-      if (mode == 'device' && latitude != null) 'latitude': latitude,
-      if (mode == 'device' && longitude != null) 'longitude': longitude,
+      if (sendCoords) 'latitude': latitude,
+      if (sendCoords) 'longitude': longitude,
       if (when != null && when!.isNotEmpty) 'when': when,
       if (perPage != null) 'per_page': perPage,
       'page': page,
@@ -82,9 +84,10 @@ class DiscoverFilters {
     final mode = resolvedDiscoveryMode;
     add('discovery_mode', mode);
     if (q != null && q!.trim().isNotEmpty) add('q', q!.trim());
-    if (mode == 'device') {
+    if ((mode == 'device' || mode == 'manual') && hasDeviceOrigin) {
       add('latitude', latitude);
       add('longitude', longitude);
+      if (mode == 'manual' && cityId != null) add('city_id', cityId);
     } else if (mode == 'nationwide') {
       add('city_id', '');
     } else if (cityId != null) {

@@ -89,6 +89,7 @@ class EventItem extends Equatable {
     this.categoryId,
     this.cityId,
     this.distanceKm,
+    this.distancePrecision,
     this.joinAction,
     this.createdBy,
     this.readyForRatings = false,
@@ -121,6 +122,9 @@ class EventItem extends Equatable {
   final int? categoryId;
   final int? cityId;
   final double? distanceKm;
+
+  /// `exact` | `city_level` | `none` — how [distanceKm] was derived.
+  final String? distancePrecision;
   final String? joinAction;
   final int? createdBy;
   final bool readyForRatings;
@@ -215,6 +219,7 @@ class EventItem extends Equatable {
       categoryId: categoryId,
       cityId: cityId,
       distanceKm: distanceKm,
+      distancePrecision: distancePrecision,
       joinAction: joinAction ?? this.joinAction,
       createdBy: createdBy,
       readyForRatings: readyForRatings ?? this.readyForRatings,
@@ -250,6 +255,7 @@ class EventItem extends Equatable {
     categoryId,
     cityId,
     distanceKm,
+    distancePrecision,
     joinAction,
     createdBy,
     readyForRatings,
@@ -342,16 +348,29 @@ class PaginatedEvents extends Equatable {
     required this.items,
     required this.currentPage,
     required this.lastPage,
+    this.isSuggestion = false,
+    this.selectedRadiusKm,
+    this.effectiveRadiusKm,
   });
 
   final List<EventItem> items;
   final int currentPage;
   final int lastPage;
+  final bool isSuggestion;
+  final int? selectedRadiusKm;
+  final int? effectiveRadiusKm;
 
   bool get hasMore => currentPage < lastPage;
 
   @override
-  List<Object?> get props => [items, currentPage, lastPage];
+  List<Object?> get props => [
+    items,
+    currentPage,
+    lastPage,
+    isSuggestion,
+    selectedRadiusKm,
+    effectiveRadiusKm,
+  ];
 }
 
 class ChatMessage extends Equatable {

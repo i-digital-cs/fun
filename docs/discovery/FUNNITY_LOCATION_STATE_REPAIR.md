@@ -1,7 +1,11 @@
 # Funnity — Location State Consistency Repair
 
-**Branch:** `fix/funnity-performance-location-discovery`  
+**Branch:** `feature/funnity-explore-v4-map-first` (continued from performance/location work)  
 **Date:** 2026-10-28
+
+## Explore V4 FINAL addendum — visible device labels
+
+After GPS detection the client now reverse-geocodes via `GET /api/places/reverse` and stores `locationLabel` / `shortLabel` in `funnity_discovery_v4` session state. The Discover chip shows `Current location · {shortLabel}`; the status banner shows the full display name + reported GPS accuracy. Boot sync preserves labels when device coordinates are unchanged across reload. Reverse failure does not invent a city name.
 
 ## Confirmed root cause
 

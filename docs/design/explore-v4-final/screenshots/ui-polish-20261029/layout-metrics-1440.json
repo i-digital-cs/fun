@@ -1,0 +1,13 @@
+{
+  "viewport": {"w": 1440, "h": 900},
+  "toolbarH": 50,
+  "splitH": 630,
+  "mapPane": {"w": 765.3, "h": 630, "pctWidth": 66.4},
+  "listW": 373.7,
+  "mapAspectRatio": 1.215,
+  "visibleAggregates": 15,
+  "visibleExactPins": 1,
+  "visibleClusters": 0,
+  "zoomApprox": 5,
+  "notes": "Blade inline height cap applied without Vite publish. Pending asset publish for deferred fitEgypt + cityId modal fix."
+}

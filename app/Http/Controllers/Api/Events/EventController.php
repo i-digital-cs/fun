@@ -43,7 +43,9 @@ class EventController extends Controller
             return $event;
         });
 
-        return EventResource::collection($events);
+        return EventResource::collection($events)->additional([
+            'discovery' => $discover->lastMeta,
+        ]);
     }
 
     public function mine(

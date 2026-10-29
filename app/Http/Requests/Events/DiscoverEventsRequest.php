@@ -74,6 +74,11 @@ class DiscoverEventsRequest extends FormRequest
         } elseif ($mode === 'nationwide') {
             $filters['city_id'] = null;
         } elseif ($mode === 'manual') {
+            // Place selection may send lat/lng without city_id (beyond cities table).
+            if ($this->filled('latitude') && $this->filled('longitude')) {
+                $filters['latitude'] = (float) $this->input('latitude');
+                $filters['longitude'] = (float) $this->input('longitude');
+            }
             if (array_key_exists('city_id', $this->query()) || $this->exists('city_id')) {
                 $filters['city_id'] = $this->filled('city_id') ? $this->integer('city_id') : null;
             }

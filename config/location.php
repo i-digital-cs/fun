@@ -17,11 +17,37 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Expansion ladder (km) when Nearby is empty
+    | Progressive nearby suggestions (km) when the selected radius is empty
+    |--------------------------------------------------------------------------
+    |
+    | Tried in ascending order for distances strictly greater than the user's
+    | selected radius. 0 = nationwide / all distances.
+    |
+    */
+
+    'progressive_radii_km' => [50, 100, 200, 0],
+
+    /*
+    |--------------------------------------------------------------------------
+    | City-level location uncertainty (km)
+    |--------------------------------------------------------------------------
+    |
+    | City-only events lack exact venue pins. A city centroid within the selected
+    | radius does not prove the venue is inside that radius. Subtract this buffer
+    | when deciding strict-radius city eligibility; otherwise surface the event
+    | via progressive nearby suggestions with an approximate distance label.
+    |
+    */
+
+    'city_location_uncertainty_km' => 10,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Legacy alias — prefer progressive_radii_km
     |--------------------------------------------------------------------------
     */
 
-    'expansion_ladder_km' => [10, 25, 50, 100, 0],
+    'expansion_ladder_km' => [50, 100, 200, 0],
 
     /*
     |--------------------------------------------------------------------------

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/discover/data/discover_map_remote.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 
 class DiscoveryLocationState {
@@ -13,6 +14,8 @@ class DiscoveryLocationState {
     this.deviceLat,
     this.deviceLng,
     this.accuracyM,
+    this.locationLabel,
+    this.shortLabel,
     this.isDetecting = false,
     this.error,
     this.lastDetectedAt,
@@ -26,6 +29,8 @@ class DiscoveryLocationState {
   final double? deviceLat;
   final double? deviceLng;
   final double? accuracyM;
+  final String? locationLabel;
+  final String? shortLabel;
   final bool isDetecting;
   final String? error;
   final DateTime? lastDetectedAt;
@@ -40,16 +45,20 @@ class DiscoveryLocationState {
 
   String get summaryLabel {
     if (mode == DiscoveryLocationMode.device) {
+      if (isDetecting) return 'Detecting your location…';
       if (hasDeviceFix) {
-        final acc = accuracyM;
-        if (acc != null && acc > 0) {
-          return 'Current location · ±${acc.round()} m';
+        final place = shortLabel ?? locationLabel;
+        if (place != null && place.isNotEmpty) {
+          return 'Current location · $place';
         }
         return 'Current location';
       }
       return 'Current location · locating…';
     }
     if (hasManualCity) return cityName!;
+    if (mode == DiscoveryLocationMode.manual && cityName != null) {
+      return cityName!;
+    }
     return 'All Egypt';
   }
 
@@ -66,6 +75,8 @@ class DiscoveryLocationState {
     double? deviceLat,
     double? deviceLng,
     double? accuracyM,
+    String? locationLabel,
+    String? shortLabel,
     bool? isDetecting,
     String? error,
     DateTime? lastDetectedAt,
@@ -73,6 +84,7 @@ class DiscoveryLocationState {
     bool clearCity = false,
     bool clearDevice = false,
     bool clearError = false,
+    bool clearLabels = false,
   }) {
     return DiscoveryLocationState(
       mode: mode ?? this.mode,
@@ -82,6 +94,12 @@ class DiscoveryLocationState {
       deviceLat: clearDevice ? null : (deviceLat ?? this.deviceLat),
       deviceLng: clearDevice ? null : (deviceLng ?? this.deviceLng),
       accuracyM: clearDevice ? null : (accuracyM ?? this.accuracyM),
+      locationLabel: clearDevice || clearLabels
+          ? null
+          : (locationLabel ?? this.locationLabel),
+      shortLabel: clearDevice || clearLabels
+          ? null
+          : (shortLabel ?? this.shortLabel),
       isDetecting: isDetecting ?? this.isDetecting,
       error: clearError ? null : (error ?? this.error),
       lastDetectedAt: clearDevice
@@ -103,6 +121,23 @@ class DiscoveryLocationState {
     if (mode == DiscoveryLocationMode.device && hasDeviceFix) {
       return DiscoverFilters(
         discoveryMode: 'device',
+        distanceKm: distanceKm,
+        latitude: deviceLat,
+        longitude: deviceLng,
+        q: q,
+        categoryId: categoryId,
+        when: when,
+        page: page,
+        allCities: false,
+      );
+    }
+    // Manual place coords (session) take priority over city_id for origin.
+    if (mode == DiscoveryLocationMode.manual &&
+        deviceLat != null &&
+        deviceLng != null) {
+      return DiscoverFilters(
+        discoveryMode: 'manual',
+        cityId: cityId,
         distanceKm: distanceKm,
         latitude: deviceLat,
         longitude: deviceLng,
@@ -156,7 +191,25 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     var mode = service.mode;
     final cityId = service.manualCityId;
     final cityName = service.manualCityName;
+    final placeLat = service.manualPlaceLat;
+    final placeLng = service.manualPlaceLng;
+    final placeName = service.manualPlaceName;
     final distance = service.distanceKm ?? user?.distanceKm ?? 25;
+
+    if (mode == DiscoveryLocationMode.manual &&
+        placeLat != null &&
+        placeLng != null &&
+        placeName != null) {
+      state = DiscoveryLocationState(
+        mode: DiscoveryLocationMode.manual,
+        cityId: cityId,
+        cityName: placeName,
+        distanceKm: distance,
+        deviceLat: placeLat,
+        deviceLng: placeLng,
+      );
+      return;
+    }
 
     // Profile city seeds manual mode only when no explicit nationwide/device.
     if (mode == DiscoveryLocationMode.manual && cityId == null && user?.cityId != null) {
@@ -187,6 +240,7 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     int? distanceKm,
   }) async {
     final km = distanceKm ?? state.distanceKm;
+    await _service.clearManualPlace();
     await _service.setManualCity(cityId: cityId, name: name);
     await _service.setDistanceKm(km);
     state = state.copyWith(
@@ -199,9 +253,40 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     );
   }
 
+  /// Manual place (may be outside cities table). Persisted locally, not on account.
+  Future<void> selectManualPlace({
+    required String name,
+    required double latitude,
+    required double longitude,
+    int? cityId,
+    int? distanceKm,
+  }) async {
+    final km = distanceKm ?? state.distanceKm;
+    await _service.setDistanceKm(km);
+    if (cityId != null) {
+      await _service.setManualCity(cityId: cityId, name: name);
+    } else {
+      await _service.clearManualCity();
+    }
+    await _service.setManualPlace(
+      name: name,
+      latitude: latitude,
+      longitude: longitude,
+    );
+    state = DiscoveryLocationState(
+      mode: DiscoveryLocationMode.manual,
+      cityId: cityId,
+      cityName: name,
+      distanceKm: km,
+      deviceLat: latitude,
+      deviceLng: longitude,
+    );
+  }
+
   Future<void> setNationwide({int? distanceKm}) async {
     final km = distanceKm ?? state.distanceKm;
     await _service.clearManualCity();
+    await _service.clearManualPlace();
     await _service.setMode(DiscoveryLocationMode.nationwide);
     await _service.setDistanceKm(km);
     state = state.copyWith(
@@ -244,11 +329,29 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
       return state.error;
     }
     final approximate = pos.accuracyM > lowAccuracyMeters;
+    String? displayName;
+    String? shortName;
+    try {
+      final remote = DiscoverMapRemote(_ref.read(apiClientProvider));
+      final geo = await remote.reverseGeocode(
+        latitude: pos.lat,
+        longitude: pos.lng,
+      );
+      final data = geo.data;
+      if (data != null) {
+        displayName = data['display_name'] as String?;
+        shortName = data['short_name'] as String?;
+      }
+    } catch (_) {
+      // Keep coords; label optional.
+    }
     state = state.copyWith(
       isDetecting: false,
       deviceLat: pos.lat,
       deviceLng: pos.lng,
       accuracyM: pos.accuracyM,
+      locationLabel: displayName,
+      shortLabel: shortName,
       isApproximate: approximate,
       lastDetectedAt: DateTime.now(),
       clearCity: true,

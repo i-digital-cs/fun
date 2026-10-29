@@ -39,6 +39,7 @@ class EventController extends Controller
     ): View|Response {
         $filters = $request->filters();
         $events = $discover->discover($request->user(), $filters);
+        $nearbyMeta = $discover->lastMeta;
 
         $discoveryMode = $filters['discovery_mode']
             ?? (isset($filters['latitude'], $filters['longitude'])
@@ -132,6 +133,7 @@ class EventController extends Controller
             'hasDeviceOrigin' => $hasDeviceOrigin,
             'discoveryMode' => $discoveryMode,
             'nationwideFallback' => $nationwideFallback,
+            'nearbyMeta' => $nearbyMeta,
             'explicitCityFilter' => $explicitCityFilter,
             'landingCities' => $landings->eligibleCities(),
             'landingCategories' => $landings->eligibleCategories(),
