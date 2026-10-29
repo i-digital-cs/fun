@@ -108,6 +108,13 @@ class DashboardController extends Controller
             ? $weatherService->forCity($weatherCity, app()->getLocale())
             : null;
 
+        $miniMapCity = $weatherCity;
+        $miniMapLat = $miniMapCity?->latitude;
+        $miniMapLng = $miniMapCity?->longitude;
+        $miniMapMode = ($miniMapLat !== null && $miniMapLng !== null && $hasNearbyOrigin)
+            ? 'manual'
+            : 'nationwide';
+
         return view('home.dashboard', [
             'appName' => site_display_name(),
             'categories' => $categories,
@@ -130,6 +137,10 @@ class DashboardController extends Controller
             'memberships' => $homeParticipations['memberships'],
             'pendingRequests' => $homeParticipations['pendingRequests'],
             'weather' => $weather,
+            'selectedDistance' => $selectedDistance,
+            'miniMapLat' => $miniMapLat !== null ? (float) $miniMapLat : null,
+            'miniMapLng' => $miniMapLng !== null ? (float) $miniMapLng : null,
+            'miniMapMode' => $miniMapMode,
         ]);
     }
 }

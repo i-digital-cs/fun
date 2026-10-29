@@ -11,6 +11,13 @@ class DirectMessage extends Model
         'conversation_id',
         'user_id',
         'body',
+        'client_uuid',
+        'reply_to_id',
+        'message_type',
+        'media_path',
+        'media_mime',
+        'media_bytes',
+        'media_duration_ms',
     ];
 
     public function conversation(): BelongsTo
@@ -21,5 +28,10 @@ class DirectMessage extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reply_to_id');
     }
 }

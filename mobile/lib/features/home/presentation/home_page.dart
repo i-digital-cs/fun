@@ -12,6 +12,7 @@ import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/now_playing_card.dart';
 import 'package:fun_mobile/features/home/presentation/home_nearby_controller.dart';
+import 'package:fun_mobile/features/home/presentation/widgets/home_explore_map_card.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/home_hero_banner.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/home_sections.dart';
 import 'package:fun_mobile/features/home/presentation/widgets/location_shortcut_card.dart';
@@ -258,6 +259,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                       );
                     },
                   ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: HomeExploreMapCard(
+                  locationLabel: user?.cityName,
                 ),
               ),
               SliverToBoxAdapter(

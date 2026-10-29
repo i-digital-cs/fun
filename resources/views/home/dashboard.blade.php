@@ -102,6 +102,16 @@
             </div>
         </section>
 
+        <x-dashboard.home-mini-map
+            :city-name="$cityName"
+            :distance-km="$selectedDistance"
+            :has-nearby-origin="$hasNearbyOrigin"
+            :latitude="$miniMapLat ?? null"
+            :longitude="$miniMapLng ?? null"
+            :discovery-mode="$miniMapMode ?? 'nationwide'"
+            :suggested-events="$eventItems"
+        />
+
         {{-- Events near you --}}
         <section class="mt-7" id="nearby">
             <div class="mb-3.5 flex flex-wrap items-end justify-between gap-3">

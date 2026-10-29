@@ -16,6 +16,13 @@ class EventMessage extends Model
         'user_id',
         'body',
         'is_system',
+        'client_uuid',
+        'reply_to_id',
+        'message_type',
+        'media_path',
+        'media_mime',
+        'media_bytes',
+        'media_duration_ms',
     ];
 
     /**
@@ -41,5 +48,10 @@ class EventMessage extends Model
     public function reactions(): HasMany
     {
         return $this->hasMany(MessageReaction::class, 'message_id');
+    }
+
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reply_to_id');
     }
 }

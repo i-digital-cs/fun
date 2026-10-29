@@ -68,8 +68,10 @@ class DirectMessageService
     /**
      * Create or get conversation and post first/next message.
      * Conversation is created on first message (concurrent-safe via unique pair).
+     *
+     * @param  array{client_uuid?: string|null, reply_to_id?: int|null}  $options
      */
-    public function send(User $sender, User $recipient, string $rawBody): DirectMessage
+    public function send(User $sender, User $recipient, string $rawBody, array $options = []): DirectMessage
     {
         $this->assertCanMessage($sender, $recipient);
 
@@ -83,20 +85,34 @@ class DirectMessageService
             throw new DomainException(__('chat.too_long'));
         }
 
+        $clientUuid = $this->normalizedClientUuid($options['client_uuid'] ?? null);
+        $replyToId = isset($options['reply_to_id']) ? (int) $options['reply_to_id'] : null;
+
         [$low, $high] = DirectConversation::orderedPair((int) $sender->id, (int) $recipient->id);
+
+        if ($clientUuid !== null && \App\Services\Chat\ChatV2Capabilities::directMessageExtensions()) {
+            $existing = DirectMessage::query()
+                ->where('user_id', $sender->id)
+                ->where('client_uuid', $clientUuid)
+                ->whereHas('conversation', fn ($q) => $q->where('user_low_id', $low)->where('user_high_id', $high))
+                ->first();
+            if ($existing !== null) {
+                return $existing->loadMissing('user:id,name,public_id,profile_image_path');
+            }
+        }
 
         $duplicateKey = sprintf(
             'dm:dup:%d:%d:%s',
             $low,
             $sender->id,
-            hash('sha256', mb_strtolower($body))
+            hash('sha256', mb_strtolower($body).($clientUuid ?? ''))
         );
 
         if (! Cache::add($duplicateKey, true, now()->addSeconds(10))) {
             throw new DomainException(__('chat.duplicate'));
         }
 
-        $message = DB::transaction(function () use ($sender, $low, $high, $body) {
+        $message = DB::transaction(function () use ($sender, $low, $high, $body, $clientUuid, $replyToId) {
             $conversation = DirectConversation::query()->firstOrCreate(
                 [
                     'user_low_id' => $low,
@@ -107,11 +123,28 @@ class DirectMessageService
                 ]
             );
 
-            $message = DirectMessage::query()->create([
+            if ($replyToId !== null) {
+                $ok = DirectMessage::query()
+                    ->where('conversation_id', $conversation->id)
+                    ->whereKey($replyToId)
+                    ->exists();
+                if (! $ok) {
+                    $replyToId = null;
+                }
+            }
+
+            $attrs = [
                 'conversation_id' => $conversation->id,
                 'user_id' => $sender->id,
                 'body' => $body,
-            ]);
+            ];
+            if (\App\Services\Chat\ChatV2Capabilities::directMessageExtensions()) {
+                $attrs['client_uuid'] = $clientUuid;
+                $attrs['reply_to_id'] = $replyToId;
+                $attrs['message_type'] = 'text';
+            }
+
+            $message = DirectMessage::query()->create($attrs);
 
             $conversation->forceFill(['last_message_at' => $message->created_at])->save();
 
@@ -137,15 +170,37 @@ class DirectMessageService
 
     /**
      * Post to an existing conversation (recipient derived from pair).
+     *
+     * @param  array{client_uuid?: string|null, reply_to_id?: int|null}  $options
      */
-    public function sendToConversation(User $sender, DirectConversation $conversation, string $rawBody): DirectMessage
-    {
+    public function sendToConversation(
+        User $sender,
+        DirectConversation $conversation,
+        string $rawBody,
+        array $options = [],
+    ): DirectMessage {
         $this->assertParticipant($sender, $conversation);
 
         $otherId = $conversation->otherUserId((int) $sender->id);
         $recipient = User::query()->findOrFail($otherId);
 
-        return $this->send($sender, $recipient, $rawBody);
+        return $this->send($sender, $recipient, $rawBody, $options);
+    }
+
+    private function normalizedClientUuid(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+        $value = trim($value);
+        if ($value === '' || strlen($value) > 36) {
+            return null;
+        }
+        if (! preg_match('/^[A-Za-z0-9_-]{8,36}$/', $value)) {
+            return null;
+        }
+
+        return $value;
     }
 
     /**

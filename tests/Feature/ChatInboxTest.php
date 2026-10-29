@@ -74,7 +74,7 @@ class ChatInboxTest extends TestCase
             ->assertOk()
             ->assertSee('Inbox Event')
             ->assertSee('Hello member')
-            ->assertSee(__('chat.inbox_recent'))
+            ->assertSee(__('chat.filter_all'))
             ->assertSee(__('chat.inbox_unread'));
     }
 

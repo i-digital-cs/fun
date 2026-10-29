@@ -49,7 +49,15 @@ class EventChatController extends Controller
         $this->authorize('chat', $event);
 
         try {
-            $message = $service->post($request->user(), $event, $request->string('body')->toString());
+            $message = $service->post(
+                $request->user(),
+                $event,
+                $request->string('body')->toString(),
+                [
+                    'client_uuid' => $request->input('client_uuid'),
+                    'reply_to_id' => $request->integer('reply_to_id') ?: null,
+                ]
+            );
         } catch (DomainException $exception) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $exception->getMessage()], 422);

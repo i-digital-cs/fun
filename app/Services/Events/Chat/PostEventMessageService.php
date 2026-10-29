@@ -11,6 +11,7 @@ use App\Models\EventMember;
 use App\Models\EventMessage;
 use App\Models\User;
 use App\Notifications\ChatMessagePushNotification;
+use App\Services\Chat\ChatV2Capabilities;
 use App\Services\Safety\UserBlockService;
 use App\Support\ChatMessageSanitizer;
 use Illuminate\Broadcasting\BroadcastException;
@@ -26,7 +27,10 @@ class PostEventMessageService
     {
     }
 
-    public function post(User $user, Event $event, string $rawBody): EventMessage
+    /**
+     * @param  array{client_uuid?: string|null, reply_to_id?: int|null}  $options
+     */
+    public function post(User $user, Event $event, string $rawBody, array $options = []): EventMessage
     {
         if (! $user->canParticipate()) {
             throw new DomainException(__('chat.not_allowed'));
@@ -56,18 +60,54 @@ class PostEventMessageService
             throw new DomainException(__('chat.too_long'));
         }
 
-        $duplicateKey = sprintf('chat:dup:%d:%d:%s', $event->id, $user->id, hash('sha256', mb_strtolower($body)));
+        $clientUuid = $this->normalizedClientUuid($options['client_uuid'] ?? null);
+        $replyToId = isset($options['reply_to_id']) ? (int) $options['reply_to_id'] : null;
+
+        if ($clientUuid !== null && ChatV2Capabilities::eventMessageExtensions()) {
+            $existing = EventMessage::query()
+                ->where('event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->where('client_uuid', $clientUuid)
+                ->first();
+            if ($existing !== null) {
+                return $existing->loadMissing('user:id,name,public_id,profile_image_path');
+            }
+        }
+
+        $duplicateKey = sprintf(
+            'chat:dup:%d:%d:%s',
+            $event->id,
+            $user->id,
+            hash('sha256', mb_strtolower($body).($clientUuid ?? ''))
+        );
 
         if (! Cache::add($duplicateKey, true, now()->addSeconds(10))) {
             throw new DomainException(__('chat.duplicate'));
         }
 
-        $message = EventMessage::query()->create([
+        if ($replyToId !== null) {
+            $ok = EventMessage::query()
+                ->where('event_id', $event->id)
+                ->whereKey($replyToId)
+                ->exists();
+            if (! $ok) {
+                $replyToId = null;
+            }
+        }
+
+        $attrs = [
             'event_id' => $event->id,
             'user_id' => $user->id,
             'body' => $body,
             'is_system' => false,
-        ]);
+        ];
+        if (ChatV2Capabilities::eventMessageExtensions()) {
+            $attrs['client_uuid'] = $clientUuid;
+            $attrs['reply_to_id'] = $replyToId;
+            $attrs['message_type'] = 'text';
+        }
+
+        $message = EventMessage::query()->create($attrs);
 
         $message->load('user:id,name,public_id,profile_image_path');
 
@@ -137,5 +177,21 @@ class PostEventMessageService
                 ]);
             }
         }
+    }
+
+    private function normalizedClientUuid(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+        $value = trim($value);
+        if ($value === '' || strlen($value) > 36) {
+            return null;
+        }
+        if (! preg_match('/^[A-Za-z0-9_-]{8,36}$/', $value)) {
+            return null;
+        }
+
+        return $value;
     }
 }

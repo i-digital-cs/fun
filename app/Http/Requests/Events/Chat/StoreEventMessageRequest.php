@@ -19,6 +19,8 @@ class StoreEventMessageRequest extends FormRequest
     {
         return [
             'body' => ['required', 'string', 'max:'.PostEventMessageService::MAX_LENGTH],
+            'client_uuid' => ['sometimes', 'nullable', 'string', 'max:36'],
+            'reply_to_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ];
     }
 }

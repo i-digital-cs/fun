@@ -44,10 +44,20 @@ class DirectMessageController extends Controller
     ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:2000'],
+            'client_uuid' => ['sometimes', 'nullable', 'string', 'max:36'],
+            'reply_to_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ]);
 
         try {
-            $message = $dms->sendToConversation($request->user(), $conversation, $validated['body']);
+            $message = $dms->sendToConversation(
+                $request->user(),
+                $conversation,
+                $validated['body'],
+                [
+                    'client_uuid' => $validated['client_uuid'] ?? null,
+                    'reply_to_id' => $validated['reply_to_id'] ?? null,
+                ]
+            );
         } catch (DomainException $e) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 422);
