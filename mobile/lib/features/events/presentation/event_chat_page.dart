@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
-import 'package:fun_mobile/features/events/domain/events_repository.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -34,6 +34,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   String? _error;
   bool _loading = true;
   bool _sending = false;
+  ChatMessage? _replyingTo;
   String? _eventTitle;
   EventCreator? _host;
   int? _ownerId;
@@ -156,7 +157,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
               myReaction: currentId != null && reaction.actorId == currentId
                   ? reaction.myReaction
                   : m.myReaction,
-              clearMyReaction: currentId != null &&
+              clearMyReaction:
+                  currentId != null &&
                   reaction.actorId == currentId &&
                   reaction.myReaction == null,
             )
@@ -168,17 +170,14 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
 
   Future<void> _react(ChatMessage message, String type) async {
     final next = message.myReaction == type ? null : type;
-    final result = await ref.read(eventsRepositoryProvider).reactToMessage(
-          widget.eventId,
-          message.id,
-          type: next,
-        );
+    final result = await ref
+        .read(eventsRepositoryProvider)
+        .reactToMessage(widget.eventId, message.id, type: next);
     if (!mounted) return;
     if (result.failure != null || result.data == null) {
       if (result.failure != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.failure!.message)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       }
       return;
     }
@@ -272,25 +271,54 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     setState(() => _sending = true);
     final result = await ref
         .read(eventsRepositoryProvider)
-        .postMessage(widget.eventId, body);
+        .postMessage(
+          widget.eventId,
+          body,
+          replyToId: _replyingTo?.id,
+          clientUuid: _clientUuid(),
+        );
     if (!mounted) return;
     setState(() => _sending = false);
     if (result.failure != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(result.failure!.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
       return;
     }
     _text.clear();
+    setState(() => _replyingTo = null);
     final posted = result.data;
     if (posted != null && !_messages.any((m) => m.id == posted.id)) {
       setState(() {
-        _messages = [..._messages, posted]..sort((a, b) => a.id.compareTo(b.id));
+        _messages = [..._messages, posted]
+          ..sort((a, b) => a.id.compareTo(b.id));
       });
       _scrollToBottom();
     } else {
       await _load();
     }
+  }
+
+  String _clientUuid() {
+    final random = Random.secure();
+    String hex(int length) => List.generate(
+      length,
+      (_) => random.nextInt(16).toRadixString(16),
+    ).join();
+    return '${hex(8)}-${hex(4)}-4${hex(3)}-'
+        '${(8 + random.nextInt(4)).toRadixString(16)}${hex(3)}-${hex(12)}';
+  }
+
+  void _jumpTo(int messageId) {
+    final index = _messages.indexWhere((message) => message.id == messageId);
+    if (index < 0 || !_scroll.hasClients) return;
+    final fraction = _messages.length <= 1
+        ? 0.0
+        : index / (_messages.length - 1);
+    _scroll.animateTo(
+      _scroll.position.maxScrollExtent * fraction,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOut,
+    );
   }
 
   void _openProfile(ChatMessage message) {
@@ -316,6 +344,11 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            ListTile(
+              leading: const Icon(Icons.reply_rounded),
+              title: Text(l10n.reply),
+              onTap: () => Navigator.pop(ctx, 'reply'),
+            ),
             ListTile(
               leading: const Icon(Icons.copy_outlined),
               title: Text(l10n.copyMessage),
@@ -347,12 +380,14 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     if (!mounted || action == null) return;
 
     switch (action) {
+      case 'reply':
+        setState(() => _replyingTo = message);
+        return;
       case 'copy':
         await Clipboard.setData(ClipboardData(text: message.body));
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.messageCopied)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.messageCopied)));
       case 'report_message':
         await showReportSheet(
           context,
@@ -374,13 +409,11 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
               .block(message.userId!);
           if (!mounted) return;
           if (result.failure != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(result.failure!.message)),
-            );
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(result.failure!.message)));
           } else {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(l10n.userBlocked)));
           }
         }
     }
@@ -512,9 +545,9 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final message = _messages[index];
-                  final mine =
-                      currentId != null && message.userId == currentId;
-                  final isHost = _ownerId != null &&
+                  final mine = currentId != null && message.userId == currentId;
+                  final isHost =
+                      _ownerId != null &&
                       message.userId != null &&
                       message.userId == _ownerId;
                   return ChatBubble(
@@ -536,12 +569,21 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                     onLongPress: message.isSystem
                         ? null
                         : () => _onMessageActions(message),
+                    onReplyTap: message.replyToId == null
+                        ? null
+                        : () => _jumpTo(message.replyToId!),
                   );
                 },
               ),
             ),
           ),
-          ChatComposer(controller: _text, sending: _sending, onSend: _send),
+          ChatComposer(
+            controller: _text,
+            sending: _sending,
+            onSend: _send,
+            replyingTo: _replyingTo,
+            onCancelReply: () => setState(() => _replyingTo = null),
+          ),
         ],
       ),
     );
@@ -561,6 +603,7 @@ class ChatBubble extends StatelessWidget {
     this.onShowReactors,
     this.onLongPress,
     this.onAvatarTap,
+    this.onReplyTap,
   });
 
   final ChatMessage message;
@@ -573,6 +616,7 @@ class ChatBubble extends StatelessWidget {
   final ValueChanged<String>? onShowReactors;
   final VoidCallback? onLongPress;
   final VoidCallback? onAvatarTap;
+  final VoidCallback? onReplyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -602,14 +646,10 @@ class ChatBubble extends StatelessWidget {
     final Color? bubbleBorder;
     if (myReaction == 'like') {
       bubbleColor = isMine ? AppColors.success : const Color(0xFFECFDF5);
-      bubbleBorder = isMine
-          ? null
-          : AppColors.success.withValues(alpha: 0.45);
+      bubbleBorder = isMine ? null : AppColors.success.withValues(alpha: 0.45);
     } else if (myReaction == 'dislike') {
       bubbleColor = isMine ? AppColors.danger : const Color(0xFFFFF1F2);
-      bubbleBorder = isMine
-          ? null
-          : AppColors.danger.withValues(alpha: 0.4);
+      bubbleBorder = isMine ? null : AppColors.danger.withValues(alpha: 0.4);
     } else {
       bubbleColor = isMine ? AppColors.primary : AppColors.surface;
       bubbleBorder = isMine
@@ -633,11 +673,38 @@ class ChatBubble extends StatelessWidget {
               bottomLeft: Radius.circular(isMine ? 18 : 4),
               bottomRight: Radius.circular(isMine ? 4 : 18),
             ),
-            border: bubbleBorder == null ? null : Border.all(color: bubbleBorder),
+            border: bubbleBorder == null
+                ? null
+                : Border.all(color: bubbleBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (message.replyTo != null)
+                InkWell(
+                  onTap: onReplyTap,
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 7),
+                    padding: const EdgeInsetsDirectional.fromSTEB(9, 6, 9, 6),
+                    decoration: BoxDecoration(
+                      color: isMine
+                          ? Colors.white.withValues(alpha: 0.14)
+                          : AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Text(
+                      '${message.replyTo!.userName ?? ''}\n${message.replyTo!.body}',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: bidiTextDirection(message.replyTo!.body),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isMine ? Colors.white : AppColors.primaryInk,
+                      ),
+                    ),
+                  ),
+                ),
               if (!isMine && message.userName != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
@@ -788,8 +855,9 @@ class ChatBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        mainAxisAlignment:
-            isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: isMine
             ? [bubble, const SizedBox(width: 8), avatar]
@@ -822,11 +890,11 @@ class _ReactionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = active
         ? (isMine
-            ? Colors.white.withValues(alpha: 0.28)
-            : AppColors.primarySoft)
+              ? Colors.white.withValues(alpha: 0.28)
+              : AppColors.primarySoft)
         : (isMine
-            ? Colors.white.withValues(alpha: 0.12)
-            : const Color(0xFFF8FAFC));
+              ? Colors.white.withValues(alpha: 0.12)
+              : const Color(0xFFF8FAFC));
     final fg = isMine
         ? Colors.white
         : (active ? AppColors.primary : AppColors.muted);
@@ -944,7 +1012,9 @@ class _ReactionsSheetState extends State<_ReactionsSheet> {
     final likes = _data?.likes ?? const <MessageReactor>[];
     final dislikes = _data?.dislikes ?? const <MessageReactor>[];
     final people = _tab == 'dislike' ? dislikes : likes;
-    final empty = _tab == 'dislike' ? widget.noDislikesLabel : widget.noLikesLabel;
+    final empty = _tab == 'dislike'
+        ? widget.noDislikesLabel
+        : widget.noLikesLabel;
 
     return SafeArea(
       child: Padding(
@@ -1181,11 +1251,15 @@ class ChatComposer extends StatelessWidget {
     required this.controller,
     required this.sending,
     required this.onSend,
+    this.replyingTo,
+    this.onCancelReply,
   });
 
   final TextEditingController controller;
   final bool sending;
   final VoidCallback onSend;
+  final ChatMessage? replyingTo;
+  final VoidCallback? onCancelReply;
 
   static const _ink = Color(0xFF0B0B0F);
 
@@ -1208,6 +1282,29 @@ class ChatComposer extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (replyingTo != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 4, 6),
+                decoration: const BoxDecoration(color: AppColors.primarySoft),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${l10n.reply}: ${replyingTo!.body}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: bidiTextDirection(replyingTo!.body),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: l10n.cancel,
+                      onPressed: onCancelReply,
+                      icon: const Icon(Icons.close, size: 18),
+                    ),
+                  ],
+                ),
+              ),
             TextField(
               controller: controller,
               minLines: 1,
@@ -1252,9 +1349,9 @@ class ChatComposer extends StatelessWidget {
                   _ComposerIconButton(
                     icon: Icons.attach_file_rounded,
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.attachSoon)),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(l10n.attachSoon)));
                     },
                   ),
                   const SizedBox(width: 8),

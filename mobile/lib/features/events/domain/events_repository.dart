@@ -38,8 +38,7 @@ class DiscoverFilters {
   final bool allCities;
   final String? discoveryMode;
 
-  bool get isNationwide =>
-      allCities || discoveryMode == 'nationwide';
+  bool get isNationwide => allCities || discoveryMode == 'nationwide';
 
   bool get hasDeviceOrigin => latitude != null && longitude != null;
 
@@ -182,16 +181,18 @@ abstract class EventsRepository {
   Future<Result<void>> transferOwnership(int eventId, int userId);
 
   Future<Result<List<ChatMessage>>> messages(int id, {Object? cancelToken});
-  Future<Result<ChatMessage>> postMessage(int id, String body);
+  Future<Result<ChatMessage>> postMessage(
+    int id,
+    String body, {
+    int? replyToId,
+    String? clientUuid,
+  });
   Future<Result<ChatMessage>> reactToMessage(
     int eventId,
     int messageId, {
     String? type,
   });
-  Future<Result<MessageReactions>> messageReactions(
-    int eventId,
-    int messageId,
-  );
+  Future<Result<MessageReactions>> messageReactions(int eventId, int messageId);
 
   Future<Result<List<EventRating>>> ratings(int id);
   Future<Result<EventRating?>> myRating(int id);

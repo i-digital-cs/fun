@@ -69,16 +69,33 @@ class DirectMessageService
      * Create or get conversation and post first/next message.
      * Conversation is created on first message (concurrent-safe via unique pair).
      *
-     * @param  array{client_uuid?: string|null, reply_to_id?: int|null}  $options
+     * @param  array{
+     *     client_uuid?: string|null,
+     *     reply_to_id?: int|null,
+     *     message_type?: string|null,
+     *     media_path?: string|null,
+     *     media_mime?: string|null,
+     *     media_bytes?: int|null,
+     *     media_duration_ms?: int|null
+     * }  $options
      */
     public function send(User $sender, User $recipient, string $rawBody, array $options = []): DirectMessage
     {
         $this->assertCanMessage($sender, $recipient);
 
         $body = ChatMessageSanitizer::clean($rawBody);
+        $hasMedia = filled($options['media_path'] ?? null);
 
-        if ($body === '') {
+        if ($body === '' && ! $hasMedia) {
             throw new DomainException(__('chat.empty'));
+        }
+
+        if ($body === '' && $hasMedia) {
+            $body = match ((string) ($options['message_type'] ?? 'file')) {
+                'voice' => '[voice]',
+                'image' => '[image]',
+                default => '[attachment]',
+            };
         }
 
         if (mb_strlen($body) > self::MAX_LENGTH) {
@@ -112,7 +129,7 @@ class DirectMessageService
             throw new DomainException(__('chat.duplicate'));
         }
 
-        $message = DB::transaction(function () use ($sender, $low, $high, $body, $clientUuid, $replyToId) {
+        $message = DB::transaction(function () use ($sender, $low, $high, $body, $clientUuid, $replyToId, $options) {
             $conversation = DirectConversation::query()->firstOrCreate(
                 [
                     'user_low_id' => $low,
@@ -141,14 +158,18 @@ class DirectMessageService
             if (\App\Services\Chat\ChatV2Capabilities::directMessageExtensions()) {
                 $attrs['client_uuid'] = $clientUuid;
                 $attrs['reply_to_id'] = $replyToId;
-                $attrs['message_type'] = 'text';
+                $attrs['message_type'] = (string) ($options['message_type'] ?? 'text');
+                $attrs['media_path'] = $options['media_path'] ?? null;
+                $attrs['media_mime'] = $options['media_mime'] ?? null;
+                $attrs['media_bytes'] = $options['media_bytes'] ?? null;
+                $attrs['media_duration_ms'] = $options['media_duration_ms'] ?? null;
             }
 
             $message = DirectMessage::query()->create($attrs);
 
             $conversation->forceFill(['last_message_at' => $message->created_at])->save();
 
-            return $message->load('user:id,name,public_id,profile_image_path');
+            return $message->load(['user:id,name,public_id,profile_image_path', 'replyTo.user:id,name']);
         });
 
         $conversation = $message->conversation()->first();
@@ -224,7 +245,7 @@ class DirectMessageService
 
         return DirectMessage::query()
             ->where('conversation_id', $conversation->id)
-            ->with('user:id,name,public_id,profile_image_path')
+            ->with(['user:id,name,public_id,profile_image_path', 'replyTo.user:id,name'])
             ->latest('id')
             ->paginate(min(max($perPage, 1), 100));
     }

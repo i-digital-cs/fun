@@ -49,14 +49,35 @@ class EventChatController extends Controller
         $this->authorize('chat', $event);
 
         try {
+            $options = [
+                'client_uuid' => $request->input('client_uuid'),
+                'reply_to_id' => $request->integer('reply_to_id') ?: null,
+            ];
+            if ($request->hasFile('media')) {
+                $media = app(\App\Services\Chat\ChatMediaService::class);
+                $kind = (string) $request->input('media_kind', 'file');
+                $stored = match ($kind) {
+                    'voice' => $media->storeVoice(
+                        $request->file('media'),
+                        (int) $request->user()->id,
+                        $request->integer('duration_ms') ?: null
+                    ),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                };
+                $options = array_merge($options, [
+                    'message_type' => $stored['message_type'],
+                    'media_path' => $stored['path'],
+                    'media_mime' => $stored['mime'],
+                    'media_bytes' => $stored['bytes'],
+                    'media_duration_ms' => $stored['duration_ms'],
+                ]);
+            }
             $message = $service->post(
                 $request->user(),
                 $event,
-                $request->string('body')->toString(),
-                [
-                    'client_uuid' => $request->input('client_uuid'),
-                    'reply_to_id' => $request->integer('reply_to_id') ?: null,
-                ]
+                (string) $request->input('body', ''),
+                $options
             );
         } catch (DomainException $exception) {
             if ($request->expectsJson()) {

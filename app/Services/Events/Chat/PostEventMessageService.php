@@ -28,7 +28,15 @@ class PostEventMessageService
     }
 
     /**
-     * @param  array{client_uuid?: string|null, reply_to_id?: int|null}  $options
+     * @param  array{
+     *     client_uuid?: string|null,
+     *     reply_to_id?: int|null,
+     *     message_type?: string|null,
+     *     media_path?: string|null,
+     *     media_mime?: string|null,
+     *     media_bytes?: int|null,
+     *     media_duration_ms?: int|null
+     * }  $options
      */
     public function post(User $user, Event $event, string $rawBody, array $options = []): EventMessage
     {
@@ -51,9 +59,18 @@ class PostEventMessageService
         }
 
         $body = ChatMessageSanitizer::clean($rawBody);
+        $hasMedia = filled($options['media_path'] ?? null);
 
-        if ($body === '') {
+        if ($body === '' && ! $hasMedia) {
             throw new DomainException(__('chat.empty'));
+        }
+
+        if ($body === '' && $hasMedia) {
+            $body = match ((string) ($options['message_type'] ?? 'file')) {
+                'voice' => '[voice]',
+                'image' => '[image]',
+                default => '[attachment]',
+            };
         }
 
         if (mb_strlen($body) > self::MAX_LENGTH) {
@@ -104,12 +121,16 @@ class PostEventMessageService
         if (ChatV2Capabilities::eventMessageExtensions()) {
             $attrs['client_uuid'] = $clientUuid;
             $attrs['reply_to_id'] = $replyToId;
-            $attrs['message_type'] = 'text';
+            $attrs['message_type'] = (string) ($options['message_type'] ?? 'text');
+            $attrs['media_path'] = $options['media_path'] ?? null;
+            $attrs['media_mime'] = $options['media_mime'] ?? null;
+            $attrs['media_bytes'] = $options['media_bytes'] ?? null;
+            $attrs['media_duration_ms'] = $options['media_duration_ms'] ?? null;
         }
 
         $message = EventMessage::query()->create($attrs);
 
-        $message->load('user:id,name,public_id,profile_image_path');
+        $message->load(['user:id,name,public_id,profile_image_path', 'replyTo.user:id,name']);
 
         try {
             broadcast(new EventMessagePosted($message))->toOthers();

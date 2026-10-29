@@ -38,15 +38,15 @@ final chatsListProvider =
     });
 
 final dmsListProvider =
-    FutureProvider.autoDispose<({List<DmConversation> data, int unreadTotal})>(
-      (ref) async {
-        final result = await ref.watch(dmsRepositoryProvider).list();
-        if (result.failure != null) {
-          throw result.failure!;
-        }
-        return (data: result.data, unreadTotal: result.unreadTotal);
-      },
-    );
+    FutureProvider.autoDispose<({List<DmConversation> data, int unreadTotal})>((
+      ref,
+    ) async {
+      final result = await ref.watch(dmsRepositoryProvider).list();
+      if (result.failure != null) {
+        throw result.failure!;
+      }
+      return (data: result.data, unreadTotal: result.unreadTotal);
+    });
 
 enum _InboxTab { events, direct }
 
@@ -86,17 +86,15 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
     }
     final q = _search.text.trim().toLowerCase();
     if (q.isEmpty) return list;
-    return list
-        .where((c) {
-          final hay = [
-            c.title,
-            c.city ?? '',
-            c.lastMessage?.body ?? '',
-            c.lastMessage?.userName ?? '',
-          ].join(' ').toLowerCase();
-          return hay.contains(q);
-        })
-        .toList();
+    return list.where((c) {
+      final hay = [
+        c.title,
+        c.city ?? '',
+        c.lastMessage?.body ?? '',
+        c.lastMessage?.userName ?? '',
+      ].join(' ').toLowerCase();
+      return hay.contains(q);
+    }).toList();
   }
 
   @override
@@ -111,17 +109,16 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
         centerTitle: false,
         title: Text(l10n.chatsTitle),
         actions: [
-          if (_inboxTab == _InboxTab.events)
-            IconButton(
-              tooltip: l10n.search,
-              icon: Icon(_showSearch ? Icons.close : Icons.search),
-              onPressed: () {
-                setState(() {
-                  _showSearch = !_showSearch;
-                  if (!_showSearch) _search.clear();
-                });
-              },
-            ),
+          IconButton(
+            tooltip: l10n.search,
+            icon: Icon(_showSearch ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) _search.clear();
+              });
+            },
+          ),
         ],
       ),
       body: Column(
@@ -150,7 +147,14 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
           const SizedBox(height: 8),
           Expanded(
             child: _inboxTab == _InboxTab.direct
-                ? _DirectInboxBody(dmsAsync: dmsAsync)
+                ? _DirectInboxBody(
+                    dmsAsync: dmsAsync,
+                    filter: _filter,
+                    showSearch: _showSearch,
+                    search: _search,
+                    onFilterChanged: (f) => setState(() => _filter = f),
+                    onSearchChanged: () => setState(() {}),
+                  )
                 : _EventsInboxBody(
                     async: async,
                     filter: _filter,
@@ -191,130 +195,140 @@ class _EventsInboxBody extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     return async.when(
-        loading: () => const Center(child: FunLoader()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              error is Failure
-                  ? failureUserMessage(error)
-                  : l10n.failedToLoadEvents,
-              textAlign: TextAlign.center,
-            ),
+      loading: () => const Center(child: FunLoader()),
+      error: (error, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            error is Failure
+                ? failureUserMessage(error)
+                : l10n.failedToLoadEvents,
+            textAlign: TextAlign.center,
           ),
         ),
-        data: (payload) {
-          if (payload.data.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.chatsEmptyTitle,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 18,
-                      ),
+      ),
+      data: (payload) {
+        if (payload.data.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.chatsEmptyTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.chatsEmptyBody,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.muted),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.chatsEmptyBody,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
+                ],
               ),
-            );
-          }
-
-          final rows = filtered(payload.data);
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: Column(
-                  children: [
-                    _ChatSegmentBar(
-                      recentLabel: l10n.chatsFilterRecent,
-                      unreadLabel: l10n.chatsFilterUnread,
-                      unreadCount: payload.unreadTotal,
-                      selected: filter,
-                      onChanged: onFilterChanged,
-                    ),
-                    if (showSearch) ...[
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: search,
-                        onChanged: (_) => onSearchChanged(),
-                        autofocus: true,
-                        textInputAction: TextInputAction.search,
-                        decoration: InputDecoration(
-                          hintText: l10n.searchChatsHint,
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          filled: true,
-                          fillColor: AppColors.surface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderSoft,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: rows.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(
-                            filter == _ChatFilter.unread &&
-                                    search.text.trim().isEmpty
-                                ? l10n.chatsNoUnread
-                                : l10n.chatsNoResults,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.muted),
-                          ),
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async =>
-                            ref.invalidate(chatsListProvider),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-                          itemCount: rows.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 6),
-                          itemBuilder: (context, index) {
-                            final chat = rows[index];
-                            return _ChatCard(
-                              chat: chat,
-                              onTap: () => context.push(
-                                '/events/${chat.eventId}/chat',
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-              ),
-            ],
+            ),
           );
-        },
+        }
+
+        final rows = filtered(payload.data);
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Column(
+                children: [
+                  _ChatSegmentBar(
+                    recentLabel: l10n.chatsFilterRecent,
+                    unreadLabel: l10n.chatsFilterUnread,
+                    unreadCount: payload.unreadTotal,
+                    selected: filter,
+                    onChanged: onFilterChanged,
+                  ),
+                  if (showSearch) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: search,
+                      onChanged: (_) => onSearchChanged(),
+                      autofocus: true,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: l10n.searchChatsHint,
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppColors.borderSoft,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: rows.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          filter == _ChatFilter.unread &&
+                                  search.text.trim().isEmpty
+                              ? l10n.chatsNoUnread
+                              : l10n.chatsNoResults,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: AppColors.muted),
+                        ),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async => ref.invalidate(chatsListProvider),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+                        itemCount: rows.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          final chat = rows[index];
+                          return _ChatCard(
+                            chat: chat,
+                            onTap: () =>
+                                context.push('/events/${chat.eventId}/chat'),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _DirectInboxBody extends ConsumerWidget {
-  const _DirectInboxBody({required this.dmsAsync});
+  const _DirectInboxBody({
+    required this.dmsAsync,
+    required this.filter,
+    required this.showSearch,
+    required this.search,
+    required this.onFilterChanged,
+    required this.onSearchChanged,
+  });
 
   final AsyncValue<({List<DmConversation> data, int unreadTotal})> dmsAsync;
+  final _ChatFilter filter;
+  final bool showSearch;
+  final TextEditingController search;
+  final ValueChanged<_ChatFilter> onFilterChanged;
+  final VoidCallback onSearchChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -355,20 +369,75 @@ class _DirectInboxBody extends ConsumerWidget {
             ),
           );
         }
-        return RefreshIndicator(
-          onRefresh: () async => ref.invalidate(dmsListProvider),
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-            itemCount: payload.data.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 6),
-            itemBuilder: (context, index) {
-              final dm = payload.data[index];
-              return _DmInboxCard(
-                conversation: dm,
-                onTap: () => context.push('/dms/${dm.id}'),
-              );
-            },
-          ),
+        final query = search.text.trim().toLowerCase();
+        final rows = payload.data.where((conversation) {
+          if (filter == _ChatFilter.unread && conversation.unreadCount == 0) {
+            return false;
+          }
+          if (query.isEmpty) return true;
+          return [
+            conversation.otherUser.name,
+            conversation.lastMessage?.body ?? '',
+            conversation.lastMessage?.userName ?? '',
+          ].join(' ').toLowerCase().contains(query);
+        }).toList();
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _ChatSegmentBar(
+                    recentLabel: l10n.chatsFilterRecent,
+                    unreadLabel: l10n.chatsFilterUnread,
+                    unreadCount: payload.unreadTotal,
+                    selected: filter,
+                    onChanged: onFilterChanged,
+                  ),
+                  if (showSearch) ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: search,
+                      autofocus: true,
+                      onChanged: (_) => onSearchChanged(),
+                      decoration: InputDecoration(
+                        hintText: l10n.searchChatsHint,
+                        prefixIcon: const Icon(Icons.search_rounded),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: rows.isEmpty
+                  ? Center(
+                      child: Text(
+                        filter == _ChatFilter.unread && query.isEmpty
+                            ? l10n.chatsNoUnread
+                            : l10n.chatsNoResults,
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async => ref.invalidate(dmsListProvider),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+                        itemCount: rows.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          final dm = rows[index];
+                          return _DmInboxCard(
+                            conversation: dm,
+                            onTap: () => context.push('/dms/${dm.id}'),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );
@@ -461,7 +530,10 @@ class _InboxTabChip extends StatelessWidget {
               if (badge > 0) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(999),
@@ -509,14 +581,14 @@ class _DmInboxCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: unread ? AppColors.primary.withValues(alpha: 0.35) : AppColors.borderSoft,
+              color: unread
+                  ? AppColors.primary.withValues(alpha: 0.35)
+                  : AppColors.borderSoft,
             ),
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                child: Text(other.initials),
-              ),
+              CircleAvatar(child: Text(other.initials)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -734,8 +806,9 @@ class _ChatCard extends StatelessWidget {
                             textDirection: bidiTextDirection(chat.title),
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight:
-                                  unread ? FontWeight.w800 : FontWeight.w600,
+                              fontWeight: unread
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
                               color: AppColors.text,
                             ),
                           ),
@@ -779,10 +852,10 @@ class _ChatCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 13,
-                              color:
-                                  unread ? AppColors.text : AppColors.muted,
-                              fontWeight:
-                                  unread ? FontWeight.w600 : FontWeight.w400,
+                              color: unread ? AppColors.text : AppColors.muted,
+                              fontWeight: unread
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
                             ),
                           ),
                         ),
@@ -881,9 +954,7 @@ class _EventAvatar extends StatelessWidget {
                     ),
                   )
                 : ColoredBox(
-                    color: unread
-                        ? AppColors.primary
-                        : AppColors.primarySoft,
+                    color: unread ? AppColors.primary : AppColors.primarySoft,
                     child: Center(
                       child: Text(
                         initial,
@@ -1175,7 +1246,7 @@ class _ChatToastListenerState extends ConsumerState<ChatToastListener> {
         return;
       }
 
-      if (notifyResult.failure == null && notifyResult.data != null) {
+      if (notifyResult.failure == null) {
         ref.read(notificationUnreadTotalProvider.notifier).state =
             notifyResult.unreadCount;
         _enqueueFriendNotifyToasts(notifyResult.data);

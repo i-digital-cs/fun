@@ -18,7 +18,8 @@ class ReactToEventMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['nullable', 'string', Rule::in(['like', 'dislike'])],
+            'type' => ['nullable', 'string', Rule::in(['like', 'dislike', 'emoji'])],
+            'emoji' => ['nullable', 'string', 'max:16'],
         ];
     }
 }

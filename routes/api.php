@@ -148,6 +148,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/dms/{conversation}/messages', [ApiDirectMessageController::class, 'store'])
             ->whereNumber('conversation')
             ->middleware('throttle:messages');
+        Route::post('/dms/{conversation}/messages/{message}/react', \App\Http\Controllers\Api\Friends\DirectMessageReactionController::class)
+            ->whereNumber('conversation')
+            ->whereNumber('message')
+            ->middleware('throttle:60,1');
+        Route::get('/dms/media/{message}', [\App\Http\Controllers\Api\Chat\ChatMediaStreamController::class, 'direct'])
+            ->whereNumber('message');
         Route::post('/dms/{conversation}/read', [ApiDirectMessageController::class, 'markRead'])
             ->whereNumber('conversation')
             ->middleware('throttle:60,1');
@@ -204,6 +210,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/events/{event}/messages/{message}/react', [ApiEventChatController::class, 'react'])
             ->middleware('throttle:60,1');
         Route::get('/events/{event}/messages/{message}/reactions', [ApiEventChatController::class, 'reactions']);
+        Route::get('/events/{event}/messages/{message}/media', [\App\Http\Controllers\Api\Chat\ChatMediaStreamController::class, 'event'])
+            ->whereNumber('message');
 
         Route::get('/events/{event}/ticket', [ApiEventTicketController::class, 'show'])
             ->whereNumber('event');

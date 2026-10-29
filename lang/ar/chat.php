@@ -28,6 +28,15 @@ return [
     'recording' => 'جاري التسجيل…',
     'communities_soon' => 'محادثات المجتمعات غير متاحة بعد.',
     'client_uuid_invalid' => 'معرّف الرسالة غير صالح.',
+    'reactions_unavailable' => 'التفاعلات غير متاحة بعد.',
+    'media_unavailable' => 'الرسائل الوسائط غير متاحة بعد.',
+    'voice_too_long' => 'الرسالة الصوتية طويلة جداً.',
+    'attachment_forbidden' => 'نوع الملف غير مسموح.',
+    'attachment_invalid' => 'فشل الرفع. جرّب ملفاً آخر.',
+    'attachment_too_large' => 'الملف كبير جداً.',
+    'attachment_type' => 'نوع الملف غير مدعوم.',
+    'attachment_failed' => 'تعذر حفظ الملف.',
+
 
     'inbox_empty_title' => 'لا محادثات بعد',
     'inbox_empty_body' => 'انضم إلى فعالية لبدء المحادثة مع الأعضاء.',

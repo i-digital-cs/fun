@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -111,7 +110,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatsYou => 'You';
 
   @override
-  String get chatsFilterRecent => 'Recent';
+  String get chatsFilterRecent => 'All';
 
   @override
   String get chatsFilterUnread => 'Unread';
@@ -130,6 +129,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageCopied => 'Message copied';
+
+  @override
+  String get reply => 'Reply';
+
+  @override
+  String get react => 'React';
+
+  @override
+  String get voiceMessage => 'Voice message';
+
+  @override
+  String get voiceUnavailable =>
+      'Voice recording is not available in this build.';
+
+  @override
+  String get homeMapTitle => 'Explore Around You';
+
+  @override
+  String get homeMapSubtitle =>
+      'Find activities, meet people, and explore events nearby.';
+
+  @override
+  String get homeMapOpen => 'Explore Full Map';
 
   @override
   String get notificationsTitle => 'Notifications';

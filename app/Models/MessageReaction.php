@@ -14,10 +14,16 @@ class MessageReaction extends Model
     /**
      * @var list<string>
      */
+    public const TYPE_EMOJI = 'emoji';
+
+    /** @var list<string> */
+    public const ALLOWED_EMOJI = ['❤️', '👍', '😂', '😮', '😢', '👏'];
+
     protected $fillable = [
         'message_id',
         'user_id',
         'type',
+        'emoji',
     ];
 
     public function message(): BelongsTo

@@ -26,8 +26,32 @@ class DmsRepositoryImpl implements DmsRepository {
   @override
   Future<({Failure? failure, DmMessage? data})> postMessage(
     int conversationId,
-    String body,
-  ) => _remote.postMessage(conversationId, body);
+    String body, {
+    String? clientUuid,
+    int? replyToId,
+    String? mediaPath,
+    String? mediaKind,
+    int? durationMs,
+  }) => _remote.postMessage(
+    conversationId,
+    body,
+    clientUuid: clientUuid,
+    replyToId: replyToId,
+    mediaPath: mediaPath,
+    mediaKind: mediaKind,
+    durationMs: durationMs,
+  );
+
+  @override
+  Future<({Failure? failure, void data})> react(
+    int conversationId,
+    int messageId,
+    String emoji,
+  ) => _remote.react(conversationId, messageId, emoji);
+
+  @override
+  Future<({Failure? failure, List<int>? data})> media(int messageId) =>
+      _remote.media(messageId);
 
   @override
   Future<({Failure? failure, void data})> markRead(int conversationId) =>

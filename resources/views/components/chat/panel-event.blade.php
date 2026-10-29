@@ -47,6 +47,7 @@
     data-no-likes-label="{{ __('chat.no_likes_yet') }}"
     data-no-dislikes-label="{{ __('chat.no_dislikes_yet') }}"
     data-see-who-label="{{ __('chat.see_who_reacted') }}"
+    data-emojis="{{ implode(',', config('chat.emojis')) }}"
 >
     <div id="chat-messages" class="event-chat__messages fancy-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 sm:px-5" role="log" aria-live="polite">
         @forelse ($messages as $message)
@@ -59,6 +60,7 @@
                 $initials = user_initials($user?->name);
                 $profileUrl = filled($user?->public_id) ? route('users.public.show', $user->public_id) : null;
                 $timeLabel = $message->created_at?->timezone(config('app.timezone'))->format('g:i A');
+                $reply = $message->relationLoaded('replyTo') ? $message->replyTo : null;
             @endphp
 
             @if ($isSystem)
@@ -70,6 +72,8 @@
                     class="chat-row {{ $mine ? 'chat-row--mine' : 'chat-row--theirs' }}"
                     data-message-id="{{ $message->id }}"
                     data-mine="{{ $mine ? '1' : '0' }}"
+                    data-body="{{ e($message->body) }}"
+                    data-sender="{{ e($user?->name ?? '') }}"
                     @if ($isHost) data-host="1" @endif
                 >
                     @unless ($mine)
@@ -97,9 +101,24 @@
                                 @endif
                             </div>
                         @endunless
-                        <p class="chat-message__body whitespace-pre-wrap break-words">{{ $message->body }}</p>
+                        @if ($reply)
+                            <button type="button" class="chat-reply-quote mb-1 w-full rounded-lg bg-black/10 px-2 py-1 text-start text-[11px]" data-jump-to="{{ $reply->id }}">
+                                <span class="font-bold">{{ $reply->user?->name }}</span>
+                                <span class="block truncate opacity-80">{{ $reply->body }}</span>
+                            </button>
+                        @endif
+                        @if (($message->message_type ?? 'text') === 'voice' && $message->media_path)
+                            <audio controls preload="none" class="mb-1 max-w-full" src="{{ url('/api/events/'.$event->id.'/messages/'.$message->id.'/media') }}"></audio>
+                        @elseif (($message->message_type ?? 'text') === 'image' && $message->media_path)
+                            <a href="{{ url('/api/events/'.$event->id.'/messages/'.$message->id.'/media') }}" target="_blank" rel="noopener" class="mb-1 block">
+                                <img src="{{ url('/api/events/'.$event->id.'/messages/'.$message->id.'/media') }}" alt="" class="max-h-48 rounded-lg object-cover" loading="lazy">
+                            </a>
+                        @else
+                            <p class="chat-message__body whitespace-pre-wrap break-words">{{ $message->body }}</p>
+                        @endif
                         <div class="chat-message__footer">
                             <span class="chat-message__time">{{ $timeLabel }}</span>
+                            <button type="button" class="text-[10px] font-bold opacity-70 hover:opacity-100" data-reply-to="{{ $message->id }}">{{ __('chat.reply') }}</button>
                             @unless ($mine)
                                 <button type="button" class="chat-message__react" data-react="like" aria-label="{{ __('chat.like') }}">👍 <span data-like-count>{{ (int) ($message->likes_count ?? 0) }}</span></button>
                                 <button type="button" class="chat-message__react" data-react="dislike" aria-label="{{ __('chat.dislike') }}">👎 <span data-dislike-count>{{ (int) ($message->dislikes_count ?? 0) }}</span></button>
@@ -113,16 +132,32 @@
         @endforelse
     </div>
 
-    <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" class="chat-v2-composer shrink-0 border-t border-slate-200/80 bg-white p-3">
+    <div id="chat-reply-bar" hidden class="flex items-center gap-2 border-t border-slate-100 bg-indigo-50/80 px-3 py-2 text-xs">
+        <div class="min-w-0 flex-1">
+            <p class="font-bold text-indigo-800" data-reply-name></p>
+            <p class="truncate text-slate-600" data-reply-body></p>
+        </div>
+        <button type="button" id="chat-reply-cancel" class="rounded-lg px-2 py-1 font-bold text-slate-600 hover:bg-white">✕</button>
+    </div>
+
+    <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" enctype="multipart/form-data" class="chat-v2-composer shrink-0 border-t border-slate-200/80 bg-white p-3">
         @csrf
+        <input type="hidden" name="reply_to_id" id="chat-reply-to" value="">
+        <input type="hidden" name="client_uuid" id="chat-client-uuid" value="">
+        <input type="hidden" name="media_kind" id="chat-media-kind" value="">
+        <input type="hidden" name="duration_ms" id="chat-duration-ms" value="">
         <div class="flex items-end gap-2">
+            <button type="button" id="chat-voice-btn" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5]" title="{{ __('chat.voice_note') }}" aria-label="{{ __('chat.voice_note') }}">🎤</button>
+            <label class="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5]" title="{{ __('chat.attach') }}">
+                📎
+                <input type="file" id="chat-media" name="media" accept="image/*,audio/*,.pdf,.txt" class="sr-only">
+            </label>
             <label class="sr-only" for="chat-body">{{ __('chat.placeholder') }}</label>
             <textarea
                 id="chat-body"
                 name="body"
                 rows="1"
                 maxlength="1000"
-                required
                 placeholder="{{ __('chat.placeholder') }}"
                 class="max-h-32 min-h-11 w-full resize-none rounded-2xl border border-slate-200 bg-[#F8F9FE] px-4 py-2.5 text-sm outline-none ring-[#7138F5]/20 focus:border-[#7138F5] focus:ring-4"
             ></textarea>

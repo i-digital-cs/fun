@@ -25,7 +25,7 @@ class ListEventMessagesService
         $blockedIds = $this->blocks->blockedUserIdsFor($user);
 
         $messages = EventMessage::query()
-            ->with(['user:id,name,public_id,profile_image_path'])
+            ->with(['user:id,name,public_id,profile_image_path', 'replyTo.user:id,name'])
             ->withCount([
                 'reactions as likes_count' => fn ($q) => $q->where('type', MessageReaction::TYPE_LIKE),
                 'reactions as dislikes_count' => fn ($q) => $q->where('type', MessageReaction::TYPE_DISLIKE),

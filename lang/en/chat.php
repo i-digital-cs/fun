@@ -28,6 +28,15 @@ return [
     'recording' => 'Recording…',
     'communities_soon' => 'Community chats are not available yet.',
     'client_uuid_invalid' => 'Invalid message identifier.',
+    'reactions_unavailable' => 'Reactions are not available yet.',
+    'media_unavailable' => 'Media messages are not available yet.',
+    'voice_too_long' => 'Voice note is too long.',
+    'attachment_forbidden' => 'This file type is not allowed.',
+    'attachment_invalid' => 'Upload failed. Try another file.',
+    'attachment_too_large' => 'File is too large.',
+    'attachment_type' => 'Unsupported file type.',
+    'attachment_failed' => 'Could not store the file.',
+
 
     'inbox_empty_title' => 'No chats yet',
     'inbox_empty_body' => 'Join an event to start chatting with other members.',

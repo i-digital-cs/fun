@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -109,7 +108,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatsYou => 'أنت';
 
   @override
-  String get chatsFilterRecent => 'الأحدث';
+  String get chatsFilterRecent => 'الكل';
 
   @override
   String get chatsFilterUnread => 'غير مقروء';
@@ -128,6 +127,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get messageCopied => 'تم نسخ الرسالة';
+
+  @override
+  String get reply => 'رد';
+
+  @override
+  String get react => 'تفاعل';
+
+  @override
+  String get voiceMessage => 'رسالة صوتية';
+
+  @override
+  String get voiceUnavailable => 'تسجيل الصوت غير متاح في هذا الإصدار.';
+
+  @override
+  String get homeMapTitle => 'استكشف من حولك';
+
+  @override
+  String get homeMapSubtitle =>
+      'اعثر على أنشطة وتعرّف على أشخاص واستكشف فعاليات قريبة.';
+
+  @override
+  String get homeMapOpen => 'استكشف الخريطة كاملة';
 
   @override
   String get notificationsTitle => 'الإشعارات';

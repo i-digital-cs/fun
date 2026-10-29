@@ -89,6 +89,13 @@ class DmMessage extends Equatable {
     this.userPublicId,
     this.userInitials,
     this.userPhotoUrl,
+    this.messageType = 'text',
+    this.mediaUrl,
+    this.mediaMime,
+    this.mediaDurationMs,
+    this.replyToId,
+    this.replyTo,
+    this.clientUuid,
   });
 
   final int id;
@@ -100,6 +107,13 @@ class DmMessage extends Equatable {
   final String? userPublicId;
   final String? userInitials;
   final String? userPhotoUrl;
+  final String messageType;
+  final String? mediaUrl;
+  final String? mediaMime;
+  final int? mediaDurationMs;
+  final int? replyToId;
+  final DmMessageReply? replyTo;
+  final String? clientUuid;
 
   factory DmMessage.fromJson(Map<String, dynamic> json) {
     final user = json['user'];
@@ -116,6 +130,17 @@ class DmMessage extends Equatable {
       userPublicId: userMap['public_id'] as String?,
       userInitials: userMap['initials'] as String?,
       userPhotoUrl: userMap['profile_image_path'] as String?,
+      messageType: json['message_type'] as String? ?? 'text',
+      mediaUrl: json['media_url'] as String?,
+      mediaMime: json['media_mime'] as String?,
+      mediaDurationMs: (json['media_duration_ms'] as num?)?.toInt(),
+      replyToId: (json['reply_to_id'] as num?)?.toInt(),
+      replyTo: json['reply_to'] is Map
+          ? DmMessageReply.fromJson(
+              Map<String, dynamic>.from(json['reply_to'] as Map),
+            )
+          : null,
+      clientUuid: json['client_uuid'] as String?,
     );
   }
 
@@ -130,7 +155,37 @@ class DmMessage extends Equatable {
     userPublicId,
     userInitials,
     userPhotoUrl,
+    messageType,
+    mediaUrl,
+    mediaMime,
+    mediaDurationMs,
+    replyToId,
+    replyTo,
+    clientUuid,
   ];
+}
+
+class DmMessageReply extends Equatable {
+  const DmMessageReply({required this.id, required this.body, this.userName});
+
+  final int id;
+  final String body;
+  final String? userName;
+
+  factory DmMessageReply.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    final userMap = user is Map
+        ? Map<String, dynamic>.from(user)
+        : const <String, dynamic>{};
+    return DmMessageReply(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      body: json['body'] as String? ?? '',
+      userName: userMap['name'] as String?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, body, userName];
 }
 
 class DmOpenResult extends Equatable {
@@ -139,9 +194,7 @@ class DmOpenResult extends Equatable {
   final int conversationId;
 
   factory DmOpenResult.fromJson(Map<String, dynamic> json) {
-    return DmOpenResult(
-      conversationId: (json['id'] as num?)?.toInt() ?? 0,
-    );
+    return DmOpenResult(conversationId: (json['id'] as num?)?.toInt() ?? 0);
   }
 
   @override

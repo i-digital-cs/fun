@@ -16,6 +16,11 @@
 
 See `docs/QA_PASS_2026-09-24.md` and `docs/RELEASE.md`.
 
+**Chat V2 + Home Mini Map** (`done` client, 2026-10-29): DM/event replies,
+DM image upload + emoji reactions, unified inbox filters/search, and lazy
+Explore V4 home map. Voice recorder remains unavailable because no recording
+package is installed; the UI explains this explicitly.
+
 ---
 
 ## Progress snapshot

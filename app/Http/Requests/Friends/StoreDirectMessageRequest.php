@@ -17,7 +17,22 @@ class StoreDirectMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'client_uuid' => ['sometimes', 'nullable', 'string', 'max:36'],
+            'reply_to_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'media' => ['sometimes', 'nullable', 'file', 'max:10240'],
+            'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,file'],
+            'duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $body = trim((string) $this->input('body', ''));
+            if ($body === '' && ! $this->hasFile('media')) {
+                $validator->errors()->add('body', __('chat.empty'));
+            }
+        });
     }
 }

@@ -50,7 +50,32 @@ class EventChatController extends Controller
         $this->authorize('chat', $event);
 
         try {
-            $message = $service->post($request->user(), $event, $request->string('body')->toString());
+            $options = [
+                'client_uuid' => $request->input('client_uuid'),
+                'reply_to_id' => $request->integer('reply_to_id') ?: null,
+            ];
+            if ($request->hasFile('media')) {
+                $media = app(\App\Services\Chat\ChatMediaService::class);
+                $kind = (string) $request->input('media_kind', 'file');
+                $stored = match ($kind) {
+                    'voice' => $media->storeVoice($request->file('media'), (int) $request->user()->id, $request->integer('duration_ms') ?: null),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                };
+                $options = array_merge($options, [
+                    'message_type' => $stored['message_type'],
+                    'media_path' => $stored['path'],
+                    'media_mime' => $stored['mime'],
+                    'media_bytes' => $stored['bytes'],
+                    'media_duration_ms' => $stored['duration_ms'],
+                ]);
+            }
+            $message = $service->post(
+                $request->user(),
+                $event,
+                (string) $request->input('body', ''),
+                $options
+            );
         } catch (DomainException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
@@ -58,6 +83,7 @@ class EventChatController extends Controller
         $message->setAttribute('likes_count', 0);
         $message->setAttribute('dislikes_count', 0);
         $message->setAttribute('my_reaction', null);
+        $message->loadMissing('replyTo.user:id,name');
 
         return (new EventMessageResource($message))->response()->setStatusCode(201);
     }
@@ -76,6 +102,7 @@ class EventChatController extends Controller
                 $event,
                 $message,
                 $request->input('type'),
+                $request->input('emoji'),
             );
         } catch (DomainException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
@@ -88,6 +115,8 @@ class EventChatController extends Controller
                 'likes_count' => $result['likes_count'],
                 'dislikes_count' => $result['dislikes_count'],
                 'my_reaction' => $result['my_reaction'],
+                'emoji_counts' => $result['emoji_counts'],
+                'my_emojis' => $result['my_emojis'],
             ],
         ]);
     }

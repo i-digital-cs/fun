@@ -387,6 +387,13 @@ class ChatMessage extends Equatable {
     this.likesCount = 0,
     this.dislikesCount = 0,
     this.myReaction,
+    this.replyToId,
+    this.replyTo,
+    this.clientUuid,
+    this.messageType = 'text',
+    this.mediaUrl,
+    this.mediaMime,
+    this.mediaDurationMs,
   });
 
   final int id;
@@ -401,12 +408,17 @@ class ChatMessage extends Equatable {
   final int likesCount;
   final int dislikesCount;
   final String? myReaction;
+  final int? replyToId;
+  final ChatMessageReply? replyTo;
+  final String? clientUuid;
+  final String messageType;
+  final String? mediaUrl;
+  final String? mediaMime;
+  final int? mediaDurationMs;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final rawUser = json['user'];
-    final user = rawUser is Map
-        ? Map<String, dynamic>.from(rawUser)
-        : null;
+    final user = rawUser is Map ? Map<String, dynamic>.from(rawUser) : null;
     return ChatMessage(
       id: (json['id'] as num?)?.toInt() ?? 0,
       eventId: (json['event_id'] as num?)?.toInt() ?? 0,
@@ -422,6 +434,17 @@ class ChatMessage extends Equatable {
       likesCount: (json['likes_count'] as num?)?.toInt() ?? 0,
       dislikesCount: (json['dislikes_count'] as num?)?.toInt() ?? 0,
       myReaction: json['my_reaction'] as String?,
+      replyToId: (json['reply_to_id'] as num?)?.toInt(),
+      replyTo: json['reply_to'] is Map
+          ? ChatMessageReply.fromJson(
+              Map<String, dynamic>.from(json['reply_to'] as Map),
+            )
+          : null,
+      clientUuid: json['client_uuid'] as String?,
+      messageType: json['message_type'] as String? ?? 'text',
+      mediaUrl: json['media_url'] as String?,
+      mediaMime: json['media_mime'] as String?,
+      mediaDurationMs: (json['media_duration_ms'] as num?)?.toInt(),
     );
   }
 
@@ -444,6 +467,13 @@ class ChatMessage extends Equatable {
       likesCount: likesCount ?? this.likesCount,
       dislikesCount: dislikesCount ?? this.dislikesCount,
       myReaction: clearMyReaction ? null : (myReaction ?? this.myReaction),
+      replyToId: replyToId,
+      replyTo: replyTo,
+      clientUuid: clientUuid,
+      messageType: messageType,
+      mediaUrl: mediaUrl,
+      mediaMime: mediaMime,
+      mediaDurationMs: mediaDurationMs,
     );
   }
 
@@ -461,7 +491,37 @@ class ChatMessage extends Equatable {
     likesCount,
     dislikesCount,
     myReaction,
+    replyToId,
+    replyTo,
+    clientUuid,
+    messageType,
+    mediaUrl,
+    mediaMime,
+    mediaDurationMs,
   ];
+}
+
+class ChatMessageReply extends Equatable {
+  const ChatMessageReply({required this.id, required this.body, this.userName});
+
+  final int id;
+  final String body;
+  final String? userName;
+
+  factory ChatMessageReply.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    final userMap = user is Map
+        ? Map<String, dynamic>.from(user)
+        : const <String, dynamic>{};
+    return ChatMessageReply(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      body: json['body'] as String? ?? '',
+      userName: userMap['name'] as String?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, body, userName];
 }
 
 class MessageReactor extends Equatable {
@@ -503,10 +563,7 @@ class MessageReactor extends Equatable {
 }
 
 class MessageReactions extends Equatable {
-  const MessageReactions({
-    this.likes = const [],
-    this.dislikes = const [],
-  });
+  const MessageReactions({this.likes = const [], this.dislikes = const []});
 
   final List<MessageReactor> likes;
   final List<MessageReactor> dislikes;

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Web\Friends;
 
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\DirectMessageResource;
 use App\Models\Category;
 use App\Models\DirectConversation;
 use App\Models\User;
+use App\Services\Chat\ChatMediaService;
 use App\Services\Friends\DirectMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,22 +43,56 @@ class DirectMessageController extends Controller
         Request $request,
         DirectConversation $conversation,
         DirectMessageService $dms,
+        ChatMediaService $media,
     ): RedirectResponse|\Illuminate\Http\JsonResponse {
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:2000'],
+            'body' => ['nullable', 'string', 'max:2000'],
             'client_uuid' => ['sometimes', 'nullable', 'string', 'max:36'],
             'reply_to_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'media' => ['sometimes', 'nullable', 'file', 'max:10240'],
+            'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,file'],
+            'duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
         ]);
 
+        $body = trim((string) ($validated['body'] ?? ''));
+        if ($body === '' && ! $request->hasFile('media')) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => __('chat.empty')], 422);
+            }
+
+            return back()->withErrors(['body' => __('chat.empty')]);
+        }
+
         try {
+            $options = [
+                'client_uuid' => $validated['client_uuid'] ?? null,
+                'reply_to_id' => $validated['reply_to_id'] ?? null,
+            ];
+            if ($request->hasFile('media')) {
+                $kind = (string) ($validated['media_kind'] ?? 'file');
+                $stored = match ($kind) {
+                    'voice' => $media->storeVoice(
+                        $request->file('media'),
+                        (int) $request->user()->id,
+                        isset($validated['duration_ms']) ? (int) $validated['duration_ms'] : null
+                    ),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                };
+                $options = array_merge($options, [
+                    'message_type' => $stored['message_type'],
+                    'media_path' => $stored['path'],
+                    'media_mime' => $stored['mime'],
+                    'media_bytes' => $stored['bytes'],
+                    'media_duration_ms' => $stored['duration_ms'],
+                ]);
+            }
+
             $message = $dms->sendToConversation(
                 $request->user(),
                 $conversation,
-                $validated['body'],
-                [
-                    'client_uuid' => $validated['client_uuid'] ?? null,
-                    'reply_to_id' => $validated['reply_to_id'] ?? null,
-                ]
+                $body,
+                $options
             );
         } catch (DomainException $e) {
             if ($request->expectsJson()) {
@@ -67,23 +103,7 @@ class DirectMessageController extends Controller
         }
 
         if ($request->expectsJson()) {
-            $name = $message->user?->name ?? '';
-
-            return response()->json([
-                'message' => [
-                    'id' => $message->id,
-                    'conversation_id' => $message->conversation_id,
-                    'body' => $message->body,
-                    'created_at' => $message->created_at?->toIso8601String(),
-                    'user' => [
-                        'id' => $message->user?->id,
-                        'name' => $name,
-                        'public_id' => $message->user?->public_id,
-                        'initials' => user_initials($name),
-                        'profile_image_path' => $message->user?->profile_image_path,
-                    ],
-                ],
-            ], 201);
+            return (new DirectMessageResource($message))->response()->setStatusCode(201);
         }
 
         return back();

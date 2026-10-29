@@ -210,12 +210,32 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
         ? ' chat-message--reacted-like'
         : (myReaction === 'dislike' ? ' chat-message--reacted-dislike' : '');
 
+    let quote = '';
+    if (message.reply_to) {
+        quote = `<button type="button" class="chat-reply-quote mb-1 w-full rounded-lg bg-black/10 px-2 py-1 text-start text-[11px]" data-jump-to="${escapeHtml(String(message.reply_to.id))}">
+            <span class="font-bold">${escapeHtml(message.reply_to.user?.name || '')}</span>
+            <span class="block truncate opacity-80">${escapeHtml(message.reply_to.body || '')}</span>
+        </button>`;
+    }
+
+    let bodyHtml = `<p class="chat-message__body">${escapeHtml(message.body ?? '')}</p>`;
+    if (message.message_type === 'voice' && message.media_url) {
+        bodyHtml = `<audio controls preload="none" class="mb-1 max-w-full" src="${escapeHtml(message.media_url)}"></audio>`;
+    } else if (message.message_type === 'image' && message.media_url) {
+        bodyHtml = `<a href="${escapeHtml(message.media_url)}" target="_blank" rel="noopener" class="mb-1 block"><img src="${escapeHtml(message.media_url)}" alt="" class="max-h-48 rounded-lg object-cover" loading="lazy"></a>`;
+    }
+
+    el.dataset.body = message.body || '';
+    el.dataset.sender = message.user?.name || '';
+
     const bubble = `
         <div class="chat-message ${mine ? 'chat-message--mine' : 'chat-message--theirs'}${isHost ? ' chat-message--host' : ''}${reactedClass}">
             ${author}
-            <p class="chat-message__body">${escapeHtml(message.body ?? '')}</p>
+            ${quote}
+            ${bodyHtml}
             <div class="chat-message__footer">
                 ${reactionsHtml(message, options)}
+                <button type="button" class="text-[10px] font-bold opacity-70" data-reply-to="${escapeHtml(String(message.id))}">Reply</button>
                 ${report}
                 <time class="chat-message__time">${escapeHtml(time)}</time>
             </div>
@@ -431,11 +451,97 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    attachBtn?.addEventListener('click', () => {
-        if (statusEl) {
-            statusEl.textContent = attachBtn.title || 'Attachments coming soon.';
-            statusEl.classList.remove('hidden');
+    const replyInput = document.getElementById('chat-reply-to');
+    const clientUuidInput = document.getElementById('chat-client-uuid');
+    const replyBar = document.getElementById('chat-reply-bar');
+    const mediaInput = document.getElementById('chat-media');
+    const mediaKind = document.getElementById('chat-media-kind');
+    const durationInput = document.getElementById('chat-duration-ms');
+    const voiceBtn = document.getElementById('chat-voice-btn');
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordStartedAt = 0;
+
+    const setReply = (id, name, body) => {
+        if (!replyInput) return;
+        replyInput.value = id || '';
+        if (!replyBar) return;
+        if (!id) {
+            replyBar.hidden = true;
+            return;
         }
+        replyBar.hidden = false;
+        replyBar.querySelector('[data-reply-name]').textContent = name || '';
+        replyBar.querySelector('[data-reply-body]').textContent = body || '';
+    };
+
+    document.getElementById('chat-reply-cancel')?.addEventListener('click', () => setReply('', '', ''));
+
+    messagesEl?.addEventListener('click', (e) => {
+        const replyTo = e.target.closest('[data-reply-to]');
+        if (replyTo) {
+            const row = replyTo.closest('[data-message-id]');
+            setReply(replyTo.dataset.replyTo, row?.dataset.sender || '', row?.dataset.body || '');
+            bodyInput?.focus();
+            return;
+        }
+        const jump = e.target.closest('[data-jump-to]');
+        if (jump) {
+            const el = messagesEl.querySelector(`[data-message-id="${jump.dataset.jumpTo}"]`);
+            el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    voiceBtn?.addEventListener('click', async () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            voiceBtn.textContent = '🎤';
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recordedChunks = [];
+            recordStartedAt = Date.now();
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (ev) => {
+                if (ev.data.size > 0) recordedChunks.push(ev.data);
+            };
+            mediaRecorder.onstop = () => {
+                stream.getTracks().forEach((t) => t.stop());
+                const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                if (mediaInput) mediaInput.files = dt.files;
+                if (mediaKind) mediaKind.value = 'voice';
+                if (durationInput) durationInput.value = String(Date.now() - recordStartedAt);
+                if (statusEl) {
+                    statusEl.textContent = 'Voice ready — tap Send';
+                    statusEl.classList.remove('hidden');
+                }
+            };
+            mediaRecorder.start();
+            voiceBtn.textContent = '⏹';
+            if (statusEl) {
+                statusEl.textContent = 'Recording… tap mic to stop';
+                statusEl.classList.remove('hidden');
+            }
+        } catch {
+            if (statusEl) {
+                statusEl.textContent = 'Microphone permission denied';
+                statusEl.classList.remove('hidden');
+            }
+        }
+    });
+
+    mediaInput?.addEventListener('change', () => {
+        if (!mediaInput.files?.length || !mediaKind) return;
+        const file = mediaInput.files[0];
+        mediaKind.value = file.type.startsWith('audio/') ? 'voice' : file.type.startsWith('image/') ? 'image' : 'file';
+    });
+
+    attachBtn?.addEventListener('click', () => {
+        mediaInput?.click();
     });
 
     const bindRealtime = () => {
@@ -489,8 +595,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const body = bodyInput.value.trim();
-        if (!body) {
+        const body = bodyInput?.value?.trim() || '';
+        const hasMedia = mediaInput?.files?.length > 0;
+        if (!body && !hasMedia) {
             return;
         }
 
@@ -498,32 +605,46 @@ document.addEventListener('DOMContentLoaded', () => {
             sendBtn.disabled = true;
         }
 
-        try {
-            const response = await window.axios.post(
-                postUrl,
-                { body },
-                {
-                    headers: {
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrf,
-                    },
-                }
-            );
+        if (clientUuidInput) {
+            clientUuidInput.value = crypto?.randomUUID
+                ? crypto.randomUUID().slice(0, 36)
+                : `c${Date.now()}${Math.random().toString(16).slice(2, 10)}`;
+        }
 
-            appendMessage(messagesEl, response.data.data, emptyEl, currentUserId, {
+        const fd = new FormData(form);
+        if (!hasMedia) fd.delete('media');
+
+        try {
+            const response = await fetch(postUrl, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: fd,
+            });
+            const json = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(json.message || json.errors?.body?.[0] || 'Unable to send message.');
+            }
+
+            appendMessage(messagesEl, json.data || json.message || json, emptyEl, currentUserId, {
                 ...appendOptions,
                 forceScroll: true,
             });
-            bodyInput.value = '';
-            autosize(bodyInput);
+            form.reset();
+            setReply('', '', '');
+            if (mediaKind) mediaKind.value = '';
+            if (durationInput) durationInput.value = '';
+            if (clientUuidInput) clientUuidInput.value = '';
+            if (bodyInput) autosize(bodyInput);
             if (statusEl && !statusEl.dataset.fallbackActive) {
                 statusEl.classList.add('hidden');
             }
         } catch (error) {
-            const message =
-                error?.response?.data?.message
-                || error?.response?.data?.errors?.body?.[0]
-                || 'Unable to send message.';
+            const message = error?.message || 'Unable to send message.';
             if (statusEl) {
                 statusEl.textContent = message;
                 statusEl.classList.remove('hidden');
@@ -532,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sendBtn) {
                 sendBtn.disabled = false;
             }
-            bodyInput.focus();
+            bodyInput?.focus();
         }
     });
 });

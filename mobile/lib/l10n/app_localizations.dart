@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatsFilterRecent.
   ///
   /// In en, this message translates to:
-  /// **'Recent'**
+  /// **'All'**
   String get chatsFilterRecent;
 
   /// No description provided for @chatsFilterUnread.
@@ -337,6 +337,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message copied'**
   String get messageCopied;
+
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @react.
+  ///
+  /// In en, this message translates to:
+  /// **'React'**
+  String get react;
+
+  /// No description provided for @voiceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice message'**
+  String get voiceMessage;
+
+  /// No description provided for @voiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice recording is not available in this build.'**
+  String get voiceUnavailable;
+
+  /// No description provided for @homeMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Around You'**
+  String get homeMapTitle;
+
+  /// No description provided for @homeMapSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find activities, meet people, and explore events nearby.'**
+  String get homeMapSubtitle;
+
+  /// No description provided for @homeMapOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Full Map'**
+  String get homeMapOpen;
 
   /// No description provided for @notificationsTitle.
   ///

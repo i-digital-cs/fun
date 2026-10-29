@@ -99,9 +99,7 @@ class EventsRemoteSource {
       );
       final body = response.data!;
       final rawData = body['data'];
-      final data = Map<String, dynamic>.from(
-        rawData is Map ? rawData : body,
-      );
+      final data = Map<String, dynamic>.from(rawData is Map ? rawData : body);
       // Show payload also mirrors creator at the top level — keep either.
       if (data['creator'] == null && body['creator'] is Map) {
         data['creator'] = Map<String, dynamic>.from(body['creator'] as Map);
@@ -377,12 +375,18 @@ class EventsRemoteSource {
 
   Future<({Failure? failure, ChatMessage? data})> postMessage(
     int id,
-    String body,
-  ) async {
+    String body, {
+    int? replyToId,
+    String? clientUuid,
+  }) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/events/$id/messages',
-        data: {'body': body},
+        data: {
+          'body': body,
+          'reply_to_id': ?replyToId,
+          'client_uuid': ?clientUuid,
+        },
       );
       final data =
           response.data!['data'] as Map<String, dynamic>? ?? response.data!;
@@ -716,11 +720,7 @@ class EventsRemoteSource {
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
         '/places/suggest',
-        queryParameters: {
-          'q': q,
-          'limit': 8,
-          if (cityId != null) 'city_id': cityId,
-        },
+        queryParameters: {'q': q, 'limit': 8, 'city_id': ?cityId},
       );
       final raw = response.data?['data'];
       if (raw is! List) {
@@ -745,8 +745,9 @@ class EventsRemoteSource {
         ? Map<String, dynamic>.from(categoryRaw)
         : null;
     final city = cityRaw is Map ? Map<String, dynamic>.from(cityRaw) : null;
-    final location =
-        locationRaw is Map ? Map<String, dynamic>.from(locationRaw) : null;
+    final location = locationRaw is Map
+        ? Map<String, dynamic>.from(locationRaw)
+        : null;
     final locationCity = location?['city'] is Map
         ? Map<String, dynamic>.from(location!['city'] as Map)
         : null;
@@ -783,8 +784,7 @@ class EventsRemoteSource {
           json['location_label'] as String? ?? location?['label'] as String?,
       latitude: latitude,
       longitude: longitude,
-      mapsUrl:
-          json['maps_url'] as String? ?? location?['maps_url'] as String?,
+      mapsUrl: json['maps_url'] as String? ?? location?['maps_url'] as String?,
       mapsOpenUrl:
           json['maps_open_url'] as String? ??
           location?['maps_open_url'] as String?,
@@ -826,12 +826,9 @@ class EventsRemoteSource {
               name: (city ?? locationCity)!['name'] as String? ?? '',
               nameEn: (city ?? locationCity)!['name_en'] as String?,
               nameAr: (city ?? locationCity)!['name_ar'] as String?,
-              latitude: _asNum(
-                (city ?? locationCity)!['latitude'],
-              )?.toDouble(),
-              longitude: _asNum(
-                (city ?? locationCity)!['longitude'],
-              )?.toDouble(),
+              latitude: _asNum((city ?? locationCity)!['latitude'])?.toDouble(),
+              longitude: _asNum((city ?? locationCity)!['longitude'])
+                  ?.toDouble(),
             )
           : null,
       creator: creator != null

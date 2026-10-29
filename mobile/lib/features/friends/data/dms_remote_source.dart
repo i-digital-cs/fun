@@ -45,10 +45,7 @@ class DmsRemoteSource {
         '/dms/with/$userId',
       );
       final data = response.data?['data'] as Map<String, dynamic>? ?? {};
-      return (
-        failure: null,
-        data: DmOpenResult.fromJson(data),
-      );
+      return (failure: null, data: DmOpenResult.fromJson(data));
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
@@ -84,18 +81,61 @@ class DmsRemoteSource {
 
   Future<({Failure? failure, DmMessage? data})> postMessage(
     int conversationId,
-    String body,
-  ) async {
+    String body, {
+    String? clientUuid,
+    int? replyToId,
+    String? mediaPath,
+    String? mediaKind,
+    int? durationMs,
+  }) async {
     try {
+      final fields = <String, dynamic>{
+        'body': body,
+        'client_uuid': ?clientUuid,
+        'reply_to_id': ?replyToId,
+        'media_kind': ?mediaKind,
+        'duration_ms': ?durationMs,
+      };
+      if (mediaPath != null) {
+        fields['media'] = await MultipartFile.fromFile(mediaPath);
+      }
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/dms/$conversationId/messages',
-        data: {'body': body},
+        data: mediaPath == null ? fields : FormData.fromMap(fields),
       );
       final data = response.data?['data'] as Map<String, dynamic>?;
       return (
         failure: null,
         data: data != null ? DmMessage.fromJson(data) : null,
       );
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, void data})> react(
+    int conversationId,
+    int messageId,
+    String emoji,
+  ) async {
+    try {
+      await _client.dio.post<void>(
+        '/dms/$conversationId/messages/$messageId/react',
+        data: {'emoji': emoji},
+      );
+      return (failure: null, data: null);
+    } on DioException catch (e) {
+      return (failure: mapDioException(e), data: null);
+    }
+  }
+
+  Future<({Failure? failure, List<int>? data})> media(int messageId) async {
+    try {
+      final response = await _client.dio.get<List<int>>(
+        '/dms/media/$messageId',
+        options: Options(responseType: ResponseType.bytes),
+      );
+      return (failure: null, data: response.data);
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
