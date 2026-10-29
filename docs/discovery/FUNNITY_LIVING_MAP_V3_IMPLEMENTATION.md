@@ -1,4 +1,4 @@
-# Living Map V3.1 — Implementation
+# Living Map V3.2 — Implementation
 
 ## Preview access
 
@@ -15,19 +15,26 @@
 |---|---|
 | `config/living_map.php` | Style URL, attribution, preview token |
 | `app/Http/Controllers/Web/Preview/LivingMapV3PreviewController.php` | Access gate + `noindex` |
-| `resources/views/preview/living-map-v3.blade.php` | Dashboard/marketing shell + atmosphere CSS |
-| `resources/js/living-map/funnity-style.js` | Reusable Funnity MapLibre palette remap + `building-3d` |
-| `resources/js/living-map-v3.js` | Framing, markers, cards, City/Exact tours, strip sync |
+| `resources/views/preview/living-map-v3.blade.php` | Shell + early RTL plugin bootstrap |
+| `resources/js/living-map/funnity-style.js` | Funnity MapLibre palette + `building-3d` |
+| `resources/js/living-map-v3.js` | Event-first map, city panel, tours, RTL wait |
+| `app/Services/Events/DiscoverMapService.php` | `cityEvents()` enriched with category/image/members |
 | `routes/web.php` | Preview route only |
-| `vite.config.js` | Prototype entry (not imported by `app.js`) |
+| `vite.config.js` | Prototype entry (not in `app.js`) |
 
-## Rendering architecture
+## Arabic / MapLibre RTL
 
-1. Fetch OpenFreeMap Liberty JSON → `buildFunnityStyle()` remaps paints.
-2. MapLibre init with cinematic pitch; fog when supported.
-3. Overview Explore V4 query → `computeFeaturedFocus()` → ease camera.
-4. Viewport refetch → exact pins + city aggregates (+ API city clusters).
-5. Tour mode: exact (≥2) else City Discovery Tour (named aggregates only).
+MapLibre **4.7** API: `setRTLTextPlugin(url, lazy)` → Promise.
+
+Must call with **`lazy = false`** and wait until `getRTLTextPluginStatus() === 'loaded'` before relying on Arabic basemap labels. Passing a callback as the 2nd argument is treated as truthy lazy and leaves Arabic reversed.
+
+## Event-first flow
+
+1. Overview Explore V4 → featured framing.
+2. Paint exact pins (primary) + compact city collections (tertiary).
+3. Strip lists **events only**.
+4. City collection → `GET /api/discovery/city-events` → in-map panel of real events → shared `selectEvent` state with strip/card.
+5. Tour: exact venue hops, else city-events tour (camera on city, cycle real event cards).
 
 ## Intentionally untouched (production)
 
@@ -35,18 +42,6 @@
 - `resources/js/discover-map.js`
 - Home / Discover Blade map wiring
 
-## Data rules
+## Flutter
 
-1. Explore V4 `/api/discovery/map` with `include_approximate=1`.
-2. Exact markers → category pins + optional exact tour.
-3. Approximate → strip / city aggregates only (never fake venue pins).
-4. `city_cluster` shown as multi-city pill; not a City Tour stop.
-5. Focus copy never claims user GPS unless authenticated home preference is used later.
-
-## Flutter (after owner approval)
-
-Tracked in `docs/FLUTTER_WEB_PARITY.md` — **not shipping** with V3.1 preview.
-
-## Rollback
-
-Unroute preview Blade; production unaffected. Prototype Vite asset unused if Blade not served.
+Deferred until owner approves V3.2 visual direction. Tracked in `docs/FLUTTER_WEB_PARITY.md` §10 item 26. Additive `city-events` fields (`category_name`, `image_url`, `members_count`) are backward compatible.

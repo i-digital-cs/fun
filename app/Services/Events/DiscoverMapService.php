@@ -3,6 +3,7 @@
 namespace App\Services\Events;
 
 use App\Enums\EventStatus;
+use App\Models\City;
 use App\Models\Event;
 use App\Models\User;
 use App\Services\Location\NearbyDiscoveryGeography;
@@ -616,8 +617,8 @@ class DiscoverMapService
             });
         }
 
-        $events = $query->orderBy('starts_at')->limit(40)->get();
-        $city = $events->first()?->city;
+        $events = $query->withCount('members')->orderBy('starts_at')->limit(40)->get();
+        $city = $events->first()?->city ?? City::query()->find($cityId);
 
         return [
             'city' => [
@@ -639,6 +640,12 @@ class DiscoverMapService
                     'latitude' => $exact ? (float) $event->latitude : null,
                     'longitude' => $exact ? (float) $event->longitude : null,
                     'city_id' => $event->city_id,
+                    'category_id' => $event->category_id,
+                    'category_name' => $event->category?->localizedName()
+                        ?? $event->category?->name
+                        ?? null,
+                    'image_url' => $event->imageUrl('card'),
+                    'members_count' => (int) ($event->members_count ?? 0),
                     'url' => '/events/'.$event->id,
                 ];
             })->all(),

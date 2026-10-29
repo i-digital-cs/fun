@@ -1,7 +1,13 @@
-# Living Map V3.1 — Visual Spec
+# Living Map V3.2 — Visual Spec
 
 Primary approved reference: `docs/a_clean_modern_colorful_ui_web_dashboard_mockup.png`  
-Rejected baseline: `docs/screencapture-funnity-preview-living-map-v3-2026-10-29-17_24_27.png`
+Rejected baselines: V3 empty-desert Liberty; V3.1 city-first purple circles + reversed Arabic.
+
+## Event-first hierarchy
+
+1. **Primary** — exact event pins + event strip + floating event preview.  
+2. **Secondary** — category color / featured previews.  
+3. **Tertiary** — compact city collection chips → expandable event list (approximate).
 
 ## Brand tokens
 
