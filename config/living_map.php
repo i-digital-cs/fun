@@ -32,4 +32,19 @@ return [
     ),
 
     'attribution' => '© OpenMapTiles © OpenStreetMap contributors · OpenFreeMap · Funnity style',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Production Home replacement (owner gate)
+    |--------------------------------------------------------------------------
+    | When false (default): Home Mini Map stays on Leaflet.
+    | Living Map V3.3 is available only via /preview/living-map-v3 (and signed links).
+    | Flip only after explicit owner visual approval.
+    */
+    'replace_home_mini_map' => (bool) env('LIVING_MAP_REPLACE_HOME', false),
+
+    /*
+    | Default display mode for the reusable component: home|discover|public|preview
+    */
+    'default_mode' => env('LIVING_MAP_DEFAULT_MODE', 'preview'),
 ];

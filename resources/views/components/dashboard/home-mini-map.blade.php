@@ -14,7 +14,19 @@
     $label = $cityName && $hasNearbyOrigin
         ? __('dashboard.mini_map_near', ['place' => $cityName, 'km' => (int) $distanceKm])
         : __('dashboard.mini_map_nationwide');
+    $useLivingMap = (bool) config('living_map.replace_home_mini_map');
 @endphp
+
+@if ($useLivingMap)
+    {{-- Owner-gated: Living Map replaces Leaflet Home mini map only when explicitly enabled. --}}
+    <section class="mt-7">
+        <x-living-map.stage
+            mode="{{ auth()->check() ? 'home' : 'public' }}"
+            :show-banner="false"
+            :show-tour-controls="false"
+        />
+    </section>
+@else
 
 <section class="mt-7" data-home-mini-map
          data-lat="{{ $latitude }}"
@@ -106,3 +118,5 @@
         @vite(['resources/js/home-mini-map.js'])
     @endpush
 @endonce
+
+@endif

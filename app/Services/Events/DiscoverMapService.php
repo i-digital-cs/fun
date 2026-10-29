@@ -391,7 +391,9 @@ class DiscoverMapService
                 'starts_at' => optional($event->starts_at)?->toIso8601String(),
                 'category_id' => $event->category_id ? (int) $event->category_id : null,
                 'category_name' => $event->category?->localizedName(),
-                'image_url' => $event->imageUrl('card'),
+                // Prefer uploaded card image; otherwise branded category stock cover
+                // (same rule as Home/Discover Blade cards — never leave image_url null when a cover exists).
+                'image_url' => $event->coverUrl('card'),
                 'members_count' => (int) ($event->members_count ?? 0),
                 'location_precision' => $precision,
                 'venue_label' => $event->locationLabel(),
@@ -644,7 +646,7 @@ class DiscoverMapService
                     'category_name' => $event->category?->localizedName()
                         ?? $event->category?->name
                         ?? null,
-                    'image_url' => $event->imageUrl('card'),
+                    'image_url' => $event->coverUrl('card'),
                     'members_count' => (int) ($event->members_count ?? 0),
                     'url' => '/events/'.$event->id,
                 ];
