@@ -1,6 +1,7 @@
-# Living Map V3 — Visual Spec
+# Living Map V3.1 — Visual Spec
 
-Primary reference: `docs/Explore Around You Events Dashboard.png`
+Primary approved reference: `docs/a_clean_modern_colorful_ui_web_dashboard_mockup.png`  
+Rejected baseline: `docs/screencapture-funnity-preview-living-map-v3-2026-10-29-17_24_27.png`
 
 ## Brand tokens
 
@@ -8,52 +9,58 @@ Primary reference: `docs/Explore Around You Events Dashboard.png`
 |---|---|
 | Primary purple | `#7138F5` |
 | CTA orange | `#FF762E` |
-| Canvas | `#F8F9FE` |
-| Soft lavender / peach / sky | Used in marker soft fills & card gradients |
+| Canvas / land | `#FFF6EC` / `#F4F0FF` |
+| Water | `#6EB6FF` |
+| Parks | `#C8F0D8` |
+| Labels | `#2A2150` |
 
-## Basemap
+## Basemap (Funnity style)
 
-- Soft pastel land, vivid water (vector style liberty as base).
-- Pitch ~38–50°, light bearing for cinematic depth.
-- Fog / horizon blend when style supports it.
-- **Not** isometric 3D ships/palm props from the artboard — those are illustration. Geographic truth remains OSM-derived vector data.
+Reusable factory: `resources/js/living-map/funnity-style.js` remaps OpenFreeMap Liberty / OpenMapTiles paint properties — **not** a CSS filter over the canvas.
+
+| Layer family | Treatment |
+|---|---|
+| Background / land | Soft lavender–ivory |
+| Water | Vibrant sky blue |
+| Roads | Warm white / peach hierarchy |
+| Parks / wood | Pastel mint |
+| Buildings | Pale lavender fill + decorative `building-3d` extrusion from ~z12 |
+| Borders | Low-opacity purple; not visually noisy |
+| Labels | Dark navy + light halo |
+
+Camera: pitch ~42–55°, light bearing. Nationwide overview softens pitch; city scale increases depth.
 
 ## Markers
 
 | Kind | Treatment |
 |---|---|
 | Exact event | Teardrop pin, category color + emoji, white rim, soft ground glow |
-| Selected / tour | Scale up + gentle float (disabled under `prefers-reduced-motion`) |
-| City aggregate | Purple pill with count + outer glow ring |
-| Cluster (API) | Treated as exact pin when precision exact |
+| Selected / tour | Scale + glow + float (disabled under `prefers-reduced-motion`) |
+| City aggregate | Purple pill with count + city name |
+| City cluster (API zoom) | Indigo cluster pill (“N cities”); not treated as a named venue |
 
-### Category colors (examples)
+### Category colors
 
-- Sports / Football / Tennis → orange–green family  
-- Gaming / PlayStation → blue  
-- Cinema → coral/rose  
-- Social → pink  
-- Outdoor → mint  
-- Default → Funnity purple  
+Sports / Football → orange · Gaming / PlayStation → electric blue · Music → purple · Food → amber · Social → pink · Outdoor → emerald · Cinema → coral · Default → Funnity purple
 
 ## Cards
 
-Floating white card: media (or emoji fallback), category chip, title, meta (time · venue · precision · members), View Event CTA. Anchored near projected marker; clamped to stage bounds.
+Frosted-glass floating preview: media or emoji fallback, category/city chip, title, meta, CTA arrow. City mode always says approximate / city-level. Clamped inside the map stage.
 
-## Motion language
+## Motion
 
-- Ease-in-out cubic camera moves (2–2.5s).
-- Temporary curved GeoJSON arc between tour hops (visual only — not a route).
-- Auto-tour pauses on drag/zoom/click/hidden tab/offscreen/`prefers-reduced-motion`.
-- Play/Pause control in HUD.
+- Ease-in-out cubic camera (≈2–2.4s).
+- Exact tour (≥2 exact venues): highlight → card → curved light arc → next.
+- **City Discovery Tour** when exact venues are insufficient: named city aggregates only.
+- Pause on drag/zoom/click/hidden tab/offscreen/`prefers-reduced-motion`.
 
-## What the reference shows that we intentionally do not fake
+## What we intentionally do not fake
 
-- 3D cargo ships, palm trees as mesh props.
-- Invented “Live Now” badges without live data.
-- Fabricated distances or attendee faces.
-- City-centroid treated as exact venue pins.
+- Illustrated ships / palms / stadium meshes from Image A.
+- Invented Live badges, distances, or participant faces.
+- City centroids as exact venue pins.
+- Fabricated building survey heights (extrusion is decorative OSM metadata).
 
 ## Layout
 
-Keep Funnity sidebar + widgets. Map lives in a rounded stage (~340–560px tall on preview), not a new full-page chrome.
+Keep Funnity dashboard sidebar + header. Map is a rounded stage inside the existing shell — English LTR left sidebar, Arabic RTL right sidebar.

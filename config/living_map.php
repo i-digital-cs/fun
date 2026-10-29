@@ -22,10 +22,14 @@ return [
     | Not OSM raster public tiles. Verify OpenFreeMap terms before heavy traffic.
     | Production may later self-host Protomaps / private vector tiles.
     */
+    /*
+    | Base OpenFreeMap Liberty JSON is fetched then remapped by
+    | resources/js/living-map/funnity-style.js into the Funnity Living palette.
+    */
     'style_url' => env(
         'LIVING_MAP_STYLE_URL',
         'https://tiles.openfreemap.org/styles/liberty'
     ),
 
-    'attribution' => '© OpenMapTiles © OpenStreetMap contributors · OpenFreeMap',
+    'attribution' => '© OpenMapTiles © OpenStreetMap contributors · OpenFreeMap · Funnity style',
 ];
