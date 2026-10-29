@@ -23,7 +23,11 @@ document.documentElement.dataset.pageLoaderReady = '1';
 initDiscoveryLocationUi();
 document.documentElement.dataset.discoveryLocationReady = '1';
 
-if (document.querySelector('[data-discover-map]')) {
+// Living Map Discover replaces Leaflet — do not dual-init.
+if (
+    document.querySelector('[data-discover-map]') &&
+    !document.querySelector('[data-discover-living-map-host]')
+) {
     import('./discover-map')
         .then(({ initDiscoverMap }) => {
             initDiscoverMap();

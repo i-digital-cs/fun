@@ -44,6 +44,16 @@ return [
     'replace_home_mini_map' => (bool) env('LIVING_MAP_REPLACE_HOME', false),
 
     /*
+    |--------------------------------------------------------------------------
+    | Production Discover map replacement (independent owner gate)
+    |--------------------------------------------------------------------------
+    | When false (default): /events stays on Leaflet (discover-map.js).
+    | When true: /events map pane uses x-living-map.stage (mode=discover).
+    | Independent from LIVING_MAP_REPLACE_HOME so Home/Dashboard stay unchanged.
+    */
+    'replace_discover_map' => (bool) env('LIVING_MAP_REPLACE_DISCOVER', false),
+
+    /*
     | Default display mode for the reusable component: home|discover|public|preview
     */
     'default_mode' => env('LIVING_MAP_DEFAULT_MODE', 'preview'),

@@ -48,6 +48,19 @@
         $sort = request('sort', 'soonest');
         $resultCount = method_exists($events, 'total') ? $events->total() : $events->count();
         $control = 'h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100';
+        $useLivingMap = (bool) config('living_map.replace_discover_map');
+        $livingMapLat = $activeDevice
+            ? $activeLat
+            : ($filterCity?->latitude);
+        $livingMapLng = $activeDevice
+            ? $activeLng
+            : ($filterCity?->longitude);
+        $livingMapMode = $activeDevice
+            ? 'device'
+            : (($discoveryMode === 'manual' && $livingMapLat !== null && $livingMapLng !== null)
+                ? 'manual'
+                : 'nationwide');
+        $livingMapKm = $discoveryMode === 'nationwide' ? 0 : $activeKm;
     @endphp
 
     <script type="application/json" id="discovery-location-boot"
@@ -198,7 +211,9 @@
                     }
                     [data-discover-split] [data-discover-map-pane],
                     [data-discover-split] [data-discover-map-list],
-                    [data-discover-split] [data-discover-map] {
+                    [data-discover-split] [data-discover-map],
+                    [data-discover-split] [data-discover-living-map-host],
+                    [data-discover-split] [data-living-map] {
                         min-height: 0 !important;
                         height: 100%;
                     }
@@ -212,26 +227,59 @@
                 'lg:col-span-8' => $viewMode === 'map',
                 'hidden lg:col-span-8' => $viewMode === 'list',
             ]) data-discover-map-pane>
-                <div data-discover-map
-                     class="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm lg:min-h-0 lg:h-full"
-                     data-discover-i18n-exact-unavailable="{{ __('events.exact_venue_unavailable') }}"
-                     data-discover-i18n-show-all="{{ __('events.show_all_results') }}"
-                     data-discover-i18n-city-heading="{{ __('events.city_events_heading') }}"
-                     data-discover-i18n-city-level="{{ __('events.city_level_preview') }}"
-                     data-discover-i18n-not-on-map="{{ __('events.event_not_on_map') }}"
-                     data-discover-i18n-no-events-radius="{{ __('events.map_no_events_in_radius') }}"
-                     data-discover-i18n-no-events-viewport="{{ __('events.map_no_events_viewport') }}">
-                    <button type="button"
-                            hidden
-                            data-discover-map-search-area
-                            class="absolute start-1/2 top-3 z-[500] -translate-x-1/2 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-indigo-700 shadow-md rtl:translate-x-1/2">
-                        {{ __('location.search_this_area') }}
-                    </button>
-                    <div data-discover-map-canvas class="absolute inset-0 h-full w-full" style="min-height: 20rem;"></div>
-                    <p class="pointer-events-none absolute bottom-0 inset-x-0 z-[400] bg-white/90 px-3 py-1 text-[10px] text-slate-500">
-                        © OpenStreetMap · Purple = city-level · Orange pin = exact venue
-                    </p>
-                </div>
+                @if ($useLivingMap)
+                    <div class="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm lg:min-h-0 lg:h-full"
+                         data-discover-living-map-host
+                         data-discover-i18n-exact-unavailable="{{ __('events.exact_venue_unavailable') }}"
+                         data-discover-i18n-city-level="{{ __('events.city_level_preview') }}"
+                         data-discover-i18n-not-on-map="{{ __('events.event_not_on_map') }}"
+                         data-discover-i18n-no-events-radius="{{ __('events.map_no_events_in_radius') }}"
+                         data-discover-i18n-no-events-viewport="{{ __('events.map_no_events_viewport') }}">
+                        <button type="button"
+                                hidden
+                                data-discover-map-search-area
+                                class="absolute start-1/2 top-3 z-[500] -translate-x-1/2 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-indigo-700 shadow-md rtl:translate-x-1/2">
+                            {{ __('location.search_this_area') }}
+                        </button>
+                        <x-living-map.stage
+                            mode="discover"
+                            class="h-full"
+                            :show-banner="false"
+                            :show-tour-controls="true"
+                            :show-radius-control="false"
+                            :show-list="false"
+                            :show-heading="false"
+                            :latitude="$livingMapLat"
+                            :longitude="$livingMapLng"
+                            :distance-km="(int) $livingMapKm"
+                            :discovery-mode="$livingMapMode"
+                            :location-label="$activeCityName"
+                            :city-id="$filters['city_id'] ?? null"
+                            :has-nearby-origin="(bool) $hasNearbyOrigin"
+                        />
+                    </div>
+                @else
+                    <div data-discover-map
+                         class="relative min-h-[20rem] flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm lg:min-h-0 lg:h-full"
+                         data-discover-i18n-exact-unavailable="{{ __('events.exact_venue_unavailable') }}"
+                         data-discover-i18n-show-all="{{ __('events.show_all_results') }}"
+                         data-discover-i18n-city-heading="{{ __('events.city_events_heading') }}"
+                         data-discover-i18n-city-level="{{ __('events.city_level_preview') }}"
+                         data-discover-i18n-not-on-map="{{ __('events.event_not_on_map') }}"
+                         data-discover-i18n-no-events-radius="{{ __('events.map_no_events_in_radius') }}"
+                         data-discover-i18n-no-events-viewport="{{ __('events.map_no_events_viewport') }}">
+                        <button type="button"
+                                hidden
+                                data-discover-map-search-area
+                                class="absolute start-1/2 top-3 z-[500] -translate-x-1/2 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-indigo-700 shadow-md rtl:translate-x-1/2">
+                            {{ __('location.search_this_area') }}
+                        </button>
+                        <div data-discover-map-canvas class="absolute inset-0 h-full w-full" style="min-height: 20rem;"></div>
+                        <p class="pointer-events-none absolute bottom-0 inset-x-0 z-[400] bg-white/90 px-3 py-1 text-[10px] text-slate-500">
+                            © OpenStreetMap · Purple = city-level · Orange pin = exact venue
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <div @class([

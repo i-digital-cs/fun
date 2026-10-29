@@ -1,7 +1,7 @@
 /**
  * Living Map V3.3 — reusable MapLibre factory (Home / Discover / Public / Preview).
- * Home/public activation is gated by living_map.replace_home_mini_map.
- * Discover production remains Leaflet until a separate owner cutover.
+ * Home/public: living_map.replace_home_mini_map
+ * Discover: living_map.replace_discover_map (mode=discover, map-only + Search This Area)
  */
 import { loadFunnityStyle } from './funnity-style.js';
 import { fillTemplate, readI18n } from './i18n.js';
@@ -102,9 +102,10 @@ function easeInOutCubic(t) {
     return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-function animateCamera(map, to, duration = 2200) {
+function animateCamera(map, to, duration = 2200, onStart) {
     return new Promise((resolve) => {
         if (!map) return resolve();
+        if (typeof onStart === 'function') onStart(duration);
         if (prefersReducedMotion()) {
             map.jumpTo(to);
             return resolve();
@@ -182,8 +183,8 @@ function readDiscoveryOrigin(root) {
         Math.abs(lat) <= 90 &&
         Math.abs(lng) <= 180;
     return {
-        lat,
-        lng,
+        lat: Number.isFinite(lat) ? lat : null,
+        lng: Number.isFinite(lng) ? lng : null,
         km: Number.isFinite(km) ? km : 25,
         mode,
         hasOrigin,
@@ -240,12 +241,19 @@ function overviewBounds() {
     return new window.maplibregl.LngLatBounds([24.9, 22.0], [35.0, 31.7]);
 }
 
+function readDiscoverFilters() {
+    const q = document.querySelector('#q')?.value?.trim() || '';
+    const categoryId = document.querySelector('#category_id')?.value || '';
+    return { q, categoryId };
+}
+
 /**
  * @param {maplibregl.LngLatBoundsLike|{getNorth:Function}} bounds
  * @param {number} zoom
  * @param {ReturnType<typeof readDiscoveryOrigin>} origin
+ * @param {{ includeApproximate?: boolean, viewportOnly?: boolean, signal?: AbortSignal }} [opts]
  */
-async function fetchMapPayload(bounds, zoom, origin) {
+async function fetchMapPayload(bounds, zoom, origin, opts = {}) {
     const get = (fn, fallback) => {
         try {
             if (bounds && typeof bounds[fn] === 'function') return bounds[fn]();
@@ -258,6 +266,7 @@ async function fetchMapPayload(bounds, zoom, origin) {
     const south = get('getSouth', Array.isArray(bounds) ? bounds[0][1] : 22.0);
     const east = get('getEast', Array.isArray(bounds) ? bounds[1][0] : 35.0);
     const west = get('getWest', Array.isArray(bounds) ? bounds[0][0] : 24.9);
+    const includeApproximate = opts.includeApproximate !== false;
 
     const params = new URLSearchParams({
         north: String(north),
@@ -265,20 +274,26 @@ async function fetchMapPayload(bounds, zoom, origin) {
         east: String(east),
         west: String(west),
         zoom: String(Math.max(5, Math.round(zoom || 6))),
-        include_approximate: '1',
+        include_approximate: includeApproximate ? '1' : '0',
         limit: origin?.hasOrigin ? '60' : '100',
     });
-    if (origin?.hasOrigin) {
+    // Viewport search (Search This Area) keeps active filters but does not rewrite saved origin.
+    if (!opts.viewportOnly && origin?.hasOrigin) {
         params.set('discovery_mode', origin.mode === 'manual' ? 'manual' : 'device');
         params.set('latitude', String(origin.lat));
         params.set('longitude', String(origin.lng));
         params.set('distance_km', String(origin.km));
-    } else {
+    } else if (!opts.viewportOnly) {
         params.set('discovery_mode', 'nationwide');
     }
+    const filters = readDiscoverFilters();
+    if (filters.q) params.set('q', filters.q);
+    if (filters.categoryId) params.set('category_id', filters.categoryId);
+
     const res = await fetch(`/api/discovery/map?${params}`, {
         headers: { Accept: 'application/json' },
         credentials: 'same-origin',
+        signal: opts.signal,
     });
     if (!res.ok) throw new Error(`discovery map ${res.status}`);
     return res.json();
@@ -360,8 +375,32 @@ export async function createLivingMap(root) {
     const radiusSelect = root.querySelector('[data-lm-radius]');
     const radiusWrap = root.querySelector('[data-lm-radius-wrap]');
     const embedded = mode === 'home' || mode === 'public';
+    const isDiscover = mode === 'discover';
+    const searchAreaBtn =
+        root.closest('[data-discover-living-map-host]')?.querySelector('[data-discover-map-search-area]') ||
+        document.querySelector('[data-discover-map-search-area]');
+    let programmaticMoveUntil = 0;
+    let searchAreaAbort = null;
+    let searchAreaSeq = 0;
 
-    const loadPayload = (bounds, zoom) => fetchMapPayload(bounds, zoom, origin);
+    const markProgrammaticMove = (ms = 1400) => {
+        programmaticMoveUntil = Date.now() + ms;
+        if (searchAreaBtn) searchAreaBtn.hidden = true;
+    };
+
+    const highlightDiscoverCard = (eventId) => {
+        if (!isDiscover) return;
+        document.querySelectorAll('[data-discover-result-card]').forEach((el) => {
+            el.classList.toggle('is-active', String(el.dataset.eventId) === String(eventId));
+        });
+        const active = document.querySelector(
+            `[data-discover-result-card][data-event-id="${eventId}"]`
+        );
+        active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    };
+
+    const loadPayload = (bounds, zoom, opts = {}) =>
+        fetchMapPayload(bounds, zoom, origin, opts);
 
     const setStatus = (msg) => {
         if (statusEl) statusEl.textContent = msg || '';
@@ -783,10 +822,12 @@ export async function createLivingMap(root) {
         }
         openEventCard(item, theme);
         highlightList(item.id);
+        if (isDiscover) highlightDiscoverCard(item.id);
         const exact =
             item.location_precision === 'exact' || item.has_exact_coordinates === true;
         setFocus(item.title || '', exact ? i18n.exactVenue : i18n.approximateCityLocation);
         if (exact && item.latitude != null && item.longitude != null) {
+            markProgrammaticMove(1700);
             await animateCamera(
                 map,
                 {
@@ -811,6 +852,7 @@ export async function createLivingMap(root) {
     const enterCity = async (item, el) => {
         stopTour(false);
         if (item.type === 'city_cluster') {
+            markProgrammaticMove(1600);
             await animateCamera(
                 map,
                 {
@@ -834,6 +876,7 @@ export async function createLivingMap(root) {
         const cityName = aggregateDisplayName(item, i18n);
         setFocus(cityName, i18n.livingCitySub);
         setStatus(fillTemplate(i18n.loadingCityEvents, { city: cityName }));
+        markProgrammaticMove(1800);
         await animateCamera(
             map,
             {
@@ -1125,6 +1168,8 @@ export async function createLivingMap(root) {
                 : root.dataset.i18nAllDistances || 'All distances';
         setFocus(origin.label || i18n.featuredRegion, sub);
         ensureOriginLayers();
+        markProgrammaticMove(animate ? 1200 : 200);
+        if (searchAreaBtn) searchAreaBtn.hidden = true;
         await new Promise((resolve) => {
             const opts = {
                 padding: 48,
@@ -1163,6 +1208,8 @@ export async function createLivingMap(root) {
             const egypt = overviewBounds();
             payload = await loadPayload(egypt, 6);
             const focus = computeFeaturedFocus(payload);
+            markProgrammaticMove(1600);
+            if (searchAreaBtn) searchAreaBtn.hidden = true;
             await animateCamera(
                 map,
                 {
@@ -1243,6 +1290,11 @@ export async function createLivingMap(root) {
     map.on('movestart', (e) => {
         if (e.originalEvent) stopTour();
     });
+    map.on('moveend', () => {
+        if (!isDiscover || !searchAreaBtn) return;
+        if (Date.now() < programmaticMoveUntil) return;
+        searchAreaBtn.hidden = false;
+    });
     map.on('click', () => closeCard());
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) stopTour();
@@ -1254,15 +1306,99 @@ export async function createLivingMap(root) {
         io.observe(stage);
     }
 
+    const searchThisArea = async () => {
+        if (!isDiscover) return;
+        if (searchAreaAbort) searchAreaAbort.abort();
+        searchAreaAbort = new AbortController();
+        const seq = ++searchAreaSeq;
+        if (searchAreaBtn) searchAreaBtn.hidden = true;
+        setStatus(i18n.composing);
+        try {
+            const payload = await loadPayload(map.getBounds(), map.getZoom(), {
+                viewportOnly: true,
+                includeApproximate: true,
+                signal: searchAreaAbort.signal,
+            });
+            if (seq !== searchAreaSeq) return;
+            paintData(payload);
+            if (
+                !(payload.markers || []).length &&
+                !(payload.city_aggregates || []).length &&
+                !(payload.clusters || []).length
+            ) {
+                setStatus(
+                    document
+                        .querySelector('[data-discover-i18n-no-events-viewport]')
+                        ?.getAttribute('data-discover-i18n-no-events-viewport') ||
+                        i18n.noEligibleEvents
+                );
+            }
+        } catch (e) {
+            if (e?.name === 'AbortError') return;
+            console.warn(e);
+            setStatus(i18n.discoveryUnavailable);
+            if (searchAreaBtn) searchAreaBtn.hidden = false;
+        }
+    };
+    searchAreaBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        searchThisArea().catch((err) => console.warn(err));
+    });
+
+    const onDiscoverCardClick = (e) => {
+        if (!isDiscover) return;
+        const card = e.target.closest('[data-discover-result-card]');
+        if (!card) return;
+        const link = e.target.closest('a[href]');
+        if (
+            link &&
+            /\/events\/\d+/.test(link.getAttribute('href') || '') &&
+            link.textContent &&
+            /view details|عرض التفاصيل/i.test(link.textContent.trim())
+        ) {
+            return;
+        }
+        if (link && !/\/events\/\d+/.test(link.getAttribute('href') || '')) return;
+        if (link && /\/events\/\d+/.test(link.getAttribute('href') || '')) {
+            e.preventDefault();
+        }
+        const id = card.dataset.eventId || card.dataset.id;
+        if (!id) return;
+        const fromList = listEvents.find((x) => String(x.id) === String(id));
+        const fromPins = eventTourQueue.find((x) => String(x.id) === String(id));
+        const item = fromList || fromPins;
+        if (item) {
+            selectEvent(item, pinByEventId.get(String(id))).catch(() => {});
+            highlightDiscoverCard(id);
+        }
+    };
+    document.addEventListener('click', onDiscoverCardClick);
+
+    // Keep map markers in sync when Discover filters change (GET form / live search).
+    const filterForm = document.querySelector('[data-discover-filters]');
+    const onFilterChange = () => {
+        if (!isDiscover) return;
+        // Debounced soft refresh — full page navigation still owns list SSOT.
+        window.clearTimeout(onFilterChange._t);
+        onFilterChange._t = window.setTimeout(() => {
+            loadPayload(map.getBounds(), map.getZoom())
+                .then((payload) => paintData(payload))
+                .catch((err) => console.warn(err));
+        }, 350);
+    };
+    filterForm?.addEventListener('change', onFilterChange);
+
     tourBtn?.addEventListener('click', () => (touring ? stopTour() : startTour()));
     prevBtn?.addEventListener('click', () => stepManual(-1));
     nextBtn?.addEventListener('click', () => stepManual(1));
-    root.querySelector('[data-lm-zoom-in]')?.addEventListener('click', () =>
-        map.zoomIn({ duration: 400 })
-    );
-    root.querySelector('[data-lm-zoom-out]')?.addEventListener('click', () =>
-        map.zoomOut({ duration: 400 })
-    );
+    root.querySelector('[data-lm-zoom-in]')?.addEventListener('click', () => {
+        markProgrammaticMove(500);
+        map.zoomIn({ duration: 400 });
+    });
+    root.querySelector('[data-lm-zoom-out]')?.addEventListener('click', () => {
+        markProgrammaticMove(500);
+        map.zoomOut({ duration: 400 });
+    });
     root.querySelector('[data-lm-reset]')?.addEventListener('click', async () => {
         try {
             await refreshFromOrigin({ animate: true });
@@ -1314,6 +1450,8 @@ export async function createLivingMap(root) {
             stopTour();
             clearMarkers();
             document.removeEventListener('funnity:discovery-location', onDiscoveryLocation);
+            document.removeEventListener('click', onDiscoverCardClick);
+            filterForm?.removeEventListener('change', onFilterChange);
             window.removeEventListener('resize', onResize);
             map.remove();
             root.dataset.ready = '0';
@@ -1323,6 +1461,7 @@ export async function createLivingMap(root) {
         getOrigin: () => ({ ...origin }),
         refreshFromOrigin,
         applyRadius,
+        searchThisArea,
     };
     root._livingMap = api;
     return api;

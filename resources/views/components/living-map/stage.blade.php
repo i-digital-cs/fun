@@ -13,6 +13,8 @@
     'hasNearbyOrigin' => false,
     'cityId' => null,
     'showRadiusControl' => null,
+    'showList' => null,
+    'showHeading' => null,
 ])
 
 @php
@@ -21,12 +23,15 @@
     $eventsUrl = $eventsUrl ?: route('events.index');
     // Embedded = Home/Dashboard chrome only. Visual map chrome matches preview (no feature fork).
     $embedded = in_array($mode, ['home', 'public'], true);
+    $isDiscover = $mode === 'discover';
     $latAttr = $latitude !== null && $latitude !== '' ? (float) $latitude : null;
     $lngAttr = $longitude !== null && $longitude !== '' ? (float) $longitude : null;
     $kmAttr = $distanceKm !== null && $distanceKm !== '' ? (int) $distanceKm : (int) config('location.default_distance_km', 25);
     $modeAttr = is_string($discoveryMode) && $discoveryMode !== '' ? $discoveryMode : 'nationwide';
     $cityIdAttr = $cityId !== null && $cityId !== '' ? (int) $cityId : null;
     $showRadius = $showRadiusControl === null ? $embedded : (bool) $showRadiusControl;
+    $showSideList = $showList === null ? ! $isDiscover : (bool) $showList;
+    $showHead = $showHeading === null ? ! $isDiscover : (bool) $showHeading;
     $radiusOptions = array_values(array_map('intval', config('location.distances_km', [5, 10, 25, 50, 100, 0])));
     $radiusSupported = $modeAttr !== 'nationwide';
 @endphp
@@ -40,6 +45,13 @@
         <style>
             .lm-shell { --lm-purple:#7138F5; --lm-orange:#FF762E; --lm-ink:#2A2150; overflow-x: clip; }
             .lm-shell [dir="auto"] { unicode-bidi: isolate; }
+            .lm-shell--discover { height: 100%; min-height: 20rem; display:flex; flex-direction:column; }
+            .lm-shell--discover .lm-split { flex:1; min-height:0; grid-template-columns: minmax(0,1fr); }
+            .lm-shell--discover .lm-stage {
+                height: 100%; min-height: 20rem; border-radius: 0.9rem;
+                box-shadow: none;
+            }
+            .lm-shell--map-only .lm-split { grid-template-columns: minmax(0,1fr); }
             .lm-banner {
                 border-radius: 1rem; border: 1px solid #fcd34d;
                 background: linear-gradient(90deg,#fffbeb,#fef3c7);
@@ -248,7 +260,11 @@
     @endpush
 @endonce
 
-<div {{ $attributes->class(['lm-shell']) }}
+<div {{ $attributes->class([
+         'lm-shell',
+         'lm-shell--discover' => $isDiscover,
+         'lm-shell--map-only' => ! $showSideList,
+     ]) }}
      data-living-map
      data-mode="{{ $mode }}"
      data-style-url="{{ $styleUrl }}"
@@ -305,29 +321,33 @@
         <div class="lm-banner mb-4" role="status">{{ __('living_map.banner_preview') }}</div>
     @endif
 
-    <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div class="min-w-0">
-            @if ($embedded)
-                <h2 class="text-[1.15rem] font-extrabold tracking-tight text-[#19213D]">{{ __('dashboard.explore_around_you') }}</h2>
-                <p class="mt-0.5 text-[12px] text-slate-500">{{ __('dashboard.explore_around_you_sub') }}</p>
-            @else
-                <h1 class="text-[clamp(1.35rem,2.6vw,1.85rem)] font-extrabold tracking-tight text-[#19213D]">
-                    {{ __('living_map.title') }}
-                    <span class="text-[#FF762E]">· {{ __('living_map.title_living') }}</span>
-                </h1>
-                <p class="mt-1 text-sm text-slate-500">{{ __('living_map.subtitle') }}</p>
-            @endif
+    @if ($showHead)
+        <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+            <div class="min-w-0">
+                @if ($embedded)
+                    <h2 class="text-[1.15rem] font-extrabold tracking-tight text-[#19213D]">{{ __('dashboard.explore_around_you') }}</h2>
+                    <p class="mt-0.5 text-[12px] text-slate-500">{{ __('dashboard.explore_around_you_sub') }}</p>
+                @else
+                    <h1 class="text-[clamp(1.35rem,2.6vw,1.85rem)] font-extrabold tracking-tight text-[#19213D]">
+                        {{ __('living_map.title') }}
+                        <span class="text-[#FF762E]">· {{ __('living_map.title_living') }}</span>
+                    </h1>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('living_map.subtitle') }}</p>
+                @endif
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+                @if ($embedded)
+                    <a href="{{ route('events.index', ['view' => 'map']) }}"
+                       class="inline-flex items-center rounded-xl bg-[#7138F5] px-3.5 py-2 text-xs font-bold text-white no-underline shadow-sm hover:bg-[#5825D6]">
+                        {{ __('dashboard.explore_full_map') }}
+                    </a>
+                @endif
+                <p class="lm-status" data-lm-status>{{ __('living_map.composing') }}</p>
+            </div>
         </div>
-        <div class="flex shrink-0 flex-wrap items-center gap-2">
-            @if ($embedded)
-                <a href="{{ route('events.index', ['view' => 'map']) }}"
-                   class="inline-flex items-center rounded-xl bg-[#7138F5] px-3.5 py-2 text-xs font-bold text-white no-underline shadow-sm hover:bg-[#5825D6]">
-                    {{ __('dashboard.explore_full_map') }}
-                </a>
-            @endif
-            <p class="lm-status" data-lm-status>{{ __('living_map.composing') }}</p>
-        </div>
-    </div>
+    @else
+        <p class="sr-only" data-lm-status>{{ __('living_map.composing') }}</p>
+    @endif
 
     @if ($showRadius)
         <div class="lm-toolbar" data-lm-toolbar>
@@ -390,17 +410,19 @@
             </article>
         </div>
 
-        <aside class="lm-side" aria-label="{{ __('living_map.list_heading') }}">
-            <div class="lm-side__head">
-                <h2 data-lm-list-heading dir="auto">{{ __('living_map.list_heading') }}</h2>
-                <a href="{{ route('events.index', ['view' => 'map']) }}" class="text-[11px] font-bold text-[#7138F5] no-underline">
-                    {{ $embedded ? __('dashboard.explore_full_map') : __('living_map.open_production_discover') }}
-                </a>
-            </div>
-            <div class="lm-list fancy-scroll" data-lm-list>
-                <p class="lm-list__empty">{{ __('living_map.list_loading') }}</p>
-            </div>
-        </aside>
+        @if ($showSideList)
+            <aside class="lm-side" aria-label="{{ __('living_map.list_heading') }}">
+                <div class="lm-side__head">
+                    <h2 data-lm-list-heading dir="auto">{{ __('living_map.list_heading') }}</h2>
+                    <a href="{{ route('events.index', ['view' => 'map']) }}" class="text-[11px] font-bold text-[#7138F5] no-underline">
+                        {{ $embedded ? __('dashboard.explore_full_map') : __('living_map.open_production_discover') }}
+                    </a>
+                </div>
+                <div class="lm-list fancy-scroll" data-lm-list>
+                    <p class="lm-list__empty">{{ __('living_map.list_loading') }}</p>
+                </div>
+            </aside>
+        @endif
     </div>
 </div>
 

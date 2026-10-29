@@ -15,16 +15,18 @@ Approved visual design. Activate the reusable Living Map on **public `/`** and *
 | Vite entry | `resources/js/living-map-v3.js` |
 | Strings | `lang/{en,ar}/living_map.php` + dashboard explore chrome |
 | Home gate | `living_map.replace_home_mini_map` ← `LIVING_MAP_REPLACE_HOME` |
-| Swap point | `resources/views/components/dashboard/home-mini-map.blade.php` |
+| Discover gate | `living_map.replace_discover_map` ← `LIVING_MAP_REPLACE_DISCOVER` (independent) |
+| Home swap | `resources/views/components/dashboard/home-mini-map.blade.php` |
+| Discover swap | `resources/views/events/index.blade.php` (`data-discover-living-map-host`) |
 
 ### Modes
 
 | Mode | Used on | Behavior |
 |---|---|---|
-| `public` | Guest `/` | Compact stage, nationwide Explore V4, no GPS prompt |
-| `home` | Auth `/` + `/dashboard` | Compact stage; passes selected city lat/lng + `distance_km` + discovery mode |
+| `public` | Guest `/` | Stage + nationwide Explore V4, no GPS prompt |
+| `home` | Auth `/` + `/dashboard` | Stage; passes selected city lat/lng + `distance_km` + discovery mode |
 | `preview` | `/preview/living-map-v3` | Full cinematic HUD + banner |
-| `discover` | reserved | **Not activated** — Discover stays Leaflet |
+| `discover` | `GET /events` when Discover gate on | Map-only stage (Discover `#discover-results` list SSOT); Search This Area; filters via Explore V4 |
 
 ## Location SSOT
 
@@ -43,11 +45,19 @@ Mobile: map above list; `overflow-x: clip` on shell.
 
 ## Production safety / rollback
 
+**Home**
+
 1. Set `LIVING_MAP_REPLACE_HOME=false` in `.env`
 2. `php artisan config:clear` (or `config:cache` rebuild)
-3. Hard-refresh Home — Leaflet mini map returns (asset `home-mini-map.js` unchanged)
+3. Hard-refresh Home — Leaflet mini map returns (`home-mini-map.js` unchanged)
 
-Discover is **not** gated by this flag.
+**Discover**
+
+1. Set `LIVING_MAP_REPLACE_DISCOVER=false` in `.env`
+2. `php artisan config:clear`
+3. Hard-refresh `/events` — Leaflet Discover map returns (`discover-map.js` via `[data-discover-map]`)
+
+Flags are independent: Home can stay Living Map while Discover rolls back (or the reverse).
 
 ## Flutter
 
@@ -75,3 +85,31 @@ php artisan config:clear
 ```
 
 Hard-refresh `/` and `/dashboard` → Leaflet mini map returns.
+
+---
+
+## Discover cutover (2026-10-29)
+
+Independent flag `LIVING_MAP_REPLACE_DISCOVER` mounts `x-living-map.stage` (`mode=discover`) on `GET /events`:
+
+- Map-only Living Map (Discover `#discover-results` remains the list SSOT; Map/List toggle unchanged).
+- Explore V4 `/api/discovery/map` with Discover toolbar filters (`q`, `category_id`).
+- **Search This Area** = viewport-only fetch (`viewportOnly`); does **not** rewrite saved origin / profile location.
+- Programmatic camera moves suppress the Search This Area chip until the user pans/zooms.
+- Card ↔ pin sync via `[data-discover-result-card]` / `data-event-id`.
+- Leaflet `discover-map.js` skips boot when `[data-discover-living-map-host]` is present.
+
+Evidence: `docs/discovery/v3_3_discover_qa/`.
+
+### Rollback
+
+```bash
+LIVING_MAP_REPLACE_DISCOVER=false
+php artisan config:clear
+```
+
+Hard-refresh `/events` → Leaflet Discover map returns.
+
+### Auth `/events` redirect note
+
+Guest `/events` returns **200**. Incomplete profiles (e.g. `sex=null` seed users such as `rania.saleh33@example.com`) can bounce on **other** protected routes / post-login gates — **not** caused by the Living Map Discover cutover.
