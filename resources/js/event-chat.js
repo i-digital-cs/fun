@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bodyInput = document.getElementById('chat-body');
     const statusEl = document.getElementById('chat-status');
     const emptyEl = document.getElementById('chat-empty');
-    const sendBtn = form?.querySelector('[data-chat-send]');
+    const sendBtn = form?.querySelector('#chat-send, [data-chat-send]');
     const attachBtn = form?.querySelector('[data-chat-attach]');
     const channelName = root.dataset.channel;
     const postUrl = root.dataset.postUrl;
@@ -492,7 +492,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const pickRecorderMime = () => {
+        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+        return (
+            ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg'].find(
+                (t) => MediaRecorder.isTypeSupported(t)
+            ) || ''
+        );
+    };
+    const extForMime = (mime) => {
+        const base = (mime || '').split(';')[0];
+        if (base.includes('mp4') || base.includes('m4a')) return 'm4a';
+        if (base.includes('ogg')) return 'ogg';
+        return 'webm';
+    };
+    const isHeic = (file) => {
+        const type = (file?.type || '').toLowerCase();
+        const name = (file?.name || '').toLowerCase();
+        return type.includes('heic') || type.includes('heif') || /\.heic$|\.heif$/.test(name);
+    };
+    const formI18n = {
+        heic: form?.dataset.i18nHeic || 'HEIC/HEIF photos are not supported. Please send a JPEG or PNG.',
+        voiceReady: form?.dataset.i18nVoiceReady || 'Voice ready — tap Send',
+        voiceRecording: form?.dataset.i18nVoiceRecording || 'Recording… tap mic to stop',
+        micDenied: form?.dataset.i18nMicDenied || 'Microphone permission denied.',
+        micUnsupported: form?.dataset.i18nMicUnsupported || 'Voice notes are not supported in this browser.',
+    };
+
     voiceBtn?.addEventListener('click', async () => {
+        if (typeof MediaRecorder === 'undefined') {
+            if (statusEl) {
+                statusEl.textContent = formI18n.micUnsupported;
+                statusEl.classList.remove('hidden');
+            }
+            return;
+        }
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
             voiceBtn.textContent = '🎤';
@@ -502,33 +536,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordedChunks = [];
             recordStartedAt = Date.now();
-            mediaRecorder = new MediaRecorder(stream);
+            const mime = pickRecorderMime();
+            mediaRecorder = mime
+                ? new MediaRecorder(stream, { mimeType: mime })
+                : new MediaRecorder(stream);
             mediaRecorder.ondataavailable = (ev) => {
                 if (ev.data.size > 0) recordedChunks.push(ev.data);
             };
             mediaRecorder.onstop = () => {
                 stream.getTracks().forEach((t) => t.stop());
-                const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+                const type = mediaRecorder.mimeType || mime || 'audio/webm';
+                const blob = new Blob(recordedChunks, { type });
+                const file = new File([blob], `voice-${Date.now()}.${extForMime(type)}`, { type });
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 if (mediaInput) mediaInput.files = dt.files;
                 if (mediaKind) mediaKind.value = 'voice';
-                if (durationInput) durationInput.value = String(Date.now() - recordStartedAt);
+                if (durationInput) durationInput.value = String(Math.max(1, Date.now() - recordStartedAt));
                 if (statusEl) {
-                    statusEl.textContent = 'Voice ready — tap Send';
+                    statusEl.textContent = formI18n.voiceReady;
                     statusEl.classList.remove('hidden');
                 }
             };
             mediaRecorder.start();
             voiceBtn.textContent = '⏹';
             if (statusEl) {
-                statusEl.textContent = 'Recording… tap mic to stop';
+                statusEl.textContent = formI18n.voiceRecording;
                 statusEl.classList.remove('hidden');
             }
         } catch {
             if (statusEl) {
-                statusEl.textContent = 'Microphone permission denied';
+                statusEl.textContent = formI18n.micDenied;
                 statusEl.classList.remove('hidden');
             }
         }
@@ -537,7 +575,20 @@ document.addEventListener('DOMContentLoaded', () => {
     mediaInput?.addEventListener('change', () => {
         if (!mediaInput.files?.length || !mediaKind) return;
         const file = mediaInput.files[0];
-        mediaKind.value = file.type.startsWith('audio/') ? 'voice' : file.type.startsWith('image/') ? 'image' : 'file';
+        if (isHeic(file)) {
+            mediaInput.value = '';
+            mediaKind.value = '';
+            if (statusEl) {
+                statusEl.textContent = formI18n.heic;
+                statusEl.classList.remove('hidden');
+            }
+            return;
+        }
+        mediaKind.value = file.type.startsWith('audio/')
+            ? 'voice'
+            : file.type.startsWith('image/')
+              ? 'image'
+              : 'file';
     });
 
     attachBtn?.addEventListener('click', () => {

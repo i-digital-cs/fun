@@ -108,10 +108,10 @@
                             </button>
                         @endif
                         @if (($message->message_type ?? 'text') === 'voice' && $message->media_path)
-                            <audio controls preload="none" class="mb-1 max-w-full" src="{{ url('/api/events/'.$event->id.'/messages/'.$message->id.'/media') }}"></audio>
+                            <audio controls preload="none" class="mb-1 max-w-full" src="{{ route('events.chat.media', [$event, $message]) }}"></audio>
                         @elseif (($message->message_type ?? 'text') === 'image' && $message->media_path)
-                            <a href="{{ url('/api/events/'.$event->id.'/messages/'.$message->id.'/media') }}" target="_blank" rel="noopener" class="mb-1 block">
-                                <img src="{{ url('/api/events/'.$event->id.'/messages/'.$message->id.'/media') }}" alt="" class="max-h-48 rounded-lg object-cover" loading="lazy">
+                            <a href="{{ route('events.chat.media', [$event, $message]) }}" target="_blank" rel="noopener" class="mb-1 block">
+                                <img src="{{ route('events.chat.media', [$event, $message]) }}" alt="" class="max-h-56 w-full max-w-xs rounded-lg object-cover" loading="lazy">
                             </a>
                         @else
                             <p class="chat-message__body whitespace-pre-wrap break-words">{{ $message->body }}</p>
@@ -140,17 +140,27 @@
         <button type="button" id="chat-reply-cancel" class="rounded-lg px-2 py-1 font-bold text-slate-600 hover:bg-white">✕</button>
     </div>
 
-    <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" enctype="multipart/form-data" class="chat-v2-composer shrink-0 border-t border-slate-200/80 bg-white p-3">
+    <form id="chat-form" method="POST" action="{{ event_route('events.chat.store', $event) }}" enctype="multipart/form-data" class="chat-v2-composer shrink-0 border-t border-slate-200/80 bg-white px-3 pt-3"
+          data-i18n-send-failed="{{ __('chat.send_failed') }}"
+          data-i18n-voice-ready="{{ __('chat.voice_ready') }}"
+          data-i18n-voice-recording="{{ __('chat.voice_recording') }}"
+          data-i18n-mic-denied="{{ __('chat.mic_denied') }}"
+          data-i18n-mic-unsupported="{{ __('chat.mic_unsupported') }}"
+          data-i18n-heic="{{ __('chat.attachment_heic') }}">
         @csrf
         <input type="hidden" name="reply_to_id" id="chat-reply-to" value="">
         <input type="hidden" name="client_uuid" id="chat-client-uuid" value="">
         <input type="hidden" name="media_kind" id="chat-media-kind" value="">
         <input type="hidden" name="duration_ms" id="chat-duration-ms" value="">
+        <div data-chat-attach-preview hidden class="rounded-xl border border-slate-200 bg-[#F8F9FE] px-2.5 py-2 text-xs font-semibold text-slate-700">
+            <span data-chat-attach-label></span>
+            <button type="button" data-chat-attach-clear class="ms-auto text-rose-600 underline">✕</button>
+        </div>
         <div class="flex items-end gap-2">
-            <button type="button" id="chat-voice-btn" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5]" title="{{ __('chat.voice_note') }}" aria-label="{{ __('chat.voice_note') }}">🎤</button>
-            <label class="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5]" title="{{ __('chat.attach') }}">
+            <button type="button" id="chat-voice-btn" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5] sm:h-11 sm:w-11" title="{{ __('chat.voice_note') }}" aria-label="{{ __('chat.voice_note') }}">🎤</button>
+            <label class="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5] sm:h-11 sm:w-11" title="{{ __('chat.attach') }}">
                 📎
-                <input type="file" id="chat-media" name="media" accept="image/*,audio/*,.pdf,.txt" class="sr-only">
+                <input type="file" id="chat-media" name="media" accept="image/jpeg,image/png,image/webp,image/gif,image/*,audio/*,.pdf,.txt" class="sr-only">
             </label>
             <label class="sr-only" for="chat-body">{{ __('chat.placeholder') }}</label>
             <textarea
@@ -158,11 +168,12 @@
                 name="body"
                 rows="1"
                 maxlength="1000"
+                enterkeyhint="send"
                 placeholder="{{ __('chat.placeholder') }}"
-                class="max-h-32 min-h-11 w-full resize-none rounded-2xl border border-slate-200 bg-[#F8F9FE] px-4 py-2.5 text-sm outline-none ring-[#7138F5]/20 focus:border-[#7138F5] focus:ring-4"
+                class="max-h-32 min-h-12 w-full resize-none rounded-2xl border border-slate-200 bg-[#F8F9FE] px-4 py-2.5 text-base outline-none ring-[#7138F5]/20 focus:border-[#7138F5] focus:ring-4 sm:min-h-11 sm:text-sm"
             ></textarea>
-            <button type="submit" class="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl bg-[#7138F5] px-4 text-sm font-bold text-white hover:bg-[#5825D6]">{{ __('chat.send') }}</button>
+            <button type="submit" id="chat-send" class="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-[#7138F5] px-4 text-sm font-bold text-white hover:bg-[#5825D6] sm:h-11">{{ __('chat.send') }}</button>
         </div>
-        <p id="chat-status" class="event-chat__status mt-1 hidden text-[11px] text-amber-700"></p>
+        <p id="chat-status" class="event-chat__status mt-1 hidden text-[11px] text-amber-700" role="status"></p>
     </form>
 </div>

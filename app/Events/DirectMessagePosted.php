@@ -17,7 +17,10 @@ class DirectMessagePosted implements ShouldBroadcastNow
 
     public function __construct(public DirectMessage $message)
     {
-        $this->message->loadMissing('user:id,name,public_id,profile_image_path');
+        $this->message->loadMissing([
+            'user:id,name,public_id,profile_image_path',
+            'replyTo.user:id,name',
+        ]);
     }
 
     /**
@@ -41,11 +44,33 @@ class DirectMessagePosted implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         $name = $this->message->user?->name ?? '';
+        $reply = null;
+        if ($this->message->replyTo) {
+            $rName = $this->message->replyTo->user?->name ?? '';
+            $reply = [
+                'id' => $this->message->replyTo->id,
+                'body' => $this->message->replyTo->body,
+                'user' => [
+                    'id' => $this->message->replyTo->user?->id,
+                    'name' => $rName,
+                ],
+            ];
+        }
 
         return [
             'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'body' => $this->message->body,
+            'client_uuid' => $this->message->client_uuid,
+            'message_type' => $this->message->message_type ?? 'text',
+            'media_mime' => $this->message->media_mime,
+            'media_bytes' => $this->message->media_bytes,
+            'media_duration_ms' => $this->message->media_duration_ms,
+            'media_url' => $this->message->media_path
+                ? url('/api/dms/media/'.$this->message->id)
+                : null,
+            'reply_to_id' => $this->message->reply_to_id,
+            'reply_to' => $reply,
             'created_at' => $this->message->created_at?->toIso8601String(),
             'user' => [
                 'id' => $this->message->user?->id,

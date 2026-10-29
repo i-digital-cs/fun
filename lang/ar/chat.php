@@ -35,7 +35,13 @@ return [
     'attachment_invalid' => 'فشل الرفع. جرّب ملفاً آخر.',
     'attachment_too_large' => 'الملف كبير جداً.',
     'attachment_type' => 'نوع الملف غير مدعوم.',
+    'attachment_heic' => 'صور HEIC/HEIF غير مدعومة. أرسل JPEG أو PNG.',
     'attachment_failed' => 'تعذر حفظ الملف.',
+    'send_failed' => 'تعذر إرسال الرسالة. اضغط لإعادة المحاولة.',
+    'voice_ready' => 'التسجيل جاهز — اضغط إرسال',
+    'voice_recording' => 'جارٍ التسجيل… اضغط الميكروفون للإيقاف',
+    'mic_denied' => 'تم رفض إذن الميكروفون.',
+    'mic_unsupported' => 'الرسائل الصوتية غير مدعومة في هذا المتصفح.',
 
 
     'inbox_empty_title' => 'لا محادثات بعد',

@@ -1,6 +1,8 @@
 /**
  * Direct message thread — Echo realtime + reply / react / voice / attachments.
+ * HTTP response is authoritative; realtime notifies peers and reconciles by id/client_uuid.
  */
+
 function whenEchoReady(callback) {
     if (window.Echo) {
         callback(window.Echo);
@@ -25,14 +27,59 @@ function uuid() {
     return `c${Date.now()}${Math.random().toString(16).slice(2, 10)}`;
 }
 
-function appendDmRow(log, payload, currentUserId) {
-    if (!payload?.id || log.querySelector(`[data-message-id="${payload.id}"]`)) return;
+function pickRecorderMime() {
+    if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) {
+        return '';
+    }
+    const candidates = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+    ];
+    return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+}
+
+function extForMime(mime) {
+    const base = (mime || '').split(';')[0];
+    if (base.includes('mp4') || base.includes('m4a')) return 'm4a';
+    if (base.includes('ogg')) return 'ogg';
+    return 'webm';
+}
+
+function isHeic(file) {
+    const type = (file?.type || '').toLowerCase();
+    const name = (file?.name || '').toLowerCase();
+    return type.includes('heic') || type.includes('heif') || /\.heic$|\.heif$/.test(name);
+}
+
+function appendDmRow(log, payload, currentUserId, opts = {}) {
+    if (!payload) return null;
+    const clientUuid = payload.client_uuid || opts.clientUuid || '';
+    if (payload.id && log.querySelector(`[data-message-id="${payload.id}"]`)) {
+        return log.querySelector(`[data-message-id="${payload.id}"]`);
+    }
+    if (clientUuid) {
+        const pending = log.querySelector(`[data-client-uuid="${clientUuid}"]`);
+        if (pending && payload.id) {
+            pending.dataset.messageId = String(payload.id);
+            pending.classList.remove('is-pending', 'is-failed');
+            pending.querySelector('[data-retry]')?.remove();
+            // Replace bubble content with confirmed payload below by rebuilding.
+            pending.remove();
+        } else if (pending && !payload.id) {
+            return pending;
+        }
+    }
+
     document.getElementById('dm-empty')?.remove();
 
-    const mine = Number(payload.user?.id) === currentUserId;
+    const mine = Number(payload.user?.id) === currentUserId || opts.mine === true;
     const row = document.createElement('div');
-    row.className = `chat-row ${mine ? 'chat-row--mine' : 'chat-row--theirs'}`;
-    row.dataset.messageId = String(payload.id);
+    row.className = `chat-row ${mine ? 'chat-row--mine' : 'chat-row--theirs'}${opts.pending ? ' is-pending' : ''}${opts.failed ? ' is-failed' : ''}`;
+    if (payload.id) row.dataset.messageId = String(payload.id);
+    if (clientUuid) row.dataset.clientUuid = clientUuid;
     row.dataset.body = payload.body || '';
     row.dataset.sender = payload.user?.name || '';
 
@@ -74,21 +121,22 @@ function appendDmRow(log, payload, currentUserId) {
         audio.className = 'max-w-full';
         audio.src = payload.media_url;
         bubble.appendChild(audio);
-    } else if (payload.message_type === 'image' && payload.media_url) {
+    } else if (payload.message_type === 'image' && (payload.media_url || opts.previewUrl)) {
         const a = document.createElement('a');
-        a.href = payload.media_url;
+        a.href = payload.media_url || opts.previewUrl;
         a.target = '_blank';
         a.rel = 'noopener';
         const img = document.createElement('img');
-        img.src = payload.media_url;
+        img.src = payload.media_url || opts.previewUrl;
         img.alt = '';
-        img.className = 'max-h-48 rounded-lg object-cover';
+        img.className = 'max-h-56 w-full max-w-xs rounded-lg object-cover';
         a.appendChild(img);
         bubble.appendChild(a);
     } else {
         const body = document.createElement('p');
         body.className = 'chat-row__body whitespace-pre-wrap break-words';
-        body.textContent = payload.body || '';
+        body.dir = 'auto';
+        body.textContent = payload.body || (opts.pending ? '…' : '');
         bubble.appendChild(body);
     }
 
@@ -96,27 +144,44 @@ function appendDmRow(log, payload, currentUserId) {
     foot.className = 'mt-1 flex items-center gap-2';
     const meta = document.createElement('p');
     meta.className = 'chat-row__meta text-[10px] opacity-70';
-    meta.textContent = payload.created_at
-        ? new Date(payload.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
-        : '';
+    meta.textContent = opts.pending
+        ? '…'
+        : payload.created_at
+          ? new Date(payload.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+          : '';
     foot.appendChild(meta);
-    const replyBtn = document.createElement('button');
-    replyBtn.type = 'button';
-    replyBtn.className = 'text-[10px] font-bold opacity-70 hover:opacity-100';
-    replyBtn.dataset.replyTo = String(payload.id);
-    replyBtn.textContent = 'Reply';
-    foot.appendChild(replyBtn);
-    const reactBtn = document.createElement('button');
-    reactBtn.type = 'button';
-    reactBtn.className = 'text-[10px] font-bold opacity-70 hover:opacity-100';
-    reactBtn.dataset.reactOpen = String(payload.id);
-    reactBtn.textContent = 'React';
-    foot.appendChild(reactBtn);
+
+    if (opts.failed && typeof opts.onRetry === 'function') {
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'chat-row__retry';
+        retry.dataset.retry = '1';
+        retry.textContent = opts.retryLabel || 'Retry';
+        retry.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            opts.onRetry();
+        });
+        foot.appendChild(retry);
+    } else if (!opts.pending) {
+        const replyBtn = document.createElement('button');
+        replyBtn.type = 'button';
+        replyBtn.className = 'text-[10px] font-bold opacity-70 hover:opacity-100';
+        replyBtn.dataset.replyTo = String(payload.id);
+        replyBtn.textContent = 'Reply';
+        foot.appendChild(replyBtn);
+        const reactBtn = document.createElement('button');
+        reactBtn.type = 'button';
+        reactBtn.className = 'text-[10px] font-bold opacity-70 hover:opacity-100';
+        reactBtn.dataset.reactOpen = String(payload.id);
+        reactBtn.textContent = 'React';
+        foot.appendChild(reactBtn);
+    }
     bubble.appendChild(foot);
 
     row.appendChild(bubble);
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
+    return row;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -138,12 +203,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationInput = document.getElementById('dm-duration-ms');
     const voiceBtn = document.getElementById('dm-voice-btn');
     const voiceStatus = document.getElementById('dm-voice-status');
+    const sendBtn = document.getElementById('dm-send');
+    const attachPreview = form?.querySelector('[data-chat-attach-preview]');
+    const attachLabel = form?.querySelector('[data-chat-attach-label]');
     const reactTemplate = root.dataset.reactUrlTemplate || '';
     const emojis = (root.dataset.emojis || '❤️,👍,😂,😮,😢,👏').split(',');
+
+    const i18n = {
+        sendFailed: form?.dataset.i18nSendFailed || 'Message could not be sent. Tap to retry.',
+        voiceReady: form?.dataset.i18nVoiceReady || 'Voice ready — tap Send',
+        voiceRecording: form?.dataset.i18nVoiceRecording || 'Recording… tap mic to stop',
+        micDenied: form?.dataset.i18nMicDenied || 'Microphone permission denied.',
+        micUnsupported: form?.dataset.i18nMicUnsupported || 'Voice notes are not supported in this browser.',
+        heic: form?.dataset.i18nHeic || 'HEIC/HEIF photos are not supported. Please send a JPEG or PNG.',
+    };
 
     let mediaRecorder = null;
     let recordedChunks = [];
     let recordStartedAt = 0;
+    let previewObjectUrl = null;
+    let sending = false;
+
+    const setStatus = (msg, show = true) => {
+        if (!voiceStatus) return;
+        voiceStatus.textContent = msg || '';
+        voiceStatus.hidden = !show || !msg;
+        voiceStatus.classList.toggle('hidden', !show || !msg);
+    };
+
+    const clearAttach = () => {
+        if (mediaInput) mediaInput.value = '';
+        if (mediaKind) mediaKind.value = '';
+        if (durationInput) durationInput.value = '';
+        if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+            previewObjectUrl = null;
+        }
+        if (attachPreview) attachPreview.hidden = true;
+        if (attachLabel) attachLabel.textContent = '';
+    };
+
+    const showAttachPreview = (file) => {
+        if (!attachPreview || !attachLabel || !file) return;
+        attachLabel.textContent = file.name || file.type || 'Attachment';
+        attachPreview.hidden = false;
+        if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+        if (file.type?.startsWith('image/')) {
+            previewObjectUrl = URL.createObjectURL(file);
+            attachLabel.textContent = `🖼 ${file.name || 'Image'}`;
+        }
+    };
 
     const setReply = (id, name, body) => {
         replyInput.value = id || '';
@@ -157,6 +266,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('dm-reply-cancel')?.addEventListener('click', () => setReply('', '', ''));
+    form?.querySelector('[data-chat-attach-clear]')?.addEventListener('click', () => {
+        clearAttach();
+        setStatus('', false);
+    });
 
     log?.addEventListener('click', (e) => {
         const replyTo = e.target.closest('[data-reply-to]');
@@ -194,6 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     voiceBtn?.addEventListener('click', async () => {
+        if (typeof MediaRecorder === 'undefined') {
+            setStatus(i18n.micUnsupported, true);
+            return;
+        }
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
             voiceBtn.textContent = '🎤';
@@ -203,54 +320,85 @@ document.addEventListener('DOMContentLoaded', () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordedChunks = [];
             recordStartedAt = Date.now();
-            mediaRecorder = new MediaRecorder(stream);
+            const mime = pickRecorderMime();
+            mediaRecorder = mime
+                ? new MediaRecorder(stream, { mimeType: mime })
+                : new MediaRecorder(stream);
             mediaRecorder.ondataavailable = (ev) => {
                 if (ev.data.size > 0) recordedChunks.push(ev.data);
             };
             mediaRecorder.onstop = () => {
                 stream.getTracks().forEach((t) => t.stop());
-                const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+                const type = mediaRecorder.mimeType || mime || 'audio/webm';
+                const blob = new Blob(recordedChunks, { type });
+                if (!blob.size) {
+                    setStatus(i18n.sendFailed, true);
+                    return;
+                }
+                const file = new File([blob], `voice-${Date.now()}.${extForMime(type)}`, { type });
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 mediaInput.files = dt.files;
                 mediaKind.value = 'voice';
-                durationInput.value = String(Date.now() - recordStartedAt);
-                voiceStatus.hidden = false;
-                voiceStatus.textContent = 'Voice ready — tap Send';
+                durationInput.value = String(Math.max(1, Date.now() - recordStartedAt));
+                showAttachPreview(file);
+                setStatus(i18n.voiceReady, true);
             };
             mediaRecorder.start();
             voiceBtn.textContent = '⏹';
-            voiceStatus.hidden = false;
-            voiceStatus.textContent = 'Recording… tap mic to stop';
+            setStatus(i18n.voiceRecording, true);
         } catch {
-            voiceStatus.hidden = false;
-            voiceStatus.textContent = 'Microphone permission denied';
+            setStatus(i18n.micDenied, true);
         }
     });
 
     mediaInput?.addEventListener('change', () => {
         if (!mediaInput.files?.length) return;
         const file = mediaInput.files[0];
-        mediaKind.value = file.type.startsWith('audio/') ? 'voice' : file.type.startsWith('image/') ? 'image' : 'file';
+        if (isHeic(file)) {
+            clearAttach();
+            setStatus(i18n.heic, true);
+            return;
+        }
+        mediaKind.value = file.type.startsWith('audio/')
+            ? 'voice'
+            : file.type.startsWith('image/')
+              ? 'image'
+              : 'file';
+        showAttachPreview(file);
+        setStatus('', false);
     });
 
-    whenEchoReady((Echo) => {
-        if (!channelName || !log) return;
-        Echo.private(channelName).listen('.message.posted', (e) => {
-            appendDmRow(log, e.message || e.data || e, userId);
-        });
-    });
-
-    form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    const sendMessage = async () => {
+        if (sending) return;
         const body = bodyInput?.value?.trim() || '';
         const hasMedia = mediaInput?.files?.length > 0;
         if (!body && !hasMedia) return;
 
-        clientUuidInput.value = uuid();
+        const clientUuid = uuid();
+        clientUuidInput.value = clientUuid;
         const fd = new FormData(form);
         if (!hasMedia) fd.delete('media');
+
+        const previewUrl =
+            hasMedia && mediaInput.files[0].type.startsWith('image/')
+                ? URL.createObjectURL(mediaInput.files[0])
+                : null;
+        const pendingPayload = {
+            client_uuid: clientUuid,
+            body,
+            message_type: mediaKind.value || 'text',
+            user: { id: userId },
+        };
+        appendDmRow(log, pendingPayload, userId, {
+            pending: true,
+            mine: true,
+            clientUuid,
+            previewUrl,
+        });
+
+        sending = true;
+        if (sendBtn) sendBtn.disabled = true;
 
         try {
             const res = await fetch(postUrl, {
@@ -263,18 +411,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 credentials: 'same-origin',
                 body: fd,
             });
-            if (!res.ok) throw new Error('send failed');
-            const json = await res.json();
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.message || json.errors?.body?.[0] || i18n.sendFailed);
+            }
             const payload = json.message || json.data || json;
-            appendDmRow(log, payload, userId);
+            appendDmRow(log, payload, userId, { clientUuid });
             form.reset();
             setReply('', '', '');
-            mediaKind.value = '';
-            durationInput.value = '';
-            voiceStatus.hidden = true;
+            clearAttach();
+            setStatus('', false);
             clientUuidInput.value = '';
-        } catch {
-            form.submit();
+        } catch (err) {
+            const pending = log.querySelector(`[data-client-uuid="${clientUuid}"]`);
+            if (pending) {
+                pending.classList.add('is-failed');
+                pending.classList.remove('is-pending');
+                const foot = pending.querySelector('.chat-row__bubble > div:last-child') || pending.querySelector('.chat-row__bubble');
+                if (foot && !pending.querySelector('[data-retry]')) {
+                    const retry = document.createElement('button');
+                    retry.type = 'button';
+                    retry.className = 'chat-row__retry';
+                    retry.dataset.retry = '1';
+                    retry.textContent = i18n.sendFailed;
+                    retry.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        pending.remove();
+                        if (body) bodyInput.value = body;
+                        sendMessage();
+                    });
+                    foot.appendChild(retry);
+                }
+            }
+            setStatus(err?.message || i18n.sendFailed, true);
+        } finally {
+            sending = false;
+            if (sendBtn) sendBtn.disabled = false;
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            bodyInput?.focus();
         }
+    };
+
+    whenEchoReady((Echo) => {
+        if (!channelName || !log) return;
+        Echo.private(channelName).listen('.message.posted', (e) => {
+            const payload = e.message || e.data || e;
+            appendDmRow(log, payload, userId);
+        });
+    });
+
+    form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendMessage();
     });
 });

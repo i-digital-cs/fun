@@ -35,7 +35,13 @@ return [
     'attachment_invalid' => 'Upload failed. Try another file.',
     'attachment_too_large' => 'File is too large.',
     'attachment_type' => 'Unsupported file type.',
+    'attachment_heic' => 'HEIC/HEIF photos are not supported. Please send a JPEG or PNG.',
     'attachment_failed' => 'Could not store the file.',
+    'send_failed' => 'Message could not be sent. Tap to retry.',
+    'voice_ready' => 'Voice ready — tap Send',
+    'voice_recording' => 'Recording… tap mic to stop',
+    'mic_denied' => 'Microphone permission denied.',
+    'mic_unsupported' => 'Voice notes are not supported in this browser.',
 
 
     'inbox_empty_title' => 'No chats yet',

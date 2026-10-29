@@ -9,19 +9,19 @@
         $items = $items ?? collect();
     @endphp
 
-    <div class="chat-v2 -mx-4 -mb-6 flex h-[calc(100dvh-5.5rem)] min-h-[28rem] flex-col overflow-hidden bg-[#F8F9FE] sm:-mx-6 lg:h-[calc(100dvh-4.75rem)]"
+    <div class="chat-v2 flex min-h-0 flex-1 flex-col overflow-hidden bg-[#F8F9FE] lg:min-h-[28rem] lg:rounded-t-2xl"
          data-chat-v2
          data-selected="{{ $selectedKey }}">
-        <div class="flex min-h-0 flex-1 overflow-hidden border-t border-slate-200/80 bg-white shadow-sm lg:rounded-t-2xl lg:border lg:border-slate-200/80">
+        <div class="flex min-h-0 flex-1 overflow-hidden border-t border-slate-200/80 bg-white shadow-sm lg:border lg:border-slate-200/80 lg:rounded-t-2xl">
             {{-- Left: conversation list --}}
             <aside @class([
                 'flex w-full shrink-0 flex-col border-e border-slate-200/80 bg-white lg:w-[34%] lg:max-w-md',
                 'hidden lg:flex' => $selectedKey !== '',
                 'flex' => $selectedKey === '',
             ]) data-chat-v2-list>
-                <header class="shrink-0 border-b border-slate-100 px-4 py-3.5">
-                    <h1 class="text-lg font-extrabold tracking-tight text-slate-900">{{ __('chat.inbox_title') }}</h1>
-                    <p class="mt-0.5 text-xs text-slate-500">{{ __('chat.inbox_subtitle_v2') }}</p>
+                <header class="shrink-0 border-b border-slate-100 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:py-3.5">
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-lg">{{ __('chat.inbox_title') }}</h1>
+                    <p class="mt-0.5 text-sm text-slate-500 sm:text-xs">{{ __('chat.inbox_subtitle_v2') }}</p>
                     <label class="sr-only" for="chat-v2-search">{{ __('chat.inbox_search') }}</label>
                     <div class="relative mt-3">
                         <svg class="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -73,29 +73,29 @@
                                     data-search="{{ $item['search'] ?? '' }}">
                                     <a href="{{ $item['url'] }}"
                                        @class([
-                                           'flex items-center gap-3 border-b border-slate-50 px-3.5 py-2.5 no-underline transition',
+                                           'flex min-h-[4.25rem] items-center gap-3 border-b border-slate-50 px-4 py-3.5 no-underline transition active:bg-slate-100 sm:px-3.5 sm:py-3',
                                            'bg-[#F1EBFF]' => $active,
                                            'hover:bg-slate-50' => ! $active,
                                            'bg-indigo-50/40' => ! $active && $unread > 0,
                                        ])>
-                                        <span class="relative h-11 w-11 shrink-0 overflow-hidden {{ ($item['type'] ?? '') === 'direct' ? 'rounded-full' : 'rounded-xl' }} bg-slate-100">
+                                        <span class="relative h-12 w-12 shrink-0 overflow-hidden {{ ($item['type'] ?? '') === 'direct' ? 'rounded-full' : 'rounded-xl' }} bg-slate-100 sm:h-11 sm:w-11">
                                             @if (! empty($item['image_url']))
                                                 <img src="{{ $item['image_url'] }}" alt="" class="h-full w-full object-cover" loading="lazy">
                                             @else
-                                                <span class="flex h-full w-full items-center justify-center bg-[#7138F5] text-xs font-extrabold text-white">{{ $item['initials'] ?? mb_strtoupper(mb_substr($item['title'] ?? '?', 0, 1)) }}</span>
+                                                <span class="flex h-full w-full items-center justify-center bg-[#7138F5] text-sm font-extrabold text-white">{{ $item['initials'] ?? mb_strtoupper(mb_substr($item['title'] ?? '?', 0, 1)) }}</span>
                                             @endif
                                         </span>
                                         <span class="min-w-0 flex-1">
                                             <span class="flex items-center justify-between gap-2">
-                                                <span @class(['truncate text-[13px] text-slate-900', 'font-extrabold' => $unread > 0, 'font-semibold' => $unread === 0])>{{ $item['title'] }}</span>
+                                                <span @class(['truncate text-[15px] text-slate-900 sm:text-[13px]', 'font-extrabold' => $unread > 0, 'font-semibold' => $unread === 0]) dir="auto">{{ $item['title'] }}</span>
                                                 @if ($relative !== '')
-                                                    <time @class(['shrink-0 text-[10px] font-bold', 'text-[#7138F5]' => $unread > 0, 'text-slate-400' => $unread === 0])>{{ $relative }}</time>
+                                                    <time @class(['shrink-0 text-[11px] font-bold sm:text-[10px]', 'text-[#7138F5]' => $unread > 0, 'text-slate-400' => $unread === 0])>{{ $relative }}</time>
                                                 @endif
                                             </span>
-                                            <span class="mt-0.5 flex items-center gap-2">
-                                                <span @class(['min-w-0 flex-1 truncate text-[12px]', 'font-semibold text-slate-700' => $unread > 0, 'text-slate-500' => $unread === 0])>{{ $item['preview'] }}</span>
+                                            <span class="mt-1 flex items-center gap-2">
+                                                <span @class(['min-w-0 flex-1 truncate text-[13px] sm:text-[12px]', 'font-semibold text-slate-700' => $unread > 0, 'text-slate-500' => $unread === 0]) dir="auto">{{ $item['preview'] }}</span>
                                                 @if ($unread > 0)
-                                                    <span class="inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-[#7138F5] px-1.5 py-0.5 text-[10px] font-bold text-white">{{ $unread > 99 ? '99+' : $unread }}</span>
+                                                    <span class="inline-flex min-w-[1.35rem] shrink-0 items-center justify-center rounded-full bg-[#7138F5] px-1.5 py-0.5 text-[11px] font-bold text-white">{{ $unread > 99 ? '99+' : $unread }}</span>
                                                 @endif
                                             </span>
                                         </span>

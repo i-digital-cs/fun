@@ -6,6 +6,7 @@ use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Events\Chat\ReactToEventMessageRequest;
 use App\Http\Requests\Events\Chat\StoreEventMessageRequest;
+use App\Http\Resources\EventMessageResource;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventMessage;
@@ -88,25 +89,9 @@ class EventChatController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return response()->json([
-                'data' => [
-                    'id' => $message->id,
-                    'event_id' => $message->event_id,
-                    'body' => $message->body,
-                    'is_system' => $message->is_system,
-                    'created_at' => $message->created_at?->toIso8601String(),
-                    'likes_count' => 0,
-                    'dislikes_count' => 0,
-                    'my_reaction' => null,
-                    'user' => [
-                        'id' => $message->user?->id,
-                        'name' => $message->user?->name,
-                        'public_id' => $message->user?->public_id,
-                        'initials' => user_initials($message->user?->name),
-                        'profile_image_path' => $message->user?->profile_image_path,
-                    ],
-                ],
-            ], 201);
+            $message->loadMissing(['user:id,name,public_id,profile_image_path', 'replyTo.user:id,name']);
+
+            return (new EventMessageResource($message))->response()->setStatusCode(201);
         }
 
         return redirect()->to(event_route('events.chat', $event));

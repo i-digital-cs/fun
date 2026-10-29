@@ -112,8 +112,13 @@ class ChatMediaService
         if ((int) $file->getSize() > $maxBytes) {
             throw new DomainException(__('chat.attachment_too_large'));
         }
-        $mime = (string) ($file->getMimeType() ?: '');
-        if ($allowedMimes !== null && ! in_array($mime, $allowedMimes, true)) {
+        $mime = strtolower(trim((string) ($file->getMimeType() ?: '')));
+        // Browsers often send "audio/webm;codecs=opus" — compare the type only.
+        $baseMime = explode(';', $mime, 2)[0];
+        if ($allowedMimes !== null && ! in_array($baseMime, $allowedMimes, true)) {
+            if (str_contains($baseMime, 'heic') || str_contains($baseMime, 'heif')) {
+                throw new DomainException(__('chat.attachment_heic'));
+            }
             throw new DomainException(__('chat.attachment_type'));
         }
     }
@@ -147,9 +152,12 @@ class ChatMediaService
             throw new DomainException(__('chat.attachment_failed'));
         }
 
+        $storedMime = strtolower(trim((string) ($file->getMimeType() ?: 'application/octet-stream')));
+        $storedMime = explode(';', $storedMime, 2)[0] ?: 'application/octet-stream';
+
         return [
             'path' => $path,
-            'mime' => (string) ($file->getMimeType() ?: 'application/octet-stream'),
+            'mime' => $storedMime,
             'bytes' => (int) $file->getSize(),
             'duration_ms' => $durationMs,
             'message_type' => $messageType,

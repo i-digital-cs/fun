@@ -41,22 +41,31 @@
         <div class="dash-main flex min-w-0 flex-1 flex-col">
             <x-dashboard.topbar />
 
-            <main class="mx-auto w-full max-w-[1500px] flex-1 px-4 py-7 pb-14 sm:px-[1.875rem] sm:pb-[3.4375rem]">
-                @if (session('status'))
-                    <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
-                        {{ session('status') }}
-                    </div>
-                @endif
+            @php
+                $isChatWorkspace = request()->routeIs('chats.*', 'dms.show', 'events.chat');
+            @endphp
+            <main @class([
+                'mx-auto w-full max-w-[1500px] flex-1',
+                'flex flex-col px-0 py-0 pb-[calc(4.0625rem+env(safe-area-inset-bottom,0px))] lg:px-[1.875rem] lg:py-7 lg:pb-[3.4375rem]' => $isChatWorkspace,
+                'px-4 py-7 pb-14 sm:px-[1.875rem] sm:pb-[3.4375rem]' => ! $isChatWorkspace,
+            ])>
+                @unless ($isChatWorkspace)
+                    @if (session('status'))
+                        <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
+                            {{ session('status') }}
+                        </div>
+                    @endif
 
-                @if ($errors->any())
-                    <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
-                        <ul class="list-disc ps-5">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                    @if ($errors->any())
+                        <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+                            <ul class="list-disc ps-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                @endunless
 
                 @yield('content')
             </main>

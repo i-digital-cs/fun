@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             LogApiRequests::class,
         ]);
 
+        // Same-origin browser session cookies authenticate /api/* (chat media <img>/<audio>).
+        // Flutter continues to use Bearer tokens; stateful middleware only activates for stateful domains.
+        $middleware->statefulApi();
+
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
             'platform.admin' => EnsurePlatformAdmin::class,

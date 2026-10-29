@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-29T18:00:17.000Z",
+  "results": [
+    {
+      "label": "login-a",
+      "status": 200,
+      "redirect": "https://funnity.com/dashboard",
+      "message": null,
+      "url": "https://funnity.com/dashboard"
+    },
+    {
+      "label": "01-mobile-list",
+      "url": "https://funnity.com/chats",
+      "hasChatV2": true,
+      "rows": 1,
+      "height": 709,
+      "overflowX": false
+    },
+    {
+      "label": "02-mobile-thread",
+      "url": "https://funnity.com/chats?c=dm-3",
+      "hasDm": true,
+      "hasComposer": true,
+      "messages": 3,
+      "images": 1,
+      "audio": 1,
+      "listHidden": true
+    },
+    {
+      "label": "03-send-text",
+      "messages": 4,
+      "pending": 0,
+      "failed": 0,
+      "found": true,
+      "stamp": "V21 browser text 1793296799829"
+    },
+    {
+      "label": "04-media-fetch",
+      "ok": true,
+      "status": 200,
+      "url": "https://funnity.com/dms/media/10"
+    },
+    {
+      "label": "07-ar-thread",
+      "lang": "ar",
+      "dir": "rtl"
+    },
+    {
+      "label": "05-desktop",
+      "listVisible": true,
+      "panelVisible": true,
+      "messages": 4
+    },
+    {
+      "label": "login-b",
+      "status": 200,
+      "redirect": "https://funnity.com/dashboard",
+      "message": null,
+      "url": "https://funnity.com/dashboard"
+    },
+    {
+      "label": "06-user-b",
+      "messages": 4,
+      "theirs": 4,
+      "images": 1,
+      "audio": 1
+    }
+  ]
+}

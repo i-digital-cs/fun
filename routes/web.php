@@ -21,6 +21,7 @@ use App\Http\Controllers\Web\Auth\RegisteredUserController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\Events\EventChatController;
 use App\Http\Controllers\Web\Chat\ChatInboxController;
+use App\Http\Controllers\Web\Chat\ChatMediaStreamController as WebChatMediaStreamController;
 use App\Http\Controllers\Web\Friends\DirectMessageController as WebDirectMessageController;
 use App\Http\Controllers\Web\Friends\FriendController as WebFriendController;
 use App\Http\Controllers\Web\Events\EventController;
@@ -181,6 +182,9 @@ Route::middleware('auth')->group(function () {
             ->whereNumber('conversation')
             ->middleware('throttle:messages')
             ->name('dms.store');
+        Route::get('/dms/media/{message}', [WebChatMediaStreamController::class, 'direct'])
+            ->whereNumber('message')
+            ->name('dms.media');
 
         Route::get('/report', [ReportController::class, 'create'])->name('reports.create');
         Route::post('/report', [ReportController::class, 'store'])
@@ -275,6 +279,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/events/{event}/{slug}/chat/{message}/reactions', [EventChatController::class, 'reactions'])
                 ->whereNumber('event')->where('slug', $slug)->whereNumber('message')
                 ->name('events.chat.reactions');
+            Route::get('/events/{event}/messages/{message}/media', [WebChatMediaStreamController::class, 'event'])
+                ->whereNumber('event')
+                ->whereNumber('message')
+                ->name('events.chat.media');
 
             Route::get('/events/{event}/{slug}/ticket', [EventTicketController::class, 'show'])
                 ->whereNumber('event')->where('slug', $slug)
