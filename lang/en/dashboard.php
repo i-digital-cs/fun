@@ -28,6 +28,9 @@ return [
     'mini_map_nationwide' => 'All Egypt — set a location for nearby focus',
     'mini_map_empty' => 'No map events in this view',
     'mini_map_error' => 'Map unavailable right now',
+    'mini_map_loading' => 'Loading map…',
+    'mini_map_tile_error' => 'Map tiles failed to load',
+    'mini_map_retry' => 'Retry',
 
     'nearby_sub' => 'Events matching :city · within :km km',
     'nearby_sub_generic' => 'Nationwide browse — set a city to discover nearby',

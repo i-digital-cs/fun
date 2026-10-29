@@ -34,6 +34,17 @@ if (document.querySelector('[data-discover-map]')) {
         });
 }
 
+if (document.querySelector('[data-home-mini-map]')) {
+    import('./home-mini-map')
+        .then(({ initHomeMiniMap }) => {
+            initHomeMiniMap();
+            document.documentElement.dataset.homeMiniMapReady = '1';
+        })
+        .catch(() => {
+            // Home mini map is progressive enhancement.
+        });
+}
+
 const needsRealtime =
     document.body?.dataset?.realtime === '1' ||
     Boolean(document.getElementById('chat-toast-host'));

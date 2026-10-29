@@ -109,7 +109,7 @@ class _HomeExploreMapCardState extends ConsumerState<HomeExploreMapCard> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: SizedBox(
-                height: 240,
+                height: 240, // Compact Home preview (220–260)
                 child: Stack(
                   children: [
                     Positioned.fill(

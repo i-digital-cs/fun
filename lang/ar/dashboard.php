@@ -28,6 +28,9 @@ return [
     'mini_map_nationwide' => 'كل مصر — اختَر موقع لتركيز أقرب',
     'mini_map_empty' => 'لا فعاليات على الخريطة هنا',
     'mini_map_error' => 'الخريطة غير متاحة حالياً',
+    'mini_map_loading' => 'جاري تحميل الخريطة…',
+    'mini_map_tile_error' => 'تعذر تحميل بلاطات الخريطة',
+    'mini_map_retry' => 'إعادة المحاولة',
 
     'nearby_sub' => 'فعاليات في :city · ضمن :km كم',
     'nearby_sub_generic' => 'تصفّح على مستوى البلد — اختَر مدينة لاكتشاف القريب',

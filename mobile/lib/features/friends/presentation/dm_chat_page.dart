@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,11 +15,13 @@ import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/friends/domain/dm_models.dart';
+import 'package:fun_mobile/features/friends/domain/dms_repository.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:record/record.dart';
 
 class DmChatPage extends ConsumerStatefulWidget {
   const DmChatPage({super.key, required this.conversationId});
@@ -35,11 +39,19 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
   bool _sending = false;
   DmMessage? _replyingTo;
   String? _mediaPath;
+  String? _voicePath;
+  int? _voiceDurationMs;
+  int _recordingDurationMs = 0;
+  bool _recording = false;
+  bool _previewPlaying = false;
   String? _peerName;
   String? _peerPublicId;
   final _text = TextEditingController();
   final _scroll = ScrollController();
+  final _recorder = AudioRecorder();
+  final _previewPlayer = AudioPlayer();
   Timer? _poll;
+  Timer? _recordingTimer;
   CancelToken? _cancel;
   StreamSubscription<DmMessage>? _threadSub;
   ChatRealtimeClient? _realtime;
@@ -47,6 +59,10 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
   @override
   void initState() {
     super.initState();
+    _previewPlayer.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() => _previewPlaying = state == PlayerState.playing);
+    });
     _load();
     _loadPeerFromInbox();
     _startPoll(const Duration(seconds: 8));
@@ -58,7 +74,12 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
   @override
   void dispose() {
     _poll?.cancel();
+    _recordingTimer?.cancel();
     _cancel?.cancel();
+    final voicePath = _voicePath;
+    if (voicePath != null) unawaited(_deleteVoiceFile(voicePath));
+    unawaited(_recorder.dispose());
+    unawaited(_previewPlayer.dispose());
     unawaited(_threadSub?.cancel());
     unawaited(_realtime?.unsubscribeDm() ?? Future<void>.value());
     _text.dispose();
@@ -184,7 +205,10 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
 
   Future<void> _send() async {
     final body = _text.text.trim();
-    if (body.isEmpty && _mediaPath == null || _sending) return;
+    if (body.isEmpty && _mediaPath == null && _voicePath == null || _sending) {
+      return;
+    }
+    final voicePath = _voicePath;
     setState(() => _sending = true);
     final result = await ref
         .read(dmsRepositoryProvider)
@@ -193,8 +217,11 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
           body,
           clientUuid: _clientUuid(),
           replyToId: _replyingTo?.id,
-          mediaPath: _mediaPath,
-          mediaKind: _mediaPath == null ? null : 'image',
+          mediaPath: voicePath ?? _mediaPath,
+          mediaKind: voicePath != null
+              ? 'voice'
+              : (_mediaPath == null ? null : 'image'),
+          durationMs: voicePath == null ? null : _voiceDurationMs,
         );
     if (!mounted) return;
     setState(() => _sending = false);
@@ -208,7 +235,10 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
     setState(() {
       _replyingTo = null;
       _mediaPath = null;
+      _voicePath = null;
+      _voiceDurationMs = null;
     });
+    if (voicePath != null) unawaited(_deleteVoiceFile(voicePath));
     final posted = result.data;
     if (posted != null && !_messages.any((m) => m.id == posted.id)) {
       setState(() {
@@ -252,13 +282,100 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
       ).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
+    await _cancelVoicePreview();
+    if (!mounted) return;
     setState(() => _mediaPath = picked.path);
   }
 
-  void _showVoiceUnavailable() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).voiceUnavailable)),
-    );
+  Future<void> _toggleRecording() async {
+    if (_recording) {
+      await _stopRecording();
+      return;
+    }
+    try {
+      if (!await _recorder.hasPermission()) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).voiceUnavailable),
+          ),
+        );
+        return;
+      }
+
+      await _cancelVoicePreview();
+      final path =
+          '${Directory.systemTemp.path}/dm_voice_${DateTime.now().microsecondsSinceEpoch}.m4a';
+      await _recorder.start(
+        const RecordConfig(encoder: AudioEncoder.aacLc),
+        path: path,
+      );
+      if (!mounted) return;
+      setState(() {
+        _mediaPath = null;
+        _recording = true;
+        _recordingDurationMs = 0;
+      });
+      _recordingTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+        if (!mounted || !_recording) return;
+        final next = _recordingDurationMs + 250;
+        if (next >= 120000) {
+          setState(() => _recordingDurationMs = 120000);
+          unawaited(_stopRecording());
+        } else {
+          setState(() => _recordingDurationMs = next);
+        }
+      });
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).voiceUnavailable)),
+      );
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    if (!_recording) return;
+    _recordingTimer?.cancel();
+    setState(() => _recording = false);
+    final path = await _recorder.stop();
+    if (!mounted) {
+      if (path != null) await _deleteVoiceFile(path);
+      return;
+    }
+    setState(() {
+      _voicePath = path;
+      _voiceDurationMs = _recordingDurationMs.clamp(1, 120000);
+    });
+  }
+
+  Future<void> _toggleVoicePreview() async {
+    final path = _voicePath;
+    if (path == null) return;
+    if (_previewPlaying) {
+      await _previewPlayer.pause();
+    } else {
+      await _previewPlayer.play(DeviceFileSource(path));
+    }
+  }
+
+  Future<void> _cancelVoicePreview() async {
+    await _previewPlayer.stop();
+    final path = _voicePath;
+    if (path != null) await _deleteVoiceFile(path);
+    if (!mounted) return;
+    setState(() {
+      _voicePath = null;
+      _voiceDurationMs = null;
+    });
+  }
+
+  Future<void> _deleteVoiceFile(String path) async {
+    try {
+      await File(path).delete();
+    } on FileSystemException {
+      // The recorder may already have removed an unusable temporary file.
+    }
   }
 
   Future<void> _showMessageActions(DmMessage message) async {
@@ -401,6 +518,7 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
                       return _DmBubble(
                         message: message,
                         isMine: isMine,
+                        repository: ref.read(dmsRepositoryProvider),
                         onLongPress: () => _showMessageActions(message),
                         onReplyTap: message.replyToId == null
                             ? null
@@ -435,17 +553,52 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
                           icon: const Icon(Icons.close),
                         ),
                       ),
+                    if (_voicePath != null)
+                      ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: IconButton(
+                          tooltip: l10n.voiceMessage,
+                          onPressed: _toggleVoicePreview,
+                          icon: Icon(
+                            _previewPlaying
+                                ? Icons.pause_circle_outline
+                                : Icons.play_circle_outline,
+                          ),
+                        ),
+                        title: Text(
+                          '${l10n.voiceMessage} · ${((_voiceDurationMs ?? 0) / 1000).ceil()}s',
+                        ),
+                        trailing: IconButton(
+                          tooltip: l10n.cancel,
+                          onPressed: _cancelVoicePreview,
+                          icon: const Icon(Icons.close),
+                        ),
+                      ),
+                    if (_recording)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          '${l10n.voiceMessage} · ${(_recordingDurationMs / 1000).ceil()}s / 120s',
+                          style: const TextStyle(color: AppColors.danger),
+                        ),
+                      ),
                     Row(
                       children: [
                         IconButton(
                           tooltip: l10n.attachmentAdd,
-                          onPressed: _sending ? null : _pickImage,
+                          onPressed: _sending || _recording ? null : _pickImage,
                           icon: const Icon(Icons.image_outlined),
                         ),
                         IconButton(
                           tooltip: l10n.voiceMessage,
-                          onPressed: _sending ? null : _showVoiceUnavailable,
-                          icon: const Icon(Icons.mic_none_rounded),
+                          onPressed: _sending ? null : _toggleRecording,
+                          icon: Icon(
+                            _recording
+                                ? Icons.stop_circle_outlined
+                                : Icons.mic_none_rounded,
+                            color: _recording ? AppColors.danger : null,
+                          ),
                         ),
                         Expanded(
                           child: TextField(
@@ -470,7 +623,7 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
                         const SizedBox(width: 8),
                         IconButton.filled(
                           tooltip: l10n.send,
-                          onPressed: _sending ? null : _send,
+                          onPressed: _sending || _recording ? null : _send,
                           icon: _sending
                               ? const SizedBox(
                                   width: 18,
@@ -498,12 +651,14 @@ class _DmBubble extends StatelessWidget {
   const _DmBubble({
     required this.message,
     required this.isMine,
+    required this.repository,
     required this.onLongPress,
     this.onReplyTap,
   });
 
   final DmMessage message;
   final bool isMine;
+  final DmsRepository repository;
   final VoidCallback onLongPress;
   final VoidCallback? onReplyTap;
 
@@ -565,17 +720,11 @@ class _DmBubble extends StatelessWidget {
                 if (message.body.isNotEmpty) const SizedBox(height: 7),
               ],
               if (message.messageType == 'voice')
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.play_circle_outline),
-                    const SizedBox(width: 6),
-                    Text(
-                      message.mediaDurationMs == null
-                          ? AppLocalizations.of(context).voiceMessage
-                          : '${(message.mediaDurationMs! / 1000).ceil()}s',
-                    ),
-                  ],
+                _DmVoicePlayer(
+                  messageId: message.id,
+                  durationMs: message.mediaDurationMs,
+                  repository: repository,
+                  foregroundColor: isMine ? Colors.white : AppColors.text,
                 ),
               if (message.body.isNotEmpty)
                 Text(
@@ -640,6 +789,107 @@ class _ComposerReplyBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DmVoicePlayer extends StatefulWidget {
+  const _DmVoicePlayer({
+    required this.messageId,
+    required this.durationMs,
+    required this.repository,
+    required this.foregroundColor,
+  });
+
+  final int messageId;
+  final int? durationMs;
+  final DmsRepository repository;
+  final Color foregroundColor;
+
+  @override
+  State<_DmVoicePlayer> createState() => _DmVoicePlayerState();
+}
+
+class _DmVoicePlayerState extends State<_DmVoicePlayer> {
+  final _player = AudioPlayer();
+  bool _loading = false;
+  bool _loaded = false;
+  bool _playing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.onPlayerStateChanged.listen((state) {
+      if (!mounted) return;
+      setState(() => _playing = state == PlayerState.playing);
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_player.dispose());
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    if (_playing) {
+      await _player.pause();
+      return;
+    }
+    if (!_loaded) {
+      setState(() => _loading = true);
+      final result = await widget.repository.media(widget.messageId);
+      if (!mounted) return;
+      if (result.data == null) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.failure?.message ??
+                  AppLocalizations.of(context).voiceUnavailable,
+            ),
+          ),
+        );
+        return;
+      }
+      await _player.setSourceBytes(Uint8List.fromList(result.data!));
+      if (!mounted) return;
+      setState(() {
+        _loaded = true;
+        _loading = false;
+      });
+    }
+    await _player.resume();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: AppLocalizations.of(context).voiceMessage,
+          visualDensity: VisualDensity.compact,
+          onPressed: _loading ? null : _toggle,
+          color: widget.foregroundColor,
+          icon: _loading
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  _playing
+                      ? Icons.pause_circle_outline
+                      : Icons.play_circle_outline,
+                ),
+        ),
+        Text(
+          widget.durationMs == null
+              ? AppLocalizations.of(context).voiceMessage
+              : '${(widget.durationMs! / 1000).ceil()}s',
+          style: TextStyle(color: widget.foregroundColor),
+        ),
+      ],
     );
   }
 }

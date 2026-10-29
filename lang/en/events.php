@@ -97,6 +97,7 @@ return [
     'set_location_cta' => 'Set your city for nearby results',
     'nationwide_notice' => 'Showing events nationwide. Choose a city to discover nearby.',
     'expanded_notice' => 'No events within :requested. Showing the nearest available within :effective.',
+    'expanded_notice_short' => 'Some suggestions are outside your selected radius (nearest available).',
     'worth_the_trip_title' => 'Worth the trip',
     'worth_the_trip_sub' => 'Interesting events a bit farther away — distances are approximate (straight-line).',
     'distance_approx_note' => 'Distances are approximate straight-line km from your discovery city',

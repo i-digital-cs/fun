@@ -13,6 +13,17 @@
         :stats="$stats"
     />
 
+    <x-dashboard.home-mini-map
+        :city-name="$cityName"
+        :distance-km="(int) ($discoveryMeta['effective_radius_km'] ?? $discoveryMeta['requested_radius_km'] ?? config('location.default_distance_km'))"
+        :has-nearby-origin="$hasNearbyOrigin"
+        :latitude="$miniMapLat ?? null"
+        :longitude="$miniMapLng ?? null"
+        :discovery-mode="$miniMapMode ?? 'nationwide'"
+        :suggested-events="collect($events ?? [])->take(4)"
+        :expanded="(bool) ($discoveryExpanded ?? false)"
+    />
+
     <section class="mt-8 overflow-hidden rounded-[1.35rem] border border-[#E8EAF2] bg-white/90 p-5 shadow-[0_18px_40px_-28px_rgba(25,33,61,0.35)] backdrop-blur-xl sm:rounded-[1.75rem] sm:p-6">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>

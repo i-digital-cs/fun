@@ -131,6 +131,17 @@ class HomeController extends Controller
 
         $playback = $nowPlaying->forUser($user, $user?->city_id);
 
+        // Guests: Egypt-wide mini map (no GPS). Auth: city origin when available.
+        $miniMapCity = $user?->city
+            ?? ($hasNearbyOrigin && ($discoveryMeta['origin_city_id'] ?? null)
+                ? City::query()->find($discoveryMeta['origin_city_id'])
+                : null);
+        $miniMapLat = $miniMapCity?->latitude;
+        $miniMapLng = $miniMapCity?->longitude;
+        $miniMapMode = ($user !== null && $miniMapLat !== null && $miniMapLng !== null && $hasNearbyOrigin)
+            ? 'manual'
+            : 'nationwide';
+
         return view('home.index', [
             'appName' => site_display_name(),
             'categories' => $categories,
@@ -153,6 +164,9 @@ class HomeController extends Controller
             'highlight' => $highlight,
             'weather' => $weather,
             'nowPlaying' => $playback,
+            'miniMapLat' => $miniMapLat !== null ? (float) $miniMapLat : null,
+            'miniMapLng' => $miniMapLng !== null ? (float) $miniMapLng : null,
+            'miniMapMode' => $miniMapMode,
             'seo' => Seo::forHome($highlight?->coverUrl('detail')),
         ]);
     }

@@ -110,6 +110,7 @@
             :longitude="$miniMapLng ?? null"
             :discovery-mode="$miniMapMode ?? 'nationwide'"
             :suggested-events="$eventItems"
+            :expanded="(bool) ($discoveryExpanded ?? false)"
         />
 
         {{-- Events near you --}}
