@@ -459,8 +459,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationInput = document.getElementById('chat-duration-ms');
     const voiceBtn = document.getElementById('chat-voice-btn');
     let mediaRecorder = null;
+    let mediaStream = null;
     let recordedChunks = [];
     let recordStartedAt = 0;
+    let recordingLock = false;
+    const stopTracks = () => {
+        mediaStream?.getTracks()?.forEach((t) => t.stop());
+        mediaStream = null;
+    };
 
     const setReply = (id, name, body) => {
         if (!replyInput) return;
@@ -520,7 +526,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     voiceBtn?.addEventListener('click', async () => {
-        if (typeof MediaRecorder === 'undefined') {
+        if (recordingLock) return;
+        if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
             if (statusEl) {
                 statusEl.textContent = formI18n.micUnsupported;
                 statusEl.classList.remove('hidden');
@@ -528,25 +535,43 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
+            recordingLock = true;
+            try {
+                mediaRecorder.requestData?.();
+                mediaRecorder.stop();
+            } finally {
+                recordingLock = false;
+            }
             voiceBtn.textContent = '🎤';
             return;
         }
+        recordingLock = true;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true },
+            });
             recordedChunks = [];
             recordStartedAt = Date.now();
             const mime = pickRecorderMime();
             mediaRecorder = mime
-                ? new MediaRecorder(stream, { mimeType: mime })
-                : new MediaRecorder(stream);
+                ? new MediaRecorder(mediaStream, { mimeType: mime })
+                : new MediaRecorder(mediaStream);
             mediaRecorder.ondataavailable = (ev) => {
-                if (ev.data.size > 0) recordedChunks.push(ev.data);
+                if (ev.data && ev.data.size > 0) recordedChunks.push(ev.data);
             };
             mediaRecorder.onstop = () => {
-                stream.getTracks().forEach((t) => t.stop());
-                const type = mediaRecorder.mimeType || mime || 'audio/webm';
+                stopTracks();
+                const type = (mediaRecorder.mimeType || mime || 'audio/webm').split(';')[0];
                 const blob = new Blob(recordedChunks, { type });
+                mediaRecorder = null;
+                if (blob.size < 256) {
+                    if (statusEl) {
+                        statusEl.textContent =
+                            form?.dataset.i18nVoiceEmpty || 'Recording failed or was empty.';
+                        statusEl.classList.remove('hidden');
+                    }
+                    return;
+                }
                 const file = new File([blob], `voice-${Date.now()}.${extForMime(type)}`, { type });
                 const dt = new DataTransfer();
                 dt.items.add(file);
@@ -558,18 +583,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusEl.classList.remove('hidden');
                 }
             };
-            mediaRecorder.start();
+            mediaRecorder.start(250);
             voiceBtn.textContent = '⏹';
             if (statusEl) {
                 statusEl.textContent = formI18n.voiceRecording;
                 statusEl.classList.remove('hidden');
             }
         } catch {
+            stopTracks();
             if (statusEl) {
                 statusEl.textContent = formI18n.micDenied;
                 statusEl.classList.remove('hidden');
             }
+        } finally {
+            recordingLock = false;
         }
+    });
+
+    window.addEventListener('pagehide', () => {
+        try {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+        } catch {
+            /* ignore */
+        }
+        stopTracks();
     });
 
     mediaInput?.addEventListener('change', () => {

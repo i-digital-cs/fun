@@ -1,9 +1,25 @@
+# Private chat / identity media must not be gzip/brotli compressed.
+# Compressed bodies with Laravel Content-Length break Safari/Range audio playback.
+# Note: project-root docroot rewrites to /public/... so both URI shapes are covered.
+# After an internal rewrite Apache renames no-gzip → REDIRECT_no-gzip; mod_deflate
+# only honors no-gzip, so we must re-assert it here before the front controller.
+<IfModule mod_setenvif.c>
+    SetEnvIf Request_URI "(?i)^/(public/)?(api/)?dms/media/" no-gzip dont-vary
+    SetEnvIf Request_URI "(?i)messages/[0-9]+/media" no-gzip dont-vary
+    SetEnvIf Request_URI "(?i)^/(public/)?(api/)?identity/documents/" no-gzip dont-vary
+    SetEnvIf REDIRECT_no-gzip .+ no-gzip=1
+    SetEnvIf REDIRECT_dont-vary .+ dont-vary=1
+</IfModule>
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Re-assert after parent rewrite so mod_deflate sees no-gzip (not only REDIRECT_*).
+    RewriteCond %{ENV:REDIRECT_no-gzip} .+
+    RewriteRule ^ - [E=no-gzip:1,E=dont-vary:1]
 
     # If this folder was hit as /public/... in the browser, strip that prefix.
     RewriteCond %{THE_REQUEST} \s/+public/([^\s?]*) [NC]

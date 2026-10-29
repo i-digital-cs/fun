@@ -80,7 +80,7 @@ class DirectMessageController extends Controller
                     'voice' => $media->storeVoice(
                         $request->file('media'),
                         (int) $request->user()->id,
-                        $request->integer('duration_ms') ?: null
+                        $request->integer('duration_ms') ?: ($request->integer('media_duration_ms') ?: null)
                     ),
                     'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
                     default => $media->storeFile($request->file('media'), (int) $request->user()->id),

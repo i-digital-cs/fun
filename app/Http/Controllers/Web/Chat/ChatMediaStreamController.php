@@ -24,7 +24,7 @@ class ChatMediaStreamController extends Controller
         DirectMessage $message,
         DirectMessageService $dms,
         ChatMediaService $media,
-    ): StreamedResponse {
+    ): StreamedResponse|\Symfony\Component\HttpFoundation\Response {
         $conversation = DirectConversation::query()->findOrFail($message->conversation_id);
         try {
             $dms->assertParticipant($request->user(), $conversation);
@@ -36,7 +36,8 @@ class ChatMediaStreamController extends Controller
 
         return $media->stream(
             (string) $message->media_path,
-            (string) ($message->media_mime ?: 'application/octet-stream')
+            (string) ($message->media_mime ?: 'application/octet-stream'),
+            $request
         );
     }
 
@@ -45,14 +46,15 @@ class ChatMediaStreamController extends Controller
         Event $event,
         EventMessage $message,
         ChatMediaService $media,
-    ): StreamedResponse {
+    ): StreamedResponse|\Symfony\Component\HttpFoundation\Response {
         $this->authorize('chat', $event);
         abort_unless((int) $message->event_id === (int) $event->id, 404);
         abort_unless(filled($message->media_path), 404);
 
         return $media->stream(
             (string) $message->media_path,
-            (string) ($message->media_mime ?: 'application/octet-stream')
+            (string) ($message->media_mime ?: 'application/octet-stream'),
+            $request
         );
     }
 }

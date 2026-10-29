@@ -1,0 +1,67 @@
+{
+  "mimeSupport": {
+    "audio/webm;codecs=opus": true,
+    "audio/webm": true,
+    "audio/mp4": true,
+    "audio/ogg;codecs=opus": false,
+    "audio/ogg": false,
+    "video/webm;codecs=opus": true
+  },
+  "record": {
+    "mimeChosen": "audio/webm;codecs=opus",
+    "actualType": "audio/webm",
+    "blobBytes": 42171,
+    "decode": {
+      "duration": 3.18,
+      "peak": 1.0303099155426025,
+      "audible": true
+    },
+    "uploadStatus": 201,
+    "id": 15,
+    "media_url": "https://funnity.com/api/dms/media/15",
+    "media_bytes": 42171,
+    "media_mime": "audio/webm",
+    "duration_ms": 3180
+  },
+  "aProbe": {
+    "status": 200,
+    "contentType": "audio/webm",
+    "contentEncoding": null,
+    "contentLength": "42171",
+    "bytes": 42171,
+    "rangeStatus": 206,
+    "duration": 3.18,
+    "peak": 1.0303099155426025,
+    "audible": true,
+    "lengthMatch": true
+  },
+  "bProbe": {
+    "status": 200,
+    "contentType": "audio/webm",
+    "contentEncoding": null,
+    "contentLength": "42171",
+    "bytes": 42171,
+    "rangeStatus": 206,
+    "duration": 3.18,
+    "peak": 1.0303099155426025,
+    "audible": true,
+    "lengthMatch": true
+  },
+  "playA": {
+    "found": true,
+    "currentTime": 1.455485,
+    "advanced": true,
+    "src": "https://funnity.com/dms/media/15"
+  },
+  "playB": {
+    "found": true,
+    "currentTime": 1.455938,
+    "advanced": true,
+    "src": "https://funnity.com/dms/media/15"
+  },
+  "unauth": {
+    "status": 0,
+    "type": "opaqueredirect"
+  },
+  "at": "2026-10-29T18:19:08.478Z"
+}

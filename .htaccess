@@ -1,3 +1,10 @@
+# Private media streams must stay uncompressed (Safari / Range / Content-Length).
+# Docroot is project root; requests are internally rewritten to public/*.
+<IfModule mod_setenvif.c>
+    SetEnvIf Request_URI "(?i)^/(public/)?(api/)?dms/media/" no-gzip dont-vary
+    SetEnvIf Request_URI "(?i)messages/[0-9]+/media" no-gzip dont-vary
+    SetEnvIf Request_URI "(?i)^/(public/)?(api/)?identity/documents/" no-gzip dont-vary
+</IfModule>
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
@@ -36,7 +43,11 @@
     RewriteCond %{THE_REQUEST} \s/+public([/?\s]) [NC]
     RewriteRule ^public(?:/(.*))?$ /$1 [L,R=301]
 
-    # Route everything else through Laravel's public/ front controller
+    # Route everything else through Laravel's public/ front controller.
+    # Propagate no-gzip for media so mod_deflate still skips after the rewrite.
+    RewriteRule ^(api/)?dms/media/ - [E=no-gzip:1,E=dont-vary:1]
+    RewriteRule ^events/.*/messages/.*/media - [E=no-gzip:1,E=dont-vary:1]
+    RewriteRule ^(api/)?identity/documents/ - [E=no-gzip:1,E=dont-vary:1]
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
 

@@ -167,20 +167,51 @@ class ChatV2ExtensionsTest extends TestCase
         $c = User::factory()->active()->create();
         $conversationId = $this->openDm($a, $b);
 
-        $file = UploadedFile::fake()->create('note.webm', 120, 'audio/webm');
-        $created = $this->post("/api/dms/{$conversationId}/messages", [
+        $fixture = base_path('tests/fixtures/chat/tone5.webm');
+        $this->assertFileExists($fixture);
+        $file = new UploadedFile($fixture, 'tone5.webm', 'audio/webm', null, true);
+        $created = $this->actingAs($a)->post("/api/dms/{$conversationId}/messages", [
             'body' => '',
             'media_kind' => 'voice',
-            'duration_ms' => 1500,
+            'duration_ms' => 5000,
             'media' => $file,
+            'client_uuid' => 'testvoice'.substr(md5((string) microtime(true)), 0, 16),
         ], ['Accept' => 'application/json'])->assertCreated();
 
         $messageId = (int) $created->json('data.id');
         $this->assertSame('voice', $created->json('data.message_type'));
+        $this->assertSame('audio/webm', $created->json('data.media_mime'));
+        $this->assertSame(5000, (int) $created->json('data.media_duration_ms'));
+        $this->assertGreaterThan(1000, (int) $created->json('data.media_bytes'));
         $this->assertNotEmpty($created->json('data.media_url'));
 
         Sanctum::actingAs($b);
-        $this->get("/api/dms/media/{$messageId}")->assertOk();
+        $ok = $this->get("/api/dms/media/{$messageId}");
+        $ok->assertOk();
+        $ok->assertHeader('Accept-Ranges', 'bytes');
+        $ok->assertHeader('Content-Type', 'audio/webm');
+        $this->assertGreaterThan(1000, strlen($ok->streamedContent()));
+
+        $partial = $this->get("/api/dms/media/{$messageId}", ['Range' => 'bytes=0-1023']);
+        $partial->assertStatus(206);
+        $partial->assertHeader('Content-Range');
+
+        // Flutter AAC / m4a path
+        $m4aPath = base_path('tests/fixtures/chat/tone5.m4a');
+        $this->assertFileExists($m4aPath);
+        $m4a = new UploadedFile($m4aPath, 'tone5.m4a', 'audio/mp4', null, true);
+        $m4aCreated = $this->actingAs($a)->post("/api/dms/{$conversationId}/messages", [
+            'body' => '',
+            'media_kind' => 'voice',
+            'duration_ms' => 5000,
+            'media' => $m4a,
+            'client_uuid' => 'testm4a'.substr(md5((string) microtime(true)), 0, 16),
+        ], ['Accept' => 'application/json'])->assertCreated();
+        $this->assertSame('audio/mp4', $m4aCreated->json('data.media_mime'));
+        Sanctum::actingAs($b);
+        $this->get('/api/dms/media/'.(int) $m4aCreated->json('data.id'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mp4');
 
         Sanctum::actingAs($c);
         $this->get("/api/dms/media/{$messageId}")->assertForbidden();

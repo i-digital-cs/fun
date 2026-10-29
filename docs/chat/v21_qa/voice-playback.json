@@ -1,0 +1,145 @@
+{
+  "msgId": 13,
+  "a": {
+    "https://funnity.com/dms/media/13": {
+      "status": 200,
+      "contentType": "audio/webm",
+      "acceptRanges": "bytes",
+      "contentLength": "19479",
+      "bytes": 29657,
+      "rangeStatus": 206,
+      "rangeBytes": 2048,
+      "rangeContentRange": "bytes 0-2047/29657",
+      "duration": 5,
+      "channels": 1,
+      "peak": 0.1287,
+      "audible": true
+    },
+    "https://funnity.com/api/dms/media/13": {
+      "status": 200,
+      "contentType": "audio/webm",
+      "acceptRanges": "bytes",
+      "contentLength": "19479",
+      "bytes": 29657,
+      "rangeStatus": 206,
+      "rangeBytes": 2048,
+      "rangeContentRange": "bytes 0-2047/29657",
+      "duration": 5,
+      "channels": 1,
+      "peak": 0.1287,
+      "audible": true
+    }
+  },
+  "b": {
+    "https://funnity.com/dms/media/13": {
+      "status": 200,
+      "contentType": "audio/webm",
+      "acceptRanges": "bytes",
+      "contentLength": "19479",
+      "bytes": 29657,
+      "rangeStatus": 206,
+      "rangeBytes": 2048,
+      "rangeContentRange": "bytes 0-2047/29657",
+      "duration": 5,
+      "channels": 1,
+      "peak": 0.1287,
+      "audible": true
+    },
+    "https://funnity.com/api/dms/media/13": {
+      "status": 200,
+      "contentType": "audio/webm",
+      "acceptRanges": "bytes",
+      "contentLength": "19479",
+      "bytes": 29657,
+      "rangeStatus": 206,
+      "rangeBytes": 2048,
+      "rangeContentRange": "bytes 0-2047/29657",
+      "duration": 5,
+      "channels": 1,
+      "peak": 0.1287,
+      "audible": true
+    }
+  },
+  "playUi": {
+    "found": true,
+    "currentTime": 1.755693,
+    "advanced": true,
+    "readyState": 4,
+    "src": "https://funnity.com/dms/media/13",
+    "networkState": 1,
+    "error": null
+  },
+  "playUiB": {
+    "found": true,
+    "currentTime": 1.713242,
+    "advanced": true,
+    "readyState": 4,
+    "src": "https://funnity.com/dms/media/13"
+  },
+  "unauth": {
+    "web": 200,
+    "api": 200
+  },
+  "upload": {
+    "status": 201,
+    "id": 14,
+    "media_url": "https://funnity.com/api/dms/media/14",
+    "media_bytes": 29657,
+    "mime": "audio/webm",
+    "raw": {
+      "data": {
+        "id": 14,
+        "conversation_id": 3,
+        "body": "[voice]",
+        "client_uuid": "v21aud91550f6a09",
+        "message_type": "voice",
+        "media_path": "chat/1461/voice/308edba7-5e9d-429d-8ccf-f48c49952700.webm",
+        "media_mime": "audio/webm",
+        "media_bytes": 29657,
+        "media_duration_ms": null,
+        "media_url": "https://funnity.com/api/dms/media/14",
+        "reply_to_id": null,
+        "reply_to": null,
+        "created_at": "2026-10-29T18:13:31+00:00",
+        "user": {
+          "id": 1461,
+          "name": "Chat QA A",
+          "public_id": "chatqaa0cc175b9",
+          "initials": "CQ",
+          "profile_image_path": null
+        }
+      }
+    }
+  },
+  "uploadProbe": {
+    "https://funnity.com/dms/media/14": {
+      "status": 200,
+      "contentType": "audio/webm",
+      "acceptRanges": "bytes",
+      "contentLength": "19479",
+      "bytes": 29657,
+      "rangeStatus": 206,
+      "rangeBytes": 2048,
+      "rangeContentRange": "bytes 0-2047/29657",
+      "duration": 5,
+      "channels": 1,
+      "peak": 0.1287,
+      "audible": true
+    },
+    "https://funnity.com/api/dms/media/14": {
+      "status": 200,
+      "contentType": "audio/webm",
+      "acceptRanges": "bytes",
+      "contentLength": "19479",
+      "bytes": 29657,
+      "rangeStatus": 206,
+      "rangeBytes": 2048,
+      "rangeContentRange": "bytes 0-2047/29657",
+      "duration": 5,
+      "channels": 1,
+      "peak": 0.1287,
+      "audible": true
+    }
+  },
+  "at": "2026-10-29T18:13:34.732Z"
+}

@@ -52,6 +52,7 @@ class DirectMessageController extends Controller
             'media' => ['sometimes', 'nullable', 'file', 'max:10240'],
             'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,file'],
             'duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
+            'media_duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
         ]);
 
         $body = trim((string) ($validated['body'] ?? ''));
@@ -70,11 +71,14 @@ class DirectMessageController extends Controller
             ];
             if ($request->hasFile('media')) {
                 $kind = (string) ($validated['media_kind'] ?? 'file');
+                $durationMs = isset($validated['duration_ms'])
+                    ? (int) $validated['duration_ms']
+                    : (isset($validated['media_duration_ms']) ? (int) $validated['media_duration_ms'] : null);
                 $stored = match ($kind) {
                     'voice' => $media->storeVoice(
                         $request->file('media'),
                         (int) $request->user()->id,
-                        isset($validated['duration_ms']) ? (int) $validated['duration_ms'] : null
+                        $durationMs
                     ),
                     'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
                     default => $media->storeFile($request->file('media'), (int) $request->user()->id),

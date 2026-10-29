@@ -108,7 +108,7 @@
                             </button>
                         @endif
                         @if (($message->message_type ?? 'text') === 'voice' && $message->media_path)
-                            <audio controls preload="none" class="mb-1 max-w-full" src="{{ route('events.chat.media', [$event, $message]) }}"></audio>
+                            <audio controls preload="metadata" class="mb-1 max-w-full" src="{{ route('events.chat.media', [$event, $message]) }}"></audio>
                         @elseif (($message->message_type ?? 'text') === 'image' && $message->media_path)
                             <a href="{{ route('events.chat.media', [$event, $message]) }}" target="_blank" rel="noopener" class="mb-1 block">
                                 <img src="{{ route('events.chat.media', [$event, $message]) }}" alt="" class="max-h-56 w-full max-w-xs rounded-lg object-cover" loading="lazy">
