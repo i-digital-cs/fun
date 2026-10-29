@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/chat-v2.js',
                 'resources/js/auth-access.js',
                 'resources/js/home-mini-map.js',
+                'resources/js/living-map-v3.js',
             ],
             refresh: true,
         }),

@@ -52,6 +52,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
+/** Living Map V3 prototype — isolated; does not replace production maps. */
+Route::get('/preview/living-map-v3', \App\Http\Controllers\Web\Preview\LivingMapV3PreviewController::class)
+    ->middleware('throttle:30,1')
+    ->name('preview.living-map-v3');
+
 Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
