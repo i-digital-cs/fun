@@ -5,6 +5,12 @@
     'showBanner' => false,
     'showTourControls' => true,
     'eventsUrl' => null,
+    'latitude' => null,
+    'longitude' => null,
+    'distanceKm' => null,
+    'discoveryMode' => 'nationwide',
+    'locationLabel' => null,
+    'hasNearbyOrigin' => false,
 ])
 
 @php
@@ -12,14 +18,20 @@
     $attribution = $attribution ?: config('living_map.attribution');
     $eventsUrl = $eventsUrl ?: route('events.index');
     $compact = in_array($mode, ['home', 'public'], true);
+    $latAttr = $latitude !== null && $latitude !== '' ? (float) $latitude : null;
+    $lngAttr = $longitude !== null && $longitude !== '' ? (float) $longitude : null;
+    $kmAttr = $distanceKm !== null && $distanceKm !== '' ? (int) $distanceKm : (int) config('location.default_distance_km', 25);
+    $modeAttr = is_string($discoveryMode) && $discoveryMode !== '' ? $discoveryMode : 'nationwide';
 @endphp
 
 @once
     @push('head')
-        <meta name="robots" content="noindex,nofollow">
+        @if (($mode ?? 'preview') === 'preview')
+            <meta name="robots" content="noindex,nofollow">
+        @endif
         <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin>
         <style>
-            .lm-shell { --lm-purple:#7138F5; --lm-orange:#FF762E; --lm-ink:#2A2150; }
+            .lm-shell { --lm-purple:#7138F5; --lm-orange:#FF762E; --lm-ink:#2A2150; overflow-x: clip; }
             .lm-shell [dir="auto"] { unicode-bidi: isolate; }
             .lm-banner {
                 border-radius: 1rem; border: 1px solid #fcd34d;
@@ -223,6 +235,11 @@
      data-attribution="{{ $attribution }}"
      data-locale="{{ app()->getLocale() }}"
      data-events-url="{{ $eventsUrl }}"
+     @if ($latAttr !== null) data-lat="{{ $latAttr }}" @endif
+     @if ($lngAttr !== null) data-lng="{{ $lngAttr }}" @endif
+     data-distance-km="{{ $kmAttr }}"
+     data-discovery-mode="{{ $modeAttr }}"
+     @if ($locationLabel) data-location-label="{{ $locationLabel }}" @endif
      data-i18n-featured-region="{{ __('living_map.featured_region') }}"
      data-i18n-featured-region-sub="{{ __('living_map.featured_region_sub') }}"
      data-i18n-composing="{{ __('living_map.composing') }}"
@@ -263,14 +280,27 @@
     @endif
 
     <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-            <h1 class="text-[clamp(1.35rem,2.6vw,1.85rem)] font-extrabold tracking-tight text-[#19213D]">
-                {{ __('living_map.title') }}
-                <span class="text-[#FF762E]">· {{ __('living_map.title_living') }}</span>
-            </h1>
-            <p class="mt-1 text-sm text-slate-500">{{ __('living_map.subtitle') }}</p>
+        <div class="min-w-0">
+            @if ($compact)
+                <h2 class="text-[1.15rem] font-extrabold tracking-tight text-[#19213D]">{{ __('dashboard.explore_around_you') }}</h2>
+                <p class="mt-0.5 text-[12px] text-slate-500">{{ __('dashboard.explore_around_you_sub') }}</p>
+            @else
+                <h1 class="text-[clamp(1.35rem,2.6vw,1.85rem)] font-extrabold tracking-tight text-[#19213D]">
+                    {{ __('living_map.title') }}
+                    <span class="text-[#FF762E]">· {{ __('living_map.title_living') }}</span>
+                </h1>
+                <p class="mt-1 text-sm text-slate-500">{{ __('living_map.subtitle') }}</p>
+            @endif
         </div>
-        <p class="lm-status" data-lm-status>{{ __('living_map.composing') }}</p>
+        <div class="flex shrink-0 flex-wrap items-center gap-2">
+            @if ($compact)
+                <a href="{{ route('events.index', ['view' => 'map']) }}"
+                   class="inline-flex items-center rounded-xl bg-[#7138F5] px-3.5 py-2 text-xs font-bold text-white no-underline shadow-sm hover:bg-[#5825D6]">
+                    {{ __('dashboard.explore_full_map') }}
+                </a>
+            @endif
+            <p class="lm-status" data-lm-status>{{ __('living_map.composing') }}</p>
+        </div>
     </div>
 
     <div @class(['lm-split', 'lm-split--compact' => $compact])>
@@ -313,9 +343,11 @@
         <aside class="lm-side" aria-label="{{ __('living_map.list_heading') }}">
             <div class="lm-side__head">
                 <h2 data-lm-list-heading dir="auto">{{ __('living_map.list_heading') }}</h2>
-                <a href="{{ route('events.index', ['view' => 'map']) }}" class="text-[11px] font-bold text-[#7138F5] no-underline">
-                    {{ __('living_map.open_production_discover') }}
-                </a>
+                @unless ($compact)
+                    <a href="{{ route('events.index', ['view' => 'map']) }}" class="text-[11px] font-bold text-[#7138F5] no-underline">
+                        {{ __('living_map.open_production_discover') }}
+                    </a>
+                @endunless
             </div>
             <div class="lm-list fancy-scroll" data-lm-list>
                 <p class="lm-list__empty">{{ __('living_map.list_loading') }}</p>

@@ -1,8 +1,8 @@
-# Living Map V3.3 — Reusable component, layout, i18n, images
+# Living Map V3.3 — Reusable component + Home/Dashboard activation
 
 ## Owner direction
 
-Keep the **original Funnity shell** (navbar / community chrome). Embed a **reusable Living Map** with V3.2 cinematic visuals + **side-by-side event list**. Do **not** replace production Home/Discover until approval.
+Approved visual design. Activate the reusable Living Map on **public `/`** and **authenticated `/dashboard`** (and authenticated `/` which shares the Home mini-map component). Keep Discover and Flutter unchanged. Preserve Funnity shell/layout; geographic SSOT via Explore V4.
 
 ## Architecture
 
@@ -13,72 +13,69 @@ Keep the **original Funnity shell** (navbar / community chrome). Embed a **reusa
 | Style | `resources/js/living-map/funnity-style.js` |
 | I18n helper | `resources/js/living-map/i18n.js` |
 | Vite entry | `resources/js/living-map-v3.js` |
-| Strings | `lang/{en,ar}/living_map.php` |
-| Config gate | `living_map.replace_home_mini_map` (`LIVING_MAP_REPLACE_HOME`, default **false**) |
+| Strings | `lang/{en,ar}/living_map.php` + dashboard explore chrome |
+| Home gate | `living_map.replace_home_mini_map` ← `LIVING_MAP_REPLACE_HOME` |
+| Swap point | `resources/views/components/dashboard/home-mini-map.blade.php` |
 
 ### Modes
 
-- `preview` — `/preview/living-map-v3` (full controls, banner)
-- `home` / `public` — compact stage, no floating card / tour HUD (ready when flag flips)
-- `discover` — reserved (same engine; Discover still Leaflet until approval)
+| Mode | Used on | Behavior |
+|---|---|---|
+| `public` | Guest `/` | Compact stage, nationwide Explore V4, no GPS prompt |
+| `home` | Auth `/` + `/dashboard` | Compact stage; passes selected city lat/lng + `distance_km` + discovery mode |
+| `preview` | `/preview/living-map-v3` | Full cinematic HUD + banner |
+| `discover` | reserved | **Not activated** — Discover stays Leaflet |
+
+## Location SSOT
+
+Home controllers already compute `miniMapLat` / `miniMapLng` / `miniMapMode` / radius. Living Map stage receives those as `data-lat`, `data-lng`, `data-distance-km`, `data-discovery-mode`.
+
+`createLivingMap()` mirrors Leaflet mini-map fetch rules:
+
+- Origin present + mode ≠ nationwide → `discovery_mode=manual|device` + lat/lng + `distance_km`
+- Otherwise → `discovery_mode=nationwide`
+- City-level events remain approximate (`include_approximate=1`); no fabricated coordinates
 
 ## Layout
 
-Desktop grid: map (~68%) + vertical event list (~32%).  
-Logical CSS: in LTR map is start (left), list end (right); in RTL map is start (right), list end (left).  
-Mobile: map stacked above list.
+Desktop: logical CSS map start / list end (EN left map; AR right map).  
+Mobile: map above list; `overflow-x: clip` on shell.
 
-## Localization
+## Production safety / rollback
 
-All chrome strings via `__('living_map.*')` injected as `data-i18n-*`. Event titles are **not** auto-translated (`dir="auto"`). MapLibre RTL plugin preserved (`setRTLTextPlugin(url, false)`).
+1. Set `LIVING_MAP_REPLACE_HOME=false` in `.env`
+2. `php artisan config:clear` (or `config:cache` rebuild)
+3. Hard-refresh Home — Leaflet mini map returns (asset `home-mini-map.js` unchanged)
 
-## Event images
-
-**Root cause:** Discover map APIs used `Event::imageUrl()` → `null` for most seeded events.  
-**Fix:** serialize `coverUrl('card')` (uploaded cover **or** branded category stock WebP), same as Home Blade cards. Applies to Explore V4 map + `city-events` payloads.
-
-## Production safety
-
-- Home Mini Map remains Leaflet while `replace_home_mini_map=false` (verified **OFF** at ship time).
-- Discover Leaflet unchanged.
-- Preview route path unchanged: `/preview/living-map-v3` (signed).
+Discover is **not** gated by this flag.
 
 ## Flutter
 
-Parity item §10.26 — implement after owner approves web V3.3 visual + Home flag. Share tokens, category colors, selection semantics, Explore V4 rules; do not port JS 1:1.
+Parity §10.26 — web Home activated; Flutter Home map still pending soak + port.
 
 ---
 
-## Visual QA (2026-10-29)
+## Home activation QA (2026-10-29)
 
-Evidence: `docs/discovery/v3_3_qa/`.
+Evidence: `docs/discovery/v3_3_home_qa/` + `smoke-auth.json`.
 
-| # | File | Check |
+| Surface | Evidence | Result |
 |---|---|---|
-| 01 | `01-en-desktop-side-by-side.jpg` | EN LTR: Funnity shell, map left / list right, real cover thumbs |
-| 02 | `02-en-event-with-image.jpg` | Selected event floating card + list image (bowling cover) |
-| 03 | `03-en-mobile-390.jpg` | EN 390px: map above list, covers intact |
-| 04 | `04-ar-desktop-side-by-side.jpg` | AR RTL: map right / list left, chrome Arabic (`فتح`, title) |
-| 05 | `05-ar-event-selected.jpg` | AR selected event: `عرض التفاصيل`, covers, RTL split |
-| 06 | `06-ar-mobile-390.jpg` | AR 390px: RTL stack, `فتح الاستكشاف الإنتاجي` |
+| Public `/` EN/AR desktop+mobile | `01`–`04` | Living Map `mode=public`, nationwide, covers, no Leaflet |
+| Auth `/dashboard?distance_km=5` Port Said | `05`, `09` | `discovery_mode=manual`, lat/lng Port Said, focus `5 km`, radius ring |
+| City expand approx labels | `06` | “Approximate city location” / Arabic equivalent |
+| Auth `/` EN/AR | `07`–`08` | `mode=home`, RTL chrome, covers |
+| Discover guest `/events` | curl | `data-discover-map` present; no Living Map in events Blade |
+| API | smoke | discovery map **200**, **0× 422** |
+| Dual init | smoke | 1× `[data-living-map]`, 0× Leaflet mini map |
+| GPS | smoke | no geolocation permission / no auto prompt |
 
-Runtime sample (`perf-sample.json`): `dir=rtl`, RTL plugin `loaded`, CTA `فتح`, **49** list cards with images, Home replace flag **false**.
+### Rollback
 
-### Pass / note
+```bash
+# in .env
+LIVING_MAP_REPLACE_HOME=false
+php artisan config:clear
+```
 
-| Criterion | Result |
-|---|---|
-| Original shell (not standalone chrome) | Pass |
-| Side-by-side map + list (logical CSS EN/AR) | Pass |
-| Laravel `living_map` EN/AR chrome | Pass |
-| Real event images via `coverUrl('card')` | Pass (~49 imgs in list) |
-| Explore V4 SSOT (`/api/discovery/map`, city-events) | Pass |
-| Home gated off (Leaflet remains) | Pass |
-| MapLibre RTL plugin | Pass (`loaded`) |
-| Marker emoji glyphs in headless screenshots | Note — some SVG emoji render as □ in headless Chromium; normal desktop Chrome has emoji fonts |
-
-### Not flipped (owner approval required)
-
-- `LIVING_MAP_REPLACE_HOME` / Home mini-map swap
-- Discover production MapLibre cutover
-- Flutter Living Map screen
+Hard-refresh `/` and `/dashboard` → Leaflet mini map returns.

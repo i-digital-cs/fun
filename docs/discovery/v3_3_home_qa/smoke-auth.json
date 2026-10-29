@@ -1,0 +1,175 @@
+{
+  "results": [
+    {
+      "label": "05-auth-dashboard-en-portsaid-5km",
+      "dir": "ltr",
+      "hasLiving": true,
+      "hasLeafletHome": false,
+      "mode": "home",
+      "discoveryMode": "manual",
+      "distanceKm": "5",
+      "lat": "31.2653",
+      "locationLabel": "Port Said",
+      "imgs": 4,
+      "cards": 4,
+      "heading": "Explore Around You",
+      "status": "Ready · ▶ Event Discovery Tour",
+      "focus": "Port Said",
+      "focusSub": "5 km",
+      "rtl": "loaded",
+      "origin": {
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "km": 5,
+        "mode": "manual",
+        "hasOrigin": true,
+        "label": "Port Said"
+      },
+      "mapZoom": 10.455345405965833
+    },
+    {
+      "label": "city-expand",
+      "opened": true,
+      "heading": "Events in Port Said",
+      "imgs": 4,
+      "approxText": [
+        "Tennis · Oct 31, 8:15 PM · Approximate city location",
+        "PlayStation · Nov 3, 5:00 PM · Approximate city location",
+        "Cinema · Nov 14, 2:30 PM · Approximate city location"
+      ]
+    },
+    {
+      "label": "07-auth-home-en",
+      "dir": "ltr",
+      "hasLiving": true,
+      "hasLeafletHome": false,
+      "mode": "home",
+      "discoveryMode": "manual",
+      "distanceKm": "5",
+      "lat": "31.2653",
+      "locationLabel": "Port Said",
+      "imgs": 4,
+      "cards": 4,
+      "heading": "Explore Around You",
+      "status": "Ready · ▶ Event Discovery Tour",
+      "focus": "Port Said",
+      "focusSub": "5 km",
+      "rtl": "loaded",
+      "origin": {
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "km": 5,
+        "mode": "manual",
+        "hasOrigin": true,
+        "label": "Port Said"
+      },
+      "mapZoom": 10.455345405965833
+    },
+    {
+      "label": "08-auth-home-ar",
+      "dir": "rtl",
+      "hasLiving": true,
+      "hasLeafletHome": false,
+      "mode": "home",
+      "discoveryMode": "manual",
+      "distanceKm": "5",
+      "lat": "31.2653",
+      "locationLabel": "بورسعيد",
+      "imgs": 4,
+      "cards": 4,
+      "heading": "اكتشف اللي بيحصل حواليك",
+      "status": "جاهز · ▶ جولة اكتشاف الفعاليات",
+      "focus": "بورسعيد",
+      "focusSub": "5 km",
+      "rtl": "loaded",
+      "origin": {
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "km": 5,
+        "mode": "manual",
+        "hasOrigin": true,
+        "label": "بورسعيد"
+      },
+      "mapZoom": 10.455345405965833
+    },
+    {
+      "label": "09-auth-dashboard-ar-mobile-5km",
+      "dir": "rtl",
+      "hasLiving": true,
+      "hasLeafletHome": false,
+      "mode": "home",
+      "discoveryMode": "manual",
+      "distanceKm": "5",
+      "lat": "31.2653",
+      "locationLabel": "بورسعيد",
+      "imgs": 4,
+      "cards": 4,
+      "heading": "اكتشف اللي بيحصل حواليك",
+      "status": "جاهز · ▶ جولة اكتشاف الفعاليات",
+      "focus": "بورسعيد",
+      "focusSub": "5 km",
+      "rtl": "loaded",
+      "origin": {
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "km": 5,
+        "mode": "manual",
+        "hasOrigin": true,
+        "label": "بورسعيد"
+      },
+      "mapZoom": 9.939221781572675
+    },
+    {
+      "label": "discover-unchanged",
+      "hasDiscover": false,
+      "hasLiving": true
+    },
+    {
+      "label": "no-dual-init",
+      "livingCount": 1,
+      "leafletCount": 0
+    }
+  ],
+  "apiLog": [
+    {
+      "path": "/api/discovery/map?north=31.42192928224698&south=31.180900142206184&east=32.489842507373766&west=32.07993835560555&zoom=10&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=5",
+      "status": 200
+    },
+    {
+      "path": "/api/discovery/city-events?city_id=11",
+      "status": 200
+    },
+    {
+      "path": "/api/discovery/map?north=31.42192928224698&south=31.180900142206184&east=32.489842507373766&west=32.07993835560555&zoom=10&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=5",
+      "status": 200
+    },
+    {
+      "path": "/api/discovery/map?north=31.42192928224698&south=31.180900142206184&east=32.489842507373766&west=32.07993835560555&zoom=10&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=5",
+      "status": 200
+    },
+    {
+      "path": "/api/discovery/map?north=31.432447253535415&south=31.175223305987913&east=32.46448625612706&west=32.10217775519817&zoom=10&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=5",
+      "status": 200
+    },
+    {
+      "path": "/api/discovery/map?north=31.42192928224698&south=31.180900142206184&east=32.489842507373766&west=32.07993835560555&zoom=10&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=5",
+      "status": 200
+    }
+  ],
+  "api422": 0,
+  "apiStatuses": [
+    200
+  ],
+  "errors": [],
+  "shots": [
+    "01-public-en-desktop.jpg",
+    "02-public-en-mobile.jpg",
+    "03-public-ar-desktop.jpg",
+    "04-public-ar-mobile.jpg",
+    "05-auth-dashboard-en-portsaid-5km.jpg",
+    "06-auth-dashboard-city-expand.jpg",
+    "07-auth-home-en.jpg",
+    "08-auth-home-ar.jpg",
+    "09-auth-dashboard-ar-mobile-5km.jpg"
+  ]
+}

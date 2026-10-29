@@ -1,6 +1,7 @@
 /**
  * Living Map V3.3 entry — boots reusable createLivingMap on [data-living-map].
- * Production Home/Discover Leaflet remain until living_map.replace_home_mini_map.
+ * Home/public mounts when living_map.replace_home_mini_map is true.
+ * Discover production remains Leaflet until a separate cutover.
  */
 import { createLivingMap } from './living-map/create-living-map.js';
 

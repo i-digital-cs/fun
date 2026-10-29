@@ -1,6 +1,7 @@
 /**
  * Living Map V3.3 — reusable MapLibre factory (Home / Discover / Public / Preview).
- * Production Leaflet Home/Discover stay until living_map.replace_home_mini_map.
+ * Home/public activation is gated by living_map.replace_home_mini_map.
+ * Discover production remains Leaflet until a separate owner cutover.
  */
 import { loadFunnityStyle } from './funnity-style.js';
 import { fillTemplate, readI18n } from './i18n.js';
@@ -163,17 +164,107 @@ function aggregateDisplayName(item, i18n) {
     return item.city_name || (item.label || '').split('·')[0].trim() || 'City';
 }
 
-async function fetchMapPayload(bounds, zoom) {
+function readDiscoveryOrigin(root) {
+    const lat = Number(root?.dataset?.lat);
+    const lng = Number(root?.dataset?.lng);
+    const km = Number(root?.dataset?.distanceKm || 25);
+    const mode = root?.dataset?.discoveryMode || 'nationwide';
+    const hasOrigin =
+        Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        mode !== 'nationwide' &&
+        Math.abs(lat) <= 90 &&
+        Math.abs(lng) <= 180;
+    return {
+        lat,
+        lng,
+        km: Number.isFinite(km) && km > 0 ? km : 25,
+        mode,
+        hasOrigin,
+        label: root?.dataset?.locationLabel || '',
+    };
+}
+
+function zoomForRadius(km) {
+    const n = Number(km);
+    if (!Number.isFinite(n) || n <= 0) return 6;
+    if (n <= 5) return 13;
+    if (n <= 10) return 12;
+    if (n <= 25) return 11;
+    if (n <= 50) return 10;
+    if (n <= 100) return 9;
+    return 8;
+}
+
+function radiusLngLatBounds(lat, lng, km) {
+    const pad = Math.max(1, Number(km) || 25) * 1.15;
+    const latPad = pad / 111;
+    const lngPad = pad / (111 * Math.max(0.2, Math.cos((lat * Math.PI) / 180)));
+    return [
+        [lng - lngPad, lat - latPad],
+        [lng + lngPad, lat + latPad],
+    ];
+}
+
+function circlePolygon(lng, lat, radiusKm, steps = 64) {
+    const coords = [];
+    const latRad = (lat * Math.PI) / 180;
+    const kmPerDegLat = 111;
+    const kmPerDegLng = 111 * Math.max(0.2, Math.cos(latRad));
+    for (let i = 0; i <= steps; i += 1) {
+        const a = (i / steps) * Math.PI * 2;
+        coords.push([
+            lng + (Math.cos(a) * radiusKm) / kmPerDegLng,
+            lat + (Math.sin(a) * radiusKm) / kmPerDegLat,
+        ]);
+    }
+    return {
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Polygon', coordinates: [coords] },
+    };
+}
+
+function overviewBounds() {
+    return new window.maplibregl.LngLatBounds([24.9, 22.0], [35.0, 31.7]);
+}
+
+/**
+ * @param {maplibregl.LngLatBoundsLike|{getNorth:Function}} bounds
+ * @param {number} zoom
+ * @param {ReturnType<typeof readDiscoveryOrigin>} origin
+ */
+async function fetchMapPayload(bounds, zoom, origin) {
+    const get = (fn, fallback) => {
+        try {
+            if (bounds && typeof bounds[fn] === 'function') return bounds[fn]();
+        } catch {
+            /* ignore */
+        }
+        return fallback;
+    };
+    const north = get('getNorth', Array.isArray(bounds) ? bounds[1][1] : 31.7);
+    const south = get('getSouth', Array.isArray(bounds) ? bounds[0][1] : 22.0);
+    const east = get('getEast', Array.isArray(bounds) ? bounds[1][0] : 35.0);
+    const west = get('getWest', Array.isArray(bounds) ? bounds[0][0] : 24.9);
+
     const params = new URLSearchParams({
-        north: String(bounds.getNorth()),
-        south: String(bounds.getSouth()),
-        east: String(bounds.getEast()),
-        west: String(bounds.getWest()),
-        zoom: String(Math.round(zoom)),
+        north: String(north),
+        south: String(south),
+        east: String(east),
+        west: String(west),
+        zoom: String(Math.max(5, Math.round(zoom || 6))),
         include_approximate: '1',
-        limit: '100',
-        discovery_mode: 'nationwide',
+        limit: origin?.hasOrigin ? '60' : '100',
     });
+    if (origin?.hasOrigin) {
+        params.set('discovery_mode', origin.mode === 'manual' ? 'manual' : 'device');
+        params.set('latitude', String(origin.lat));
+        params.set('longitude', String(origin.lng));
+        params.set('distance_km', String(origin.km));
+    } else {
+        params.set('discovery_mode', 'nationwide');
+    }
     const res = await fetch(`/api/discovery/map?${params}`, {
         headers: { Accept: 'application/json' },
         credentials: 'same-origin',
@@ -245,6 +336,7 @@ export async function createLivingMap(root) {
 
     const i18n = readI18n(root);
     const mode = root.dataset.mode || 'preview';
+    const origin = readDiscoveryOrigin(root);
     const mapEl = root.querySelector('[data-lm-map]');
     const stage = root.querySelector('[data-lm-stage]');
     const listEl = root.querySelector('[data-lm-list]');
@@ -255,6 +347,8 @@ export async function createLivingMap(root) {
     const cityPanel = root.querySelector('[data-lm-city-panel]');
     const statusEl = root.querySelector('[data-lm-status]');
     const compact = mode === 'home' || mode === 'public';
+
+    const loadPayload = (bounds, zoom) => fetchMapPayload(bounds, zoom, origin);
 
     const setStatus = (msg) => {
         if (statusEl) statusEl.textContent = msg || '';
@@ -299,12 +393,18 @@ export async function createLivingMap(root) {
         setStatus(i18n.styleFallback);
     }
 
+    const initialCenter = origin.hasOrigin ? [origin.lng, origin.lat] : [31.24, 30.05];
+    const initialZoom = origin.hasOrigin
+        ? zoomForRadius(origin.km)
+        : compact
+          ? 7.0
+          : 7.4;
     const map = new window.maplibregl.Map({
         container: mapEl,
         style,
-        center: [31.24, 30.05],
-        zoom: compact ? 7.0 : 7.4,
-        pitch: prefersReducedMotion() ? 0 : compact ? 38 : 44,
+        center: initialCenter,
+        zoom: initialZoom,
+        pitch: prefersReducedMotion() ? 0 : compact ? (origin.hasOrigin ? 42 : 38) : 44,
         bearing: prefersReducedMotion() ? 0 : -8,
         maxBounds: EGYPT_BOUNDS,
         attributionControl: { compact: true },
@@ -314,6 +414,62 @@ export async function createLivingMap(root) {
         new window.maplibregl.NavigationControl({ visualizePitch: !compact }),
         'bottom-right'
     );
+
+    const ensureOriginLayers = () => {
+        if (!origin.hasOrigin) return;
+        const srcId = 'lm-home-origin';
+        if (map.getSource(srcId)) return;
+        map.addSource(srcId, {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: [
+                    circlePolygon(origin.lng, origin.lat, origin.km),
+                    {
+                        type: 'Feature',
+                        properties: { kind: 'origin' },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [origin.lng, origin.lat],
+                        },
+                    },
+                ],
+            },
+        });
+        map.addLayer({
+            id: 'lm-home-radius-fill',
+            type: 'fill',
+            source: srcId,
+            filter: ['==', ['geometry-type'], 'Polygon'],
+            paint: {
+                'fill-color': '#7138F5',
+                'fill-opacity': 0.06,
+            },
+        });
+        map.addLayer({
+            id: 'lm-home-radius-line',
+            type: 'line',
+            source: srcId,
+            filter: ['==', ['geometry-type'], 'Polygon'],
+            paint: {
+                'line-color': '#7138F5',
+                'line-width': 1.5,
+                'line-opacity': 0.45,
+            },
+        });
+        map.addLayer({
+            id: 'lm-home-origin-dot',
+            type: 'circle',
+            source: srcId,
+            filter: ['==', ['get', 'kind'], 'origin'],
+            paint: {
+                'circle-radius': 7,
+                'circle-color': '#2563EB',
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff',
+            },
+        });
+    };
 
     const markerObjs = [];
     const pinByEventId = new Map();
@@ -627,7 +783,7 @@ export async function createLivingMap(root) {
                 1400
             );
             try {
-                paintData(await fetchMapPayload(map.getBounds(), map.getZoom()));
+                paintData(await loadPayload(map.getBounds(), map.getZoom()));
             } catch {
                 /* keep */
             }
@@ -899,32 +1055,84 @@ export async function createLivingMap(root) {
             setTimeout(pollRtl, 250);
         }
 
+        map.on('style.load', () => {
+            try {
+                ensureOriginLayers();
+            } catch (e) {
+                console.warn('origin layers', e);
+            }
+        });
+        try {
+            ensureOriginLayers();
+        } catch (e) {
+            console.warn('origin layers', e);
+        }
+
         setStatus(i18n.composing);
-        setFocus(i18n.featuredRegion, i18n.featuredRegionSub);
-        const overviewBounds = new window.maplibregl.LngLatBounds([24.9, 22.0], [35.0, 31.7]);
         let payload;
         try {
-            payload = await fetchMapPayload(overviewBounds, 6);
+            if (origin.hasOrigin) {
+                setFocus(origin.label || i18n.featuredRegion, `${origin.km} km`);
+                await new Promise((resolve) => {
+                    map.fitBounds(radiusLngLatBounds(origin.lat, origin.lng, origin.km), {
+                        padding: compact ? 36 : 48,
+                        maxZoom: zoomForRadius(origin.km),
+                        duration: prefersReducedMotion() ? 0 : 900,
+                        pitch: prefersReducedMotion() ? 0 : 42,
+                        bearing: prefersReducedMotion() ? 0 : -6,
+                    });
+                    map.once('moveend', () => resolve());
+                    setTimeout(resolve, 1100);
+                });
+                payload = await loadPayload(map.getBounds(), map.getZoom());
+            } else {
+                setFocus(i18n.featuredRegion, i18n.featuredRegionSub);
+                const egypt = overviewBounds();
+                payload = await loadPayload(egypt, 6);
+                if (!compact) {
+                    const focus = computeFeaturedFocus(payload);
+                    await animateCamera(
+                        map,
+                        {
+                            center: focus.center,
+                            zoom: focus.zoom,
+                            pitch: focus.pitch,
+                            bearing: focus.bearing,
+                        },
+                        prefersReducedMotion() ? 0 : 1400
+                    );
+                    try {
+                        payload = await loadPayload(map.getBounds(), map.getZoom());
+                    } catch {
+                        /* keep first payload */
+                    }
+                } else {
+                    await new Promise((resolve) => {
+                        map.fitBounds(
+                            [
+                                [25.0, 22.2],
+                                [34.9, 31.65],
+                            ],
+                            {
+                                padding: 28,
+                                maxZoom: 7,
+                                duration: prefersReducedMotion() ? 0 : 800,
+                            }
+                        );
+                        map.once('moveend', () => resolve());
+                        setTimeout(resolve, 1000);
+                    });
+                    try {
+                        payload = await loadPayload(map.getBounds(), map.getZoom());
+                    } catch {
+                        /* keep */
+                    }
+                }
+            }
         } catch (e) {
             console.warn(e);
             setStatus(i18n.discoveryUnavailable);
             return;
-        }
-        const focus = computeFeaturedFocus(payload);
-        await animateCamera(
-            map,
-            {
-                center: focus.center,
-                zoom: focus.zoom,
-                pitch: focus.pitch,
-                bearing: focus.bearing,
-            },
-            prefersReducedMotion() ? 0 : 1400
-        );
-        try {
-            payload = await fetchMapPayload(map.getBounds(), map.getZoom());
-        } catch {
-            /* keep */
         }
         paintData(payload);
     });
@@ -956,6 +1164,24 @@ export async function createLivingMap(root) {
         stopTour();
         closeCard();
         hideCityPanel();
+        if (origin.hasOrigin) {
+            setFocus(origin.label || i18n.featuredRegion, `${origin.km} km`);
+            await new Promise((resolve) => {
+                map.fitBounds(radiusLngLatBounds(origin.lat, origin.lng, origin.km), {
+                    padding: compact ? 36 : 48,
+                    maxZoom: zoomForRadius(origin.km),
+                    duration: prefersReducedMotion() ? 0 : 800,
+                });
+                map.once('moveend', () => resolve());
+                setTimeout(resolve, 1000);
+            });
+            try {
+                paintData(await loadPayload(map.getBounds(), map.getZoom()));
+            } catch {
+                if (payloadCache) paintData(payloadCache);
+            }
+            return;
+        }
         if (!payloadCache) return;
         const focus = computeFeaturedFocus(payloadCache);
         setFocus(i18n.featuredRegion, i18n.featuredRegionSub);
@@ -978,6 +1204,7 @@ export async function createLivingMap(root) {
         },
         getRtlStatus: () => window.maplibregl?.getRTLTextPluginStatus?.() || 'unknown',
         getMode: () => mode,
+        getOrigin: () => ({ ...origin }),
     };
     root._livingMap = api;
     return api;

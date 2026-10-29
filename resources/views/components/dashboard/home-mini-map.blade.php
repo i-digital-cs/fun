@@ -24,7 +24,18 @@
             mode="{{ auth()->check() ? 'home' : 'public' }}"
             :show-banner="false"
             :show-tour-controls="false"
+            :latitude="$latitude"
+            :longitude="$longitude"
+            :distance-km="(int) $distanceKm"
+            :discovery-mode="$discoveryMode"
+            :location-label="$cityName"
+            :has-nearby-origin="(bool) $hasNearbyOrigin"
         />
+        @if ($expanded)
+            <p class="mt-2 rounded-xl border border-amber-100 bg-amber-50/80 px-3.5 py-2 text-[11px] font-medium text-amber-900">
+                {{ __('events.expanded_notice_short') }}
+            </p>
+        @endif
     </section>
 @else
 
