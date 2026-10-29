@@ -1,0 +1,34 @@
+{
+  "text": {
+    "status": 201,
+    "id": 25,
+    "type": "text"
+  },
+  "image": {
+    "status": 201,
+    "id": 26,
+    "type": "image",
+    "url": "https://funnity.com/api/dms/media/26"
+  },
+  "voice1": {
+    "status": 201,
+    "id": 27,
+    "path": "chat/1461/voice/b40801a4-615a-4b4e-8bc6-9474b9ab781a.webm",
+    "uuid": "smokeretrya188f673f1"
+  },
+  "voice2": {
+    "status": 200,
+    "id": 27,
+    "path": "chat/1461/voice/b40801a4-615a-4b4e-8bc6-9474b9ab781a.webm",
+    "uuid": "smokeretrya188f673f1"
+  },
+  "sameId": true,
+  "samePath": true,
+  "play": {
+    "status": 200,
+    "bytes": 29657,
+    "duration": 4.999977324263039,
+    "peak": 0.12859579920768738,
+    "audible": true
+  }
+}

@@ -92,10 +92,11 @@ class ChatV2ExtensionsTest extends TestCase
 
         $messageId = (int) $first->json('data.id');
 
+        // Idempotent replay (lost HTTP / multi-tap Retry) returns 200, same row.
         $this->postJson("/api/dms/{$conversationId}/messages", [
             'body' => 'Hello',
             'client_uuid' => 'uuid-hello-1',
-        ])->assertCreated()->assertJsonPath('data.id', $messageId);
+        ])->assertOk()->assertJsonPath('data.id', $messageId);
 
         $reply = $this->postJson("/api/dms/{$conversationId}/messages", [
             'body' => 'Reply body',
@@ -215,6 +216,75 @@ class ChatV2ExtensionsTest extends TestCase
 
         Sanctum::actingAs($c);
         $this->get("/api/dms/media/{$messageId}")->assertForbidden();
+    }
+
+    public function test_voice_retry_reuses_client_uuid_without_duplicating_message_or_media(): void
+    {
+        EventFacade::fake([DirectMessagePosted::class, \App\Events\UserDirectMessageReceived::class]);
+        Notification::fake();
+        $disk = config('media.private_disk');
+        Storage::fake($disk);
+
+        $a = User::factory()->active()->create();
+        $b = User::factory()->active()->create();
+        $conversationId = $this->openDm($a, $b);
+        $clientUuid = 'retryuuid'.substr(md5('voice-v3-retry'), 0, 16);
+        $fixture = base_path('tests/fixtures/chat/tone5.webm');
+
+        // 1) First attempt fails before persistence (invalid empty body + no media).
+        $this->actingAs($a)->post("/api/dms/{$conversationId}/messages", [
+            'body' => '',
+            'client_uuid' => $clientUuid,
+        ], ['Accept' => 'application/json'])->assertStatus(422);
+        $this->assertSame(0, DirectMessage::query()->count());
+
+        // 2) Successful persist (simulates first upload that the client may lose).
+        $created = $this->actingAs($a)->post("/api/dms/{$conversationId}/messages", [
+            'body' => '',
+            'media_kind' => 'voice',
+            'duration_ms' => 5000,
+            'media' => new UploadedFile($fixture, 'tone5.webm', 'audio/webm', null, true),
+            'client_uuid' => $clientUuid,
+        ], ['Accept' => 'application/json'])->assertCreated();
+
+        $messageId = (int) $created->json('data.id');
+        $mediaPath = (string) $created->json('data.media_path');
+        $this->assertNotSame('', $mediaPath);
+        $this->assertTrue(Storage::disk($disk)->exists($mediaPath));
+        $filesAfterFirst = Storage::disk($disk)->allFiles('chat');
+        $this->assertCount(1, $filesAfterFirst);
+        $this->assertSame(1, DirectMessage::query()->where('message_type', 'voice')->count());
+
+        // 3) Lost HTTP response + multi-click Retry: same client_uuid, same message, no new file.
+        for ($i = 0; $i < 3; $i++) {
+            $replay = $this->actingAs($a)->post("/api/dms/{$conversationId}/messages", [
+                'body' => '',
+                'media_kind' => 'voice',
+                'duration_ms' => 5000,
+                'media' => new UploadedFile($fixture, 'tone5-retry.webm', 'audio/webm', null, true),
+                'client_uuid' => $clientUuid,
+            ], ['Accept' => 'application/json']);
+
+            $replay->assertOk();
+            $this->assertSame($messageId, (int) $replay->json('data.id'));
+            $this->assertSame($mediaPath, (string) $replay->json('data.media_path'));
+            $this->assertSame($clientUuid, (string) $replay->json('data.client_uuid'));
+        }
+
+        $this->assertSame(1, DirectMessage::query()->count());
+        $this->assertSame(1, DirectMessage::query()->where('client_uuid', $clientUuid)->count());
+        $this->assertSame([$mediaPath], Storage::disk($disk)->allFiles('chat'));
+
+        // 4) Realtime-before-HTTP equivalent: finding by client_uuid returns the persisted row
+        //    without requiring a second store (broadcast payload uses same id/uuid/media_url).
+        $existing = app(\App\Services\Friends\DirectMessageService::class)->findExistingByClientUuid(
+            $a,
+            DirectConversation::query()->findOrFail($conversationId),
+            $clientUuid
+        );
+        $this->assertNotNull($existing);
+        $this->assertSame($messageId, (int) $existing->id);
+        $this->assertSame($mediaPath, (string) $existing->media_path);
     }
 
     public function test_blocks_executable_attachment(): void

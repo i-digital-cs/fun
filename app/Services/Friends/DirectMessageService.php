@@ -208,6 +208,34 @@ class DirectMessageService
         return $this->send($sender, $recipient, $rawBody, $options);
     }
 
+    /**
+     * Idempotent lookup used before media storage so retries after a lost HTTP
+     * response do not create orphan private-disk attachments.
+     */
+    public function findExistingByClientUuid(
+        User $sender,
+        DirectConversation $conversation,
+        mixed $clientUuid,
+    ): ?DirectMessage {
+        $this->assertParticipant($sender, $conversation);
+
+        if (! \App\Services\Chat\ChatV2Capabilities::directMessageExtensions()) {
+            return null;
+        }
+
+        $uuid = $this->normalizedClientUuid($clientUuid);
+        if ($uuid === null) {
+            return null;
+        }
+
+        return DirectMessage::query()
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $sender->id)
+            ->where('client_uuid', $uuid)
+            ->with(['user:id,name,public_id,profile_image_path', 'replyTo.user:id,name'])
+            ->first();
+    }
+
     private function normalizedClientUuid(mixed $value): ?string
     {
         if (! is_string($value)) {

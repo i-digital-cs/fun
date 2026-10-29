@@ -1,6 +1,11 @@
 /**
  * Direct message thread — Echo realtime + reply / react / voice V3 / attachments.
  * HTTP response is authoritative; realtime notifies peers and reconciles by id/client_uuid.
+ *
+ * Voice draft retention: the in-memory Blob/File (`voiceDraftFile`) is kept after
+ * network failures so Retry can reuse the same `client_uuid`. Drafts are cleared
+ * only after server confirmation (or explicit Delete). Page reload discards the
+ * draft — recovery after reload is not supported.
  */
 
 function whenEchoReady(callback) {

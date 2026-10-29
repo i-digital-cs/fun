@@ -69,6 +69,15 @@ class DirectMessageController extends Controller
         DirectMessageService $dms,
     ): JsonResponse {
         try {
+            $existing = $dms->findExistingByClientUuid(
+                $request->user(),
+                $conversation,
+                $request->input('client_uuid')
+            );
+            if ($existing !== null) {
+                return (new DirectMessageResource($existing))->response()->setStatusCode(200);
+            }
+
             $options = [
                 'client_uuid' => $request->input('client_uuid'),
                 'reply_to_id' => $request->integer('reply_to_id') ?: null,

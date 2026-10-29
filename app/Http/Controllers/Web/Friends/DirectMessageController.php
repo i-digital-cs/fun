@@ -65,6 +65,19 @@ class DirectMessageController extends Controller
         }
 
         try {
+            $existing = $dms->findExistingByClientUuid(
+                $request->user(),
+                $conversation,
+                $validated['client_uuid'] ?? null
+            );
+            if ($existing !== null) {
+                if ($request->expectsJson()) {
+                    return (new DirectMessageResource($existing))->response()->setStatusCode(200);
+                }
+
+                return back();
+            }
+
             $options = [
                 'client_uuid' => $validated['client_uuid'] ?? null,
                 'reply_to_id' => $validated['reply_to_id'] ?? null,
