@@ -102,9 +102,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     final firstName = user?.firstName ?? '';
     final canParticipate = user?.canParticipate ?? false;
 
+    // Under MainShell the topbar already applies SafeArea(top).
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () =>

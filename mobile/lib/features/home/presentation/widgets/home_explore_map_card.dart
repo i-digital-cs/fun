@@ -132,7 +132,7 @@ class _HomeExploreMapCardState extends ConsumerState<HomeExploreMapCard> {
                               children: [
                                 TileLayer(
                                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                  userAgentPackageName: 'com.idigital.fun',
+                                  userAgentPackageName: 'com.funnity.app',
                                   maxZoom: 19,
                                   errorTileCallback: (_, _, _) {
                                     if (!mounted || _tileFailed) return;

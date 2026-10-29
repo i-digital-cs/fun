@@ -220,9 +220,12 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final isAuthed = auth is Authenticated;
     final radiusLabel = loc.radiusLabel();
 
+    // Under MainShell the topbar already applies SafeArea(top). Re-applying
+    // top inset here left a large blank band (web Explore V4 has none).
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
+        top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -238,60 +241,60 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                       : const SizedBox(width: double.infinity),
                 );
               },
+              // Web Explore V4: compact toolbar — Map/List in chrome, Create via
+              // bottom nav / sidebar only (not beside the title).
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.discoverTitle,
-                            style: const TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.4,
-                            ),
+                    Text(
+                      l10n.discoverTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.discoverSub,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: SegmentedButton<_DiscoverViewMode>(
+                        style: ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: WidgetStateProperty.all(
+                            const EdgeInsets.symmetric(horizontal: 10),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.discoverSub,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.muted,
-                            ),
+                        ),
+                        segments: const [
+                          ButtonSegment(
+                            value: _DiscoverViewMode.map,
+                            icon: Icon(Icons.map_outlined, size: 18),
+                            label: Text('Map'),
+                          ),
+                          ButtonSegment(
+                            value: _DiscoverViewMode.list,
+                            icon: Icon(Icons.view_list_outlined, size: 18),
+                            label: Text('List'),
                           ),
                         ],
+                        selected: {_viewMode},
+                        onSelectionChanged: (next) {
+                          setState(() => _viewMode = next.first);
+                        },
                       ),
                     ),
-                    SegmentedButton<_DiscoverViewMode>(
-                      segments: const [
-                        ButtonSegment(
-                          value: _DiscoverViewMode.map,
-                          icon: Icon(Icons.map_outlined, size: 18),
-                          label: Text('Map'),
-                        ),
-                        ButtonSegment(
-                          value: _DiscoverViewMode.list,
-                          icon: Icon(Icons.view_list_outlined, size: 18),
-                          label: Text('List'),
-                        ),
-                      ],
-                      selected: {_viewMode},
-                      onSelectionChanged: (next) {
-                        setState(() => _viewMode = next.first);
-                      },
-                    ),
-                    if (canCreate) ...[
-                      const SizedBox(width: 8),
-                      GradientButton(
-                        label: l10n.createEvent,
-                        icon: Icons.add,
-                        onPressed: () => context.go('/create'),
-                      ),
-                    ],
                   ],
                 ),
               ),

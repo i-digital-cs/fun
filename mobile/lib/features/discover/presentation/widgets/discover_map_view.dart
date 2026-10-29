@@ -32,7 +32,17 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
   final _map = MapController();
   bool _loadedOnce = false;
 
-  static const _egyptCenter = LatLng(26.8, 30.8); // fallback initialCenter only
+  /// Nationwide / unknown-origin framing — used for first paint and resets.
+  static final _egyptBounds = LatLngBounds(
+    const LatLng(22.0, 24.9),
+    const LatLng(31.75, 35.0),
+  );
+
+  static final _egyptInitialFit = CameraFit.bounds(
+    bounds: _egyptBounds,
+    padding: const EdgeInsets.all(28),
+    maxZoom: 7,
+  );
 
   @override
   void initState() {
@@ -80,30 +90,9 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
             loc.deviceLat != null &&
             loc.deviceLng != null)) {
       _fitOrigin(loc.deviceLat!, loc.deviceLng!, loc.distanceKm);
-    } else if (loc.mode == DiscoveryLocationMode.manual &&
-        loc.hasManualCity) {
-      // Manual city without place coords — Egypt framing until place known.
-      _map.fitCamera(
-        CameraFit.bounds(
-          bounds: LatLngBounds(
-            const LatLng(22.0, 24.9),
-            const LatLng(31.75, 35.0),
-          ),
-          padding: const EdgeInsets.all(28),
-          maxZoom: 7,
-        ),
-      );
     } else {
-      _map.fitCamera(
-        CameraFit.bounds(
-          bounds: LatLngBounds(
-            const LatLng(22.0, 24.9),
-            const LatLng(31.75, 35.0),
-          ),
-          padding: const EdgeInsets.all(28),
-          maxZoom: 7,
-        ),
-      );
+      // Manual city without coords, or nationwide — Egypt envelope.
+      _map.fitCamera(_egyptInitialFit);
     }
     await _searchCurrentArea();
   }
@@ -161,16 +150,7 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
         _fitOrigin(next.deviceLat!, next.deviceLng!, next.distanceKm);
         _searchCurrentArea();
       } else if (next.mode == DiscoveryLocationMode.nationwide) {
-        _map.fitCamera(
-          CameraFit.bounds(
-            bounds: LatLngBounds(
-              const LatLng(22.0, 24.9),
-              const LatLng(31.75, 35.0),
-            ),
-            padding: const EdgeInsets.all(28),
-            maxZoom: 7,
-          ),
-        );
+        _map.fitCamera(_egyptInitialFit);
         _searchCurrentArea();
       }
     });
@@ -179,21 +159,17 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
     final loc = ref.watch(discoveryLocationControllerProvider);
     final selected = mapState.selectedMarker;
 
-    ref.listen(discoveryLocationControllerProvider, (prev, next) {
-      if (next.deviceLat != null &&
-          next.deviceLng != null &&
-          (prev?.deviceLat != next.deviceLat || prev?.deviceLng != next.deviceLng)) {
-        _map.move(LatLng(next.deviceLat!, next.deviceLng!), 12);
-      }
-    });
+    // Single origin-sync path via the listen above (_fitOrigin). A second
+    // listen that jumped to zoom 12 fought CameraFit and caused Africa→Egypt flash.
 
     return Stack(
       children: [
         FlutterMap(
           mapController: _map,
           options: MapOptions(
-            initialCenter: _egyptCenter,
-            initialZoom: 6,
+            // First paint already Egypt-framed (avoids continent flash before
+            // post-frame fitCamera).
+            initialCameraFit: _egyptInitialFit,
             minZoom: 4,
             maxZoom: 17,
             onMapEvent: _onMapEvent,
@@ -203,7 +179,7 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.idigital.fun',
+              userAgentPackageName: 'com.funnity.app',
               maxZoom: 19,
             ),
             if ((loc.hasDeviceFix ||
