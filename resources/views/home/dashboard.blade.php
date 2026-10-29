@@ -109,6 +109,7 @@
             :latitude="$miniMapLat ?? null"
             :longitude="$miniMapLng ?? null"
             :discovery-mode="$miniMapMode ?? 'nationwide'"
+            :city-id="$miniMapCityId ?? null"
             :suggested-events="$eventItems"
             :expanded="(bool) ($discoveryExpanded ?? false)"
         />

@@ -7,6 +7,7 @@
     'discoveryMode' => 'nationwide',
     'suggestedEvents' => null,
     'expanded' => false,
+    'cityId' => null,
 ])
 
 @php
@@ -23,13 +24,15 @@
         <x-living-map.stage
             mode="{{ auth()->check() ? 'home' : 'public' }}"
             :show-banner="false"
-            :show-tour-controls="false"
+            :show-tour-controls="true"
+            :show-radius-control="true"
             :latitude="$latitude"
             :longitude="$longitude"
             :distance-km="(int) $distanceKm"
             :discovery-mode="$discoveryMode"
             :location-label="$cityName"
             :has-nearby-origin="(bool) $hasNearbyOrigin"
+            :city-id="$cityId ?? null"
         />
         @if ($expanded)
             <p class="mt-2 rounded-xl border border-amber-100 bg-amber-50/80 px-3.5 py-2 text-[11px] font-medium text-amber-900">

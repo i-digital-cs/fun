@@ -15,11 +15,12 @@
 
     <x-dashboard.home-mini-map
         :city-name="$cityName"
-        :distance-km="(int) ($discoveryMeta['effective_radius_km'] ?? $discoveryMeta['requested_radius_km'] ?? config('location.default_distance_km'))"
+        :distance-km="(int) ($miniMapDistanceKm ?? $discoveryMeta['requested_radius_km'] ?? config('location.default_distance_km'))"
         :has-nearby-origin="$hasNearbyOrigin"
         :latitude="$miniMapLat ?? null"
         :longitude="$miniMapLng ?? null"
         :discovery-mode="$miniMapMode ?? 'nationwide'"
+        :city-id="$miniMapCityId ?? null"
         :suggested-events="collect($events ?? [])->take(4)"
         :expanded="(bool) ($discoveryExpanded ?? false)"
     />

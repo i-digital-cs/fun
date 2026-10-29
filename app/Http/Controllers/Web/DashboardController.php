@@ -141,6 +141,7 @@ class DashboardController extends Controller
             'miniMapLat' => $miniMapLat !== null ? (float) $miniMapLat : null,
             'miniMapLng' => $miniMapLng !== null ? (float) $miniMapLng : null,
             'miniMapMode' => $miniMapMode,
+            'miniMapCityId' => $miniMapCity?->id,
         ]);
     }
 }

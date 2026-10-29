@@ -55,20 +55,16 @@ Parity §10.26 — web Home activated; Flutter Home map still pending soak + por
 
 ---
 
-## Home activation QA (2026-10-29)
+## Integration repair (2026-10-29)
 
-Evidence: `docs/discovery/v3_3_home_qa/` + `smoke-auth.json`.
+Preview is the visual SSOT. Home/Dashboard no longer use a “compact” feature fork:
 
-| Surface | Evidence | Result |
-|---|---|---|
-| Public `/` EN/AR desktop+mobile | `01`–`04` | Living Map `mode=public`, nationwide, covers, no Leaflet |
-| Auth `/dashboard?distance_km=5` Port Said | `05`, `09` | `discovery_mode=manual`, lat/lng Port Said, focus `5 km`, radius ring |
-| City expand approx labels | `06` | “Approximate city location” / Arabic equivalent |
-| Auth `/` EN/AR | `07`–`08` | `mode=home`, RTL chrome, covers |
-| Discover guest `/events` | curl | `data-discover-map` present; no Living Map in events Blade |
-| API | smoke | discovery map **200**, **0× 422** |
-| Dual init | smoke | 1× `[data-living-map]`, 0× Leaflet mini map |
-| GPS | smoke | no geolocation permission / no auto prompt |
+- Same stage height as preview (`min(58vh, 520px)`), floating event card, tour HUD.
+- Radius selector (`config('location.distances_km')`) on embedded surfaces; persists via `/settings/location`.
+- Origin/radius from user city + `distance_km` (requested, not expanded); listens to `funnity:discovery-location`.
+- Port Said in earlier QA was the **demo user’s saved city** + optional `?distance_km=5` — not a hardcoded default.
+
+Evidence: `docs/discovery/v3_3_repair_qa/`.
 
 ### Rollback
 

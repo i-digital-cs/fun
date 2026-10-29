@@ -11,17 +11,24 @@
     'discoveryMode' => 'nationwide',
     'locationLabel' => null,
     'hasNearbyOrigin' => false,
+    'cityId' => null,
+    'showRadiusControl' => null,
 ])
 
 @php
     $styleUrl = $styleUrl ?: config('living_map.style_url');
     $attribution = $attribution ?: config('living_map.attribution');
     $eventsUrl = $eventsUrl ?: route('events.index');
-    $compact = in_array($mode, ['home', 'public'], true);
+    // Embedded = Home/Dashboard chrome only. Visual map chrome matches preview (no feature fork).
+    $embedded = in_array($mode, ['home', 'public'], true);
     $latAttr = $latitude !== null && $latitude !== '' ? (float) $latitude : null;
     $lngAttr = $longitude !== null && $longitude !== '' ? (float) $longitude : null;
     $kmAttr = $distanceKm !== null && $distanceKm !== '' ? (int) $distanceKm : (int) config('location.default_distance_km', 25);
     $modeAttr = is_string($discoveryMode) && $discoveryMode !== '' ? $discoveryMode : 'nationwide';
+    $cityIdAttr = $cityId !== null && $cityId !== '' ? (int) $cityId : null;
+    $showRadius = $showRadiusControl === null ? $embedded : (bool) $showRadiusControl;
+    $radiusOptions = array_values(array_map('intval', config('location.distances_km', [5, 10, 25, 50, 100, 0])));
+    $radiusSupported = $modeAttr !== 'nationwide';
 @endphp
 
 @once
@@ -42,17 +49,32 @@
                 display: grid; gap: 1rem; align-items: stretch;
             }
             @media (min-width: 1024px) {
-                .lm-split { grid-template-columns: minmax(0,1fr) minmax(16rem, 32%); }
-                .lm-split--compact { grid-template-columns: minmax(0,1fr) minmax(14rem, 30%); }
+                .lm-split { grid-template-columns: minmax(0,1fr) minmax(16rem, 32%); min-width: 0; }
             }
             .lm-stage {
                 position: relative; overflow: hidden; border-radius: 1.35rem;
                 border: 1px solid rgba(232,234,242,.9);
                 background: linear-gradient(160deg,#DCECFF 0%, #F8F1FF 55%, #FFE9D6 100%);
                 box-shadow: 0 24px 50px -28px rgba(49,24,110,.5);
-                min-height: 280px; height: min(58vh, 520px);
+                min-height: 280px; height: min(58vh, 520px); min-width: 0;
             }
-            .lm-stage--compact { height: min(42vh, 340px); min-height: 240px; }
+            .lm-toolbar {
+                display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem;
+                margin-bottom: .85rem;
+            }
+            .lm-radius {
+                display:inline-flex; align-items:center; gap:.45rem;
+                border-radius: .9rem; border: 1px solid #e2e8f0; background:#fff;
+                padding: .35rem .55rem .35rem .7rem;
+                box-shadow: 0 8px 18px -14px rgba(15,23,42,.35);
+            }
+            .lm-radius[hidden] { display:none !important; }
+            .lm-radius label { font-size:.68rem; font-weight:800; color:#64748b; white-space:nowrap; }
+            .lm-radius select {
+                border:0; background:transparent; font-size:.78rem; font-weight:800; color:#19213D;
+                padding:.15rem .1rem; max-width:9.5rem; cursor:pointer;
+            }
+            .lm-radius select:focus { outline: none; }
             .lm-map { position:absolute; inset:0; }
             .lm-map .maplibregl-canvas { outline: none; }
             .lm-atmosphere {
@@ -192,8 +214,6 @@
                 flex:1; overflow:auto; padding:.55rem; display:flex; flex-direction:column; gap:.45rem;
                 max-height: min(58vh, 520px);
             }
-            .lm-stage--compact ~ .lm-side .lm-list,
-            .lm-split--compact .lm-list { max-height: min(42vh, 340px); }
             .lm-list__card {
                 display:flex; gap:.7rem; width:100%; text-align:start; cursor:pointer;
                 border:1px solid #E8EAF2; border-radius:1rem; background:#fff; padding:.45rem;
@@ -221,8 +241,8 @@
             .lm-list__empty { margin:0; padding:1rem; font-size:.78rem; color:#6B6280; font-weight:600; }
             .lm-status { font-size:.7rem; font-weight:700; color:#6B6280; }
             @media (max-width: 1023px) {
-                .lm-stage, .lm-stage--compact { height: 260px; min-height: 240px; }
-                .lm-list { max-height: 22rem; }
+                .lm-stage { height: min(48vh, 360px); min-height: 260px; }
+                .lm-list { max-height: 24rem; }
             }
         </style>
     @endpush
@@ -240,6 +260,9 @@
      data-distance-km="{{ $kmAttr }}"
      data-discovery-mode="{{ $modeAttr }}"
      @if ($locationLabel) data-location-label="{{ $locationLabel }}" @endif
+     @if ($cityIdAttr !== null) data-city-id="{{ $cityIdAttr }}" @endif
+     data-radius-options="{{ e(json_encode($radiusOptions)) }}"
+     data-show-radius="{{ $showRadius ? '1' : '0' }}"
      data-i18n-featured-region="{{ __('living_map.featured_region') }}"
      data-i18n-featured-region-sub="{{ __('living_map.featured_region_sub') }}"
      data-i18n-composing="{{ __('living_map.composing') }}"
@@ -273,7 +296,10 @@
      data-i18n-city-cluster="{{ __('living_map.city_cluster') }}"
      data-i18n-zoom-expand-cluster="{{ __('living_map.zoom_to_expand_cluster') }}"
      data-i18n-ambient-showcase="{{ __('living_map.ambient_showcase') }}"
-     data-i18n-close-city="{{ __('living_map.close_city_collection') }}">
+     data-i18n-close-city="{{ __('living_map.close_city_collection') }}"
+     data-i18n-radius-label="{{ __('location.discovery_distance') }}"
+     data-i18n-all-distances="{{ __('location.all_distances') }}"
+     data-i18n-km="{{ __('location.km') }}">
 
     @if ($showBanner)
         <div class="lm-banner mb-4" role="status">{{ __('living_map.banner_preview') }}</div>
@@ -281,7 +307,7 @@
 
     <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
         <div class="min-w-0">
-            @if ($compact)
+            @if ($embedded)
                 <h2 class="text-[1.15rem] font-extrabold tracking-tight text-[#19213D]">{{ __('dashboard.explore_around_you') }}</h2>
                 <p class="mt-0.5 text-[12px] text-slate-500">{{ __('dashboard.explore_around_you_sub') }}</p>
             @else
@@ -293,7 +319,7 @@
             @endif
         </div>
         <div class="flex shrink-0 flex-wrap items-center gap-2">
-            @if ($compact)
+            @if ($embedded)
                 <a href="{{ route('events.index', ['view' => 'map']) }}"
                    class="inline-flex items-center rounded-xl bg-[#7138F5] px-3.5 py-2 text-xs font-bold text-white no-underline shadow-sm hover:bg-[#5825D6]">
                     {{ __('dashboard.explore_full_map') }}
@@ -303,8 +329,34 @@
         </div>
     </div>
 
-    <div @class(['lm-split', 'lm-split--compact' => $compact])>
-        <div @class(['lm-stage', 'lm-stage--compact' => $compact]) data-lm-stage>
+    @if ($showRadius)
+        <div class="lm-toolbar" data-lm-toolbar>
+            <div class="lm-radius" data-lm-radius-wrap @if (! $radiusSupported) hidden @endif>
+                <label for="lm-radius-{{ $mode }}-{{ $cityIdAttr ?? 'x' }}">{{ __('location.discovery_distance') }}</label>
+                <select id="lm-radius-{{ $mode }}-{{ $cityIdAttr ?? 'x' }}" data-lm-radius @disabled(! $radiusSupported)>
+                    @foreach ($radiusOptions as $distance)
+                        <option value="{{ $distance }}" @selected((int) $kmAttr === (int) $distance)>
+                            @if ((int) $distance === 0)
+                                {{ __('location.all_distances') }}
+                            @else
+                                {{ $distance }} {{ __('location.km') }}
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @auth
+                <button type="button"
+                        class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-700 shadow-sm hover:bg-slate-50"
+                        data-location-modal-open>
+                    {{ __('weather.change_city') }}
+                </button>
+            @endauth
+        </div>
+    @endif
+
+    <div class="lm-split">
+        <div class="lm-stage" data-lm-stage>
             <div class="lm-map" data-lm-map role="application" aria-label="{{ __('living_map.aria_map') }}"></div>
             <div class="lm-atmosphere" aria-hidden="true"></div>
 
@@ -327,27 +379,23 @@
 
             <aside class="lm-city-panel" data-lm-city-panel hidden aria-live="polite"></aside>
 
-            @unless ($compact)
-                <article class="lm-card" data-lm-card hidden>
-                    <div data-lm-card-media></div>
-                    <div class="lm-card__body">
-                        <span class="lm-card__cat" data-lm-card-cat></span>
-                        <h3 data-lm-card-title dir="auto"></h3>
-                        <p class="lm-card__meta" data-lm-card-meta dir="auto"></p>
-                        <a class="lm-card__cta" data-lm-card-link href="#">{{ __('living_map.view_event') }}</a>
-                    </div>
-                </article>
-            @endunless
+            <article class="lm-card" data-lm-card hidden>
+                <div data-lm-card-media></div>
+                <div class="lm-card__body">
+                    <span class="lm-card__cat" data-lm-card-cat></span>
+                    <h3 data-lm-card-title dir="auto"></h3>
+                    <p class="lm-card__meta" data-lm-card-meta dir="auto"></p>
+                    <a class="lm-card__cta" data-lm-card-link href="#">{{ __('living_map.view_event') }}</a>
+                </div>
+            </article>
         </div>
 
         <aside class="lm-side" aria-label="{{ __('living_map.list_heading') }}">
             <div class="lm-side__head">
                 <h2 data-lm-list-heading dir="auto">{{ __('living_map.list_heading') }}</h2>
-                @unless ($compact)
-                    <a href="{{ route('events.index', ['view' => 'map']) }}" class="text-[11px] font-bold text-[#7138F5] no-underline">
-                        {{ __('living_map.open_production_discover') }}
-                    </a>
-                @endunless
+                <a href="{{ route('events.index', ['view' => 'map']) }}" class="text-[11px] font-bold text-[#7138F5] no-underline">
+                    {{ $embedded ? __('dashboard.explore_full_map') : __('living_map.open_production_discover') }}
+                </a>
             </div>
             <div class="lm-list fancy-scroll" data-lm-list>
                 <p class="lm-list__empty">{{ __('living_map.list_loading') }}</p>

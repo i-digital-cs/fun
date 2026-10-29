@@ -54,6 +54,12 @@ class HomeController extends Controller
             $filters['when'] = $when;
         }
 
+        $selectedDistance = null;
+        if (array_key_exists('distance_km', $request->query()) && $request->query('distance_km') !== null && $request->query('distance_km') !== '') {
+            $selectedDistance = (int) $request->query('distance_km');
+            $filters['distance_km'] = $selectedDistance;
+        }
+
         // Ephemeral browser GPS (secure context + user gesture). Never stored.
         if ($request->filled('latitude') && $request->filled('longitude')) {
             $lat = (float) $request->query('latitude');
@@ -141,6 +147,9 @@ class HomeController extends Controller
         $miniMapMode = ($user !== null && $miniMapLat !== null && $miniMapLng !== null && $hasNearbyOrigin)
             ? 'manual'
             : 'nationwide';
+        $miniMapDistanceKm = $selectedDistance
+            ?? (int) ($discoveryMeta['requested_radius_km'] ?? $user?->distance_km ?? config('location.default_distance_km'));
+        $miniMapCityId = $miniMapCity?->id;
 
         return view('home.index', [
             'appName' => site_display_name(),
@@ -167,6 +176,8 @@ class HomeController extends Controller
             'miniMapLat' => $miniMapLat !== null ? (float) $miniMapLat : null,
             'miniMapLng' => $miniMapLng !== null ? (float) $miniMapLng : null,
             'miniMapMode' => $miniMapMode,
+            'miniMapDistanceKm' => $miniMapDistanceKm,
+            'miniMapCityId' => $miniMapCityId,
             'seo' => Seo::forHome($highlight?->coverUrl('detail')),
         ]);
     }

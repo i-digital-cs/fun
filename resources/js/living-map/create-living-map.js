@@ -167,8 +167,14 @@ function aggregateDisplayName(item, i18n) {
 function readDiscoveryOrigin(root) {
     const lat = Number(root?.dataset?.lat);
     const lng = Number(root?.dataset?.lng);
-    const km = Number(root?.dataset?.distanceKm || 25);
+    const rawKm = root?.dataset?.distanceKm;
+    const km = rawKm === undefined || rawKm === '' ? 25 : Number(rawKm);
     const mode = root?.dataset?.discoveryMode || 'nationwide';
+    const cityIdRaw = root?.dataset?.cityId;
+    const cityId =
+        cityIdRaw !== undefined && cityIdRaw !== '' && Number.isFinite(Number(cityIdRaw))
+            ? Number(cityIdRaw)
+            : null;
     const hasOrigin =
         Number.isFinite(lat) &&
         Number.isFinite(lng) &&
@@ -178,22 +184,27 @@ function readDiscoveryOrigin(root) {
     return {
         lat,
         lng,
-        km: Number.isFinite(km) && km > 0 ? km : 25,
+        km: Number.isFinite(km) ? km : 25,
         mode,
         hasOrigin,
         label: root?.dataset?.locationLabel || '',
+        cityId,
     };
 }
 
 function zoomForRadius(km) {
     const n = Number(km);
-    if (!Number.isFinite(n) || n <= 0) return 6;
-    if (n <= 5) return 13;
-    if (n <= 10) return 12;
-    if (n <= 25) return 11;
-    if (n <= 50) return 10;
-    if (n <= 100) return 9;
-    return 8;
+    if (!Number.isFinite(n) || n <= 0) return 6.8;
+    if (n <= 5) return 12.2;
+    if (n <= 10) return 11.4;
+    if (n <= 25) return 10.6;
+    if (n <= 50) return 9.8;
+    if (n <= 100) return 8.8;
+    return 7.6;
+}
+
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
 function radiusLngLatBounds(lat, lng, km) {
@@ -336,7 +347,7 @@ export async function createLivingMap(root) {
 
     const i18n = readI18n(root);
     const mode = root.dataset.mode || 'preview';
-    const origin = readDiscoveryOrigin(root);
+    let origin = readDiscoveryOrigin(root);
     const mapEl = root.querySelector('[data-lm-map]');
     const stage = root.querySelector('[data-lm-stage]');
     const listEl = root.querySelector('[data-lm-list]');
@@ -346,7 +357,9 @@ export async function createLivingMap(root) {
     const nextBtn = root.querySelector('[data-lm-next]');
     const cityPanel = root.querySelector('[data-lm-city-panel]');
     const statusEl = root.querySelector('[data-lm-status]');
-    const compact = mode === 'home' || mode === 'public';
+    const radiusSelect = root.querySelector('[data-lm-radius]');
+    const radiusWrap = root.querySelector('[data-lm-radius-wrap]');
+    const embedded = mode === 'home' || mode === 'public';
 
     const loadPayload = (bounds, zoom) => fetchMapPayload(bounds, zoom, origin);
 
@@ -394,73 +407,72 @@ export async function createLivingMap(root) {
     }
 
     const initialCenter = origin.hasOrigin ? [origin.lng, origin.lat] : [31.24, 30.05];
-    const initialZoom = origin.hasOrigin
-        ? zoomForRadius(origin.km)
-        : compact
-          ? 7.0
-          : 7.4;
+    const initialZoom = origin.hasOrigin ? zoomForRadius(origin.km) : 7.4;
     const map = new window.maplibregl.Map({
         container: mapEl,
         style,
         center: initialCenter,
         zoom: initialZoom,
-        pitch: prefersReducedMotion() ? 0 : compact ? (origin.hasOrigin ? 42 : 38) : 44,
+        pitch: prefersReducedMotion() ? 0 : 44,
         bearing: prefersReducedMotion() ? 0 : -8,
         maxBounds: EGYPT_BOUNDS,
         attributionControl: { compact: true },
         cooperativeGestures: true,
     });
-    map.addControl(
-        new window.maplibregl.NavigationControl({ visualizePitch: !compact }),
-        'bottom-right'
-    );
+    map.addControl(new window.maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
+
+    const ORIGIN_SRC = 'lm-home-origin';
+    const clearOriginLayers = () => {
+        ['lm-home-origin-dot', 'lm-home-radius-line', 'lm-home-radius-fill'].forEach((id) => {
+            if (map.getLayer(id)) map.removeLayer(id);
+        });
+        if (map.getSource(ORIGIN_SRC)) map.removeSource(ORIGIN_SRC);
+    };
 
     const ensureOriginLayers = () => {
+        clearOriginLayers();
         if (!origin.hasOrigin) return;
-        const srcId = 'lm-home-origin';
-        if (map.getSource(srcId)) return;
-        map.addSource(srcId, {
+        const features = [
+            {
+                type: 'Feature',
+                properties: { kind: 'origin' },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [origin.lng, origin.lat],
+                },
+            },
+        ];
+        if (origin.km > 0) {
+            features.unshift(circlePolygon(origin.lng, origin.lat, origin.km));
+        }
+        map.addSource(ORIGIN_SRC, {
             type: 'geojson',
-            data: {
-                type: 'FeatureCollection',
-                features: [
-                    circlePolygon(origin.lng, origin.lat, origin.km),
-                    {
-                        type: 'Feature',
-                        properties: { kind: 'origin' },
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [origin.lng, origin.lat],
-                        },
-                    },
-                ],
-            },
+            data: { type: 'FeatureCollection', features },
         });
-        map.addLayer({
-            id: 'lm-home-radius-fill',
-            type: 'fill',
-            source: srcId,
-            filter: ['==', ['geometry-type'], 'Polygon'],
-            paint: {
-                'fill-color': '#7138F5',
-                'fill-opacity': 0.06,
-            },
-        });
-        map.addLayer({
-            id: 'lm-home-radius-line',
-            type: 'line',
-            source: srcId,
-            filter: ['==', ['geometry-type'], 'Polygon'],
-            paint: {
-                'line-color': '#7138F5',
-                'line-width': 1.5,
-                'line-opacity': 0.45,
-            },
-        });
+        if (origin.km > 0) {
+            map.addLayer({
+                id: 'lm-home-radius-fill',
+                type: 'fill',
+                source: ORIGIN_SRC,
+                filter: ['==', ['geometry-type'], 'Polygon'],
+                paint: { 'fill-color': '#7138F5', 'fill-opacity': 0.06 },
+            });
+            map.addLayer({
+                id: 'lm-home-radius-line',
+                type: 'line',
+                source: ORIGIN_SRC,
+                filter: ['==', ['geometry-type'], 'Polygon'],
+                paint: {
+                    'line-color': '#7138F5',
+                    'line-width': 1.5,
+                    'line-opacity': 0.45,
+                },
+            });
+        }
         map.addLayer({
             id: 'lm-home-origin-dot',
             type: 'circle',
-            source: srcId,
+            source: ORIGIN_SRC,
             filter: ['==', ['get', 'kind'], 'origin'],
             paint: {
                 'circle-radius': 7,
@@ -469,6 +481,33 @@ export async function createLivingMap(root) {
                 'circle-stroke-color': '#ffffff',
             },
         });
+    };
+
+    const syncRadiusUi = () => {
+        if (!radiusWrap || !radiusSelect) return;
+        const show = root.dataset.showRadius === '1' && origin.hasOrigin;
+        radiusWrap.hidden = !show;
+        radiusSelect.disabled = !show;
+        if (show && String(radiusSelect.value) !== String(origin.km)) {
+            radiusSelect.value = String(origin.km);
+        }
+    };
+
+    const writeOriginDataset = () => {
+        if (origin.hasOrigin) {
+            root.dataset.lat = String(origin.lat);
+            root.dataset.lng = String(origin.lng);
+            root.dataset.discoveryMode = origin.mode;
+        } else {
+            delete root.dataset.lat;
+            delete root.dataset.lng;
+            root.dataset.discoveryMode = 'nationwide';
+        }
+        root.dataset.distanceKm = String(origin.km);
+        if (origin.label) root.dataset.locationLabel = origin.label;
+        if (origin.cityId != null) root.dataset.cityId = String(origin.cityId);
+        else delete root.dataset.cityId;
+        syncRadiusUi();
     };
 
     const markerObjs = [];
@@ -505,7 +544,7 @@ export async function createLivingMap(root) {
 
     const placeCard = (point) => {
         const card = root.querySelector('[data-lm-card]');
-        if (!card || !stage || compact) return;
+        if (!card || !stage) return;
         const rect = stage.getBoundingClientRect();
         const w = Math.min(280, rect.width - 24);
         const x = Math.min(Math.max(point.x - w / 2, 12), rect.width - w - 12);
@@ -518,7 +557,7 @@ export async function createLivingMap(root) {
 
     const openEventCard = (item, theme) => {
         const card = root.querySelector('[data-lm-card]');
-        if (!card || compact) return;
+        if (!card) return;
         card.hidden = false;
         const media = card.querySelector('[data-lm-card-media]');
         const imageUrl = typeof item.image_url === 'string' ? item.image_url.trim() : '';
@@ -752,7 +791,7 @@ export async function createLivingMap(root) {
                 map,
                 {
                     center: [item.longitude, item.latitude],
-                    zoom: Math.max(map.getZoom(), compact ? 11.8 : 12.6),
+                    zoom: Math.max(map.getZoom(), 12.6),
                     pitch: prefersReducedMotion() ? 0 : 52,
                     bearing: (map.getBearing() + 14) % 360,
                 },
@@ -799,7 +838,7 @@ export async function createLivingMap(root) {
             map,
             {
                 center: [item.longitude, item.latitude],
-                zoom: compact ? 10.8 : 11.4,
+                zoom: 11.4,
                 pitch: prefersReducedMotion() ? 0 : 50,
                 bearing: -12,
             },
@@ -902,7 +941,7 @@ export async function createLivingMap(root) {
         const collections = (payload.city_aggregates || []).filter(
             (c) => c.latitude != null && c.longitude != null
         );
-        const named = collections.filter((c) => c.type !== 'city_cluster').slice(0, compact ? 10 : 14);
+        const named = collections.filter((c) => c.type !== 'city_cluster').slice(0, 14);
         const clusters = collections.filter((c) => c.type === 'city_cluster').slice(0, 3);
         [...named, ...clusters].forEach((item) => {
             const el = createAggEl(item);
@@ -1068,74 +1107,138 @@ export async function createLivingMap(root) {
             console.warn('origin layers', e);
         }
 
+        syncRadiusUi();
         setStatus(i18n.composing);
-        let payload;
         try {
-            if (origin.hasOrigin) {
-                setFocus(origin.label || i18n.featuredRegion, `${origin.km} km`);
-                await new Promise((resolve) => {
-                    map.fitBounds(radiusLngLatBounds(origin.lat, origin.lng, origin.km), {
-                        padding: compact ? 36 : 48,
-                        maxZoom: zoomForRadius(origin.km),
-                        duration: prefersReducedMotion() ? 0 : 900,
-                        pitch: prefersReducedMotion() ? 0 : 42,
-                        bearing: prefersReducedMotion() ? 0 : -6,
-                    });
-                    map.once('moveend', () => resolve());
-                    setTimeout(resolve, 1100);
-                });
-                payload = await loadPayload(map.getBounds(), map.getZoom());
-            } else {
-                setFocus(i18n.featuredRegion, i18n.featuredRegionSub);
-                const egypt = overviewBounds();
-                payload = await loadPayload(egypt, 6);
-                if (!compact) {
-                    const focus = computeFeaturedFocus(payload);
-                    await animateCamera(
-                        map,
-                        {
-                            center: focus.center,
-                            zoom: focus.zoom,
-                            pitch: focus.pitch,
-                            bearing: focus.bearing,
-                        },
-                        prefersReducedMotion() ? 0 : 1400
-                    );
-                    try {
-                        payload = await loadPayload(map.getBounds(), map.getZoom());
-                    } catch {
-                        /* keep first payload */
-                    }
-                } else {
-                    await new Promise((resolve) => {
-                        map.fitBounds(
-                            [
-                                [25.0, 22.2],
-                                [34.9, 31.65],
-                            ],
-                            {
-                                padding: 28,
-                                maxZoom: 7,
-                                duration: prefersReducedMotion() ? 0 : 800,
-                            }
-                        );
-                        map.once('moveend', () => resolve());
-                        setTimeout(resolve, 1000);
-                    });
-                    try {
-                        payload = await loadPayload(map.getBounds(), map.getZoom());
-                    } catch {
-                        /* keep */
-                    }
-                }
-            }
+            await refreshFromOrigin({ animate: !prefersReducedMotion() });
         } catch (e) {
             console.warn(e);
             setStatus(i18n.discoveryUnavailable);
-            return;
+        }
+    });
+
+    async function frameOrigin({ animate = true } = {}) {
+        if (!origin.hasOrigin) return;
+        const sub =
+            origin.km > 0
+                ? `${origin.km} ${root.dataset.i18nKm || 'km'}`
+                : root.dataset.i18nAllDistances || 'All distances';
+        setFocus(origin.label || i18n.featuredRegion, sub);
+        ensureOriginLayers();
+        await new Promise((resolve) => {
+            const opts = {
+                padding: 48,
+                maxZoom: zoomForRadius(origin.km > 0 ? origin.km : 100),
+                duration: animate ? 900 : 0,
+                pitch: prefersReducedMotion() ? 0 : 44,
+                bearing: prefersReducedMotion() ? 0 : -6,
+            };
+            if (origin.km > 0) {
+                map.fitBounds(radiusLngLatBounds(origin.lat, origin.lng, origin.km), opts);
+            } else {
+                map.easeTo({
+                    center: [origin.lng, origin.lat],
+                    zoom: 7.2,
+                    ...opts,
+                });
+            }
+            map.once('moveend', () => resolve());
+            setTimeout(resolve, animate ? 1100 : 50);
+        });
+    }
+
+    async function refreshFromOrigin({ animate = true } = {}) {
+        writeOriginDataset();
+        stopTour(false);
+        closeCard();
+        hideCityPanel();
+        setStatus(i18n.composing);
+        let payload;
+        if (origin.hasOrigin) {
+            await frameOrigin({ animate });
+            payload = await loadPayload(map.getBounds(), map.getZoom());
+        } else {
+            clearOriginLayers();
+            setFocus(i18n.featuredRegion, i18n.featuredRegionSub);
+            const egypt = overviewBounds();
+            payload = await loadPayload(egypt, 6);
+            const focus = computeFeaturedFocus(payload);
+            await animateCamera(
+                map,
+                {
+                    center: focus.center,
+                    zoom: focus.zoom,
+                    pitch: focus.pitch,
+                    bearing: focus.bearing,
+                },
+                animate && !prefersReducedMotion() ? 1400 : 0
+            );
+            try {
+                payload = await loadPayload(map.getBounds(), map.getZoom());
+            } catch {
+                /* keep */
+            }
         }
         paintData(payload);
-    });
+        requestAnimationFrame(() => map.resize());
+        return payload;
+    }
+
+    async function persistRadiusPreference(km) {
+        if (!embedded || !origin.cityId) return;
+        try {
+            const body = new URLSearchParams();
+            body.set('_token', csrfToken());
+            body.set('_method', 'PUT');
+            body.set('city_id', String(origin.cityId));
+            body.set('distance_km', String(km));
+            body.set('redirect_to', `${window.location.pathname}${window.location.search}`);
+            await fetch('/settings/location', {
+                method: 'POST',
+                headers: {
+                    Accept: 'text/html',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body,
+                redirect: 'manual',
+            });
+        } catch (e) {
+            console.warn('persist radius', e);
+        }
+    }
+
+    async function applyRadius(km) {
+        const next = Number(km);
+        if (!Number.isFinite(next)) return;
+        origin = { ...origin, km: next };
+        writeOriginDataset();
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('distance_km', String(next));
+            window.history.replaceState({}, '', url.toString());
+        } catch {
+            /* ignore */
+        }
+        try {
+            const raw = sessionStorage.getItem('funnity_discovery_v4');
+            const prev = raw ? JSON.parse(raw) : {};
+            sessionStorage.setItem(
+                'funnity_discovery_v4',
+                JSON.stringify({
+                    ...prev,
+                    distanceKm: next,
+                    updatedAt: Date.now(),
+                })
+            );
+        } catch {
+            /* ignore */
+        }
+        await persistRadiusPreference(next);
+        await refreshFromOrigin({ animate: true });
+    }
 
     map.on('movestart', (e) => {
         if (e.originalEvent) stopTour();
@@ -1161,50 +1264,65 @@ export async function createLivingMap(root) {
         map.zoomOut({ duration: 400 })
     );
     root.querySelector('[data-lm-reset]')?.addEventListener('click', async () => {
-        stopTour();
-        closeCard();
-        hideCityPanel();
-        if (origin.hasOrigin) {
-            setFocus(origin.label || i18n.featuredRegion, `${origin.km} km`);
-            await new Promise((resolve) => {
-                map.fitBounds(radiusLngLatBounds(origin.lat, origin.lng, origin.km), {
-                    padding: compact ? 36 : 48,
-                    maxZoom: zoomForRadius(origin.km),
-                    duration: prefersReducedMotion() ? 0 : 800,
-                });
-                map.once('moveend', () => resolve());
-                setTimeout(resolve, 1000);
-            });
-            try {
-                paintData(await loadPayload(map.getBounds(), map.getZoom()));
-            } catch {
-                if (payloadCache) paintData(payloadCache);
-            }
-            return;
+        try {
+            await refreshFromOrigin({ animate: true });
+        } catch {
+            if (payloadCache) paintData(payloadCache);
         }
-        if (!payloadCache) return;
-        const focus = computeFeaturedFocus(payloadCache);
-        setFocus(i18n.featuredRegion, i18n.featuredRegionSub);
-        await animateCamera(map, {
-            center: focus.center,
-            zoom: focus.zoom,
-            pitch: focus.pitch,
-            bearing: focus.bearing,
-        });
-        paintData(payloadCache);
     });
+
+    radiusSelect?.addEventListener('change', () => {
+        applyRadius(radiusSelect.value).catch((e) => console.warn(e));
+    });
+
+    const onDiscoveryLocation = (ev) => {
+        if (!embedded) return;
+        const detail = ev?.detail || {};
+        const nextMode = detail.mode || 'nationwide';
+        const nextKm = Number(detail.distanceKm);
+        const lat = Number(detail.lat);
+        const lng = Number(detail.lng);
+        const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+        origin = {
+            lat: hasCoords ? lat : origin.lat,
+            lng: hasCoords ? lng : origin.lng,
+            km: Number.isFinite(nextKm) ? nextKm : origin.km,
+            mode: nextMode,
+            hasOrigin: nextMode !== 'nationwide' && hasCoords,
+            label: detail.cityName || detail.shortLabel || detail.locationLabel || origin.label,
+            cityId:
+                detail.cityId != null && Number.isFinite(Number(detail.cityId))
+                    ? Number(detail.cityId)
+                    : origin.cityId,
+        };
+        refreshFromOrigin({ animate: true }).catch((e) => console.warn(e));
+    };
+    document.addEventListener('funnity:discovery-location', onDiscoveryLocation);
+
+    const onResize = () => {
+        try {
+            map.resize();
+        } catch {
+            /* ignore */
+        }
+    };
+    window.addEventListener('resize', onResize);
 
     const api = {
         map,
         destroy() {
             stopTour();
             clearMarkers();
+            document.removeEventListener('funnity:discovery-location', onDiscoveryLocation);
+            window.removeEventListener('resize', onResize);
             map.remove();
             root.dataset.ready = '0';
         },
         getRtlStatus: () => window.maplibregl?.getRTLTextPluginStatus?.() || 'unknown',
         getMode: () => mode,
         getOrigin: () => ({ ...origin }),
+        refreshFromOrigin,
+        applyRadius,
     };
     root._livingMap = api;
     return api;
