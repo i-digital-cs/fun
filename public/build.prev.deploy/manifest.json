@@ -1,0 +1,67 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-D6KpKCwk.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-zVYOejfv.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/discover-map.js",
+      "resources/js/realtime.js",
+      "resources/js/event-place-map.js"
+    ]
+  },
+  "resources/js/auth-access.js": {
+    "file": "assets/auth-access-BeLvfRKk.js",
+    "name": "auth-access",
+    "src": "resources/js/auth-access.js",
+    "isEntry": true
+  },
+  "resources/js/chat-inbox.js": {
+    "file": "assets/chat-inbox-DTfpTzOJ.js",
+    "name": "chat-inbox",
+    "src": "resources/js/chat-inbox.js",
+    "isEntry": true
+  },
+  "resources/js/discover-map.js": {
+    "file": "assets/discover-map-GZmVERnv.js",
+    "name": "discover-map",
+    "src": "resources/js/discover-map.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "resources/js/dm-chat.js": {
+    "file": "assets/dm-chat-0c55j3xD.js",
+    "name": "dm-chat",
+    "src": "resources/js/dm-chat.js",
+    "isEntry": true
+  },
+  "resources/js/event-chat.js": {
+    "file": "assets/event-chat-metYP64p.js",
+    "name": "event-chat",
+    "src": "resources/js/event-chat.js",
+    "isEntry": true
+  },
+  "resources/js/event-place-map.js": {
+    "file": "assets/event-place-map-DM5uftTX.js",
+    "name": "event-place-map",
+    "src": "resources/js/event-place-map.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/realtime.js": {
+    "file": "assets/realtime-CERTCz_n.js",
+    "name": "realtime",
+    "src": "resources/js/realtime.js",
+    "isDynamicEntry": true
+  }
+}
