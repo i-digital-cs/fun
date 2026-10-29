@@ -2751,8 +2751,24 @@
     opacity: 0.72;
 }
 
+.chat-row.is-pending .chat-row__meta {
+    font-weight: 800;
+}
+
 .chat-row.is-failed .chat-row__bubble {
     outline: 2px solid #fb7185;
+}
+
+#dm-voice-panel[data-voice-state='recording'],
+#chat-voice-panel[data-voice-state='recording'] {
+    border-color: #fca5a5;
+    background: rgba(254, 226, 226, 0.55);
+}
+
+#dm-voice-panel[data-voice-state='paused'],
+#chat-voice-panel[data-voice-state='paused'] {
+    border-color: #fcd34d;
+    background: rgba(254, 243, 199, 0.7);
 }
 
 .chat-row__retry {

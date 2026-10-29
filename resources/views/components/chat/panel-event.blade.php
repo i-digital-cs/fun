@@ -144,9 +144,14 @@
           data-i18n-send-failed="{{ __('chat.send_failed') }}"
           data-i18n-voice-ready="{{ __('chat.voice_ready') }}"
           data-i18n-voice-recording="{{ __('chat.voice_recording') }}"
+          data-i18n-voice-paused="{{ __('chat.voice_paused') }}"
           data-i18n-mic-denied="{{ __('chat.mic_denied') }}"
           data-i18n-mic-unsupported="{{ __('chat.mic_unsupported') }}"
-          data-i18n-heic="{{ __('chat.attachment_heic') }}">
+          data-i18n-heic="{{ __('chat.attachment_heic') }}"
+          data-i18n-voice-empty="{{ __('chat.voice_empty') }}"
+          data-i18n-voice-uploading="{{ __('chat.voice_uploading') }}"
+          data-i18n-voice-pending="{{ __('chat.voice_pending') }}"
+          data-i18n-retry="{{ __('chat.retry') }}">
         @csrf
         <input type="hidden" name="reply_to_id" id="chat-reply-to" value="">
         <input type="hidden" name="client_uuid" id="chat-client-uuid" value="">
@@ -155,6 +160,22 @@
         <div data-chat-attach-preview hidden class="rounded-xl border border-slate-200 bg-[#F8F9FE] px-2.5 py-2 text-xs font-semibold text-slate-700">
             <span data-chat-attach-label></span>
             <button type="button" data-chat-attach-clear class="ms-auto text-rose-600 underline">✕</button>
+        </div>
+        <div id="chat-voice-panel" hidden class="mb-2 rounded-xl border border-indigo-100 bg-indigo-50/80 px-2.5 py-2" data-voice-state="idle">
+            <div class="flex items-center gap-2">
+                <span id="chat-voice-state" class="text-[11px] font-extrabold text-indigo-900">{{ __('chat.voice_note') }}</span>
+                <span id="chat-voice-timer" class="ms-auto text-xs font-extrabold tabular-nums text-indigo-800">0:00</span>
+            </div>
+            <audio id="chat-voice-preview" controls preload="metadata" class="mt-2 hidden w-full max-w-full"></audio>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+                <button type="button" id="chat-voice-record" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-800">{{ __('chat.voice_record') }}</button>
+                <button type="button" id="chat-voice-pause" hidden class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-900">{{ __('chat.voice_pause') }}</button>
+                <button type="button" id="chat-voice-resume" hidden class="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-900">{{ __('chat.voice_resume') }}</button>
+                <button type="button" id="chat-voice-stop" hidden class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-bold text-rose-800">{{ __('chat.voice_stop') }}</button>
+                <button type="button" id="chat-voice-again" hidden class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-800">{{ __('chat.voice_again') }}</button>
+                <button type="button" id="chat-voice-discard" hidden class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700">{{ __('chat.voice_delete') }}</button>
+                <button type="button" id="chat-voice-send" hidden class="rounded-lg bg-[#7138F5] px-2.5 py-1.5 text-[11px] font-bold text-white">{{ __('chat.voice_send') }}</button>
+            </div>
         </div>
         <div class="flex items-end gap-2">
             <button type="button" id="chat-voice-btn" class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 hover:border-[#7138F5] hover:text-[#7138F5] sm:h-11 sm:w-11" title="{{ __('chat.voice_note') }}" aria-label="{{ __('chat.voice_note') }}">🎤</button>

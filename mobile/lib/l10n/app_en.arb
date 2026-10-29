@@ -44,6 +44,11 @@
   "react": "React",
   "voiceMessage": "Voice message",
   "voiceUnavailable": "Voice recording is not available in this build.",
+  "voicePause": "Pause",
+  "voiceResume": "Resume",
+  "voiceStop": "Stop",
+  "voicePending": "Pending",
+
   "homeMapTitle": "Explore Around You",
   "homeMapSubtitle": "Find activities, meet people, and explore events nearby.",
   "homeMapOpen": "Explore Full Map",

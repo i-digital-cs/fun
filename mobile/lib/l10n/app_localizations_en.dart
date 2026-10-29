@@ -145,6 +145,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Voice recording is not available in this build.';
 
   @override
+  String get voicePause => 'Pause';
+
+  @override
+  String get voiceResume => 'Resume';
+
+  @override
+  String get voiceStop => 'Stop';
+
+  @override
+  String get voicePending => 'Pending';
+
+  @override
   String get homeMapTitle => 'Explore Around You';
 
   @override

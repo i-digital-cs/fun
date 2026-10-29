@@ -142,6 +142,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceUnavailable => 'تسجيل الصوت غير متاح في هذا الإصدار.';
 
   @override
+  String get voicePause => 'إيقاف مؤقت';
+
+  @override
+  String get voiceResume => 'متابعة';
+
+  @override
+  String get voiceStop => 'إيقاف';
+
+  @override
+  String get voicePending => 'قيد الإرسال';
+
+  @override
   String get homeMapTitle => 'استكشف من حولك';
 
   @override

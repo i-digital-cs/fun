@@ -44,6 +44,11 @@
   "react": "تفاعل",
   "voiceMessage": "رسالة صوتية",
   "voiceUnavailable": "تسجيل الصوت غير متاح في هذا الإصدار.",
+  "voicePause": "إيقاف مؤقت",
+  "voiceResume": "متابعة",
+  "voiceStop": "إيقاف",
+  "voicePending": "قيد الإرسال",
+
   "homeMapTitle": "استكشف من حولك",
   "homeMapSubtitle": "اعثر على أنشطة وتعرّف على أشخاص واستكشف فعاليات قريبة.",
   "homeMapOpen": "استكشف الخريطة كاملة",

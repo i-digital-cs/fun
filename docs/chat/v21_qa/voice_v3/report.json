@@ -1,0 +1,53 @@
+{
+  "steps": {
+    "lifecycle": "PASS",
+    "retry": "CONDITIONAL (UI failed state captured; automated retry flake in headless)",
+    "arRecordingLabel": "جارٍ التسجيل…",
+    "arPausedLabel": "متوقف مؤقتاً",
+    "arPreviewLabel": "المعاينة جاهزة — أرسل أو احذف",
+    "pausedLabelEn": "Paused"
+  },
+  "timing": {
+    "sendToPendingMs": 43,
+    "pendingToConfirmedMs": 1280,
+    "messageId": 24
+  },
+  "realtime": {
+    "sentId": 24,
+    "recipientFoundWithoutRefresh": true,
+    "sendToRecipientMs": 1349,
+    "senderConfirmMs": 1280,
+    "playB": {
+      "found": true,
+      "advanced": true,
+      "currentTime": 0.66,
+      "src": "https://funnity.com/api/dms/media/24"
+    }
+  },
+  "security": {
+    "unauth": "opaqueredirect/302",
+    "crossUser": 403,
+    "guest": 302,
+    "participant": 200
+  },
+  "gzip": {
+    "mediaUncompressed": true,
+    "siteJsGzipPreserved": true
+  },
+  "mobileDevices": "UNVERIFIED — no physical Safari iOS / Chrome Android",
+  "flutter": "Code parity: pause/resume/stop added; device verification NOT done",
+  "screens": [
+    "ar-390-paused.jpg",
+    "ar-390-preview.jpg",
+    "ar-390-recording.jpg",
+    "en-320-recording.jpg",
+    "en-375-preview.jpg",
+    "en-390-failed.jpg",
+    "en-390-paused.jpg",
+    "en-390-preview.jpg",
+    "en-390-recording.jpg",
+    "en-390-sent.jpg",
+    "en-390-uploading.jpg",
+    "realtime-recipient.jpg"
+  ]
+}

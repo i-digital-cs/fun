@@ -1,5 +1,5 @@
 /**
- * Direct message thread — Echo realtime + reply / react / voice / attachments.
+ * Direct message thread — Echo realtime + reply / react / voice V3 / attachments.
  * HTTP response is authoritative; realtime notifies peers and reconciles by id/client_uuid.
  */
 
@@ -66,7 +66,7 @@ function appendDmRow(log, payload, currentUserId, opts = {}) {
             pending.dataset.messageId = String(payload.id);
             pending.classList.remove('is-pending', 'is-failed');
             pending.querySelector('[data-retry]')?.remove();
-            // Replace bubble content with confirmed payload below by rebuilding.
+            pending.querySelector('[data-upload-progress]')?.remove();
             pending.remove();
         } else if (pending && !payload.id) {
             return pending;
@@ -153,15 +153,32 @@ function appendDmRow(log, payload, currentUserId, opts = {}) {
     }
 
     const foot = document.createElement('div');
-    foot.className = 'mt-1 flex items-center gap-2';
+    foot.className = 'mt-1 flex flex-wrap items-center gap-2';
     const meta = document.createElement('p');
     meta.className = 'chat-row__meta text-[10px] opacity-70';
-    meta.textContent = opts.pending
-        ? '…'
-        : payload.created_at
-          ? new Date(payload.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
-          : '';
+    meta.dataset.meta = '1';
+    if (opts.pending) {
+        meta.textContent = opts.pendingLabel || '…';
+    } else if (opts.failed) {
+        meta.textContent = opts.failedLabel || 'Failed';
+    } else {
+        meta.textContent = payload.created_at
+            ? new Date(payload.created_at).toLocaleTimeString([], {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+              })
+            : '';
+    }
     foot.appendChild(meta);
+
+    if (opts.pending) {
+        const prog = document.createElement('span');
+        prog.className = 'text-[10px] font-bold opacity-80';
+        prog.dataset.uploadProgress = '1';
+        prog.textContent = opts.progressText || '';
+        foot.appendChild(prog);
+    }
 
     if (opts.failed && typeof opts.onRetry === 'function') {
         const retry = document.createElement('button');
@@ -174,7 +191,7 @@ function appendDmRow(log, payload, currentUserId, opts = {}) {
             opts.onRetry();
         });
         foot.appendChild(retry);
-    } else if (!opts.pending) {
+    } else if (!opts.pending && !opts.failed) {
         const replyBtn = document.createElement('button');
         replyBtn.type = 'button';
         replyBtn.className = 'text-[10px] font-bold opacity-70 hover:opacity-100';
@@ -223,34 +240,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const i18n = {
         sendFailed: form?.dataset.i18nSendFailed || 'Message could not be sent. Tap to retry.',
-        voiceReady: form?.dataset.i18nVoiceReady || 'Voice ready — tap Send',
-        voiceRecording: form?.dataset.i18nVoiceRecording || 'Recording… tap mic to stop',
+        voiceReady: form?.dataset.i18nVoiceReady || 'Preview ready — Send or delete',
+        voiceRecording: form?.dataset.i18nVoiceRecording || 'Recording…',
+        voicePaused: form?.dataset.i18nVoicePaused || 'Paused',
         micDenied: form?.dataset.i18nMicDenied || 'Microphone permission denied.',
         micUnsupported: form?.dataset.i18nMicUnsupported || 'Voice notes are not supported in this browser.',
         heic: form?.dataset.i18nHeic || 'HEIC/HEIF photos are not supported. Please send a JPEG or PNG.',
+        voiceEmpty: form?.dataset.i18nVoiceEmpty || 'Recording failed or was empty. Please try again.',
+        voiceUploading: form?.dataset.i18nVoiceUploading || 'Uploading voice…',
+        voicePending: form?.dataset.i18nVoicePending || 'Pending',
+        voiceFailed: form?.dataset.i18nVoiceFailed || 'Failed',
+        voiceProgress: form?.dataset.i18nVoiceProgress || 'Uploading :pct%',
+        retry: form?.dataset.i18nRetry || 'Retry',
     };
 
     let mediaRecorder = null;
     let mediaStream = null;
     let recordedChunks = [];
-    let recordStartedAt = 0;
+    let recordAccumMs = 0;
+    let segmentStartedAt = 0;
     let previewObjectUrl = null;
     let voiceObjectUrl = null;
     let voiceDraftFile = null;
     let timerId = null;
     let recordingLock = false;
     let sending = false;
+    let voicePhase = 'idle'; // idle | recording | paused | preview
+    let activeClientUuid = null;
+    let lastFailedUuid = null;
 
     const voicePanel = document.getElementById('dm-voice-panel');
     const voicePreview = document.getElementById('dm-voice-preview');
     const voiceTimer = document.getElementById('dm-voice-timer');
+    const voiceStateEl = document.getElementById('dm-voice-state');
+    const voiceRecordBtn = document.getElementById('dm-voice-record');
+    const voicePauseBtn = document.getElementById('dm-voice-pause');
+    const voiceResumeBtn = document.getElementById('dm-voice-resume');
+    const voiceStopBtn = document.getElementById('dm-voice-stop');
+    const voiceAgainBtn = document.getElementById('dm-voice-again');
     const voiceDiscardBtn = document.getElementById('dm-voice-discard');
     const voiceSendBtn = document.getElementById('dm-voice-send');
-
-    const i18nExtra = {
-        voiceEmpty: form?.dataset.i18nVoiceEmpty || 'Recording failed or was empty. Please try again.',
-        voiceUploading: form?.dataset.i18nVoiceUploading || 'Uploading voice…',
-    };
+    const progressWrap = document.getElementById('dm-voice-progress-wrap');
+    const progressBar = document.getElementById('dm-voice-progress-bar');
+    const progressLabel = document.getElementById('dm-voice-progress-label');
 
     const setStatus = (msg, show = true) => {
         if (!voiceStatus) return;
@@ -264,6 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     };
 
+    const elapsedMs = () => {
+        let total = recordAccumMs;
+        if (voicePhase === 'recording' && segmentStartedAt) {
+            total += Date.now() - segmentStartedAt;
+        }
+        return total;
+    };
+
     const stopTracks = () => {
         mediaStream?.getTracks()?.forEach((t) => t.stop());
         mediaStream = null;
@@ -274,7 +314,72 @@ document.addEventListener('DOMContentLoaded', () => {
         timerId = null;
     };
 
-    const clearVoiceDraft = () => {
+    const startTimer = () => {
+        stopTimer();
+        timerId = window.setInterval(() => {
+            if (voiceTimer) voiceTimer.textContent = formatTimer(elapsedMs());
+        }, 200);
+    };
+
+    const setProgress = (pct) => {
+        const n = Math.max(0, Math.min(100, Math.round(pct)));
+        if (progressWrap) progressWrap.hidden = false;
+        if (progressBar) progressBar.style.width = `${n}%`;
+        if (progressLabel) {
+            progressLabel.textContent = i18n.voiceProgress.replace(':pct', String(n));
+        }
+        const pending = activeClientUuid
+            ? log?.querySelector(`[data-client-uuid="${activeClientUuid}"]`)
+            : null;
+        const el = pending?.querySelector('[data-upload-progress]');
+        if (el) el.textContent = i18n.voiceProgress.replace(':pct', String(n));
+    };
+
+    const hideProgress = () => {
+        if (progressWrap) progressWrap.hidden = true;
+        if (progressBar) progressBar.style.width = '0%';
+        if (progressLabel) progressLabel.textContent = '';
+    };
+
+    const syncVoiceUi = () => {
+        if (voicePanel) {
+            voicePanel.hidden = voicePhase === 'idle';
+            voicePanel.dataset.voiceState = voicePhase;
+        }
+        const show = (el, on) => {
+            if (el) el.hidden = !on;
+        };
+        show(voiceRecordBtn, voicePhase === 'idle' || voicePhase === 'preview');
+        if (voiceRecordBtn && voicePhase === 'preview') {
+            voiceRecordBtn.hidden = true;
+        }
+        show(voicePauseBtn, voicePhase === 'recording');
+        show(voiceResumeBtn, voicePhase === 'paused');
+        show(voiceStopBtn, voicePhase === 'recording' || voicePhase === 'paused');
+        show(voiceAgainBtn, voicePhase === 'preview');
+        show(voiceDiscardBtn, voicePhase === 'preview' || voicePhase === 'paused' || voicePhase === 'recording');
+        show(voiceSendBtn, voicePhase === 'preview');
+        if (voicePreview) {
+            voicePreview.classList.toggle('hidden', voicePhase !== 'preview');
+        }
+        if (voiceStateEl) {
+            voiceStateEl.textContent =
+                voicePhase === 'recording'
+                    ? i18n.voiceRecording
+                    : voicePhase === 'paused'
+                      ? i18n.voicePaused
+                      : voicePhase === 'preview'
+                        ? i18n.voiceReady
+                        : '';
+        }
+        if (voiceBtn) {
+            voiceBtn.setAttribute('aria-pressed', voicePhase === 'recording' || voicePhase === 'paused' ? 'true' : 'false');
+            voiceBtn.textContent = voicePhase === 'recording' || voicePhase === 'paused' ? '⏹' : '🎤';
+        }
+        if (voiceTimer) voiceTimer.textContent = formatTimer(elapsedMs());
+    };
+
+    const clearVoiceDraft = ({ keepPanel = false } = {}) => {
         stopTimer();
         if (voiceObjectUrl) {
             URL.revokeObjectURL(voiceObjectUrl);
@@ -285,16 +390,18 @@ document.addEventListener('DOMContentLoaded', () => {
             voicePreview.removeAttribute('src');
             voicePreview.load();
         }
-        if (voicePanel) voicePanel.hidden = true;
-        if (voiceBtn) {
-            voiceBtn.textContent = '🎤';
-            voiceBtn.setAttribute('aria-pressed', 'false');
-        }
         if (mediaKind?.value === 'voice') {
             if (mediaInput) mediaInput.value = '';
             mediaKind.value = '';
             if (durationInput) durationInput.value = '';
         }
+        recordAccumMs = 0;
+        segmentStartedAt = 0;
+        recordedChunks = [];
+        voicePhase = keepPanel ? 'idle' : 'idle';
+        hideProgress();
+        if (!keepPanel && voicePanel) voicePanel.hidden = true;
+        syncVoiceUi();
     };
 
     const clearAttach = () => {
@@ -322,9 +429,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (voicePreview) {
             voicePreview.src = voiceObjectUrl;
             voicePreview.load();
+            voicePreview.classList.remove('hidden');
         }
-        if (voiceTimer) voiceTimer.textContent = formatTimer(durationMs);
+        recordAccumMs = durationMs;
+        voicePhase = 'preview';
         if (voicePanel) voicePanel.hidden = false;
+        syncVoiceUi();
         setStatus(i18n.voiceReady, true);
     };
 
@@ -391,40 +501,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    voiceDiscardBtn?.addEventListener('click', () => {
-        clearVoiceDraft();
-        setStatus('', false);
-    });
-    voiceSendBtn?.addEventListener('click', () => {
-        if (!voiceDraftFile && !(mediaInput?.files?.length && mediaKind?.value === 'voice')) return;
-        sendMessage();
-    });
+    const finishRecordingToDraft = () => {
+        stopTracks();
+        stopTimer();
+        const type = (mediaRecorder?.mimeType || pickRecorderMime() || 'audio/webm').split(';')[0];
+        const blob = new Blob(recordedChunks, { type });
+        mediaRecorder = null;
+        if (blob.size < 256) {
+            voicePhase = 'idle';
+            syncVoiceUi();
+            setStatus(i18n.voiceEmpty, true);
+            return;
+        }
+        const durationMs = Math.max(1, elapsedMs());
+        const file = new File([blob], `voice-${Date.now()}.${extForMime(type)}`, {
+            type,
+            lastModified: Date.now(),
+        });
+        applyVoiceDraft(file, durationMs);
+    };
 
-    voiceBtn?.addEventListener('click', async () => {
-        if (recordingLock) return;
+    const startRecording = async () => {
+        if (recordingLock || sending) return;
         if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
             setStatus(i18n.micUnsupported, true);
             return;
         }
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            recordingLock = true;
-            try {
-                if (mediaRecorder.state === 'recording') mediaRecorder.requestData?.();
-                mediaRecorder.stop();
-            } finally {
-                recordingLock = false;
-            }
-            return;
-        }
-        if (sending) return;
         recordingLock = true;
         try {
-            clearVoiceDraft();
+            clearVoiceDraft({ keepPanel: true });
             mediaStream = await navigator.mediaDevices.getUserMedia({
                 audio: { echoCancellation: true, noiseSuppression: true },
             });
             recordedChunks = [];
-            recordStartedAt = Date.now();
+            recordAccumMs = 0;
+            segmentStartedAt = Date.now();
             const mime = pickRecorderMime();
             mediaRecorder = mime
                 ? new MediaRecorder(mediaStream, { mimeType: mime })
@@ -435,63 +546,134 @@ document.addEventListener('DOMContentLoaded', () => {
             mediaRecorder.onerror = () => {
                 stopTracks();
                 stopTimer();
-                setStatus(i18nExtra.voiceEmpty, true);
-                if (voiceBtn) {
-                    voiceBtn.textContent = '🎤';
-                    voiceBtn.setAttribute('aria-pressed', 'false');
-                }
+                mediaRecorder = null;
+                voicePhase = 'idle';
+                syncVoiceUi();
+                setStatus(i18n.voiceEmpty, true);
             };
             mediaRecorder.onstop = () => {
-                stopTracks();
-                stopTimer();
-                const type = (mediaRecorder.mimeType || mime || 'audio/webm').split(';')[0];
-                const blob = new Blob(recordedChunks, { type });
-                mediaRecorder = null;
-                if (voiceBtn) {
-                    voiceBtn.textContent = '🎤';
-                    voiceBtn.setAttribute('aria-pressed', 'false');
-                }
-                if (blob.size < 256) {
-                    setStatus(i18nExtra.voiceEmpty, true);
-                    return;
-                }
-                const durationMs = Math.max(1, Date.now() - recordStartedAt);
-                const file = new File([blob], `voice-${Date.now()}.${extForMime(type)}`, {
-                    type,
-                    lastModified: Date.now(),
-                });
-                applyVoiceDraft(file, durationMs);
+                finishRecordingToDraft();
             };
-            // Timeslice keeps chunks flowing so stop() always yields audible bytes.
             mediaRecorder.start(250);
-            if (voiceBtn) {
-                voiceBtn.textContent = '⏹';
-                voiceBtn.setAttribute('aria-pressed', 'true');
-            }
-            if (voiceTimer) voiceTimer.textContent = '0:00';
-            if (voicePanel) {
-                voicePanel.hidden = false;
-                if (voicePreview) {
-                    voicePreview.removeAttribute('src');
-                    voicePreview.load();
-                }
-            }
-            timerId = window.setInterval(() => {
-                if (voiceTimer) voiceTimer.textContent = formatTimer(Date.now() - recordStartedAt);
-            }, 250);
+            voicePhase = 'recording';
+            if (voicePanel) voicePanel.hidden = false;
+            syncVoiceUi();
+            startTimer();
             setStatus(i18n.voiceRecording, true);
         } catch {
             stopTracks();
+            voicePhase = 'idle';
+            syncVoiceUi();
             setStatus(i18n.micDenied, true);
         } finally {
             recordingLock = false;
         }
+    };
+
+    const pauseRecording = () => {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+        try {
+            mediaRecorder.pause();
+            mediaRecorder.requestData?.();
+            recordAccumMs += Date.now() - segmentStartedAt;
+            segmentStartedAt = 0;
+            voicePhase = 'paused';
+            syncVoiceUi();
+            setStatus(i18n.voicePaused, true);
+        } catch {
+            setStatus(i18n.voiceEmpty, true);
+        }
+    };
+
+    const resumeRecording = () => {
+        if (!mediaRecorder || mediaRecorder.state !== 'paused') return;
+        try {
+            mediaRecorder.resume();
+            segmentStartedAt = Date.now();
+            voicePhase = 'recording';
+            syncVoiceUi();
+            startTimer();
+            setStatus(i18n.voiceRecording, true);
+        } catch {
+            setStatus(i18n.voiceEmpty, true);
+        }
+    };
+
+    const stopRecording = () => {
+        if (!mediaRecorder) return;
+        if (recordingLock) return;
+        recordingLock = true;
+        try {
+            if (mediaRecorder.state === 'paused') {
+                // Some engines deliver a more reliable final blob if resumed briefly before stop.
+                try {
+                    mediaRecorder.resume();
+                    segmentStartedAt = Date.now();
+                    voicePhase = 'recording';
+                } catch {
+                    /* ignore */
+                }
+            }
+            if (mediaRecorder.state === 'recording') {
+                recordAccumMs += Date.now() - segmentStartedAt;
+                segmentStartedAt = 0;
+            }
+            if (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused') {
+                mediaRecorder.requestData?.();
+                mediaRecorder.stop();
+            }
+        } finally {
+            recordingLock = false;
+        }
+    };
+
+    const cancelLiveRecording = () => {
+        if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+            mediaRecorder.onstop = () => {
+                stopTracks();
+                stopTimer();
+                mediaRecorder = null;
+                clearVoiceDraft();
+                setStatus('', false);
+            };
+            try {
+                mediaRecorder.stop();
+            } catch {
+                stopTracks();
+                mediaRecorder = null;
+                clearVoiceDraft();
+            }
+            return;
+        }
+        clearVoiceDraft();
+        setStatus('', false);
+    };
+
+    voiceRecordBtn?.addEventListener('click', () => startRecording());
+    voicePauseBtn?.addEventListener('click', () => pauseRecording());
+    voiceResumeBtn?.addEventListener('click', () => resumeRecording());
+    voiceStopBtn?.addEventListener('click', () => stopRecording());
+    voiceAgainBtn?.addEventListener('click', () => startRecording());
+    voiceDiscardBtn?.addEventListener('click', () => cancelLiveRecording());
+    voiceSendBtn?.addEventListener('click', () => {
+        if (voicePhase !== 'preview' || !voiceDraftFile) return;
+        sendMessage();
     });
 
-    // Release mic if user navigates away mid-recording.
+    voiceBtn?.addEventListener('click', async () => {
+        if (voicePhase === 'recording' || voicePhase === 'paused') {
+            stopRecording();
+            return;
+        }
+        // Idle or preview: start / record again.
+        await startRecording();
+    });
+
     window.addEventListener('pagehide', () => {
         try {
-            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+                mediaRecorder.stop();
+            }
         } catch {
             /* ignore */
         }
@@ -516,13 +698,41 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('', false);
     });
 
-    const sendMessage = async () => {
+    const xhrSend = (fd, onProgress) =>
+        new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', postUrl);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.withCredentials = true;
+            xhr.upload.onprogress = (ev) => {
+                if (!ev.lengthComputable || typeof onProgress !== 'function') return;
+                onProgress((ev.loaded / ev.total) * 100);
+            };
+            xhr.onload = () => {
+                let json = {};
+                try {
+                    json = JSON.parse(xhr.responseText || '{}');
+                } catch {
+                    json = {};
+                }
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve({ ok: true, status: xhr.status, json });
+                } else {
+                    reject(new Error(json.message || json.errors?.body?.[0] || i18n.sendFailed));
+                }
+            };
+            xhr.onerror = () => reject(new Error(i18n.sendFailed));
+            xhr.send(fd);
+        });
+
+    const sendMessage = async ({ reuseUuid = null } = {}) => {
         if (sending) return;
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
+        if (voicePhase === 'recording' || voicePhase === 'paused') {
             setStatus(i18n.voiceRecording, true);
             return;
         }
-        // Re-apply draft if the file input was cleared by a prior form.reset race.
         if (voiceDraftFile && (!mediaInput?.files?.length || mediaKind.value !== 'voice')) {
             applyVoiceDraft(voiceDraftFile, Number(durationInput.value) || 1);
         }
@@ -530,14 +740,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasMedia = mediaInput?.files?.length > 0;
         if (!body && !hasMedia) return;
         if (hasMedia && mediaKind.value === 'voice' && mediaInput.files[0].size < 256) {
-            setStatus(i18nExtra.voiceEmpty, true);
+            setStatus(i18n.voiceEmpty, true);
             return;
         }
 
-        const clientUuid = uuid();
+        const clientUuid = reuseUuid || uuid();
+        activeClientUuid = clientUuid;
         clientUuidInput.value = clientUuid;
         const fd = new FormData(form);
         if (!hasMedia) fd.delete('media');
+        fd.set('client_uuid', clientUuid);
 
         const isVoice = mediaKind.value === 'voice';
         const previewUrl =
@@ -546,52 +758,76 @@ document.addEventListener('DOMContentLoaded', () => {
                 : isVoice && voiceObjectUrl
                   ? voiceObjectUrl
                   : null;
-        const pendingPayload = {
-            client_uuid: clientUuid,
-            body,
-            message_type: mediaKind.value || 'text',
-            media_duration_ms: isVoice ? Number(durationInput.value) || null : null,
-            user: { id: userId },
-        };
-        appendDmRow(log, pendingPayload, userId, {
-            pending: true,
-            mine: true,
-            clientUuid,
-            previewUrl: isVoice ? voiceObjectUrl : previewUrl,
-        });
+
+        // Reuse existing failed/pending row for same uuid (no duplicate bubble).
+        let pendingRow = log?.querySelector(`[data-client-uuid="${clientUuid}"]`);
+        if (pendingRow) {
+            pendingRow.classList.add('is-pending');
+            pendingRow.classList.remove('is-failed');
+            pendingRow.querySelector('[data-retry]')?.remove();
+            const meta = pendingRow.querySelector('[data-meta]');
+            if (meta) meta.textContent = i18n.voicePending;
+            let prog = pendingRow.querySelector('[data-upload-progress]');
+            if (!prog) {
+                prog = document.createElement('span');
+                prog.className = 'text-[10px] font-bold opacity-80';
+                prog.dataset.uploadProgress = '1';
+                pendingRow.querySelector('.chat-row__bubble > div:last-child')?.appendChild(prog);
+            }
+            prog.textContent = '';
+        } else {
+            const pendingPayload = {
+                client_uuid: clientUuid,
+                body,
+                message_type: mediaKind.value || 'text',
+                media_duration_ms: isVoice ? Number(durationInput.value) || null : null,
+                user: { id: userId },
+            };
+            pendingRow = appendDmRow(log, pendingPayload, userId, {
+                pending: true,
+                mine: true,
+                clientUuid,
+                previewUrl: isVoice ? voiceObjectUrl : previewUrl,
+                pendingLabel: isVoice ? i18n.voicePending : '…',
+            });
+        }
 
         sending = true;
         if (sendBtn) sendBtn.disabled = true;
         if (voiceSendBtn) voiceSendBtn.disabled = true;
-        if (isVoice) setStatus(i18nExtra.voiceUploading, true);
+        if (isVoice) {
+            setStatus(i18n.voiceUploading, true);
+            setProgress(0);
+        }
 
+        const t0 = performance.now();
         try {
-            const res = await fetch(postUrl, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': csrf,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-                body: fd,
+            const { json } = await xhrSend(fd, (pct) => {
+                if (isVoice) setProgress(pct);
             });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                throw new Error(json.message || json.errors?.body?.[0] || i18n.sendFailed);
-            }
             const payload = json.message || json.data || json;
             appendDmRow(log, payload, userId, { clientUuid });
+            const confirmedMs = Math.round(performance.now() - t0);
+            pendingRow = log?.querySelector(`[data-message-id="${payload.id}"]`);
+            if (pendingRow) pendingRow.dataset.confirmMs = String(confirmedMs);
             form.reset();
             setReply('', '', '');
             clearAttach();
+            hideProgress();
             setStatus('', false);
             clientUuidInput.value = '';
+            activeClientUuid = null;
+            lastFailedUuid = null;
+            window.__funnityLastVoiceTiming = { clientUuid, confirmedMs, messageId: payload.id };
         } catch (err) {
-            const pending = log.querySelector(`[data-client-uuid="${clientUuid}"]`);
+            lastFailedUuid = clientUuid;
+            const pending = log?.querySelector(`[data-client-uuid="${clientUuid}"]`);
             if (pending) {
                 pending.classList.add('is-failed');
                 pending.classList.remove('is-pending');
+                const meta = pending.querySelector('[data-meta]');
+                if (meta) meta.textContent = i18n.voiceFailed;
+                pending.querySelector('[data-upload-progress]')?.remove();
                 const foot =
                     pending.querySelector('.chat-row__bubble > div:last-child') ||
                     pending.querySelector('.chat-row__bubble');
@@ -600,17 +836,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     retry.type = 'button';
                     retry.className = 'chat-row__retry';
                     retry.dataset.retry = '1';
-                    retry.textContent = i18n.sendFailed;
+                    retry.textContent = i18n.retry;
                     retry.addEventListener('click', (ev) => {
                         ev.preventDefault();
-                        pending.remove();
                         if (body) bodyInput.value = body;
-                        sendMessage();
+                        // Re-seat draft bytes into the file input before retrying
+                        // the same client_uuid (server idempotency).
+                        if (voiceDraftFile) {
+                            applyVoiceDraft(
+                                voiceDraftFile,
+                                Number(durationInput?.value) ||
+                                    Number(payload?.media_duration_ms) ||
+                                    Math.max(1, recordAccumMs) ||
+                                    1
+                            );
+                        }
+                        window.setTimeout(() => sendMessage({ reuseUuid: clientUuid }), 0);
                     });
                     foot.appendChild(retry);
                 }
             }
-            // Keep voice draft for retry — do not discard after network errors.
             setStatus(err?.message || i18n.sendFailed, true);
         } finally {
             sending = false;
@@ -626,6 +871,14 @@ document.addEventListener('DOMContentLoaded', () => {
         Echo.private(channelName).listen('.message.posted', (e) => {
             const payload = e.message || e.data || e;
             appendDmRow(log, payload, userId);
+            if (payload?.id && payload?.client_uuid) {
+                window.__funnityLastEchoVoice = {
+                    id: payload.id,
+                    client_uuid: payload.client_uuid,
+                    at: Date.now(),
+                    media_url: payload.media_url,
+                };
+            }
         });
     });
 
@@ -633,4 +886,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         sendMessage();
     });
+
+    syncVoiceUi();
 });

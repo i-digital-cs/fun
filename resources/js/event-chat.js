@@ -458,14 +458,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const mediaKind = document.getElementById('chat-media-kind');
     const durationInput = document.getElementById('chat-duration-ms');
     const voiceBtn = document.getElementById('chat-voice-btn');
+    const voicePanel = document.getElementById('chat-voice-panel');
+    const voicePreview = document.getElementById('chat-voice-preview');
+    const voiceTimer = document.getElementById('chat-voice-timer');
+    const voiceStateEl = document.getElementById('chat-voice-state');
+    const voiceRecordBtn = document.getElementById('chat-voice-record');
+    const voicePauseBtn = document.getElementById('chat-voice-pause');
+    const voiceResumeBtn = document.getElementById('chat-voice-resume');
+    const voiceStopBtn = document.getElementById('chat-voice-stop');
+    const voiceAgainBtn = document.getElementById('chat-voice-again');
+    const voiceDiscardBtn = document.getElementById('chat-voice-discard');
+    const voiceSendBtn = document.getElementById('chat-voice-send');
     let mediaRecorder = null;
     let mediaStream = null;
     let recordedChunks = [];
-    let recordStartedAt = 0;
+    let recordAccumMs = 0;
+    let segmentStartedAt = 0;
     let recordingLock = false;
+    let voicePhase = 'idle';
+    let voiceObjectUrl = null;
+    let timerId = null;
     const stopTracks = () => {
         mediaStream?.getTracks()?.forEach((t) => t.stop());
         mediaStream = null;
+    };
+    const stopTimer = () => {
+        if (timerId) window.clearInterval(timerId);
+        timerId = null;
+    };
+    const formatTimer = (ms) => {
+        const s = Math.max(0, Math.floor(ms / 1000));
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    };
+    const elapsedMs = () => {
+        let total = recordAccumMs;
+        if (voicePhase === 'recording' && segmentStartedAt) total += Date.now() - segmentStartedAt;
+        return total;
     };
 
     const setReply = (id, name, body) => {
@@ -519,94 +547,212 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const formI18n = {
         heic: form?.dataset.i18nHeic || 'HEIC/HEIF photos are not supported. Please send a JPEG or PNG.',
-        voiceReady: form?.dataset.i18nVoiceReady || 'Voice ready — tap Send',
-        voiceRecording: form?.dataset.i18nVoiceRecording || 'Recording… tap mic to stop',
+        voiceReady: form?.dataset.i18nVoiceReady || 'Preview ready — Send or delete',
+        voiceRecording: form?.dataset.i18nVoiceRecording || 'Recording…',
+        voicePaused: form?.dataset.i18nVoicePaused || 'Paused',
         micDenied: form?.dataset.i18nMicDenied || 'Microphone permission denied.',
         micUnsupported: form?.dataset.i18nMicUnsupported || 'Voice notes are not supported in this browser.',
+        voiceEmpty: form?.dataset.i18nVoiceEmpty || 'Recording failed or was empty.',
     };
-
-    voiceBtn?.addEventListener('click', async () => {
+    const setVoiceStatus = (msg) => {
+        if (!statusEl) return;
+        statusEl.textContent = msg || '';
+        statusEl.classList.toggle('hidden', !msg);
+    };
+    const syncVoiceUi = () => {
+        if (voicePanel) {
+            voicePanel.hidden = voicePhase === 'idle';
+            voicePanel.dataset.voiceState = voicePhase;
+        }
+        const show = (el, on) => {
+            if (el) el.hidden = !on;
+        };
+        show(voiceRecordBtn, voicePhase === 'idle');
+        show(voicePauseBtn, voicePhase === 'recording');
+        show(voiceResumeBtn, voicePhase === 'paused');
+        show(voiceStopBtn, voicePhase === 'recording' || voicePhase === 'paused');
+        show(voiceAgainBtn, voicePhase === 'preview');
+        show(voiceDiscardBtn, voicePhase !== 'idle');
+        show(voiceSendBtn, voicePhase === 'preview');
+        if (voicePreview) voicePreview.classList.toggle('hidden', voicePhase !== 'preview');
+        if (voiceStateEl) {
+            voiceStateEl.textContent =
+                voicePhase === 'recording'
+                    ? formI18n.voiceRecording
+                    : voicePhase === 'paused'
+                      ? formI18n.voicePaused
+                      : voicePhase === 'preview'
+                        ? formI18n.voiceReady
+                        : '';
+        }
+        if (voiceTimer) voiceTimer.textContent = formatTimer(elapsedMs());
+        if (voiceBtn) voiceBtn.textContent = voicePhase === 'recording' || voicePhase === 'paused' ? '⏹' : '🎤';
+    };
+    const applyDraft = (file, durationMs) => {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        if (mediaInput) mediaInput.files = dt.files;
+        if (mediaKind) mediaKind.value = 'voice';
+        if (durationInput) durationInput.value = String(Math.max(1, durationMs));
+        if (voiceObjectUrl) URL.revokeObjectURL(voiceObjectUrl);
+        voiceObjectUrl = URL.createObjectURL(file);
+        if (voicePreview) {
+            voicePreview.src = voiceObjectUrl;
+            voicePreview.load();
+        }
+        recordAccumMs = durationMs;
+        voicePhase = 'preview';
+        syncVoiceUi();
+        setVoiceStatus(formI18n.voiceReady);
+    };
+    const clearVoice = () => {
+        stopTimer();
+        stopTracks();
+        if (voiceObjectUrl) URL.revokeObjectURL(voiceObjectUrl);
+        voiceObjectUrl = null;
+        recordedChunks = [];
+        recordAccumMs = 0;
+        segmentStartedAt = 0;
+        mediaRecorder = null;
+        if (mediaKind?.value === 'voice') {
+            if (mediaInput) mediaInput.value = '';
+            mediaKind.value = '';
+            if (durationInput) durationInput.value = '';
+        }
+        if (voicePreview) {
+            voicePreview.removeAttribute('src');
+            voicePreview.load();
+        }
+        voicePhase = 'idle';
+        syncVoiceUi();
+        setVoiceStatus('');
+    };
+    const startRecording = async () => {
         if (recordingLock) return;
         if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-            if (statusEl) {
-                statusEl.textContent = formI18n.micUnsupported;
-                statusEl.classList.remove('hidden');
-            }
-            return;
-        }
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-            recordingLock = true;
-            try {
-                mediaRecorder.requestData?.();
-                mediaRecorder.stop();
-            } finally {
-                recordingLock = false;
-            }
-            voiceBtn.textContent = '🎤';
+            setVoiceStatus(formI18n.micUnsupported);
             return;
         }
         recordingLock = true;
         try {
+            clearVoice();
             mediaStream = await navigator.mediaDevices.getUserMedia({
                 audio: { echoCancellation: true, noiseSuppression: true },
             });
             recordedChunks = [];
-            recordStartedAt = Date.now();
+            recordAccumMs = 0;
+            segmentStartedAt = Date.now();
             const mime = pickRecorderMime();
             mediaRecorder = mime
                 ? new MediaRecorder(mediaStream, { mimeType: mime })
                 : new MediaRecorder(mediaStream);
             mediaRecorder.ondataavailable = (ev) => {
-                if (ev.data && ev.data.size > 0) recordedChunks.push(ev.data);
+                if (ev.data?.size) recordedChunks.push(ev.data);
             };
             mediaRecorder.onstop = () => {
                 stopTracks();
-                const type = (mediaRecorder.mimeType || mime || 'audio/webm').split(';')[0];
+                stopTimer();
+                const type = (mediaRecorder?.mimeType || mime || 'audio/webm').split(';')[0];
                 const blob = new Blob(recordedChunks, { type });
                 mediaRecorder = null;
                 if (blob.size < 256) {
-                    if (statusEl) {
-                        statusEl.textContent =
-                            form?.dataset.i18nVoiceEmpty || 'Recording failed or was empty.';
-                        statusEl.classList.remove('hidden');
-                    }
+                    voicePhase = 'idle';
+                    syncVoiceUi();
+                    setVoiceStatus(formI18n.voiceEmpty);
                     return;
                 }
-                const file = new File([blob], `voice-${Date.now()}.${extForMime(type)}`, { type });
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                if (mediaInput) mediaInput.files = dt.files;
-                if (mediaKind) mediaKind.value = 'voice';
-                if (durationInput) durationInput.value = String(Math.max(1, Date.now() - recordStartedAt));
-                if (statusEl) {
-                    statusEl.textContent = formI18n.voiceReady;
-                    statusEl.classList.remove('hidden');
-                }
+                applyDraft(
+                    new File([blob], `voice-${Date.now()}.${extForMime(type)}`, { type }),
+                    Math.max(1, elapsedMs())
+                );
             };
             mediaRecorder.start(250);
-            voiceBtn.textContent = '⏹';
-            if (statusEl) {
-                statusEl.textContent = formI18n.voiceRecording;
-                statusEl.classList.remove('hidden');
-            }
+            voicePhase = 'recording';
+            if (voicePanel) voicePanel.hidden = false;
+            syncVoiceUi();
+            timerId = window.setInterval(() => {
+                if (voiceTimer) voiceTimer.textContent = formatTimer(elapsedMs());
+            }, 200);
+            setVoiceStatus(formI18n.voiceRecording);
         } catch {
             stopTracks();
-            if (statusEl) {
-                statusEl.textContent = formI18n.micDenied;
-                statusEl.classList.remove('hidden');
-            }
+            voicePhase = 'idle';
+            syncVoiceUi();
+            setVoiceStatus(formI18n.micDenied);
         } finally {
             recordingLock = false;
         }
+    };
+
+    voiceRecordBtn?.addEventListener('click', () => startRecording());
+    voicePauseBtn?.addEventListener('click', () => {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+        mediaRecorder.pause();
+        mediaRecorder.requestData?.();
+        recordAccumMs += Date.now() - segmentStartedAt;
+        segmentStartedAt = 0;
+        voicePhase = 'paused';
+        syncVoiceUi();
+        setVoiceStatus(formI18n.voicePaused);
+    });
+    voiceResumeBtn?.addEventListener('click', () => {
+        if (!mediaRecorder || mediaRecorder.state !== 'paused') return;
+        mediaRecorder.resume();
+        segmentStartedAt = Date.now();
+        voicePhase = 'recording';
+        syncVoiceUi();
+        setVoiceStatus(formI18n.voiceRecording);
+    });
+    voiceStopBtn?.addEventListener('click', () => {
+        if (!mediaRecorder) return;
+        if (mediaRecorder.state === 'paused') {
+            try {
+                mediaRecorder.resume();
+                segmentStartedAt = Date.now();
+                voicePhase = 'recording';
+            } catch {
+                /* ignore */
+            }
+        }
+        if (mediaRecorder.state === 'recording') {
+            recordAccumMs += Date.now() - segmentStartedAt;
+            segmentStartedAt = 0;
+        }
+        mediaRecorder.requestData?.();
+        mediaRecorder.stop();
+    });
+    voiceAgainBtn?.addEventListener('click', () => startRecording());
+    voiceDiscardBtn?.addEventListener('click', () => {
+        if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+            mediaRecorder.onstop = () => clearVoice();
+            try {
+                mediaRecorder.stop();
+            } catch {
+                clearVoice();
+            }
+            return;
+        }
+        clearVoice();
+    });
+    voiceSendBtn?.addEventListener('click', () => form?.requestSubmit());
+    voiceBtn?.addEventListener('click', async () => {
+        if (voicePhase === 'recording' || voicePhase === 'paused') {
+            voiceStopBtn?.click();
+            return;
+        }
+        await startRecording();
     });
 
     window.addEventListener('pagehide', () => {
         try {
-            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+                mediaRecorder.stop();
+            }
         } catch {
             /* ignore */
         }
         stopTracks();
+        stopTimer();
     });
 
     mediaInput?.addEventListener('change', () => {
@@ -615,10 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isHeic(file)) {
             mediaInput.value = '';
             mediaKind.value = '';
-            if (statusEl) {
-                statusEl.textContent = formI18n.heic;
-                statusEl.classList.remove('hidden');
-            }
+            setVoiceStatus(formI18n.heic);
             return;
         }
         mediaKind.value = file.type.startsWith('audio/')

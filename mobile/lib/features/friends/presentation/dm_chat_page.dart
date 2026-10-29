@@ -43,6 +43,7 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
   int? _voiceDurationMs;
   int _recordingDurationMs = 0;
   bool _recording = false;
+  bool _recordingPaused = false;
   bool _previewPlaying = false;
   String? _peerName;
   String? _peerPublicId;
@@ -314,10 +315,11 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
       setState(() {
         _mediaPath = null;
         _recording = true;
+        _recordingPaused = false;
         _recordingDurationMs = 0;
       });
       _recordingTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
-        if (!mounted || !_recording) return;
+        if (!mounted || !_recording || _recordingPaused) return;
         final next = _recordingDurationMs + 250;
         if (next >= 120000) {
           setState(() => _recordingDurationMs = 120000);
@@ -334,10 +336,33 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
     }
   }
 
+  Future<void> _pauseOrResumeRecording() async {
+    if (!_recording) return;
+    try {
+      if (_recordingPaused) {
+        await _recorder.resume();
+        if (!mounted) return;
+        setState(() => _recordingPaused = false);
+      } else {
+        await _recorder.pause();
+        if (!mounted) return;
+        setState(() => _recordingPaused = true);
+      }
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).voiceUnavailable)),
+      );
+    }
+  }
+
   Future<void> _stopRecording() async {
     if (!_recording) return;
     _recordingTimer?.cancel();
-    setState(() => _recording = false);
+    setState(() {
+      _recording = false;
+      _recordingPaused = false;
+    });
     final path = await _recorder.stop();
     if (!mounted) {
       if (path != null) await _deleteVoiceFile(path);
@@ -578,9 +603,35 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
                     if (_recording)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          '${l10n.voiceMessage} · ${(_recordingDurationMs / 1000).ceil()}s / 120s',
-                          style: const TextStyle(color: AppColors.danger),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${_recordingPaused ? l10n.voicePause : l10n.voiceMessage} · ${(_recordingDurationMs / 1000).ceil()}s / 120s',
+                                style: TextStyle(
+                                  color: _recordingPaused
+                                      ? AppColors.warning
+                                      : AppColors.danger,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: _recordingPaused
+                                  ? l10n.voiceResume
+                                  : l10n.voicePause,
+                              onPressed: _pauseOrResumeRecording,
+                              icon: Icon(
+                                _recordingPaused
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.pause_rounded,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: l10n.voiceStop,
+                              onPressed: _stopRecording,
+                              icon: const Icon(Icons.stop_rounded),
+                            ),
+                          ],
                         ),
                       ),
                     Row(

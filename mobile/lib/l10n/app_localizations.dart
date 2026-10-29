@@ -362,6 +362,18 @@ abstract class AppLocalizations {
   /// **'Voice recording is not available in this build.'**
   String get voiceUnavailable;
 
+  /// No description provided for @voicePause.
+  String get voicePause;
+
+  /// No description provided for @voiceResume.
+  String get voiceResume;
+
+  /// No description provided for @voiceStop.
+  String get voiceStop;
+
+  /// No description provided for @voicePending.
+  String get voicePending;
+
   /// No description provided for @homeMapTitle.
   ///
   /// In en, this message translates to:
