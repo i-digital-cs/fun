@@ -35,7 +35,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
-<body class="bg-[#f5f7fb] text-slate-900 antialiased">
+<body class="bg-[#F8F9FE] text-slate-900 antialiased">
     <div class="flex min-h-screen">
         <x-admin.sidebar />
 
