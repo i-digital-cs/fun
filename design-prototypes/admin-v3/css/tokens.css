@@ -1,0 +1,123 @@
+/* Funnity Admin V3 — Design tokens (prototype only) */
+:root {
+  --fn-purple: #7138F5;
+  --fn-purple-soft: #F1EBFF;
+  --fn-purple-mid: #9B74F8;
+  --fn-purple-deep: #4F1FD4;
+  --fn-orange: #FF762E;
+  --fn-orange-soft: #FFF1E8;
+  --fn-bg: #F8F9FE;
+  --fn-ink: #19213D;
+  --fn-ink-2: #3A4466;
+  --fn-muted: #6B7390;
+  --fn-line: #E4E7F1;
+  --fn-line-strong: #D0D5E6;
+  --fn-white: #FFFFFF;
+  --fn-tint: #F3F5FC;
+  --fn-success: #0F9F76;
+  --fn-success-soft: #E8F8F2;
+  --fn-warning: #C47A00;
+  --fn-warning-soft: #FFF6E5;
+  --fn-danger: #D12B4A;
+  --fn-danger-soft: #FFE9EE;
+  --fn-info: #2563EB;
+  --fn-info-soft: #EAF1FF;
+
+  --fn-radius-sm: 8px;
+  --fn-radius: 14px;
+  --fn-radius-lg: 22px;
+  --fn-radius-pill: 999px;
+
+  --fn-shadow-sm: 0 1px 0 rgba(25, 33, 61, 0.04);
+  --fn-shadow: 0 10px 30px rgba(25, 33, 61, 0.06);
+  --fn-shadow-lg: 0 22px 48px rgba(81, 40, 180, 0.12);
+
+  --fn-space-1: 4px;
+  --fn-space-2: 8px;
+  --fn-space-3: 12px;
+  --fn-space-4: 16px;
+  --fn-space-5: 24px;
+  --fn-space-6: 32px;
+  --fn-space-7: 48px;
+
+  --fn-sidebar: 268px;
+  --fn-sidebar-collapsed: 84px;
+  --fn-topbar: 64px;
+
+  --fn-font-en: "IBM Plex Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --fn-font-ar: "Tajawal", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+
+  --fn-chart-1: #7138F5;
+  --fn-chart-2: #FF762E;
+  --fn-chart-3: #0F9F76;
+  --fn-chart-4: #F59E0B;
+  --fn-chart-5: #64748B;
+
+  --fn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fn-dur: 180ms;
+}
+
+@font-face {
+  font-family: "Tajawal";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/Tajawal-400.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Tajawal";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/Tajawal-500.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Tajawal";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/Tajawal-700.ttf") format("truetype");
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(113, 56, 245, 0.08), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(255, 118, 46, 0.07), transparent 50%),
+    var(--fn-bg);
+  color: var(--fn-ink);
+  font-family: var(--fn-font-en);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+html[dir="rtl"] body,
+html[lang^="ar"] body {
+  font-family: var(--fn-font-ar);
+}
+
+img { max-width: 100%; display: block; }
+button, input { font: inherit; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid rgba(113, 56, 245, 0.35);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

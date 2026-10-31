@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Funnity Admin V3 — Design Prototype</title>
+  <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+  <link href="https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/shell.css">
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="drawer-backdrop" aria-hidden="true"></div>
+
+  <div class="app">
+    <aside class="sidebar" aria-label="Admin navigation">
+      <a class="brand" href="./index.html">
+        <span class="brand__mark" aria-hidden="true"></span>
+        <span class="brand__text">
+          <span class="brand__name">Funnity</span>
+          <span class="brand__tag" data-i18n="panel">Admin panel</span>
+        </span>
+      </a>
+
+      <nav>
+        <div class="nav-group">
+          <p class="nav-group__label" data-i18n="overview">Overview</p>
+          <button type="button" class="nav-link is-active" aria-current="page">
+            <span class="nav-link__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z"/></svg>
+            </span>
+            <span data-i18n="nav_command">Command center</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group__label" data-i18n="users_group">Users & social</p>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span>
+            <span data-i18n="nav_users">Users</span>
+          </button>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>
+            <span data-i18n="nav_identity">Identity documents</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group__label" data-i18n="events_group">Events</p>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+            <span data-i18n="nav_events">Events</span>
+          </button>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></span>
+            <span data-i18n="nav_calendar">Calendar</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group__label" data-i18n="moderation">Moderation</p>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg></span>
+            <span data-i18n="nav_reports">Reports</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group__label" data-i18n="catalog">Catalog</p>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/></svg></span>
+            <span data-i18n="nav_categories">Categories</span>
+          </button>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <span data-i18n="nav_cities">Cities</span>
+          </button>
+        </div>
+        <div class="nav-group">
+          <p class="nav-group__label" data-i18n="system">System</p>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg></span>
+            <span data-i18n="nav_settings">Site settings</span>
+          </button>
+          <button type="button" class="nav-link is-demo" data-demo="Demo">
+            <span class="nav-link__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>
+            <span data-i18n="nav_audit">Audit log</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-foot" data-i18n="foot">V3 visual prototype. Routes are non-functional placeholders.</div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar__left">
+          <button type="button" class="icon-btn" id="btn-menu" data-i18n-aria="menu" aria-label="Menu">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <button type="button" class="icon-btn" id="btn-collapse" data-i18n-aria="collapse" aria-label="Collapse sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h10M4 12h16M4 18h10M18 8l-4 4 4 4"/></svg>
+          </button>
+          <div>
+            <div class="topbar__eyebrow" data-i18n="panel">Admin panel</div>
+            <div class="topbar__title" data-i18n="command">Command center</div>
+          </div>
+        </div>
+        <div class="topbar__right">
+          <button type="button" class="chip-btn" id="btn-lang" data-i18n="language">العربية</button>
+          <span class="avatar" aria-hidden="true">QA</span>
+        </div>
+      </header>
+
+      <main id="main" class="content">
+        <div class="prototype-banner" role="status">
+          <span><strong data-i18n="prototype">Design prototype · fixture data only · not connected to production</strong></span>
+          <span>Admin V3 · Editorial Command Center</span>
+        </div>
+
+        <section class="command" aria-labelledby="command-title">
+          <div class="command__copy">
+            <h1 id="command-title" data-i18n="command">Command center</h1>
+            <p class="command__lede" data-i18n="lede">Operational intelligence for Funnity — performance, attention, events, and social health.</p>
+            <div class="command__meta">
+              <span><span data-i18n="last_updated">Last refreshed</span> <strong id="refreshed-at">—</strong></span>
+              <span class="dot" data-i18n="timezone">Africa/Cairo (fixture)</span>
+            </div>
+          </div>
+          <div class="period-panel">
+            <div class="period-panel__label" data-i18n="reporting">Reporting period</div>
+            <div class="period-panel__range" id="period-range">—</div>
+            <div class="segmented" role="group" aria-label="Reporting period">
+              <button type="button" data-period="today" aria-pressed="false">Today</button>
+              <button type="button" data-period="7d" aria-pressed="true">7d</button>
+              <button type="button" data-period="30d" aria-pressed="false">30d</button>
+              <button type="button" data-period="90d" aria-pressed="false">90d</button>
+            </div>
+            <div class="period-actions">
+              <button type="button" class="primary-btn" id="btn-refresh" data-i18n="refresh">Refresh</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="intel-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="intel-title" data-i18n="intel">Executive intelligence</h2>
+              <p class="section__sub" data-i18n="intel_sub">Lifetime snapshots and period totals — composition, not six identical cards.</p>
+            </div>
+          </div>
+          <div class="intel">
+            <article class="feature-kpi">
+              <span class="feature-kpi__badge" data-i18n="featured_badge">Lifetime</span>
+              <div class="feature-kpi__label" data-i18n="featured_label">Total members</div>
+              <div class="feature-kpi__value" id="kpi-featured-value">—</div>
+              <p class="feature-kpi__hint" data-i18n="featured_hint">All registered accounts across Funnity (lifetime).</p>
+              <div class="feature-kpi__chart">
+                <canvas id="spark-chart" aria-label="Member growth sparkline"></canvas>
+              </div>
+            </article>
+            <article class="kpi-card kpi-card--accent">
+              <div class="kpi-card__label" data-i18n="new_users">New users</div>
+              <div class="kpi-card__value" id="kpi-new-users">—</div>
+              <div class="kpi-card__delta" id="kpi-new-users-delta">—</div>
+              <div class="kpi-card__hint" data-i18n="period">Period</div>
+            </article>
+            <article class="kpi-card kpi-card--ink">
+              <div class="kpi-card__label" data-i18n="published">Published events</div>
+              <div class="kpi-card__value" id="kpi-published">—</div>
+              <div class="kpi-card__hint" data-i18n="featured_badge">Lifetime</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-card__label" data-i18n="participants">New participants</div>
+              <div class="kpi-card__value" id="kpi-participants">—</div>
+              <div class="kpi-card__delta" id="kpi-participants-delta">—</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-card__label" data-i18n="events_created">Events created</div>
+              <div class="kpi-card__value" id="kpi-events-created">—</div>
+              <div class="kpi-card__delta" id="kpi-events-created-delta">—</div>
+            </article>
+          </div>
+          <div class="metric-strip" aria-label="Secondary metrics">
+            <div class="metric-strip__item">
+              <div class="metric-strip__label" data-i18n="session_active">Session-active</div>
+              <div class="metric-strip__value" id="strip-session">—</div>
+            </div>
+            <div class="metric-strip__item">
+              <div class="metric-strip__label" data-i18n="active_accounts">Active accounts</div>
+              <div class="metric-strip__value" id="strip-active">—</div>
+            </div>
+            <div class="metric-strip__item">
+              <div class="metric-strip__label" data-i18n="pending_reports">Pending reports</div>
+              <div class="metric-strip__value" id="strip-reports">—</div>
+            </div>
+            <div class="metric-strip__item">
+              <div class="metric-strip__label" data-i18n="events_created">Events created</div>
+              <div class="metric-strip__value" id="strip-created">—</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="action" aria-labelledby="action-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="action-title" data-i18n="action">Needs your attention</h2>
+              <p class="section__sub" data-i18n="action_sub">Real operational queues — priority without false urgency.</p>
+            </div>
+          </div>
+          <div class="action-board">
+            <aside class="action-board__aside">
+              <h3 data-i18n="action_aside_title">Action center</h3>
+              <p data-i18n="action_aside_body">Work the queues that exist today. Drafts are informational. Identity backlog is not auto-critical.</p>
+            </aside>
+            <div class="action-list" id="action-list"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="events-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="events-title" data-i18n="events">Events intelligence</h2>
+              <p class="section__sub" data-i18n="events_sub">Creation, participation, and catalog status for the selected range.</p>
+            </div>
+          </div>
+          <div class="split-2">
+            <article class="panel">
+              <div class="panel__head">
+                <div>
+                  <h3 class="panel__title" data-i18n="chart_events">Events & participation</h3>
+                  <p class="panel__sub" data-i18n="chart_events_sub">Daily (or bucketed) creation vs new memberships</p>
+                </div>
+              </div>
+              <div class="chart-frame">
+                <canvas id="events-chart" aria-label="Events and participation trend"></canvas>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel__head">
+                <div>
+                  <h3 class="panel__title" data-i18n="status_mix">Status mix</h3>
+                </div>
+              </div>
+              <div class="status-rail">
+                <div class="status-pill"><div class="status-pill__label" data-i18n="published_s">Published</div><div class="status-pill__value" id="st-published">—</div></div>
+                <div class="status-pill"><div class="status-pill__label" data-i18n="draft">Draft</div><div class="status-pill__value" id="st-draft">—</div></div>
+                <div class="status-pill"><div class="status-pill__label" data-i18n="completed">Completed</div><div class="status-pill__value" id="st-completed">—</div></div>
+                <div class="status-pill"><div class="status-pill__label" data-i18n="cancelled">Cancelled</div><div class="status-pill__value" id="st-cancelled">—</div></div>
+              </div>
+              <p class="panel__sub" style="margin-top:8px">Catalog snapshot (lifetime). Drafts are host-owned — not an admin approval queue.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="activity-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="activity-title" data-i18n="activity">Recent platform activity</h2>
+              <p class="section__sub" data-i18n="activity_sub">Synthetic timeline for design review — eight rows.</p>
+            </div>
+          </div>
+          <div class="panel panel--flush">
+            <div class="activity" id="activity-list" aria-label="Recent activity"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="recent-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="recent-title" data-i18n="recent">Recent events</h2>
+              <p class="section__sub" data-i18n="recent_sub">Compact table with organizer, city, start, status, members.</p>
+            </div>
+          </div>
+          <div class="panel panel--flush">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="col_event">Event</th>
+                    <th data-i18n="col_organizer">Organizer</th>
+                    <th data-i18n="col_city">City</th>
+                    <th data-i18n="col_starts">Starts</th>
+                    <th data-i18n="col_status">Status</th>
+                    <th data-i18n="col_members">Members</th>
+                  </tr>
+                </thead>
+                <tbody id="events-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="social-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="social-title" data-i18n="social">Social intelligence</h2>
+              <p class="section__sub" data-i18n="social_sub">Account mix, friendships, and conversation volume — counts only, never message bodies.</p>
+            </div>
+          </div>
+          <div class="bento">
+            <article class="panel">
+              <div class="social-grid">
+                <div class="social-stat"><div class="social-stat__label" data-i18n="friend_requests">Friend requests</div><div class="social-stat__value" id="social-fr">—</div></div>
+                <div class="social-stat"><div class="social-stat__label" data-i18n="friend_accepts">Friend accepts</div><div class="social-stat__value" id="social-fa">—</div></div>
+                <div class="social-stat"><div class="social-stat__label" data-i18n="event_chat">Event chat</div><div class="social-stat__value" id="social-em">—</div></div>
+                <div class="social-stat"><div class="social-stat__label" data-i18n="dms">Direct messages</div><div class="social-stat__value" id="social-dm">—</div></div>
+              </div>
+              <div class="social-grid" style="margin-top:10px">
+                <div class="social-stat"><div class="social-stat__label" data-i18n="friendships">Active friendships</div><div class="social-stat__value" id="social-af">—</div></div>
+                <div class="social-stat"><div class="social-stat__label" data-i18n="pending_friends">Pending friend requests</div><div class="social-stat__value" id="social-pf">—</div></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="social-stat"><div class="social-stat__label" data-i18n="creators">Event creators</div><div class="social-stat__value" id="social-creators">—</div></div>
+              <div class="social-stat" style="margin-top:10px"><div class="social-stat__label" data-i18n="joiners">Event joiners</div><div class="social-stat__value" id="social-joiners">—</div></div>
+              <div class="social-grid" style="margin-top:10px">
+                <div class="social-stat"><div class="social-stat__label">Active</div><div class="social-stat__value" id="social-active">—</div></div>
+                <div class="social-stat"><div class="social-stat__label">Pending</div><div class="social-stat__value" id="social-pending">—</div></div>
+              </div>
+              <div class="social-stat" style="margin-top:10px"><div class="social-stat__label">Deactivated</div><div class="social-stat__value" id="social-deact">—</div></div>
+            </article>
+            <article class="panel">
+              <div class="panel__head">
+                <div>
+                  <h3 class="panel__title" data-i18n="users_chart">Registrations & events</h3>
+                </div>
+              </div>
+              <div class="chart-frame chart-frame--sm">
+                <canvas id="users-chart" aria-label="Registrations and events"></canvas>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="geo-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="geo-title" data-i18n="geo">Geographic intelligence</h2>
+              <p class="section__sub" data-i18n="geo_sub">City assignments on events — no IP geolocation.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="rank-list" id="geo-list"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="health-title">
+          <div class="section__head">
+            <div>
+              <h2 class="section__title" id="health-title" data-i18n="health">System health</h2>
+              <p class="section__sub" data-i18n="health_sub">Verified signals only.</p>
+            </div>
+          </div>
+          <div class="health">
+            <article class="health-card is-ok">
+              <div class="metric-strip__label" data-i18n="failed_jobs">Failed jobs</div>
+              <div class="health-card__value" id="health-failed">—</div>
+              <p class="health-card__note">Count only — exception payloads never shown.</p>
+            </article>
+            <article class="health-card health-card--muted">
+              <div class="metric-strip__label" data-i18n="monitoring">Monitoring coverage</div>
+              <p class="health-card__note" id="health-note">—</p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Mobile">
+    <a href="#main" class="is-active" data-i18n="nav_command">Command center</a>
+    <a href="#action" data-i18n="action">Needs your attention</a>
+    <a href="#events-title" data-i18n="nav_events">Events</a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="./js/i18n.js" defer></script>
+  <script src="./js/charts.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>
