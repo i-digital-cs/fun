@@ -47,7 +47,11 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
     final l10n = AppLocalizations.of(context);
     switch (result.gate) {
       case EventDetailGate.needLogin:
-        context.push(loginLocation(returnTo: '/events/${widget.eventId}'));
+        requireAuth(
+          context,
+          ref.read(authControllerProvider),
+          returnTo: '/events/${widget.eventId}',
+        );
         return;
       case EventDetailGate.needIdentity:
         ScaffoldMessenger.of(context)
@@ -233,9 +237,15 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                     )
                   else if (ref.watch(authControllerProvider) is! Authenticated)
                     GradientButton.indigo(
-                      label: l10n.loginRequired,
-                      onPressed: () => context.push(
-                        loginLocation(returnTo: '/events/${widget.eventId}'),
+                      // Browse-first: show Join intent; auth gate preserves returnTo.
+                      // Does not auto-join after login — user confirms on return.
+                      label: detail.joinAction == 'request_to_join'
+                          ? l10n.requestToJoin
+                          : l10n.loginRequired,
+                      onPressed: () => requireAuth(
+                        context,
+                        ref.read(authControllerProvider),
+                        returnTo: '/events/${widget.eventId}',
                       ),
                       icon: Icons.login,
                     )

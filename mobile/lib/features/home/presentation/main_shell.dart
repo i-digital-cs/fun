@@ -27,7 +27,8 @@ class MainShell extends ConsumerWidget {
 
   void _onBranchTap(BuildContext context, WidgetRef ref, int index) {
     final auth = ref.read(authControllerProvider);
-    if (auth is! Authenticated && index != 1) {
+    // Guests may use Home (0) and Discover (1). Other tabs require auth.
+    if (auth is! Authenticated && index != 0 && index != 1) {
       context.push(loginLocation(returnTo: shellPathForBranch(index)));
       return;
     }

@@ -10,6 +10,7 @@ import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_searching.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
 import 'package:fun_mobile/features/chat/presentation/chats_page.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/home/domain/search_suggest_item.dart';
@@ -109,8 +110,15 @@ class _DashTopbarState extends ConsumerState<DashTopbar> {
   }
 
   Future<void> _logout() async {
+    // Tear down private messaging socket before clearing the session.
+    await ref.read(chatRealtimeClientProvider).disconnect();
     await ref.read(authControllerProvider.notifier).logout();
-    if (mounted) context.go('/login');
+    // Drop private badge + inbox caches; public browse continues on Home.
+    ref.invalidate(chatsListProvider);
+    ref.invalidate(dmsListProvider);
+    ref.read(chatUnreadTotalProvider.notifier).state = 0;
+    ref.read(notificationUnreadTotalProvider.notifier).state = 0;
+    if (mounted) context.go('/home');
   }
 
   @override

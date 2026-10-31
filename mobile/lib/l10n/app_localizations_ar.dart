@@ -216,6 +216,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get greetingSub => 'جاهز تجد شيئاً ممتعاً اليوم؟';
 
   @override
+  String get guestGreeting => 'أهلاً بك في فنيتي';
+
+  @override
+  String get guestGreetingSub =>
+      'تصفّح الفعاليات القريبة — سجّل الدخول عندما تريد المشاركة.';
+
+  @override
+  String get guestSignInCta => 'تسجيل الدخول';
+
+  @override
+  String get guestSignUpCta => 'إنشاء حساب';
+
+  @override
+  String get continueBrowsing => 'متابعة التصفح';
+
+  @override
   String get heroEyebrow => 'أنشطة حولك الآن';
 
   @override

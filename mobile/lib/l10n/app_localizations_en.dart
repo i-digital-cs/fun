@@ -219,6 +219,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get greetingSub => 'Ready to find something fun to do today?';
 
   @override
+  String get guestGreeting => 'Welcome to Funnity';
+
+  @override
+  String get guestGreetingSub =>
+      'Browse events nearby — log in when you want to join.';
+
+  @override
+  String get guestSignInCta => 'Log in';
+
+  @override
+  String get guestSignUpCta => 'Sign up';
+
+  @override
+  String get continueBrowsing => 'Continue browsing';
+
+  @override
   String get heroEyebrow => 'Activities happening around you';
 
   @override

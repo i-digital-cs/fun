@@ -82,6 +82,11 @@
     }
   },
   "greetingSub": "Ready to find something fun to do today?",
+  "guestGreeting": "Welcome to Funnity",
+  "guestGreetingSub": "Browse events nearby — log in when you want to join.",
+  "guestSignInCta": "Log in",
+  "guestSignUpCta": "Sign up",
+  "continueBrowsing": "Continue browsing",
   "heroEyebrow": "Activities happening around you",
   "heroTitle1": "Find people.",
   "heroTitle2": "Do what you love.",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
@@ -621,9 +622,17 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                     else if (state.items.isEmpty)
                       SliverToBoxAdapter(
                         child: DiscoverEmptyState(
-                          onCreate: canCreate
-                              ? () => context.go('/create')
-                              : null,
+                          onCreate: () {
+                            if (canCreate) {
+                              context.go('/create');
+                              return;
+                            }
+                            requireAuth(
+                              context,
+                              auth,
+                              returnTo: '/create',
+                            );
+                          },
                           onShowAll: _clear,
                           onChangeLocation: _useMyLocation,
                         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:fun_mobile/core/identity/user_public_id.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
+import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:go_router/go_router.dart';
 
 /// Shared navigation helpers (Funnity V2.1 contract).
@@ -54,10 +55,17 @@ void goAfterSuccessfulAuthWithRouter(
   router.go(resolvePostAuthLocation(user, returnTo: returnTo));
 }
 
+/// Post-splash landing for unauthenticated users (browse-first).
+const String guestLandingLocation = '/home';
+
 /// Paths guests may browse without auth (keep in sync with [router.dart]).
+///
+/// Public browse-first policy: Home, Discover, public event detail, public
+/// profiles, and static legal pages. Protected actions use [requireAuth].
 bool isGuestBrowsableLocation(String location) {
   final path = Uri.tryParse(location)?.path ?? location;
-  if (path == '/discover' ||
+  if (path == '/home' ||
+      path == '/discover' ||
       path == '/safety/guidelines' ||
       path == '/privacy-policy' ||
       path == '/terms' ||
@@ -66,7 +74,23 @@ bool isGuestBrowsableLocation(String location) {
     return true;
   }
   if (path.startsWith('/u/')) return true;
+  // Public event detail only — not chat/requests/members/edit/ticket.
   return RegExp(r'^/events/\d+$').hasMatch(path);
+}
+
+/// Returns `true` when the user is authenticated; otherwise navigates to login
+/// with allowlisted [returnTo] and returns `false`.
+///
+/// Single gate for protected actions (join, create, friends, chat, tickets,
+/// settings). Does **not** auto-perform the action after login.
+bool requireAuth(
+  BuildContext context,
+  AuthState auth, {
+  required String returnTo,
+}) {
+  if (auth is Authenticated) return true;
+  context.push(loginLocation(returnTo: returnTo));
+  return false;
 }
 
 /// Allowlisted in-app return paths after login / gates.

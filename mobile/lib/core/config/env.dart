@@ -80,11 +80,23 @@ abstract final class Env {
   }
 
   /// Throws in release if [apiBaseUrl] points at a loopback host.
+  ///
+  /// Also rejects `SAFE_MOCK_MESSAGING=true` in release (see [SafeMock]).
   static void assertSafeForRelease() {
     if (kReleaseMode && usesLocalApi) {
       throw StateError(
         'Release builds must not use a local API_BASE_URL ($apiBaseUrl). '
         'Omit the define or pass the production URL.',
+      );
+    }
+    const safeMock = bool.fromEnvironment(
+      'SAFE_MOCK_MESSAGING',
+      defaultValue: false,
+    );
+    if (kReleaseMode && safeMock) {
+      throw StateError(
+        'Release builds must not enable SAFE_MOCK_MESSAGING. '
+        'Omit the dart-define for store / production APKs.',
       );
     }
   }

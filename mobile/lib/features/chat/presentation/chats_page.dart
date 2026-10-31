@@ -6,6 +6,7 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/qa/safe_mock.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
@@ -123,6 +124,28 @@ class _ChatsPageState extends ConsumerState<ChatsPage> {
       ),
       body: Column(
         children: [
+          if (SafeMock.isActive)
+            Material(
+              color: const Color(0xFFFFF7ED),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(
+                  children: [
+                    const Icon(Icons.science_outlined, color: Color(0xFFB45309)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'SAFE MOCK — in-memory messaging only. Not Production.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF9A3412),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: _InboxTabBar(

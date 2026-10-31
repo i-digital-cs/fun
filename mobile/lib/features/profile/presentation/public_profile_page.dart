@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
@@ -182,8 +183,12 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
                 const SizedBox(height: 16),
                 if (me == null)
                   GradientButton.indigo(
-                    label: l10n.login,
-                    onPressed: () => context.go('/login'),
+                    label: l10n.friendsAdd,
+                    onPressed: () => requireAuth(
+                      context,
+                      auth,
+                      returnTo: '/u/${widget.publicId}',
+                    ),
                   )
                 else if (isSelf)
                   GradientButton.indigo(

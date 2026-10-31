@@ -5,6 +5,7 @@ import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
@@ -55,6 +56,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   String _greeting(AppLocalizations l10n, String name) {
+    if (name.trim().isEmpty) return l10n.guestGreeting;
     final hour = DateTime.now().hour;
     if (hour < 12) return l10n.greetingMorning(name);
     if (hour < 17) return l10n.greetingAfternoon(name);
@@ -69,12 +71,26 @@ class _HomePageState extends ConsumerState<HomePage> {
     context.go('/discover');
   }
 
-  void _openCreate(bool canParticipate) {
+  void _openCreate({required bool isGuest, required bool canParticipate}) {
+    if (isGuest) {
+      requireAuth(
+        context,
+        ref.read(authControllerProvider),
+        returnTo: '/create',
+      );
+      return;
+    }
     if (canParticipate) {
       context.go('/create');
     } else {
       context.push('/identity');
     }
+  }
+
+  void _openLocationSettings() {
+    final auth = ref.read(authControllerProvider);
+    if (!requireAuth(context, auth, returnTo: '/settings/location')) return;
+    context.push('/settings/location');
   }
 
   Future<void> _cancelJoin(int eventId) async {
@@ -104,6 +120,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       orElse: () => SiteBranding.fallback,
     );
     final user = auth is Authenticated ? auth.user : null;
+    final isGuest = user == null;
     final firstName = user?.firstName ?? '';
     final canParticipate = user?.canParticipate ?? false;
 
@@ -148,7 +165,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              l10n.greetingSub,
+                              isGuest ? l10n.guestGreetingSub : l10n.greetingSub,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.muted,
@@ -161,12 +178,45 @@ class _HomePageState extends ConsumerState<HomePage> {
                       GradientButton(
                         label: l10n.createEvent,
                         icon: Icons.add,
-                        onPressed: () => _openCreate(canParticipate),
+                        onPressed: () => _openCreate(
+                          isGuest: isGuest,
+                          canParticipate: canParticipate,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+              if (isGuest)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => context.push(
+                              loginLocation(returnTo: '/home'),
+                            ),
+                            child: Text(l10n.guestSignInCta),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () => context.push(
+                              locationWithReturnTo(
+                                '/register',
+                                returnTo: '/home',
+                              ),
+                            ),
+                            child: Text(l10n.guestSignUpCta),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -174,6 +224,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     cityName: user?.cityName,
                     distanceKm: user?.distanceKm ?? 25,
                     onTap: () async {
+                      if (isGuest) {
+                        _openLocationSettings();
+                        return;
+                      }
                       await context.push('/settings/location');
                       if (!mounted) return;
                       await ref
@@ -229,7 +283,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       final sideBySide = constraints.maxWidth >= 640;
                       final weather = WeatherCard(
                         weather: nearby.weather,
-                        onSetLocation: () => context.push('/settings/location'),
+                        onSetLocation: _openLocationSettings,
                       );
                       final nowPlaying = nearby.nowPlaying == null
                           ? null
@@ -291,7 +345,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             ),
                             const SizedBox(height: 2),
                             InkWell(
-                              onTap: () => context.push('/settings/location'),
+                              onTap: _openLocationSettings,
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -362,9 +416,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                     child: HomeEmptyNearbyCard(
                       onShowAll: () => _openDiscoverAll(),
-                      onChangeLocation: () =>
-                          context.push('/settings/location'),
-                      onCreate: () => _openCreate(canParticipate),
+                      onChangeLocation: _openLocationSettings,
+                      onCreate: () => _openCreate(
+                        isGuest: isGuest,
+                        canParticipate: canParticipate,
+                      ),
                     ),
                   ),
                 )
@@ -483,7 +539,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   child: HomeCreateBanner(
-                    onCreate: () => _openCreate(canParticipate),
+                    onCreate: () => _openCreate(
+                      isGuest: isGuest,
+                      canParticipate: canParticipate,
+                    ),
                   ),
                 ),
               ),

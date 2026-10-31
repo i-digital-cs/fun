@@ -494,6 +494,36 @@ abstract class AppLocalizations {
   /// **'Ready to find something fun to do today?'**
   String get greetingSub;
 
+  /// No description provided for @guestGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Funnity'**
+  String get guestGreeting;
+
+  /// No description provided for @guestGreetingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse events nearby — log in when you want to join.'**
+  String get guestGreetingSub;
+
+  /// No description provided for @guestSignInCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get guestSignInCta;
+
+  /// No description provided for @guestSignUpCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get guestSignUpCta;
+
+  /// No description provided for @continueBrowsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue browsing'**
+  String get continueBrowsing;
+
   /// No description provided for @heroEyebrow.
   ///
   /// In en, this message translates to:

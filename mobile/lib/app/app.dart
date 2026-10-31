@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/router.dart';
 import 'package:fun_mobile/app/theme/app_theme.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/core/qa/safe_mock.dart';
 import 'package:fun_mobile/features/notifications/data/push_notification_service.dart';
 import 'package:fun_mobile/features/site/presentation/widgets/site_brand_lockup.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -26,6 +27,16 @@ class FunApp extends ConsumerWidget {
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         routerConfig: router,
+        builder: (context, child) {
+          final content = child ?? const SizedBox.shrink();
+          if (!SafeMock.isActive) return content;
+          return Banner(
+            message: 'SAFE MOCK',
+            location: BannerLocation.topEnd,
+            color: const Color(0xFFB45309),
+            child: content,
+          );
+        },
       ),
     );
   }

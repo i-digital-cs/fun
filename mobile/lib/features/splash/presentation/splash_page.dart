@@ -11,6 +11,7 @@ import 'package:fun_mobile/features/site/data/app_update_service.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/features/site/domain/app_update.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 /// Animated launch screen — site logo + name from `GET /api/site`.
 /// Auth redirect is handled by GoRouter once [AuthController.bootstrap] finishes.
@@ -209,6 +210,16 @@ class _SplashPageState extends ConsumerState<SplashPage>
                     unawaited(_boot());
                   },
                   child: Text(l10n.retry),
+                ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed: () async {
+                    // Clear stuck/expired session so public browse is unblocked.
+                    await ref.read(authControllerProvider.notifier).logout();
+                    if (!context.mounted) return;
+                    context.go('/home');
+                  },
+                  child: Text(l10n.continueBrowsing),
                 ),
               ],
             ),

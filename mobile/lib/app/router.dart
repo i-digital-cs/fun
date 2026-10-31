@@ -68,14 +68,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isGuestBrowse = isGuestBrowsableLocation(loc) ||
           isGuestBrowsableLocation(state.uri.path);
 
-      if (auth is AuthInitial ||
-          auth is AuthLoading ||
-          auth is AuthSessionRestoreFailed) {
+      if (auth is AuthInitial || auth is AuthLoading) {
         return loc == '/splash' ? null : '/splash';
       }
 
+      // Network blip while restoring session: keep splash UI for retry, but do
+      // not block already-opened public browse routes.
+      if (auth is AuthSessionRestoreFailed) {
+        if (loc == '/splash') return null;
+        if (isGuestBrowse || isAuthRoute || isPasswordResetRoute) return null;
+        return '/splash';
+      }
+
       if (auth is Unauthenticated) {
-        if (loc == '/splash') return '/discover';
+        if (loc == '/splash') return guestLandingLocation;
         if (isAuthRoute || isPasswordResetRoute || isGuestBrowse) return null;
         return _loginRedirect(state);
       }

@@ -590,7 +590,7 @@ Automate signed builds via Fastlane / GitHub Actions / Codemagic / Bitrise → P
 | HTTP | `dio` + `ApiClient` |
 | Nav | `go_router` |
 | Images | `cached_network_image` |
-| Fonts | `google_fonts` (IBM Plex Sans) |
+| Fonts | **EN:** `google_fonts` IBM Plex Sans · **AR:** bundled **Tajawal** (`assets/fonts/Tajawal/`, weights 400/500/700/800) via `AppTheme.light(locale:)` — no Arabic runtime download |
 | API | Sanctum Bearer → `https://www.funnity.com/api` |
 | Design | Root `DESIGN.md` |
 | Roadmap | `ROADMAP.md` (Flutter tasks F2+) |

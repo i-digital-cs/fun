@@ -14,9 +14,12 @@ import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/utils/upload_validator.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/async_body.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/chat/data/chat_realtime_client.dart';
+import 'package:fun_mobile/features/chat/domain/message_identity.dart';
+import 'package:fun_mobile/features/chat/presentation/voice_playback_coordinator.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 import 'package:fun_mobile/features/safety/presentation/report_sheet.dart';
@@ -155,19 +158,23 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   void _onLiveMessage(ChatMessage message) {
     if (!mounted) return;
     if (message.eventId != 0 && message.eventId != widget.eventId) return;
-    if (_messages.any((m) => m.id == message.id)) return;
-
-    final auth = ref.read(authControllerProvider);
-    final currentId = auth is Authenticated ? auth.user.id : null;
-    // Own posts are appended after POST; skip duplicate from echo if any.
-    if (currentId != null && message.userId == currentId) {
-      if (_messages.any((m) => m.id == message.id)) return;
-    }
-
+    final existed = _messages.any(
+      (m) => sameChatIdentity(
+        aId: m.id,
+        aClientUuid: m.clientUuid,
+        bId: message.id,
+        bClientUuid: message.clientUuid,
+      ),
+    );
     setState(() {
-      _messages = [..._messages, message]..sort((a, b) => a.id.compareTo(b.id));
+      _messages = upsertMessageByIdentity(
+        existing: _messages,
+        incoming: message,
+        idOf: (m) => m.id,
+        clientUuidOf: (m) => m.clientUuid,
+      );
     });
-    _scrollToBottom();
+    if (!existed) _scrollToBottom();
   }
 
   void _onLiveReaction(ChatMessageReaction reaction) {
@@ -295,7 +302,12 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
 
   Future<void> _send() async {
     final body = _text.text.trim();
-    if (body.isEmpty && _mediaPath == null && _voicePath == null || _sending) {
+    if (!canAttemptSend(
+      body: body,
+      hasMedia: _mediaPath != null,
+      hasVoice: _voicePath != null,
+      sending: _sending,
+    )) {
       return;
     }
     final voicePath = _voicePath;
@@ -324,7 +336,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
       setState(() => _sendFailed = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.failure!.message),
+          content: Text(failureUserMessage(result.failure!)),
           action: SnackBarAction(
             label: AppLocalizations.of(context).retry,
             onPressed: () {
@@ -348,14 +360,12 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
     final posted = result.data;
     if (posted != null) {
       setState(() {
-        _messages = [
-          for (final m in _messages)
-            if (m.id != posted.id &&
-                (posted.clientUuid == null ||
-                    m.clientUuid != posted.clientUuid))
-              m,
-          posted,
-        ]..sort((a, b) => a.id.compareTo(b.id));
+        _messages = upsertMessageByIdentity(
+          existing: _messages,
+          incoming: posted,
+          idOf: (m) => m.id,
+          clientUuidOf: (m) => m.clientUuid,
+        );
       });
       _scrollToBottom();
     } else {
@@ -474,6 +484,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   Future<void> _stopRecording() async {
     if (!_recording) return;
     _recordingTimer?.cancel();
+    final durationMs = _recordingDurationMs;
     setState(() {
       _recording = false;
       _recordingPaused = false;
@@ -483,9 +494,17 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
       if (path != null) await _deleteVoiceFile(path);
       return;
     }
+    if (path == null || durationMs < 500) {
+      if (path != null) await _deleteVoiceFile(path);
+      setState(() {
+        _voicePath = null;
+        _voiceDurationMs = null;
+      });
+      return;
+    }
     setState(() {
       _voicePath = path;
-      _voiceDurationMs = _recordingDurationMs.clamp(1, 120000);
+      _voiceDurationMs = durationMs.clamp(500, 120000);
     });
   }
 
@@ -1831,6 +1850,7 @@ class _EventChatVoicePlayer extends StatefulWidget {
 
 class _EventChatVoicePlayerState extends State<_EventChatVoicePlayer> {
   final _player = AudioPlayer();
+  final Object _playbackKey = Object();
   bool _loading = false;
   bool _loaded = false;
   bool _playing = false;
@@ -1838,6 +1858,9 @@ class _EventChatVoicePlayerState extends State<_EventChatVoicePlayer> {
   @override
   void initState() {
     super.initState();
+    VoicePlaybackCoordinator.instance.register(_playbackKey, () async {
+      await _player.stop();
+    });
     _player.onPlayerStateChanged.listen((state) {
       if (!mounted) return;
       setState(() => _playing = state == PlayerState.playing);
@@ -1846,6 +1869,7 @@ class _EventChatVoicePlayerState extends State<_EventChatVoicePlayer> {
 
   @override
   void dispose() {
+    VoicePlaybackCoordinator.instance.unregister(_playbackKey);
     unawaited(_player.dispose());
     super.dispose();
   }
@@ -1855,6 +1879,7 @@ class _EventChatVoicePlayerState extends State<_EventChatVoicePlayer> {
       await _player.pause();
       return;
     }
+    await VoicePlaybackCoordinator.instance.claim(_playbackKey);
     if (!_loaded) {
       setState(() => _loading = true);
       final result = await widget.repository.messageMedia(
@@ -1867,8 +1892,9 @@ class _EventChatVoicePlayerState extends State<_EventChatVoicePlayer> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              result.failure?.message ??
-                  AppLocalizations.of(context).voiceUnavailable,
+              result.failure != null
+                  ? failureUserMessage(result.failure!)
+                  : AppLocalizations.of(context).voiceUnavailable,
             ),
           ),
         );
@@ -1949,6 +1975,34 @@ class _EventChatMediaImageState extends State<_EventChatMediaImage> {
     setState(() => _bytes = Uint8List.fromList(result.data!));
   }
 
+  void _openPreview() {
+    final bytes = _bytes;
+    if (bytes == null) return;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        backgroundColor: Colors.black,
+        child: Stack(
+          children: [
+            InteractiveViewer(
+              child: Center(child: Image.memory(bytes, fit: BoxFit.contain)),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                color: Colors.white,
+                onPressed: () => Navigator.pop(ctx),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -1961,7 +2015,13 @@ class _EventChatMediaImageState extends State<_EventChatMediaImage> {
                 color: AppColors.primarySoft,
                 child: Center(child: CircularProgressIndicator()),
               )
-            : Image.memory(_bytes!, fit: BoxFit.cover),
+            : Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _openPreview,
+                  child: Image.memory(_bytes!, fit: BoxFit.cover),
+                ),
+              ),
       ),
     );
   }

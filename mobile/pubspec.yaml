@@ -51,3 +51,14 @@ flutter:
     - assets/branding/funity-app-icon.png
     - assets/funnity-v2/hero-cairo-skyline.webp
     - assets/funnity-v2/weather-sunset-skyline.webp
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal/Tajawal-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Tajawal/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Tajawal/Tajawal-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Tajawal/Tajawal-ExtraBold.ttf
+          weight: 800
