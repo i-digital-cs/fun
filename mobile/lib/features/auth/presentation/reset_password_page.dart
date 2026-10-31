@@ -73,11 +73,12 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   void _onSuccess() {
+    final router = GoRouter.of(context);
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
     ref.read(authControllerProvider.notifier).commitPendingSession();
-    if (!mounted) return;
     final auth = ref.read(authControllerProvider);
     if (auth is Authenticated) {
-      goAfterSuccessfulAuth(context, auth.user);
+      goAfterSuccessfulAuthWithRouter(router, auth.user, returnTo: returnTo);
     }
   }
 

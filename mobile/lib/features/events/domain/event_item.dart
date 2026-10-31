@@ -637,6 +637,9 @@ class EventDraft {
     this.latitude,
     this.longitude,
     this.mapsUrl,
+    /// When true, `POST /events` must publish in the same request (OPTION A).
+    /// Omitted/false → draft. Multipart sends `"1"` / `"0"` for Laravel booleans.
+    this.publishIntent = false,
   });
 
   final String title;
@@ -657,6 +660,47 @@ class EventDraft {
   final double? latitude;
   final double? longitude;
   final String? mapsUrl;
+  final bool publishIntent;
+
+  EventDraft copyWith({
+    String? title,
+    String? description,
+    int? categoryId,
+    int? cityId,
+    String? venue,
+    DateTime? startsAt,
+    DateTime? endsAt,
+    int? maxParticipants,
+    String? sex,
+    String? requirements,
+    String? expectedCost,
+    num? costPerPerson,
+    String? imagePath,
+    double? latitude,
+    double? longitude,
+    String? mapsUrl,
+    bool? publishIntent,
+  }) {
+    return EventDraft(
+      title: title ?? this.title,
+      description: description ?? this.description,
+      categoryId: categoryId ?? this.categoryId,
+      cityId: cityId ?? this.cityId,
+      venue: venue ?? this.venue,
+      startsAt: startsAt ?? this.startsAt,
+      endsAt: endsAt ?? this.endsAt,
+      maxParticipants: maxParticipants ?? this.maxParticipants,
+      sex: sex ?? this.sex,
+      requirements: requirements ?? this.requirements,
+      expectedCost: expectedCost ?? this.expectedCost,
+      costPerPerson: costPerPerson ?? this.costPerPerson,
+      imagePath: imagePath ?? this.imagePath,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      mapsUrl: mapsUrl ?? this.mapsUrl,
+      publishIntent: publishIntent ?? this.publishIntent,
+    );
+  }
 }
 
 class NowPlayingFeed {

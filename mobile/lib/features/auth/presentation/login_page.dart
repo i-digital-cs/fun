@@ -49,19 +49,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _goAfterAuth() {
+    // Capture router + returnTo before commit — Authenticated refresh can dispose
+    // this page before GoRouter redirect runs (Android stuck-on-login race).
+    final router = GoRouter.of(context);
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
     ref.read(authControllerProvider.notifier).commitPendingSession();
-    if (!mounted) return;
     final auth = ref.read(authControllerProvider);
     if (auth is Authenticated) {
-      goAfterSuccessfulAuth(context, auth.user);
+      goAfterSuccessfulAuthWithRouter(router, auth.user, returnTo: returnTo);
     }
   }
 
   void _goAfterSocialAuth() {
-    if (!mounted) return;
+    final router = GoRouter.of(context);
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
     final auth = ref.read(authControllerProvider);
     if (auth is Authenticated) {
-      goAfterSuccessfulAuth(context, auth.user);
+      goAfterSuccessfulAuthWithRouter(router, auth.user, returnTo: returnTo);
     }
   }
 
@@ -332,8 +336,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 Align(
                                   alignment: AlignmentDirectional.centerEnd,
                                   child: TextButton(
-                                    onPressed: () =>
-                                        context.go('/forgot-password'),
+                                    onPressed: () {
+                                      final returnTo = GoRouterState.of(
+                                        context,
+                                      ).uri.queryParameters['returnTo'];
+                                      context.go(
+                                        locationWithReturnTo(
+                                          '/forgot-password',
+                                          returnTo: returnTo,
+                                        ),
+                                      );
+                                    },
                                     child: Text(
                                       l10n.forgotPassword,
                                       style: const TextStyle(
@@ -417,7 +430,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   child: Text(l10n.browseAsGuest),
                                 ),
                                 TextButton(
-                                  onPressed: () => context.go('/register'),
+                                  onPressed: () {
+                                    final returnTo = GoRouterState.of(
+                                      context,
+                                    ).uri.queryParameters['returnTo'];
+                                    context.go(
+                                      locationWithReturnTo(
+                                        '/register',
+                                        returnTo: returnTo,
+                                      ),
+                                    );
+                                  },
                                   child: Text(
                                     '${l10n.noAccount} ${l10n.register}',
                                   ),

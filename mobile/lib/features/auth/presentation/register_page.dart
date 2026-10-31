@@ -42,11 +42,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   void _goAfterAuth() {
+    final router = GoRouter.of(context);
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
     ref.read(authControllerProvider.notifier).commitPendingSession();
-    if (!mounted) return;
     final auth = ref.read(authControllerProvider);
     if (auth is Authenticated) {
-      goAfterSuccessfulAuth(context, auth.user);
+      goAfterSuccessfulAuthWithRouter(router, auth.user, returnTo: returnTo);
     }
   }
 
@@ -346,7 +347,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   child: Text(l10n.browseAsGuest),
                                 ),
                                 TextButton(
-                                  onPressed: () => context.go('/login'),
+                                  onPressed: () {
+                                    final returnTo = GoRouterState.of(
+                                      context,
+                                    ).uri.queryParameters['returnTo'];
+                                    context.go(
+                                      locationWithReturnTo(
+                                        '/login',
+                                        returnTo: returnTo,
+                                      ),
+                                    );
+                                  },
                                   child: Text(
                                     '${l10n.haveAccount} ${l10n.login}',
                                   ),

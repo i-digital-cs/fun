@@ -101,8 +101,10 @@
     }
   },
   "seeAll": "See all",
-  "createEvent": "Create event",
+  "createEvent": "Create Event",
   "viewEvent": "View Event",
+  "continueEditing": "Continue Editing",
+  "publishStatusMismatch": "The event was not published as expected. You can continue editing.",
   "members": "members",
   "free": "Free",
   "currencyShort": "EGP",
@@ -235,7 +237,7 @@
   "costPerPerson": "Cost per person",
   "pickImage": "Pick image",
   "imageSelected": "Image selected",
-  "createDraft": "Save draft",
+  "createDraft": "Save Draft",
   "publishEvent": "Publish event",
   "cancelEvent": "Cancel event",
   "completeEvent": "Mark complete",
@@ -327,8 +329,8 @@
       "count": {"type": "int"}
     }
   },
-  "eventSaved": "Event saved as draft",
-  "eventPublished": "Event published — it's now discoverable",
+  "eventSaved": "Draft saved successfully",
+  "eventPublished": "Event published successfully",
   "optional": "Optional",
   "pickDateTime": "Pick date & time",
   "publishOfferBody": "Publish \"{title}\" now so others can discover it?",

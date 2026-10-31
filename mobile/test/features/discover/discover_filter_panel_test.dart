@@ -5,7 +5,9 @@ import 'package:fun_mobile/features/discover/presentation/discover_page.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 
 void main() {
-  testWidgets('DiscoverFilterPanel shows search and apply', (tester) async {
+  testWidgets('DiscoverFilterPanel shows category/city filters without duplicate search', (
+    tester,
+  ) async {
     final search = TextEditingController();
     addTearDown(search.dispose);
 
@@ -42,6 +44,9 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(find.byType(DiscoverFilterPanel), findsOneWidget);
-    expect(find.byIcon(Icons.search), findsOneWidget);
+    // Search lives in Discover chrome only — panel must not duplicate it.
+    expect(find.byIcon(Icons.search), findsNothing);
+    expect(find.text('Category'), findsOneWidget);
+    expect(find.text('City'), findsOneWidget);
   });
 }

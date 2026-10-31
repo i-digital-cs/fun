@@ -4,11 +4,11 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
-import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/friends/domain/friend_user.dart';
 import 'package:fun_mobile/features/friends/domain/friendship_state.dart';
+import 'package:fun_mobile/features/friends/presentation/widgets/friend_user_avatar.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -257,7 +257,8 @@ class PeopleSuggestionCard extends StatelessWidget {
   final List<String>? sharedInterests;
 
   static const double cardWidth = 152;
-  static const double cardHeight = 248;
+  /// Extra vertical room vs 248 so AR / large text scale does not overflow.
+  static const double cardHeight = 264;
   static const double avatarSize = 56;
   static const double actionHeight = 36;
 
@@ -307,7 +308,7 @@ class PeopleSuggestionCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: Column(
                   children: [
-                    _Avatar(user: user, size: avatarSize),
+                    FriendUserAvatar(user: user, size: avatarSize),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 32,
@@ -432,39 +433,3 @@ class PeopleSuggestionCard extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.user, required this.size});
-
-  final FriendUser user;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final photo = user.profileImagePath;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: photo != null && photo.isNotEmpty
-          ? ClipOval(
-              child: AppNetworkImage(
-                url: photo,
-                logicalWidth: size,
-                logicalHeight: size,
-                fit: BoxFit.cover,
-              ),
-            )
-          : CircleAvatar(
-              radius: size / 2,
-              backgroundColor: const Color(0xFF7138F5).withValues(alpha: 0.12),
-              foregroundColor: const Color(0xFF7138F5),
-              child: Text(
-                user.initials,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: size * 0.28,
-                ),
-              ),
-            ),
-    );
-  }
-}

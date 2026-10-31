@@ -218,9 +218,10 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
     );
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _submit({required bool publishIntent}) async {
     final state = ref.read(createEventControllerProvider(_controllerKey));
+    if (state.submitting) return;
+    if (!_formKey.currentState!.validate()) return;
     if (state.startsAt == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -229,49 +230,92 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       );
       return;
     }
-    final draft = _buildDraft(state);
-    if (draft == null) return;
+    final built = _buildDraft(state);
+    if (built == null) return;
+    final draft = built.copyWith(publishIntent: publishIntent);
 
     final result = await _ctrl.submit(draft);
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+
+    // Status mismatch after HTTP success — never claim published/draft success.
+    if (result.outcome == CreateSubmitOutcome.unexpectedDraft ||
+        result.outcome == CreateSubmitOutcome.unexpectedPublished) {
+      final event = result.event;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.publishStatusMismatch)),
+      );
+      if (event != null) {
+        context.go('/my-events');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          // Authorized edit — avoid public show that may 403 for drafts.
+          context.push('/events/${event.id}/edit');
+        });
+      }
+      return;
+    }
+
     if (!result.ok) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(result.error ?? 'Error')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.error ?? l10n.errorGeneric)),
+      );
       return;
     }
 
     final event = result.event!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).eventSaved)),
-    );
-
-    if (result.offerPublish) {
-      final publish = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => PublishOfferDialog(eventTitle: event.title),
+    if (_isEdit) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.eventSaved)),
       );
-      if (publish == true && mounted) {
-        final pubError = await _ctrl.publish(event.id);
+      if (!mounted) return;
+      context.go('/my-events');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        if (pubError != null) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(pubError)));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context).eventPublished),
-            ),
-          );
-        }
-      }
+        context.push('/events/${event.id}');
+      });
+      return;
     }
 
-    // NAV-F3: land on shell then push detail so Back is not an orphan root route.
-    if (!mounted) return;
+    if (result.isPublished) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.eventPublished),
+          action: SnackBarAction(
+            label: l10n.viewEvent,
+            onPressed: () {
+              if (!mounted) return;
+              context.push('/events/${event.id}');
+            },
+          ),
+        ),
+      );
+      // NAV-F3: shell then detail so Back is not an orphan root route.
+      context.go('/my-events');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.push('/events/${event.id}');
+      });
+      return;
+    }
+
+    // Draft saved — continue editing; do not open public show.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.eventSaved),
+        action: SnackBarAction(
+          label: l10n.continueEditing,
+          onPressed: () {
+            if (!mounted) return;
+            context.push('/events/${event.id}/edit');
+          },
+        ),
+      ),
+    );
     context.go('/my-events');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.push('/events/${event.id}');
+      context.push('/events/${event.id}/edit');
     });
   }
 
@@ -336,11 +380,39 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 },
               ),
               const SizedBox(height: 24),
-              GradientButton(
-                label: _isEdit ? l10n.save : l10n.createDraft,
-                isLoading: state.submitting,
-                onPressed: _submit,
-              ),
+              if (_isEdit)
+                GradientButton(
+                  label: l10n.save,
+                  isLoading: state.submitting,
+                  onPressed: state.submitting
+                      ? null
+                      : () => _submit(publishIntent: false),
+                )
+              else ...[
+                GradientButton(
+                  label: l10n.createEvent,
+                  isLoading: state.submitting,
+                  onPressed: state.submitting
+                      ? null
+                      : () => _submit(publishIntent: true),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: state.submitting
+                      ? null
+                      : () => _submit(publishIntent: false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(l10n.createDraft),
+                ),
+              ],
+              SizedBox(height: MediaQuery.paddingOf(context).bottom + 8),
             ],
           ),
         ),

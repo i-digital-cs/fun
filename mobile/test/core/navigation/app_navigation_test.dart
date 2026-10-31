@@ -9,7 +9,14 @@ void main() {
       expect(sanitizeReturnTo('/events/42/chat'), '/events/42/chat');
       expect(sanitizeReturnTo('/home'), '/home');
       expect(sanitizeReturnTo('/friends?tab=requests'), '/friends?tab=requests');
-      expect(sanitizeReturnTo('/u/abc123'), '/u/abc123');
+      // Public profiles: only Laravel UserPublicId form (Funity-F######).
+      // Arbitrary /u/abc123 must NOT pass — open-redirect / injection hardening
+      // added with public-profile error handling (commit 3aed3b2).
+      expect(
+        sanitizeReturnTo('/u/Funity-F001115'),
+        '/u/Funity-F001115',
+      );
+      expect(sanitizeReturnTo('/u/1115'), '/u/Funity-F001115');
       expect(sanitizeReturnTo('/dms/9'), '/dms/9');
     });
 
@@ -22,6 +29,10 @@ void main() {
       expect(sanitizeReturnTo('../etc/passwd'), isNull);
       expect(sanitizeReturnTo(''), isNull);
       expect(sanitizeReturnTo(null), isNull);
+      // Invalid public-id tokens stay rejected (do not widen allowlist).
+      expect(sanitizeReturnTo('/u/abc123'), isNull);
+      expect(sanitizeReturnTo('/u/chatqaa0cc175b9'), isNull);
+      expect(sanitizeReturnTo('/u/../events/1'), isNull);
     });
 
     test('loginLocation encodes returnTo', () {

@@ -5,10 +5,10 @@ import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
-import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/features/friends/domain/friend_user.dart';
 import 'package:fun_mobile/features/friends/domain/friendship_state.dart';
+import 'package:fun_mobile/features/friends/presentation/widgets/friend_user_avatar.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -361,7 +361,7 @@ class _RequestRow extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: _Avatar(user: user),
+        leading: FriendUserAvatar(user: user),
         title: Text(user.name),
         subtitle: Text(user.publicId),
         onTap: () => pushPublicProfile(context, user.publicId),
@@ -447,7 +447,7 @@ class _FriendSearchRow extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           children: [
-            _Avatar(user: user),
+            FriendUserAvatar(user: user),
             const SizedBox(width: 12),
             Expanded(
               child: InkWell(
@@ -502,7 +502,7 @@ class _FriendRow extends StatelessWidget {
 
     return Card(
       child: ListTile(
-        leading: _Avatar(user: user),
+        leading: FriendUserAvatar(user: user),
         title: Text(user.name),
         subtitle: Text(user.publicId),
         onTap: onOpenProfile,
@@ -579,37 +579,3 @@ class _FriendshipActionChip extends ConsumerWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.user});
-
-  final FriendUser user;
-  static const double size = 40;
-
-  @override
-  Widget build(BuildContext context) {
-    final photo = user.profileImagePath;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: photo != null && photo.isNotEmpty
-          ? ClipOval(
-              child: AppNetworkImage(
-                url: photo,
-                logicalWidth: size,
-                logicalHeight: size,
-                fit: BoxFit.cover,
-              ),
-            )
-          : CircleAvatar(
-              radius: size / 2,
-              child: Text(
-                user.initials,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-    );
-  }
-}

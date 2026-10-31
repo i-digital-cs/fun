@@ -374,7 +374,11 @@ Holographic perforated pass (web CSS class `event-ticket`). Show when `join_acti
 
 **Open in maps:** always opens **Google Maps** (`https://www.google.com/maps?q=lat,lng`) from pin coords (or a parsable stored link rewritten to Google). Tapping the in-app OSM preview (web + Flutter) also opens Google Maps. If the user pastes a link then moves the pin, the pin wins and `maps_url` is rewritten to match.
 
-CTA: orange create/save. After create → show or edit draft + publish.
+**Publish intent (OPTION A):** multipart `publish_intent` as `"1"` / `"0"`.
+Primary CTA **Create Event** / **إنشاء الفعالية** → `publish_intent=true` → expect `status=published`.
+Secondary CTA **Save Draft** / **حفظ كمسودة** → `publish_intent=false` → expect `status=draft`.
+Success UX must match returned status (never treat HTTP 201 alone as published). After publish: Discover `markStale()` + home nearby refresh. Drafts open authorized edit (`/events/:id/edit`), not public show.
+See `docs/flutter/EVENT_PUBLISHING_API_HANDOFF.md` · Flutter QA `docs/flutter/EVENT_PUBLISHING_FLUTTER_QA.md`.
 
 ---
 
@@ -1341,7 +1345,7 @@ Copy this into PRs:
 Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
 1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API); **forgot-password OTP for social-only accounts** (set password when Google/Apple is down) — web+API+Flutter copy (§2.12b); **OTP resend always visible + server cooldown metadata** (web theater footer bug fixed; Flutter countdown synced to `retry_after_seconds`) — see `docs/flutter/OTP_AND_EVENT_DISCOVERY_REPAIR.md`
-1b. **Event create → discover** — API/web support **`publish_intent`** (OPTION A): `true` → published in one request, `false`/omit → draft; discover only **published** + date/geo filters; Flutter must send intent explicitly (see `docs/flutter/EVENT_PUBLISHING_API_HANDOFF.md`); Discover `markStale()` after publish; existing drafts (e.g. #605) are never bulk-published  
+1b. **Event create → discover** — API/web + Flutter **`publish_intent`** (OPTION A) wired: Create Event → `true`/`published`, Save Draft → `false`/`draft`; status-gated success UX; Discover `markStale()` + home refresh after publish; draft → edit route; see `docs/flutter/EVENT_PUBLISHING_API_HANDOFF.md` + `EVENT_PUBLISHING_FLUTTER_QA.md`; existing drafts (e.g. #605) are never bulk-published  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  

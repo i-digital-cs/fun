@@ -575,7 +575,7 @@ abstract class AppLocalizations {
   /// No description provided for @createEvent.
   ///
   /// In en, this message translates to:
-  /// **'Create event'**
+  /// **'Create Event'**
   String get createEvent;
 
   /// No description provided for @viewEvent.
@@ -583,6 +583,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View Event'**
   String get viewEvent;
+
+  /// No description provided for @continueEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Editing'**
+  String get continueEditing;
+
+  /// No description provided for @publishStatusMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The event was not published as expected. You can continue editing.'**
+  String get publishStatusMismatch;
 
   /// No description provided for @members.
   ///
@@ -1199,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @createDraft.
   ///
   /// In en, this message translates to:
-  /// **'Save draft'**
+  /// **'Save Draft'**
   String get createDraft;
 
   /// No description provided for @publishEvent.
@@ -1655,13 +1667,13 @@ abstract class AppLocalizations {
   /// No description provided for @eventSaved.
   ///
   /// In en, this message translates to:
-  /// **'Event saved as draft'**
+  /// **'Draft saved successfully'**
   String get eventSaved;
 
   /// No description provided for @eventPublished.
   ///
   /// In en, this message translates to:
-  /// **'Event published — it\'s now discoverable'**
+  /// **'Event published successfully'**
   String get eventPublished;
 
   /// No description provided for @optional.

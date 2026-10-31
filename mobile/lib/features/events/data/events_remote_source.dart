@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
@@ -6,6 +7,38 @@ import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
 import 'package:http_parser/http_parser.dart';
+
+/// Multipart field map for `POST /api/events`.
+///
+/// `publish_intent` is serialized as `"1"` / `"0"` so Laravel
+/// `filter_var(..., FILTER_VALIDATE_BOOLEAN)` accepts it (Dart `bool` in
+/// FormData is not reliable across Dio encodings).
+@visibleForTesting
+Map<String, dynamic> eventDraftMultipartFields(
+  EventDraft draft, {
+  String? methodOverride,
+  bool includePublishIntent = true,
+}) {
+  return <String, dynamic>{
+    'title': draft.title,
+    'category_id': draft.categoryId,
+    'city_id': draft.cityId,
+    'starts_at': draft.startsAt.toIso8601String(),
+    'max_participants': draft.maxParticipants,
+    'sex': draft.sex,
+    'description': ?draft.description,
+    'venue': draft.venue ?? '',
+    if (draft.latitude != null) 'latitude': draft.latitude,
+    if (draft.longitude != null) 'longitude': draft.longitude,
+    'maps_url': ?draft.mapsUrl,
+    if (draft.endsAt != null) 'ends_at': draft.endsAt!.toIso8601String(),
+    'requirements': ?draft.requirements,
+    'expected_cost': ?draft.expectedCost,
+    if (draft.costPerPerson != null) 'cost_per_person': draft.costPerPerson,
+    if (includePublishIntent) 'publish_intent': draft.publishIntent ? '1' : '0',
+    '_method': ?methodOverride,
+  };
+}
 
 class EventsRemoteSource {
   EventsRemoteSource(this._client);
@@ -144,7 +177,7 @@ class EventsRemoteSource {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/events',
-        data: await _formData(draft),
+        data: await _formData(draft, includePublishIntent: true),
       );
       final body = response.data!;
       final data = body['data'] as Map<String, dynamic>? ?? body;
@@ -161,7 +194,7 @@ class EventsRemoteSource {
     try {
       final response = await _client.dio.put<dynamic>(
         '/events/$id',
-        data: await _formData(draft),
+        data: await _formData(draft, includePublishIntent: false),
       );
       final body = response.data;
       if (body is Map) {
@@ -894,26 +927,17 @@ class EventsRemoteSource {
     return ChatMessage.fromJson(json);
   }
 
-  Future<FormData> _formData(EventDraft draft, {String? methodOverride}) async {
+  Future<FormData> _formData(
+    EventDraft draft, {
+    String? methodOverride,
+    bool includePublishIntent = true,
+  }) async {
     // Always include venue (even empty) so the API can reverse-geocode when a pin is set.
-    final map = <String, dynamic>{
-      'title': draft.title,
-      'category_id': draft.categoryId,
-      'city_id': draft.cityId,
-      'starts_at': draft.startsAt.toIso8601String(),
-      'max_participants': draft.maxParticipants,
-      'sex': draft.sex,
-      'description': ?draft.description,
-      'venue': draft.venue ?? '',
-      if (draft.latitude != null) 'latitude': draft.latitude,
-      if (draft.longitude != null) 'longitude': draft.longitude,
-      'maps_url': ?draft.mapsUrl,
-      if (draft.endsAt != null) 'ends_at': draft.endsAt!.toIso8601String(),
-      'requirements': ?draft.requirements,
-      'expected_cost': ?draft.expectedCost,
-      if (draft.costPerPerson != null) 'cost_per_person': draft.costPerPerson,
-      '_method': ?methodOverride,
-    };
+    final map = eventDraftMultipartFields(
+      draft,
+      methodOverride: methodOverride,
+      includePublishIntent: includePublishIntent,
+    );
 
     final form = FormData.fromMap(map);
     if (draft.imagePath != null && draft.imagePath!.isNotEmpty) {

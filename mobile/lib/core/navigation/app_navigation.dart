@@ -33,9 +33,25 @@ String resolvePostAuthLocation(User user, {String? returnTo}) {
 ///
 /// Call after [AuthController.commitPendingSession] or social login success
 /// so the user leaves `/login` even if a refresh race delays redirect.
+///
+/// Prefer [goAfterSuccessfulAuthWithRouter] when commit may dispose the page
+/// (Android redirect race): capture [GoRouter] + [returnTo] **before** commit.
 void goAfterSuccessfulAuth(BuildContext context, User user) {
   final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
-  context.go(resolvePostAuthLocation(user, returnTo: returnTo));
+  goAfterSuccessfulAuthWithRouter(
+    GoRouter.of(context),
+    user,
+    returnTo: returnTo,
+  );
+}
+
+/// Same as [goAfterSuccessfulAuth] but does not require a mounted [BuildContext].
+void goAfterSuccessfulAuthWithRouter(
+  GoRouter router,
+  User user, {
+  String? returnTo,
+}) {
+  router.go(resolvePostAuthLocation(user, returnTo: returnTo));
 }
 
 /// Paths guests may browse without auth (keep in sync with [router.dart]).
@@ -74,7 +90,9 @@ String? sanitizeReturnTo(String? raw) {
       value.contains('://') ||
       value.contains('\\') ||
       value.contains('\n') ||
-      value.contains('\r')) {
+      value.contains('\r') ||
+      // Reject traversal before Uri normalizes `/u/../events/1` → `/events/1`.
+      value.contains('..')) {
     return null;
   }
 
@@ -84,7 +102,7 @@ String? sanitizeReturnTo(String? raw) {
   if (uri == null || uri.hasScheme || uri.host.isNotEmpty) return null;
 
   final path = uri.path;
-  if (path.isEmpty || path == '/') return null;
+  if (path.isEmpty || path == '/' || path.contains('..')) return null;
 
   const blocked = {
     '/login',

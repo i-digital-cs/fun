@@ -11,6 +11,7 @@ import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_code_fields.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_resend_section.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
 class VerifyEmailPage extends ConsumerStatefulWidget {
   const VerifyEmailPage({super.key});
@@ -56,11 +57,12 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
   }
 
   void _goAfterAuth() {
+    final router = GoRouter.of(context);
+    final returnTo = GoRouterState.of(context).uri.queryParameters['returnTo'];
     ref.read(authControllerProvider.notifier).commitPendingSession();
-    if (!mounted) return;
     final auth = ref.read(authControllerProvider);
     if (auth is Authenticated) {
-      goAfterSuccessfulAuth(context, auth.user);
+      goAfterSuccessfulAuthWithRouter(router, auth.user, returnTo: returnTo);
     }
   }
 

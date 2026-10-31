@@ -261,10 +261,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seeAll => 'See all';
 
   @override
-  String get createEvent => 'Create event';
+  String get createEvent => 'Create Event';
 
   @override
   String get viewEvent => 'View Event';
+
+  @override
+  String get continueEditing => 'Continue Editing';
+
+  @override
+  String get publishStatusMismatch =>
+      'The event was not published as expected. You can continue editing.';
 
   @override
   String get members => 'members';
@@ -595,7 +602,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imageSelected => 'Image selected';
 
   @override
-  String get createDraft => 'Save draft';
+  String get createDraft => 'Save Draft';
 
   @override
   String get publishEvent => 'Publish event';
@@ -834,10 +841,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get eventSaved => 'Event saved as draft';
+  String get eventSaved => 'Draft saved successfully';
 
   @override
-  String get eventPublished => 'Event published — it\'s now discoverable';
+  String get eventPublished => 'Event published successfully';
 
   @override
   String get optional => 'Optional';

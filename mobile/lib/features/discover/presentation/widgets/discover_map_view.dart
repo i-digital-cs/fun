@@ -256,63 +256,17 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                     ),
                 ],
               ),
+            // Exact event pins first (under), city aggregates last (on top) so
+            // dense Cairo/New Cairo centroids remain tappable.
             MarkerLayer(
               markers: [
-                for (final c in mapState.clusters)
-                  Marker(
-                    point: LatLng(c.latitude, c.longitude),
-                    width: 44,
-                    height: 44,
-                    child: GestureDetector(
-                      onTap: () => _map.move(
-                        LatLng(c.latitude, c.longitude),
-                        c.expansionZoom.toDouble(),
-                      ),
-                      child: _ClusterBubble(count: c.count),
-                    ),
-                  ),
-                for (final a in mapState.cityAggregates)
-                  Marker(
-                    point: LatLng(a.latitude, a.longitude),
-                    width: a.isCluster ? 48 : 52,
-                    height: a.isCluster ? 48 : 52,
-                    child: GestureDetector(
-                      onTap: () {
-                        if (a.isCluster) {
-                          _map.move(
-                            LatLng(a.latitude, a.longitude),
-                            a.expansionZoom.toDouble(),
-                          );
-                          return;
-                        }
-                        _map.move(LatLng(a.latitude, a.longitude), 11);
-                        final query = ref.read(discoveryQueryControllerProvider);
-                        ref
-                            .read(discoverMapControllerProvider.notifier)
-                            .selectCityAggregate(
-                              a,
-                              categoryId: query.categoryId,
-                              q: query.normalizedQ,
-                            );
-                      },
-                      child: Tooltip(
-                        message: a.label ??
-                            '${a.cityName} · ${a.count} city-level',
-                        child: a.isCluster
-                            ? _ClusterBubble(count: a.count)
-                            : _CityAggregateBubble(
-                                count: a.count,
-                                name: a.cityName,
-                              ),
-                      ),
-                    ),
-                  ),
                 for (final m in mapState.markers)
                   Marker(
                     point: LatLng(m.latitude, m.longitude),
                     width: 36,
                     height: 36,
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => ref
                           .read(discoverMapControllerProvider.notifier)
                           .selectMarker(m),
@@ -345,6 +299,63 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                           boxShadow: const [
                             BoxShadow(blurRadius: 4, color: Color(0x44000000)),
                           ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            MarkerLayer(
+              markers: [
+                for (final c in mapState.clusters)
+                  Marker(
+                    point: LatLng(c.latitude, c.longitude),
+                    width: 48,
+                    height: 48,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _map.move(
+                        LatLng(c.latitude, c.longitude),
+                        c.expansionZoom.toDouble(),
+                      ),
+                      child: SizedBox.expand(
+                        child: Center(child: _ClusterBubble(count: c.count)),
+                      ),
+                    ),
+                  ),
+                for (final a in mapState.cityAggregates)
+                  Marker(
+                    point: LatLng(a.latitude, a.longitude),
+                    width: a.isCluster ? 56 : 60,
+                    height: a.isCluster ? 56 : 60,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        if (a.isCluster) {
+                          _map.move(
+                            LatLng(a.latitude, a.longitude),
+                            a.expansionZoom.toDouble(),
+                          );
+                          return;
+                        }
+                        _map.move(LatLng(a.latitude, a.longitude), 11);
+                        final query = ref.read(discoveryQueryControllerProvider);
+                        ref
+                            .read(discoverMapControllerProvider.notifier)
+                            .selectCityAggregate(
+                              a,
+                              categoryId: query.categoryId,
+                              q: query.normalizedQ,
+                            );
+                      },
+                      child: SizedBox.expand(
+                        child: Center(
+                          child: a.isCluster
+                              ? _ClusterBubble(count: a.count)
+                              : _CityAggregateBubble(
+                                  count: a.count,
+                                  name: a.cityName,
+                                ),
                         ),
                       ),
                     ),

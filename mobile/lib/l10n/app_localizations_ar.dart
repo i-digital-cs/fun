@@ -258,10 +258,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seeAll => 'عرض الكل';
 
   @override
-  String get createEvent => 'إنشاء فعالية';
+  String get createEvent => 'إنشاء الفعالية';
 
   @override
   String get viewEvent => 'عرض الفعالية';
+
+  @override
+  String get continueEditing => 'متابعة التحرير';
+
+  @override
+  String get publishStatusMismatch =>
+      'لم يتم نشر الفعالية كما هو متوقع. يمكنك متابعة التحرير.';
 
   @override
   String get members => 'أعضاء';
@@ -827,10 +834,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get eventSaved => 'تم حفظ الفعالية كمسودة';
+  String get eventSaved => 'تم حفظ المسودة بنجاح';
 
   @override
-  String get eventPublished => 'تم نشر الفعالية — أصبحت قابلة للاكتشاف الآن';
+  String get eventPublished => 'تم نشر الفعالية بنجاح';
 
   @override
   String get optional => 'اختياري';

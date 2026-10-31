@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
@@ -6,6 +9,7 @@ import 'package:fun_mobile/features/discover/presentation/discover_controller.da
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
 import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
+import 'package:fun_mobile/features/home/presentation/home_nearby_controller.dart';
 
 /// Place pin status keys mapped to l10n by the page (ARCH-GOD-CREATE-001).
 enum CreatePlaceStatus {
@@ -27,14 +31,38 @@ class CreateBootstrapResult {
   final EventItem? editEvent;
 }
 
+enum CreateSubmitOutcome {
+  /// Create/update succeeded; status matches intent.
+  published,
+  draft,
+
+  /// HTTP success but status does not match publish_intent (do not claim success).
+  unexpectedDraft,
+  unexpectedPublished,
+}
+
 class CreateSubmitResult {
-  const CreateSubmitResult({this.error, this.event, this.offerPublish = false});
+  const CreateSubmitResult({
+    this.error,
+    this.event,
+    this.outcome,
+    @Deprecated('Use outcome; dialog publish is no longer the primary path')
+    this.offerPublish = false,
+  });
 
   final String? error;
   final EventItem? event;
+  final CreateSubmitOutcome? outcome;
   final bool offerPublish;
 
-  bool get ok => error == null && event != null;
+  bool get ok =>
+      error == null &&
+      event != null &&
+      (outcome == CreateSubmitOutcome.published ||
+          outcome == CreateSubmitOutcome.draft);
+
+  bool get isPublished => outcome == CreateSubmitOutcome.published;
+  bool get isDraft => outcome == CreateSubmitOutcome.draft;
 }
 
 class CreateEventState {
@@ -129,6 +157,9 @@ class CreateEventController extends StateNotifier<CreateEventState> {
 
   /// `0` = create mode; positive = edit event id.
   final int eventId;
+
+  /// Sync lock so concurrent taps cannot both pass `state.submitting` before it flips.
+  bool _submitLocked = false;
 
   bool get isEdit => eventId > 0;
 
@@ -280,28 +311,89 @@ class CreateEventController extends StateNotifier<CreateEventState> {
     return nextUrl;
   }
 
+  /// Create or update. For create, [draft.publishIntent] drives OPTION A.
   Future<CreateSubmitResult> submit(EventDraft draft) async {
-    state = state.copyWith(submitting: true);
-    final repo = _ref.read(eventsRepositoryProvider);
-    final result = isEdit
-        ? await repo.update(eventId, draft)
-        : await repo.create(draft);
-    state = state.copyWith(submitting: false);
-    if (result.failure != null || result.data == null) {
-      return CreateSubmitResult(error: result.failure?.message ?? 'Error');
+    if (_submitLocked || state.submitting) {
+      return const CreateSubmitResult(error: 'Already submitting');
     }
-    final event = result.data!;
-    return CreateSubmitResult(
-      event: event,
-      offerPublish: !isEdit && event.isDraft,
-    );
+    _submitLocked = true;
+    state = state.copyWith(submitting: true, clearError: true);
+    try {
+      final repo = _ref.read(eventsRepositoryProvider);
+      final result = isEdit
+          ? await repo.update(eventId, draft.copyWith(publishIntent: false))
+          : await repo.create(draft);
+      if (result.failure != null || result.data == null) {
+        return CreateSubmitResult(
+          error: result.failure?.message ?? 'Error',
+        );
+      }
+      final event = result.data!;
+      if (isEdit) {
+        return CreateSubmitResult(
+          event: event,
+          outcome: event.isPublished
+              ? CreateSubmitOutcome.published
+              : CreateSubmitOutcome.draft,
+        );
+      }
+
+      final wantedPublish = draft.publishIntent;
+      if (wantedPublish) {
+        if (event.isPublished) {
+          _onPublishedFeeds();
+          return CreateSubmitResult(
+            event: event,
+            outcome: CreateSubmitOutcome.published,
+          );
+        }
+        // Do not claim published; draft may exist from partial server failure.
+        debugPrint(
+          'CreateEvent: publish_intent=true but status=${event.status} id=${event.id}',
+        );
+        return CreateSubmitResult(
+          event: event,
+          outcome: CreateSubmitOutcome.unexpectedDraft,
+          error: 'publish_intent_mismatch',
+        );
+      }
+
+      if (event.isDraft) {
+        return CreateSubmitResult(
+          event: event,
+          outcome: CreateSubmitOutcome.draft,
+        );
+      }
+      debugPrint(
+        'CreateEvent: publish_intent=false but status=${event.status} id=${event.id}',
+      );
+      return CreateSubmitResult(
+        event: event,
+        outcome: CreateSubmitOutcome.unexpectedPublished,
+        error: 'draft_intent_mismatch',
+      );
+    } finally {
+      _submitLocked = false;
+      if (mounted) {
+        state = state.copyWith(submitting: false);
+      }
+    }
+  }
+
+  void _onPublishedFeeds() {
+    _ref.read(discoverControllerProvider.notifier).markStale();
+    // Home nearby/soon feeds — best-effort; never block create success UX.
+    unawaited(() async {
+      try {
+        await _ref.read(homeNearbyControllerProvider.notifier).load();
+      } catch (_) {}
+    }());
   }
 
   Future<String?> publish(int id) async {
     final result = await _ref.read(eventsRepositoryProvider).publish(id);
     if (result.failure == null) {
-      // Newly published events must appear on Discover without a stale list.
-      _ref.read(discoverControllerProvider.notifier).markStale();
+      _onPublishedFeeds();
     }
     return result.failure?.message;
   }

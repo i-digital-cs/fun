@@ -42,7 +42,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   String? _draftWhen;
   bool _draftAllCities = true;
   bool _catalogLoaded = false;
-  final _headerVisible = ValueNotifier<bool>(true);
+  // Map-first: start collapsed so the map viewport is usable on phone.
+  final _headerVisible = ValueNotifier<bool>(false);
   double _lastScroll = 0;
   _DiscoverViewMode _viewMode = _DiscoverViewMode.map;
 
@@ -264,78 +265,110 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ValueListenableBuilder<bool>(
-              valueListenable: _headerVisible,
-              builder: (context, visible, child) {
-                return AnimatedSize(
-                  duration: const Duration(milliseconds: 160),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
-                  child: visible
-                      ? child!
-                      : const SizedBox(width: double.infinity),
-                );
-              },
-              // Web Explore V4: compact toolbar — Map/List in chrome, Create via
-              // bottom nav / sidebar only (not beside the title).
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.discoverTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
+            // Compact always-on Map/List control (never steals map viewport).
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _headerVisible,
+                      builder: (context, visible, _) {
+                        if (!visible) {
+                          return Text(
+                            l10n.discoverTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                  SegmentedButton<_DiscoverViewMode>(
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: WidgetStateProperty.all(
+                        const EdgeInsets.symmetric(horizontal: 10),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.discoverSub,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.muted,
+                    segments: const [
+                      ButtonSegment(
+                        value: _DiscoverViewMode.map,
+                        icon: Icon(Icons.map_outlined, size: 18),
+                        label: Text('Map'),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: SegmentedButton<_DiscoverViewMode>(
-                        style: ButtonStyle(
-                          visualDensity: VisualDensity.compact,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          padding: WidgetStateProperty.all(
-                            const EdgeInsets.symmetric(horizontal: 10),
-                          ),
-                        ),
-                        segments: const [
-                          ButtonSegment(
-                            value: _DiscoverViewMode.map,
-                            icon: Icon(Icons.map_outlined, size: 18),
-                            label: Text('Map'),
-                          ),
-                          ButtonSegment(
-                            value: _DiscoverViewMode.list,
-                            icon: Icon(Icons.view_list_outlined, size: 18),
-                            label: Text('List'),
-                          ),
-                        ],
-                        selected: {_viewMode},
-                        onSelectionChanged: (next) {
-                          setState(() => _viewMode = next.first);
-                        },
+                      ButtonSegment(
+                        value: _DiscoverViewMode.list,
+                        icon: Icon(Icons.view_list_outlined, size: 18),
+                        label: Text('List'),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                    selected: {_viewMode},
+                    onSelectionChanged: (next) {
+                      setState(() {
+                        _viewMode = next.first;
+                        // Map defaults to collapsed title chrome for viewport.
+                        if (_viewMode == _DiscoverViewMode.map) {
+                          _headerVisible.value = false;
+                        } else {
+                          _headerVisible.value = true;
+                        }
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
+            // List-only title/subtitle collapses on scroll; Map keeps viewport.
+            if (_viewMode == _DiscoverViewMode.list)
+              ValueListenableBuilder<bool>(
+                valueListenable: _headerVisible,
+                builder: (context, visible, child) {
+                  return AnimatedSize(
+                    duration: const Duration(milliseconds: 160),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: visible
+                        ? child!
+                        : const SizedBox(width: double.infinity),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.discoverTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.discoverSub,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // Location + search stay usable on Map and List (single SSOT field).
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: InkWell(
                 onTap: _useMyLocation,
                 borderRadius: BorderRadius.circular(14),
@@ -379,9 +412,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                 ),
               ),
             ),
-            // Shared search chrome for Map + List (SSOT via discoveryQuery).
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               child: TextField(
                 controller: _search,
                 textInputAction: TextInputAction.search,
@@ -713,17 +745,7 @@ class DiscoverFilterPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
-            controller: searchController,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => onApply(),
-            decoration: InputDecoration(
-              labelText: l10n.search,
-              hintText: l10n.heroActivityPh,
-              prefixIcon: const Icon(Icons.search),
-            ),
-          ),
-          const SizedBox(height: 12),
+          // Search lives in Discover chrome (Map+List SSOT) — avoid duplicate field.
           DropdownButtonFormField<int?>(
             // ignore: deprecated_member_use
             value: categoryId,
