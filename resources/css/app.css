@@ -4115,3 +4115,104 @@ html[data-page-loading='1'] {
     outline: 2px solid #ff762e;
     outline-offset: 2px;
 }
+
+/* —— Admin Dashboard V2.1 —— */
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/tajawal/Tajawal-400.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/tajawal/Tajawal-500.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/tajawal/Tajawal-700.ttf') format('truetype');
+}
+
+.admin-shell {
+    font-feature-settings: 'kern' 1;
+}
+
+html[lang^='ar'] .admin-shell,
+html[dir='rtl'] .admin-shell {
+    font-family: 'Tajawal', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+}
+
+.admin-shell .dash-sidebar {
+    padding-block: 1.25rem;
+}
+
+.admin-shell .dash-sidebar nav a {
+    min-height: 2.5rem;
+}
+
+.admin-dash-toolbar {
+    border: 1px solid #e8eaf2;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(25, 33, 61, 0.04);
+}
+
+.admin-kpi-primary {
+    min-height: 8.5rem;
+}
+
+.admin-kpi-secondary {
+    min-height: 4.75rem;
+}
+
+.admin-action-critical {
+    border-color: #fecaca;
+    background: linear-gradient(180deg, #fff5f5 0%, #fff 70%);
+}
+
+.admin-action-warning {
+    border-color: #fde68a;
+    background: linear-gradient(180deg, #fffbeb 0%, #fff 70%);
+}
+
+.admin-action-info {
+    border-color: #e8eaf2;
+    background: #fff;
+}
+
+.admin-activity-row {
+    min-height: 3.25rem;
+}
+
+.admin-chart-panel {
+    border: 1px solid #e8eaf2;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(25, 33, 61, 0.03);
+}
+
+.admin-chart-panel__canvas {
+    position: relative;
+    height: 14rem;
+    max-height: 14rem;
+    overflow: hidden;
+}
+
+.admin-chart-panel__canvas canvas {
+    display: block;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-shell a,
+    .admin-shell button {
+        transition: none !important;
+    }
+}

@@ -45,10 +45,10 @@ class AdminDashboardV2Test extends TestCase
             ->assertSee(__('admin.section_action'), false)
             ->assertSee(__('admin.section_activity'), false)
             ->assertSee(__('admin.section_events'), false)
-            ->assertSee(__('admin.section_social'), false)
-            ->assertSee(__('admin.section_users'), false)
+            ->assertSee(__('admin.section_users_social'), false)
             ->assertSee(__('admin.section_geo'), false)
             ->assertSee(__('admin.section_health'), false)
+            ->assertSee(__('admin.kpi_secondary_title'), false)
             ->assertDontSee('private message body should never appear', false);
     }
 
