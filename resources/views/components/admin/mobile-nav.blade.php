@@ -13,12 +13,11 @@
         @php $active = request()->routeIs($link['match']); @endphp
         <a href="{{ route($link['route']) }}"
            @class([
-               'flex min-h-11 min-w-[3.5rem] flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-semibold no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7138F5]/40',
-               'font-extrabold text-[#7138F5]' => $active,
+               'flex flex-col items-center gap-0.5 px-1 text-[9px] font-semibold no-underline',
+               'font-extrabold text-indigo-600' => $active,
                'text-slate-500' => ! $active,
-           ])
-           @if ($active) aria-current="page" @endif>
-            <span class="truncate max-w-[4.5rem]">{{ $link['label'] }}</span>
+           ])>
+            <span class="truncate">{{ $link['label'] }}</span>
         </a>
     @endforeach
 </nav>
