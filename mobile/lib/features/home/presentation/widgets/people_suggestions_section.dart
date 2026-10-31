@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
@@ -53,7 +55,7 @@ class PeopleSuggestionsController extends StateNotifier<PeopleSuggestionsState> 
     if (result.failure != null) {
       state = state.copyWith(
         isLoading: false,
-        error: result.failure!.message,
+        error: failureUserMessage(result.failure!),
         items: const [],
       );
       return;
@@ -211,7 +213,7 @@ class PeopleSuggestionsSection extends ConsumerWidget {
                   final item = state.items[i];
                   return PeopleSuggestionCard(
                     user: item,
-                    onProfile: () => context.push('/u/${item.publicId}'),
+                    onProfile: () => pushPublicProfile(context, item.publicId),
                     onAdd: item.friendship.canRequest
                         ? () async {
                             final err = await ref

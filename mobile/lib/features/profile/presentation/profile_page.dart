@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/rtl.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
@@ -99,7 +100,7 @@ class ProfilePage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton(
-                      onPressed: () => context.push('/u/${user.publicId}'),
+                      onPressed: () => pushPublicProfile(context, user.publicId),
                       child: Text(l10n.openPublicProfile),
                     ),
                   ],

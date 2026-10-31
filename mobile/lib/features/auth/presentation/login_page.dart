@@ -118,14 +118,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       setState(() {
         _submitting = false;
         if (e.code != AuthorizationErrorCode.canceled) {
-          _error = e.message;
+          _error = AppLocalizations.of(context).errorGeneric;
         }
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = e.toString();
+        _error = AppLocalizations.of(context).errorGeneric;
       });
     }
   }

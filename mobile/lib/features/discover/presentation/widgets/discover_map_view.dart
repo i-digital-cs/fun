@@ -179,8 +179,21 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              // OSM requires an identifying UA; flutter_map prefixes
+              // `flutter_map (<package>)`.
               userAgentPackageName: 'com.funnity.app',
               maxZoom: 19,
+              errorTileCallback: (tile, error, stackTrace) {
+                // Surface tile failures (gray map) in logcat — not a UX change.
+                assert(() {
+                  // ignore: avoid_print
+                  print(
+                    'FUNNITY_MAP_TILE_ERROR z=${tile.coordinates.z} '
+                    'x=${tile.coordinates.x} y=${tile.coordinates.y} err=$error',
+                  );
+                  return true;
+                }());
+              },
             ),
             if ((loc.hasDeviceFix ||
                     (loc.mode == DiscoveryLocationMode.manual &&

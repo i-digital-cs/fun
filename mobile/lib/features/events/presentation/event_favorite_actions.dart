@@ -1,3 +1,4 @@
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 
@@ -20,7 +21,7 @@ Future<({List<EventItem> items, String? error})> toggleFavoriteInList({
 
   final result = await repository.toggleFavorite(eventId);
   if (result.failure != null) {
-    return (items: items, error: result.failure!.message);
+    return (items: items, error: failureUserMessage(result.failure!));
   }
 
   final favorited = result.data ?? !previous;

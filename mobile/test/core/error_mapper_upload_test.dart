@@ -30,6 +30,9 @@ void main() {
       expect(mapStatus(422), isA<ValidationFailure>());
       expect(mapStatus(429), isA<RateLimitFailure>());
       expect(mapStatus(500), isA<ServerFailure>());
+      // Status payloads must not leak Laravel "m$status" copy into UI defaults.
+      expect(failureUserMessage(mapStatus(404)), isNot(contains('m404')));
+      expect(failureUserMessage(mapStatus(500)), isNot(contains('m500')));
     });
 
     test('failureUserMessage prefers first validation field error', () {

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:fun_mobile/core/identity/user_public_id.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:go_router/go_router.dart';
 
@@ -126,8 +127,12 @@ String? sanitizeReturnTo(String? raw) {
     return uri.hasQuery ? '$path?${uri.query}' : path;
   }
 
-  if (path.startsWith('/u/') && path.length > 3) {
-    return uri.hasQuery ? '$path?${uri.query}' : path;
+  if (path.startsWith('/u/')) {
+    final id = UserPublicId.normalize(Uri.decodeComponent(path.substring(3)));
+    if (id != null) {
+      final safePath = '/u/$id';
+      return uri.hasQuery ? '$safePath?${uri.query}' : safePath;
+    }
   }
 
   if (RegExp(r'^/dms/\d+$').hasMatch(path)) {
@@ -215,4 +220,13 @@ void openAppPath(BuildContext context, String path) {
     return;
   }
   context.go(safe);
+}
+
+/// Opens `/u/{publicId}` only when [publicId] matches Laravel `Funity-F######`.
+/// Returns `false` when the id is missing/invalid (no navigation).
+bool pushPublicProfile(BuildContext context, String? publicId) {
+  final id = UserPublicId.normalize(publicId);
+  if (id == null) return false;
+  context.push('/u/$id');
+  return true;
 }

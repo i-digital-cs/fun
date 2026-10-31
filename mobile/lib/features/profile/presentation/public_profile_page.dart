@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
+import 'package:fun_mobile/core/widgets/async_body.dart';
 import 'package:fun_mobile/core/widgets/fun_confirm_dialog.dart';
-import 'package:fun_mobile/core/widgets/fun_loader.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile.dart';
@@ -36,6 +37,13 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     _load();
   }
 
+  String _userError(Failure failure) {
+    final l10n = AppLocalizations.of(context);
+    if (failure is NotFoundFailure) return l10n.profileUnavailable;
+    if (failure is NetworkFailure) return l10n.errorProfileLoad;
+    return localizedFailureMessage(l10n, failure);
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -48,10 +56,13 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     setState(() {
       _loading = false;
       if (result.failure != null) {
-        _error = result.failure!.message;
+        _error = _userError(result.failure!);
         _profile = null;
       } else {
         _profile = result.data;
+        if (_profile == null) {
+          _error = AppLocalizations.of(context).profileUnavailable;
+        }
       }
     });
   }
@@ -65,7 +76,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     setState(() => _friendAction = false);
     if (result.failure != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure!.message)),
+        SnackBar(content: Text(_userError(result.failure!))),
       );
       return;
     }
@@ -80,8 +91,15 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     if (!mounted) return;
     setState(() => _friendAction = false);
     if (result.failure != null || result.data == null) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failure?.message ?? 'Error')),
+        SnackBar(
+          content: Text(
+            result.failure != null
+                ? _userError(result.failure!)
+                : l10n.errorGeneric,
+          ),
+        ),
       );
       return;
     }
@@ -103,7 +121,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
     setState(() => _blocking = false);
     if (result.failure != null) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(result.failure!.message)));
+          .showSnackBar(SnackBar(content: Text(_userError(result.failure!))));
       return;
     }
     ScaffoldMessenger.of(context)
@@ -140,13 +158,24 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
             ),
         ],
       ),
-      body: _loading
-          ? const Center(child: FunLoader())
-          : _error != null
-          ? Center(child: Text(_error!))
-          : profile == null
-          ? Center(child: Text(l10n.profileNotFound))
-          : ListView(
+      body: AsyncBody(
+        isLoading: _loading,
+        error: _error,
+        onRetry: _load,
+        isEmpty: !_loading && _error == null && profile == null,
+        empty: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              l10n.profileUnavailable,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.muted),
+            ),
+          ),
+        ),
+        child: profile == null
+            ? const SizedBox.shrink()
+            : ListView(
               padding: const EdgeInsets.all(20),
               children: [
                 PublicProfileCard(profile: profile),
@@ -246,6 +275,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
                 ],
               ],
             ),
+      ),
     );
   }
 

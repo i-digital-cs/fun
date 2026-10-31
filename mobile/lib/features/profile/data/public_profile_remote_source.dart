@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/core/identity/user_public_id.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
 import 'package:fun_mobile/features/friends/domain/friendship_state.dart';
 import 'package:fun_mobile/features/profile/domain/public_profile.dart';
@@ -13,9 +14,16 @@ class PublicProfileRemoteSource {
   Future<({Failure? failure, PublicProfile? data})> show(
     String publicId,
   ) async {
+    final id = UserPublicId.normalize(publicId);
+    if (id == null) {
+      // Invalid id never matches Laravel `Funity-F######` route constraint —
+      // skip the call so we don't surface "The route api/users/… could not be found."
+      return (failure: const NotFoundFailure(), data: null);
+    }
+
     try {
       final response = await _client.dio.get<Map<String, dynamic>>(
-        '/users/$publicId',
+        '/users/${Uri.encodeComponent(id)}',
       );
       final body = response.data!;
       final data = body['data'] as Map<String, dynamic>? ?? body;
@@ -42,7 +50,7 @@ class PublicProfileRemoteSource {
         failure: null,
         data: PublicProfile(
           id: data['id'] as int?,
-          publicId: data['public_id'] as String? ?? publicId,
+          publicId: data['public_id'] as String? ?? id,
           name: data['name'] as String? ?? '',
           initials: data['initials'] as String? ?? '?',
           profileImagePath: data['profile_image_path'] as String?,
@@ -63,6 +71,8 @@ class PublicProfileRemoteSource {
       );
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
+    } catch (e) {
+      return (failure: mapUnexpectedError(e), data: null);
     }
   }
 }

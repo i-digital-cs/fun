@@ -794,6 +794,48 @@ abstract class AppLocalizations {
   /// **'Please log in to continue.'**
   String get errorUnauthorized;
 
+  /// No description provided for @errorForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have access to this.'**
+  String get errorForbidden;
+
+  /// No description provided for @errorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find what you were looking for.'**
+  String get errorNotFound;
+
+  /// No description provided for @errorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The request timed out. Please try again.'**
+  String get errorTimeout;
+
+  /// No description provided for @errorRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Please wait a moment.'**
+  String get errorRateLimit;
+
+  /// No description provided for @errorConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'That action couldn\'t be completed. Please try again.'**
+  String get errorConflict;
+
+  /// No description provided for @errorProfileLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this profile. Check your connection and try again.'**
+  String get errorProfileLoad;
+
+  /// No description provided for @profileUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile is no longer available.'**
+  String get profileUnavailable;
+
   /// No description provided for @validationRequired.
   ///
   /// In en, this message translates to:

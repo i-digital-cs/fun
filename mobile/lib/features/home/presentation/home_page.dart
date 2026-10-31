@@ -40,6 +40,11 @@ class _HomePageState extends ConsumerState<HomePage> {
       await ref.read(homeNearbyControllerProvider.notifier).load();
       if (!mounted) return;
       await ref.read(peopleSuggestionsControllerProvider.notifier).load();
+      // Emulator QA only: --dart-define=QA_OPEN_PROFILE=<id>
+      const qaProfile = String.fromEnvironment('QA_OPEN_PROFILE');
+      if (qaProfile.isNotEmpty && mounted) {
+        context.push('/u/$qaProfile');
+      }
     });
   }
 

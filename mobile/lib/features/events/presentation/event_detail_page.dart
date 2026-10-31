@@ -585,7 +585,7 @@ class EventHostCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: publicId != null && publicId.isNotEmpty
-            ? () => context.push('/u/$publicId')
+            ? () => pushPublicProfile(context, publicId)
             : null,
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -713,7 +713,7 @@ class CreatorRatingSection extends StatelessWidget {
             const SizedBox(height: 10),
             InkWell(
               onTap: publicId != null && publicId.isNotEmpty
-                  ? () => context.push('/u/$publicId')
+                  ? () => pushPublicProfile(context, publicId)
                   : null,
               borderRadius: BorderRadius.circular(12),
               child: Row(

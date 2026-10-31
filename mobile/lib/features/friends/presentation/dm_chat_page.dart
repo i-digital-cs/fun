@@ -8,6 +8,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/identity/user_public_id.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/utils/upload_validator.dart';
@@ -18,7 +21,6 @@ import 'package:fun_mobile/features/friends/domain/dm_models.dart';
 import 'package:fun_mobile/features/friends/domain/dms_repository.dart';
 import 'package:fun_mobile/features/site/data/site_remote_source.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
@@ -239,7 +241,7 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
       setState(() => _sendFailed = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.failure!.message),
+          content: Text(failureUserMessage(result.failure!)),
           action: SnackBarAction(
             label: AppLocalizations.of(context).retry,
             onPressed: () {
@@ -494,8 +496,9 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
         .read(dmsRepositoryProvider)
         .react(widget.conversationId, message.id, emoji);
     if (!mounted || result.failure == null) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(result.failure!.message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(failureUserMessage(result.failure!))),
+    );
   }
 
   void _jumpTo(int messageId) {
@@ -537,9 +540,9 @@ class _DmChatPageState extends ConsumerState<DmChatPage> {
           ],
         ),
         actions: [
-          if (_peerPublicId != null)
+          if (UserPublicId.isValid(_peerPublicId))
             TextButton(
-              onPressed: () => context.push('/u/$_peerPublicId'),
+              onPressed: () => pushPublicProfile(context, _peerPublicId),
               child: Text(l10n.publicProfile),
             ),
         ],

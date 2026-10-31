@@ -374,6 +374,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorUnauthorized => 'سجّل الدخول للمتابعة.';
 
   @override
+  String get errorForbidden => 'ليس لديك صلاحية للوصول إلى هذا.';
+
+  @override
+  String get errorNotFound => 'تعذر العثور على ما تبحث عنه.';
+
+  @override
+  String get errorTimeout => 'انتهت مهلة الطلب. حاول مرة أخرى.';
+
+  @override
+  String get errorRateLimit => 'طلبات كثيرة. انتظر لحظة ثم حاول.';
+
+  @override
+  String get errorConflict => 'تعذر إكمال هذا الإجراء. حاول مرة أخرى.';
+
+  @override
+  String get errorProfileLoad =>
+      'تعذر تحميل هذا الملف. تحقق من الاتصال وحاول مرة أخرى.';
+
+  @override
+  String get profileUnavailable => 'هذا الملف لم يعد متاحاً.';
+
+  @override
   String get validationRequired => 'هذا الحقل مطلوب';
 
   @override

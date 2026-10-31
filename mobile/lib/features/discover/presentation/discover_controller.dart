@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
@@ -102,7 +103,9 @@ class DiscoverController extends StateNotifier<DiscoverState> {
       state = state.copyWith(
         isLoading: false,
         isSearching: false,
-        error: result.failure?.message,
+        error: result.failure != null
+            ? failureUserMessage(result.failure!)
+            : null,
         hasMore: append ? false : state.hasMore,
         clearSuggestion: !append,
       );

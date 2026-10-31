@@ -377,6 +377,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorUnauthorized => 'Please log in to continue.';
 
   @override
+  String get errorForbidden => 'You don\'t have access to this.';
+
+  @override
+  String get errorNotFound => 'We couldn\'t find what you were looking for.';
+
+  @override
+  String get errorTimeout => 'The request timed out. Please try again.';
+
+  @override
+  String get errorRateLimit => 'Too many requests. Please wait a moment.';
+
+  @override
+  String get errorConflict =>
+      'That action couldn\'t be completed. Please try again.';
+
+  @override
+  String get errorProfileLoad =>
+      'Couldn\'t load this profile. Check your connection and try again.';
+
+  @override
+  String get profileUnavailable => 'This profile is no longer available.';
+
+  @override
   String get validationRequired => 'This field is required';
 
   @override

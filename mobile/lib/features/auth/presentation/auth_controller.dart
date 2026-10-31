@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
@@ -64,8 +65,13 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     // Keep token on network/server blips — do not fake logout.
-    state = AuthSessionRestoreFailed(failure?.message);
+    state = AuthSessionRestoreFailed(
+      failure != null ? failureUserMessage(failure) : null,
+    );
   }
+
+  String? _safeError(Failure? failure) =>
+      failure == null ? null : failureUserMessage(failure);
 
   /// Apply a deferred session after the access theater finishes.
   void commitPendingSession() {
@@ -99,7 +105,7 @@ class AuthController extends StateNotifier<AuthState> {
         .read(authRepositoryProvider)
         .login(email: email, password: password);
     if (result.failure != null || result.data == null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     _applyUser(result.data!, commitSession: commitSession);
     return null;
@@ -118,7 +124,7 @@ class AuthController extends StateNotifier<AuthState> {
           locale: locale,
         );
     if (result.failure != null || result.data == null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     state = Authenticated(result.data!);
     return null;
@@ -133,7 +139,7 @@ class AuthController extends StateNotifier<AuthState> {
         .read(authRepositoryProvider)
         .loginWithApple(idToken: idToken, name: name, locale: locale);
     if (result.failure != null || result.data == null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     state = Authenticated(result.data!);
     return null;
@@ -150,7 +156,7 @@ class AuthController extends StateNotifier<AuthState> {
           providerReauth: providerReauth,
         );
     if (result.failure != null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     await logout();
     return null;
@@ -161,7 +167,7 @@ class AuthController extends StateNotifier<AuthState> {
         .read(authRepositoryProvider)
         .cancelAccountDeletion();
     if (result.failure != null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     await refreshMe();
     return null;
@@ -187,7 +193,7 @@ class AuthController extends StateNotifier<AuthState> {
           locale: locale,
         );
     if (result.failure != null || result.data == null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     _applyUser(result.data!, commitSession: commitSession);
     return null;
@@ -196,7 +202,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<String?> verifyEmail(String code, {bool commitSession = true}) async {
     final result = await _ref.read(authRepositoryProvider).verifyEmail(code);
     if (result.failure != null || result.data == null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     _applyUser(result.data!, commitSession: commitSession);
     return null;
@@ -204,7 +210,7 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<String?> resendEmailVerify() async {
     final result = await _ref.read(authRepositoryProvider).resendEmailVerify();
-    return result.failure?.message;
+    return _safeError(result.failure);
   }
 
   Future<({String? error, String? email})> forgotPassword(String email) async {
@@ -212,7 +218,7 @@ class AuthController extends StateNotifier<AuthState> {
         .read(authRepositoryProvider)
         .forgotPassword(email);
     if (result.failure != null) {
-      return (error: result.failure!.message, email: null);
+      return (error: failureUserMessage(result.failure!), email: null);
     }
     return (error: null, email: result.data);
   }
@@ -226,7 +232,7 @@ class AuthController extends StateNotifier<AuthState> {
         .verifyResetCode(email: email, code: code);
     if (result.failure != null || result.data == null) {
       return (
-        error: result.failure?.message ?? 'Invalid code',
+        error: _safeError(result.failure) ?? 'Invalid code',
         resetToken: null,
       );
     }
@@ -249,7 +255,7 @@ class AuthController extends StateNotifier<AuthState> {
           passwordConfirmation: passwordConfirmation,
         );
     if (result.failure != null || result.data == null) {
-      return result.failure?.message;
+      return _safeError(result.failure);
     }
     _applyUser(result.data!, commitSession: commitSession);
     return null;

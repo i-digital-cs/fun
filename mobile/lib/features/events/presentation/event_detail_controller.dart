@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
@@ -100,7 +101,7 @@ class EventDetailController extends StateNotifier<EventDetailState> {
     if (detailResult.failure != null) {
       state = state.copyWith(
         isLoading: false,
-        error: detailResult.failure!.message,
+        error: failureUserMessage(detailResult.failure!),
         clearDetail: true,
       );
       return;
@@ -142,7 +143,7 @@ class EventDetailController extends StateNotifier<EventDetailState> {
           event: detail.event.copyWith(isFavorited: previous),
         ),
       );
-      return EventDetailMutation(error: result.failure!.message);
+      return EventDetailMutation(error: failureUserMessage(result.failure!));
     }
 
     final favorited = result.data ?? !previous;
@@ -165,35 +166,47 @@ class EventDetailController extends StateNotifier<EventDetailState> {
     }
     return _mutate(() async {
       final result = await _ref.read(eventsRepositoryProvider).join(eventId);
-      return result.failure?.message;
+      return result.failure == null
+          ? null
+          : failureUserMessage(result.failure!);
     });
   }
 
   Future<EventDetailMutation> leave() => _mutate(() async {
     final result = await _ref.read(eventsRepositoryProvider).leave(eventId);
-    return result.failure?.message;
+    return result.failure == null
+        ? null
+        : failureUserMessage(result.failure!);
   });
 
   Future<EventDetailMutation> cancelJoinRequest() => _mutate(() async {
     final result = await _ref
         .read(eventsRepositoryProvider)
         .cancelJoinRequest(eventId);
-    return result.failure?.message;
+    return result.failure == null
+        ? null
+        : failureUserMessage(result.failure!);
   });
 
   Future<EventDetailMutation> publish() => _mutate(() async {
     final result = await _ref.read(eventsRepositoryProvider).publish(eventId);
-    return result.failure?.message;
+    return result.failure == null
+        ? null
+        : failureUserMessage(result.failure!);
   }, successMessageKey: 'eventPublished');
 
   Future<EventDetailMutation> cancelEvent() => _mutate(() async {
     final result = await _ref.read(eventsRepositoryProvider).cancel(eventId);
-    return result.failure?.message;
+    return result.failure == null
+        ? null
+        : failureUserMessage(result.failure!);
   });
 
   Future<EventDetailMutation> completeEvent() => _mutate(() async {
     final result = await _ref.read(eventsRepositoryProvider).complete(eventId);
-    return result.failure?.message;
+    return result.failure == null
+        ? null
+        : failureUserMessage(result.failure!);
   });
 
   Future<EventDetailMutation> blockCreator() async {
@@ -201,7 +214,7 @@ class EventDetailController extends StateNotifier<EventDetailState> {
     if (creatorId == null) return const EventDetailMutation();
     final result = await _ref.read(safetyRepositoryProvider).block(creatorId);
     if (result.failure != null) {
-      return EventDetailMutation(error: result.failure!.message);
+      return EventDetailMutation(error: failureUserMessage(result.failure!));
     }
     return const EventDetailMutation(successMessageKey: 'userBlocked');
   }

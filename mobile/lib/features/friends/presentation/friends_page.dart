@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/widgets/app_network_image.dart';
 import 'package:fun_mobile/core/widgets/fun_loader.dart';
@@ -228,7 +229,7 @@ class _FriendsList extends ConsumerWidget {
               final friend = friends[index];
               return _FriendRow(
                 user: friend,
-                onOpenProfile: () => context.push('/u/${friend.publicId}'),
+                onOpenProfile: () => pushPublicProfile(context, friend.publicId),
                 onMessage: () => _openDm(context, ref, friend.id),
                 onUnfriend: () => _unfriend(context, ref, friend, onChanged),
               );
@@ -363,7 +364,7 @@ class _RequestRow extends ConsumerWidget {
         leading: _Avatar(user: user),
         title: Text(user.name),
         subtitle: Text(user.publicId),
-        onTap: () => context.push('/u/${user.publicId}'),
+        onTap: () => pushPublicProfile(context, user.publicId),
         trailing: incoming
             ? Wrap(
                 spacing: 6,
@@ -450,7 +451,7 @@ class _FriendSearchRow extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: InkWell(
-                onTap: () => context.push('/u/${user.publicId}'),
+                onTap: () => pushPublicProfile(context, user.publicId),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

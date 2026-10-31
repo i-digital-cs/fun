@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/discover/data/discover_map_remote.dart';
 import 'package:fun_mobile/features/discover/domain/map_discovery.dart';
@@ -93,7 +94,10 @@ class DiscoverMapController extends StateNotifier<DiscoverMapState> {
     );
     if (id != _requestId) return;
     if (result.failure != null) {
-      state = state.copyWith(isLoading: false, error: result.failure!.message);
+      state = state.copyWith(
+        isLoading: false,
+        error: failureUserMessage(result.failure!),
+      );
       return;
     }
     state = state.copyWith(
@@ -148,7 +152,10 @@ class DiscoverMapController extends StateNotifier<DiscoverMapState> {
       q: q,
     );
     if (result.failure != null) {
-      state = state.copyWith(isLoading: false, error: result.failure!.message);
+      state = state.copyWith(
+        isLoading: false,
+        error: failureUserMessage(result.failure!),
+      );
       return;
     }
     state = DiscoverMapState(

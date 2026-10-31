@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
+import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/core/utils/bidi_text.dart';
 import 'package:fun_mobile/core/utils/upload_validator.dart';
@@ -534,9 +535,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
   }
 
   void _openProfile(ChatMessage message) {
-    final publicId = message.userPublicId;
-    if (publicId == null || publicId.isEmpty) return;
-    context.push('/u/$publicId');
+    pushPublicProfile(context, message.userPublicId);
   }
 
   Future<void> _onMessageActions(ChatMessage message) async {
@@ -677,10 +676,7 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
               color: AppColors.surface,
               child: InkWell(
                 onTap: () {
-                  final publicId = _host!.publicId?.trim();
-                  if (publicId != null && publicId.isNotEmpty) {
-                    context.push('/u/$publicId');
-                  }
+                  pushPublicProfile(context, _host!.publicId);
                 },
                 child: Container(
                   width: double.infinity,
@@ -1371,7 +1367,7 @@ class _ReactionsSheetState extends State<_ReactionsSheet> {
                       onTap: publicId != null && publicId.isNotEmpty
                           ? () {
                               Navigator.pop(context);
-                              context.push('/u/$publicId');
+                              pushPublicProfile(context, publicId);
                             }
                           : null,
                     );
