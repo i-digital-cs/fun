@@ -1,0 +1,190 @@
+{
+  "_meta": {
+    "notice": "PROTOTYPE FIXTURE DATA ONLY — not live production metrics. Aggregates inspired by documented V2 analytics shape. No private user content. Language switch must not change totals.",
+    "source": "Synthetic for Admin V3.1 design review"
+  },
+  "periods": {
+    "today": {
+      "label_en": "Today",
+      "label_ar": "اليوم",
+      "range_en": "31 Oct 2026",
+      "range_ar": "٣١ أكتوبر ٢٠٢٦",
+      "days": ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00"],
+      "events_per_day": [0, 1, 0, 2, 1, 0],
+      "participants_per_day": [0, 2, 1, 3, 2, 1],
+      "users_per_day": [1, 2, 1, 3, 2, 1],
+      "kpis": {
+        "total_users": 12840,
+        "new_users": 18,
+        "new_users_delta": 4,
+        "published_events": 962,
+        "participants": 47,
+        "participants_delta": 9,
+        "events_created": 6,
+        "events_created_delta": 1,
+        "session_active": 214,
+        "session_active_delta": -12,
+        "active_accounts": 11002,
+        "pending_reports": 3
+      }
+    },
+    "7d": {
+      "label_en": "Last 7 days",
+      "label_ar": "آخر ٧ أيام",
+      "range_en": "25 Oct → 31 Oct 2026",
+      "range_ar": "٢٥ أكتوبر → ٣١ أكتوبر ٢٠٢٦",
+      "days": ["25", "26", "27", "28", "29", "30", "31"],
+      "events_per_day": [4, 6, 3, 8, 5, 9, 6],
+      "participants_per_day": [18, 22, 14, 31, 24, 40, 27],
+      "users_per_day": [22, 28, 19, 35, 26, 41, 30],
+      "kpis": {
+        "total_users": 12840,
+        "new_users": 201,
+        "new_users_delta": 18,
+        "published_events": 962,
+        "participants": 176,
+        "participants_delta": 24,
+        "events_created": 41,
+        "events_created_delta": 5,
+        "session_active": 1840,
+        "session_active_delta": 62,
+        "active_accounts": 11002,
+        "pending_reports": 3
+      }
+    },
+    "30d": {
+      "label_en": "Last 30 days",
+      "label_ar": "آخر ٣٠ يوماً",
+      "range_en": "2 Oct → 31 Oct 2026",
+      "range_ar": "٢ أكتوبر → ٣١ أكتوبر ٢٠٢٦",
+      "days": ["W1", "W2", "W3", "W4"],
+      "events_per_day": [28, 34, 31, 41],
+      "participants_per_day": [120, 148, 132, 176],
+      "users_per_day": [160, 190, 175, 201],
+      "kpis": {
+        "total_users": 12840,
+        "new_users": 726,
+        "new_users_delta": 54,
+        "published_events": 962,
+        "participants": 576,
+        "participants_delta": 48,
+        "events_created": 134,
+        "events_created_delta": 11,
+        "session_active": 6120,
+        "session_active_delta": 210,
+        "active_accounts": 11002,
+        "pending_reports": 3
+      }
+    },
+    "90d": {
+      "label_en": "Last 90 days",
+      "label_ar": "آخر ٩٠ يوماً",
+      "range_en": "3 Aug → 31 Oct 2026",
+      "range_ar": "٣ أغسطس → ٣١ أكتوبر ٢٠٢٦",
+      "days": ["Aug", "Sep", "Oct"],
+      "events_per_day": [98, 112, 134],
+      "participants_per_day": [420, 510, 576],
+      "users_per_day": [580, 640, 726],
+      "kpis": {
+        "total_users": 12840,
+        "new_users": 1946,
+        "new_users_delta": 120,
+        "published_events": 962,
+        "participants": 1506,
+        "participants_delta": 90,
+        "events_created": 344,
+        "events_created_delta": 28,
+        "session_active": 14820,
+        "session_active_delta": 430,
+        "active_accounts": 11002,
+        "pending_reports": 3
+      }
+    }
+  },
+  "actions": [
+    {
+      "key": "pending_reports",
+      "count": 3,
+      "tier": "critical",
+      "label_en": "Pending reports",
+      "label_ar": "بلاغات معلّقة",
+      "desc_en": "User, event, or message reports waiting for moderation.",
+      "desc_ar": "بلاغات مستخدم أو فعالية أو رسالة بانتظار المراجعة."
+    },
+    {
+      "key": "pending_identity",
+      "count": 48,
+      "tier": "warning",
+      "label_en": "Pending identity users",
+      "label_ar": "مستخدمو الهوية المعلّقون",
+      "desc_en": "Accounts still in pending_documents — operational backlog, not an incident by default.",
+      "desc_ar": "حسابات ما زالت بحالة pending_documents — تراكم تشغيلي وليس حادثاً افتراضياً."
+    },
+    {
+      "key": "failed_jobs",
+      "count": 0,
+      "tier": "ok",
+      "label_en": "Failed queue jobs",
+      "label_ar": "مهام الطابور الفاشلة",
+      "desc_en": "Jobs in failed_jobs. Exception details are never shown here.",
+      "desc_ar": "مهام في failed_jobs. تفاصيل الاستثناء لا تُعرض هنا أبداً."
+    },
+    {
+      "key": "draft_events",
+      "count": 27,
+      "tier": "info",
+      "label_en": "Draft events",
+      "label_ar": "فعاليات مسودة",
+      "desc_en": "Host drafts only — not a publish-approval queue.",
+      "desc_ar": "مسودات المضيفين فقط — ليست قائمة موافقة على النشر."
+    }
+  ],
+  "event_status": {
+    "draft": 27,
+    "published": 962,
+    "cancelled": 41,
+    "completed": 318
+  },
+  "activity": [
+    { "type": "UR", "type_en": "User registered", "type_ar": "تسجيل مستخدم", "title_en": "Noura A.", "title_ar": "نورة أ.", "at": "2026-10-31 11:42", "status": "active" },
+    { "type": "EV", "type_en": "Event created", "type_ar": "إنشاء فعالية", "title_en": "Friday Board Games", "title_ar": "ألعاب الطاولة الجمعة", "at": "2026-10-31 11:18", "status": "published" },
+    { "type": "RP", "type_en": "Report submitted", "type_ar": "بلاغ مقدَّم", "title_en": "Report · spam", "title_ar": "بلاغ · رسائل مزعجة", "at": "2026-10-31 10:55", "status": "pending" },
+    { "type": "FR", "type_en": "Friendship accepted", "type_ar": "قبول صداقة", "title_en": "Samir ↔ Lina", "title_ar": "سمير ↔ لينا", "at": "2026-10-31 10:12", "status": "accepted" },
+    { "type": "EV", "type_en": "Event created", "type_ar": "إنشاء فعالية", "title_en": "Sunrise Run — Maadi", "title_ar": "جري الشروق — المعادي", "at": "2026-10-31 09:40", "status": "draft" },
+    { "type": "UR", "type_en": "User registered", "type_ar": "تسجيل مستخدم", "title_en": "Karim H.", "title_ar": "كريم ح.", "at": "2026-10-31 09:05", "status": "pending_documents" },
+    { "type": "AD", "type_en": "Admin action", "type_ar": "إجراء إداري", "title_en": "Category updated", "title_ar": "تحديث فئة", "at": "2026-10-30 18:22", "status": "audit" },
+    { "type": "EV", "type_en": "Event created", "type_ar": "إنشاء فعالية", "title_en": "Design Crit Circle", "title_ar": "حلقة نقد التصميم", "at": "2026-10-30 16:08", "status": "published" }
+  ],
+  "recent_events": [
+    { "title_en": "Friday Board Games", "title_ar": "ألعاب الطاولة الجمعة", "organizer_en": "Mona S.", "organizer_ar": "منى س.", "city_en": "Cairo", "city_ar": "القاهرة", "starts": "2026-11-07 19:00", "status": "published", "members": 12 },
+    { "title_en": "Sunrise Run — Maadi", "title_ar": "جري الشروق — المعادي", "organizer_en": "Youssef K.", "organizer_ar": "يوسف ك.", "city_en": "Cairo", "city_ar": "القاهرة", "starts": "2026-11-02 06:30", "status": "draft", "members": 3 },
+    { "title_en": "Design Crit Circle", "title_ar": "حلقة نقد التصميم", "organizer_en": "Hana R.", "organizer_ar": "هناء ر.", "city_en": "Giza", "city_ar": "الجيزة", "starts": "2026-11-05 18:00", "status": "published", "members": 8 },
+    { "title_en": "Arabic Book Club", "title_ar": "نادي الكتاب العربي", "organizer_en": "Omar T.", "organizer_ar": "عمر ط.", "city_en": "Alexandria", "city_ar": "الإسكندرية", "starts": "2026-11-09 17:30", "status": "published", "members": 15 },
+    { "title_en": "Coastal Photography Walk", "title_ar": "جولة تصوير ساحلية", "organizer_en": "Dina M.", "organizer_ar": "دينا م.", "city_en": "Alexandria", "city_ar": "الإسكندرية", "starts": "2026-11-12 16:00", "status": "published", "members": 9 }
+  ],
+  "social": {
+    "friend_requests": 86,
+    "friend_accepts": 61,
+    "event_messages": 1240,
+    "direct_messages": 980,
+    "accepted_friendships": 18420,
+    "pending_friendships": 312,
+    "creators_period": 94,
+    "joiners_period": 410,
+    "by_status": { "active": 11002, "pending": 1380, "deactivated": 458 }
+  },
+  "geo": {
+    "cities_by_events": [
+      { "label_en": "Cairo", "label_ar": "القاهرة", "count": 412 },
+      { "label_en": "Giza", "label_ar": "الجيزة", "count": 188 },
+      { "label_en": "Alexandria", "label_ar": "الإسكندرية", "count": 156 },
+      { "label_en": "Mansoura", "label_ar": "المنصورة", "count": 64 },
+      { "label_en": "Unknown / unset", "label_ar": "غير معروف", "count": 42 }
+    ]
+  },
+  "health": {
+    "failed_jobs": 0,
+    "monitoring_note_en": "Scheduled-job heartbeats, notification delivery failures, and live error rates are not instrumented yet. This panel does not invent green statuses.",
+    "monitoring_note_ar": "نبضات المهام المجدولة وفشل الإشعارات ومعدلات الأخطاء غير مُجهَّزة بعد. هذه اللوحة لا تختلق حالات خضراء."
+  }
+}

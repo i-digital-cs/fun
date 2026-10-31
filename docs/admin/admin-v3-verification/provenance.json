@@ -1,0 +1,188 @@
+[
+  {
+    "filename": "01-v3-arabic-desktop-full.png",
+    "source_url": "http://127.0.0.1:8767/",
+    "viewport": "1440x900",
+    "language": "ar",
+    "captured_at": "2026-10-31T13:05:35.677Z",
+    "document_title": "Funnity Admin V3 — Design Prototype",
+    "html_lang": "ar",
+    "dir": "rtl",
+    "css": [
+      "https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap",
+      "http://127.0.0.1:8767/css/tokens.css",
+      "http://127.0.0.1:8767/css/shell.css",
+      "http://127.0.0.1:8767/css/dashboard.css"
+    ],
+    "js": [
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
+      "http://127.0.0.1:8767/js/i18n.js",
+      "http://127.0.0.1:8767/js/charts.js",
+      "http://127.0.0.1:8767/js/app.js"
+    ],
+    "prototype_path": "design-prototypes/admin-v3/index.html",
+    "v3_markers": {
+      "feature_kpi": true,
+      "action_board": true,
+      "featured_value": "١٢٬٨٤٠",
+      "banner": "نموذج تصميم · بيانات تجريبية فقط · غير متصل بالإنتاج\nAdmin V3 · Editorial Command Center"
+    },
+    "console": [],
+    "failed_requests": []
+  },
+  {
+    "filename": "02-v3-english-desktop-full.png",
+    "source_url": "http://127.0.0.1:8767/",
+    "viewport": "1440x900",
+    "language": "en",
+    "captured_at": "2026-10-31T13:05:35.677Z",
+    "document_title": "Funnity Admin V3 — Design Prototype",
+    "html_lang": "en",
+    "dir": "ltr",
+    "css": [
+      "https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap",
+      "http://127.0.0.1:8767/css/tokens.css",
+      "http://127.0.0.1:8767/css/shell.css",
+      "http://127.0.0.1:8767/css/dashboard.css"
+    ],
+    "js": [
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
+      "http://127.0.0.1:8767/js/i18n.js",
+      "http://127.0.0.1:8767/js/charts.js",
+      "http://127.0.0.1:8767/js/app.js"
+    ],
+    "prototype_path": "design-prototypes/admin-v3/index.html",
+    "v3_markers": {
+      "feature_kpi": true,
+      "action_board": true,
+      "featured_value": "12,840",
+      "banner": "Design prototype · fixture data only · not connected to production\nAdmin V3 · Editorial Command Center"
+    },
+    "console": [],
+    "failed_requests": []
+  },
+  {
+    "filename": "05-v3-featured-intelligence.png",
+    "source_url": "http://127.0.0.1:8767/",
+    "viewport": "1440x900",
+    "language": "en",
+    "captured_at": "2026-10-31T13:05:35.677Z",
+    "document_title": "Funnity Admin V3 — Design Prototype",
+    "html_lang": "en",
+    "dir": "ltr",
+    "css": [
+      "https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap",
+      "http://127.0.0.1:8767/css/tokens.css",
+      "http://127.0.0.1:8767/css/shell.css",
+      "http://127.0.0.1:8767/css/dashboard.css"
+    ],
+    "js": [
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
+      "http://127.0.0.1:8767/js/i18n.js",
+      "http://127.0.0.1:8767/js/charts.js",
+      "http://127.0.0.1:8767/js/app.js"
+    ],
+    "prototype_path": "design-prototypes/admin-v3/index.html",
+    "v3_markers": {
+      "feature_kpi": true,
+      "action_board": true,
+      "featured_value": "12,840",
+      "banner": "Design prototype · fixture data only · not connected to production\nAdmin V3 · Editorial Command Center"
+    },
+    "console": [],
+    "failed_requests": []
+  },
+  {
+    "filename": "06-v3-action-center.png",
+    "source_url": "http://127.0.0.1:8767/",
+    "viewport": "1440x900",
+    "language": "en",
+    "captured_at": "2026-10-31T13:05:35.677Z",
+    "document_title": "Funnity Admin V3 — Design Prototype",
+    "html_lang": "en",
+    "dir": "ltr",
+    "css": [
+      "https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap",
+      "http://127.0.0.1:8767/css/tokens.css",
+      "http://127.0.0.1:8767/css/shell.css",
+      "http://127.0.0.1:8767/css/dashboard.css"
+    ],
+    "js": [
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
+      "http://127.0.0.1:8767/js/i18n.js",
+      "http://127.0.0.1:8767/js/charts.js",
+      "http://127.0.0.1:8767/js/app.js"
+    ],
+    "prototype_path": "design-prototypes/admin-v3/index.html",
+    "v3_markers": {
+      "feature_kpi": true,
+      "action_board": true,
+      "featured_value": "12,840",
+      "banner": "Design prototype · fixture data only · not connected to production\nAdmin V3 · Editorial Command Center"
+    },
+    "console": [],
+    "failed_requests": []
+  },
+  {
+    "filename": "03-v3-arabic-mobile-full.png",
+    "source_url": "http://127.0.0.1:8767/",
+    "viewport": "390x844",
+    "language": "ar",
+    "captured_at": "2026-10-31T13:05:35.677Z",
+    "document_title": "Funnity Admin V3 — Design Prototype",
+    "html_lang": "ar",
+    "dir": "rtl",
+    "css": [
+      "https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap",
+      "http://127.0.0.1:8767/css/tokens.css",
+      "http://127.0.0.1:8767/css/shell.css",
+      "http://127.0.0.1:8767/css/dashboard.css"
+    ],
+    "js": [
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
+      "http://127.0.0.1:8767/js/i18n.js",
+      "http://127.0.0.1:8767/js/charts.js",
+      "http://127.0.0.1:8767/js/app.js"
+    ],
+    "prototype_path": "design-prototypes/admin-v3/index.html",
+    "v3_markers": {
+      "feature_kpi": true,
+      "action_board": true,
+      "featured_value": "١٢٬٨٤٠",
+      "banner": "نموذج تصميم · بيانات تجريبية فقط · غير متصل بالإنتاج\nAdmin V3 · Editorial Command Center"
+    },
+    "console": [],
+    "failed_requests": []
+  },
+  {
+    "filename": "04-v3-english-mobile-full.png",
+    "source_url": "http://127.0.0.1:8767/",
+    "viewport": "390x844",
+    "language": "en",
+    "captured_at": "2026-10-31T13:05:35.677Z",
+    "document_title": "Funnity Admin V3 — Design Prototype",
+    "html_lang": "en",
+    "dir": "ltr",
+    "css": [
+      "https://fonts.bunny.net/css?family=ibm-plex-sans:400,500,600,700&display=swap",
+      "http://127.0.0.1:8767/css/tokens.css",
+      "http://127.0.0.1:8767/css/shell.css",
+      "http://127.0.0.1:8767/css/dashboard.css"
+    ],
+    "js": [
+      "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
+      "http://127.0.0.1:8767/js/i18n.js",
+      "http://127.0.0.1:8767/js/charts.js",
+      "http://127.0.0.1:8767/js/app.js"
+    ],
+    "prototype_path": "design-prototypes/admin-v3/index.html",
+    "v3_markers": {
+      "feature_kpi": true,
+      "action_board": true,
+      "featured_value": "12,840",
+      "banner": "Design prototype · fixture data only · not connected to production\nAdmin V3 · Editorial Command Center"
+    },
+    "console": [],
+    "failed_requests": []
+  }
+]

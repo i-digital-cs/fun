@@ -1,0 +1,124 @@
+/* Funnity Admin V3.1 — Design tokens */
+:root {
+  --fn-purple: #7138F5;
+  --fn-purple-soft: #F1EBFF;
+  --fn-purple-mid: #8B63F7;
+  --fn-purple-deep: #4F1FD4;
+  --fn-orange: #FF762E;
+  --fn-orange-soft: #FFF1E8;
+  --fn-bg: #F8F9FE;
+  --fn-ink: #19213D;
+  --fn-ink-2: #3A4466;
+  --fn-muted: #5E6785;
+  --fn-line: #E2E6F0;
+  --fn-line-strong: #C9CFDF;
+  --fn-white: #FFFFFF;
+  --fn-tint: #F2F4FB;
+  --fn-tint-2: #EBEFFA;
+  --fn-success: #0C8F6B;
+  --fn-success-soft: #E6F7F1;
+  --fn-warning: #B86B00;
+  --fn-warning-soft: #FFF4E0;
+  --fn-danger: #C92242;
+  --fn-danger-soft: #FFE8ED;
+  --fn-info: #1D4ED8;
+  --fn-info-soft: #E8EEFF;
+
+  --fn-radius-sm: 8px;
+  --fn-radius: 12px;
+  --fn-radius-lg: 18px;
+  --fn-radius-pill: 999px;
+
+  --fn-shadow-sm: 0 1px 0 rgba(25, 33, 61, 0.04);
+  --fn-shadow: 0 8px 22px rgba(25, 33, 61, 0.05);
+  --fn-shadow-lg: 0 18px 40px rgba(81, 40, 180, 0.14);
+
+  --fn-space-1: 4px;
+  --fn-space-2: 8px;
+  --fn-space-3: 12px;
+  --fn-space-4: 16px;
+  --fn-space-5: 20px;
+  --fn-space-6: 28px;
+
+  --fn-sidebar: 248px;
+  --fn-sidebar-collapsed: 76px;
+  --fn-topbar: 56px;
+
+  --fn-font-en: "IBM Plex Sans", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --fn-font-ar: "Tajawal", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+
+  --fn-chart-1: #7138F5;
+  --fn-chart-2: #FF762E;
+  --fn-chart-3: #0C8F6B;
+  --fn-chart-4: #F59E0B;
+  --fn-chart-5: #64748B;
+
+  --fn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fn-dur: 160ms;
+}
+
+@font-face {
+  font-family: "Tajawal";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/Tajawal-400.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Tajawal";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/Tajawal-500.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Tajawal";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/Tajawal-700.ttf") format("truetype");
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 380px at 8% -8%, rgba(113, 56, 245, 0.07), transparent 55%),
+    radial-gradient(700px 320px at 100% 0%, rgba(255, 118, 46, 0.05), transparent 48%),
+    var(--fn-bg);
+  color: var(--fn-ink);
+  font-family: var(--fn-font-en);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+html[dir="rtl"] body,
+html[lang^="ar"] body {
+  font-family: var(--fn-font-ar);
+  line-height: 1.55;
+}
+
+img { max-width: 100%; display: block; }
+button, input { font: inherit; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid rgba(113, 56, 245, 0.38);
+  outline-offset: 2px;
+}
+
+.bidi-isolate { unicode-bidi: isolate; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
