@@ -9,19 +9,22 @@
 <header class="relative sticky top-0 z-40 flex h-[70px] items-center justify-between overflow-visible border-b border-[#e7ebf3] px-4 sm:px-[1.875rem]">
     <div class="pointer-events-none absolute inset-0 z-0 bg-white/90 backdrop-blur-xl" aria-hidden="true"></div>
     <div class="relative z-10">
-        <p class="text-[11px] font-bold uppercase tracking-widest text-indigo-500">{{ __('admin.panel') }}</p>
+        <p class="text-[11px] font-bold uppercase tracking-widest text-[#7138F5]">{{ __('admin.panel') }}</p>
         <p class="text-sm font-extrabold text-slate-900">@yield('topbar_title', __('admin.dashboard'))</p>
     </div>
 
     <div class="relative z-10 flex items-center gap-3">
-        <form method="POST" action="{{ route('locale.update') }}" class="hidden sm:inline-flex">
+        <form method="POST" action="{{ route('locale.update') }}" class="inline-flex">
             @csrf
             <input type="hidden" name="locale" value="{{ $oppositeLocale }}">
             <button type="submit"
-                    class="flex h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700"
+                    class="flex h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-600 transition hover:border-[#7138F5]/40 hover:text-[#7138F5]"
                     aria-label="{{ __('ui.language') }}">
-                <span class="font-black text-indigo-500">{{ $locale === 'en' ? 'ع' : 'EN' }}</span>
-                {{ $locale === 'en' ? 'AR' : 'EN' }}
+                @if ($locale === 'en')
+                    <span class="font-black text-[#7138F5]">ع</span> AR
+                @else
+                    <span class="font-black text-[#7138F5]">EN</span>
+                @endif
             </button>
         </form>
 

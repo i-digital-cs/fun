@@ -1,6 +1,6 @@
 @php
     $links = [
-        ['route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'label' => __('admin.dashboard')],
+        ['route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'label' => __('admin.dashboard_command')],
         ['route' => 'admin.users.index', 'match' => 'admin.users.*', 'label' => __('admin.users')],
         ['route' => 'admin.events.index', 'match' => 'admin.events.*', 'label' => __('admin.events')],
         ['route' => 'admin.reports.index', 'match' => 'admin.reports.*', 'label' => __('admin.reports')],

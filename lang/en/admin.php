@@ -87,6 +87,7 @@ return [
     'no_users' => 'No users match this filter.',
     'showing_events_of' => 'Showing :shown of :total events',
     'chart_activity' => 'Activity (14 days)',
+    'chart_activity_period' => 'Registrations & events (:days days)',
     'chart_activity_sub' => 'New events and new users per day',
     'chart_event_status' => 'Events by status',
     'chart_event_status_sub' => 'Current distribution across the catalog',

@@ -103,8 +103,18 @@
                     @forelse ($activityFeed as $row)
                         <li>
                             <a href="{{ $row['href'] }}" class="flex items-start gap-3 px-4 py-3 no-underline transition hover:bg-[#F8F9FE]">
-                                <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F8F9FE] text-[10px] font-extrabold uppercase text-[#7138F5]">
-                                    {{ strtoupper(substr(__('admin.activity_type_'.$row['type']), 0, 2)) }}
+                                @php
+                                    $typeBadge = match ($row['type'] ?? '') {
+                                        'user_registered' => 'UR',
+                                        'event_created' => 'EV',
+                                        'report_submitted' => 'RP',
+                                        'friend_accepted' => 'FR',
+                                        'admin_audit' => 'AD',
+                                        default => '•',
+                                    };
+                                @endphp
+                                <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F8F9FE] text-[10px] font-extrabold uppercase tracking-wide text-[#7138F5]" aria-hidden="true">
+                                    {{ $typeBadge }}
                                 </span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block text-xs font-bold text-slate-500">{{ __('admin.activity_type_'.$row['type']) }}</span>
@@ -114,7 +124,9 @@
                                     @endif
                                 </span>
                                 <span class="shrink-0 text-end">
-                                    <span class="block text-[10px] font-semibold text-slate-400">{{ $row['at']?->diffForHumans() }}</span>
+                                    <time class="block text-[10px] font-semibold text-slate-400" datetime="{{ $row['at']?->toIso8601String() }}">
+                                        {{ $row['at']?->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
+                                    </time>
                                     <span class="mt-1 inline-block rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-500">{{ $row['status'] }}</span>
                                 </span>
                             </a>
@@ -285,9 +297,9 @@
         </div>
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <div class="rounded-2xl border border-[#e7ebf3] bg-white p-4">
-                <h3 class="text-sm font-extrabold text-[#19213d]">{{ __('admin.chart_activity') }}</h3>
+                <h3 class="text-sm font-extrabold text-[#19213d]">{{ __('admin.chart_activity_period', ['days' => $period['days']]) }}</h3>
                 <div class="mt-3 h-52">
-                    <canvas id="admin-activity-chart" aria-label="{{ __('admin.chart_activity') }}"></canvas>
+                    <canvas id="admin-activity-chart" aria-label="{{ __('admin.chart_activity_period', ['days' => $period['days']]) }}"></canvas>
                 </div>
             </div>
             <div class="rounded-2xl border border-[#e7ebf3] bg-white p-4">
