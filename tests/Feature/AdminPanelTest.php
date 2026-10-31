@@ -29,9 +29,10 @@ class AdminPanelTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $this->actingAs($admin)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee(__('admin.dashboard'))
-            ->assertSee(__('admin.stat_active_users'), false)
-            ->assertSee(__('admin.today_activity'), false)
+            ->assertSee(__('admin.dashboard_command'))
+            ->assertSee(__('admin.section_executive'), false)
+            ->assertSee(__('admin.section_action'), false)
+            ->assertSee(__('admin.kpi_active_accounts'), false)
             ->assertSee(__('admin.chart_activity'), false)
             ->assertSee(__('admin.chart_actions'), false);
     }
@@ -121,15 +122,13 @@ class AdminPanelTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee(__('admin.today_metric_registrations'), false)
-            ->assertSee(__('admin.today_metric_events_created'), false)
-            ->assertSee(__('admin.today_metric_join_requests'), false)
-            ->assertSee(__('admin.today_metric_joins_accepted'), false)
-            ->assertSee(__('admin.today_metric_event_messages'), false)
-            ->assertSee(__('admin.today_metric_direct_messages'), false)
+            ->assertSee(__('admin.kpi_new_users'), false)
+            ->assertSee(__('admin.kpi_events_created'), false)
+            ->assertSee(__('admin.kpi_session_active'), false)
             ->assertSee(__('admin.today_metric_friend_requests'), false)
             ->assertSee(__('admin.today_metric_friend_accepts'), false)
-            ->assertSee(__('admin.today_metric_active_members'), false)
+            ->assertSee(__('admin.today_metric_event_messages'), false)
+            ->assertSee(__('admin.today_metric_direct_messages'), false)
             ->assertViewHas('today', function (array $todayStats): bool {
                 return ($todayStats['registrations'] ?? 0) >= 1
                     && ($todayStats['events_created'] ?? 0) >= 1
