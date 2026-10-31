@@ -33,8 +33,8 @@ class AdminPanelTest extends TestCase
             ->assertSee(__('admin.section_executive'), false)
             ->assertSee(__('admin.section_action'), false)
             ->assertSee(__('admin.kpi_active_accounts'), false)
-            ->assertSee(__('admin.chart_activity'), false)
-            ->assertSee(__('admin.chart_actions'), false);
+            ->assertSee(__('admin.chart_activity_period', ['days' => 7]))
+            ->assertSee(__('admin.chart_actions'));
     }
 
     public function test_dashboard_shows_today_activity_counts(): void

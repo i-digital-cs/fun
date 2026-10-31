@@ -277,10 +277,14 @@ class DashboardAnalyticsService
         ];
 
         $pendingUsers = $snapshots['pending_users'];
+        // Large identity backlogs are operational debt (info/medium), not incident-level
+        // unless paired with pending reports — avoid painting the whole queue "high".
         $items[] = [
             'key' => 'pending_identity',
             'count' => $pendingUsers,
-            'priority' => $pendingUsers > 10 ? 'medium' : ($pendingUsers > 0 ? 'low' : 'ok'),
+            'priority' => $pendingUsers === 0
+                ? 'ok'
+                : ($pendingUsers > 50 ? 'medium' : 'low'),
             'href' => route('admin.users.index', ['status' => AccountStatus::PendingDocuments->value]),
             'label' => __('admin.action_pending_identity'),
             'description' => __('admin.action_pending_identity_desc'),
@@ -336,6 +340,7 @@ class DashboardAnalyticsService
 
         Event::query()
             ->with(['creator:id,name', 'city'])
+            ->where('created_at', '<=', now())
             ->latest('created_at')
             ->limit(5)
             ->get(['id', 'title', 'slug', 'status', 'created_by', 'city_id', 'created_at'])

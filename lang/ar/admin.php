@@ -87,6 +87,7 @@ return [
     'no_users' => 'لا يوجد مستخدمون مطابقون.',
     'showing_events_of' => 'عرض :shown من :total فعالية',
     'chart_activity' => 'النشاط (14 يومًا)',
+    'chart_activity_period' => 'التسجيلات والفعاليات (:days يومًا)',
     'chart_activity_sub' => 'فعاليات ومستخدمون جدد يوميًا',
     'chart_event_status' => 'الفعاليات حسب الحالة',
     'chart_event_status_sub' => 'التوزيع الحالي للكتالوج',
