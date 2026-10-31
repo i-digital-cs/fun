@@ -26,9 +26,14 @@ class LoginController extends Controller
 
         $token = $loginUserService->issueApiToken($user);
         $emailVerified = $user->email_verified_at !== null;
+        $otp = null;
 
         if (! $emailVerified) {
-            $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+            try {
+                $otp = $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+            } catch (DomainException) {
+                $otp = null;
+            }
         }
 
         return response()->json([
@@ -36,6 +41,9 @@ class LoginController extends Controller
             'token_type' => 'Bearer',
             'email_verified' => $emailVerified,
             'needs_email_verification' => ! $emailVerified,
+            'otp' => $emailVerified
+                ? null
+                : ($otp?->toArray() ?? $codes->cooldownPayload($user, EmailAuthPurpose::EmailVerify)),
             'user' => [
                 'id' => $user->id,
                 'public_id' => $user->public_id,

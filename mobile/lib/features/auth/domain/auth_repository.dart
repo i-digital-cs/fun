@@ -1,18 +1,36 @@
 import 'package:fun_mobile/core/errors/failures.dart';
+import 'package:fun_mobile/features/auth/domain/otp_issue_meta.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 
 typedef Result<T> = ({Failure? failure, T? data});
 
-abstract class AuthRepository {
-  Future<Result<User>> login({required String email, required String password});
+class AuthSession {
+  const AuthSession({required this.user, this.otp});
 
-  Future<Result<User>> loginWithGoogle({
+  final User user;
+  final OtpIssueMeta? otp;
+}
+
+class ForgotPasswordResult {
+  const ForgotPasswordResult({required this.email, this.otp});
+
+  final String email;
+  final OtpIssueMeta? otp;
+}
+
+abstract class AuthRepository {
+  Future<Result<AuthSession>> login({
+    required String email,
+    required String password,
+  });
+
+  Future<Result<AuthSession>> loginWithGoogle({
     String? idToken,
     String? accessToken,
     String? locale,
   });
 
-  Future<Result<User>> loginWithApple({
+  Future<Result<AuthSession>> loginWithApple({
     required String idToken,
     String? name,
     String? locale,
@@ -25,7 +43,7 @@ abstract class AuthRepository {
 
   Future<Result<void>> cancelAccountDeletion();
 
-  Future<Result<User>> register({
+  Future<Result<AuthSession>> register({
     required String name,
     required String email,
     required String password,
@@ -42,9 +60,9 @@ abstract class AuthRepository {
 
   Future<Result<User>> verifyEmail(String code);
 
-  Future<Result<void>> resendEmailVerify();
+  Future<Result<OtpIssueMeta>> resendEmailVerify();
 
-  Future<Result<String>> forgotPassword(String email);
+  Future<Result<ForgotPasswordResult>> forgotPassword(String email);
 
   Future<Result<String>> verifyResetCode({
     required String email,

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
+import 'package:fun_mobile/features/auth/domain/otp_issue_meta.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 
@@ -27,20 +28,20 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Result<void>> logout() async => (failure: null, data: null);
 
   @override
-  Future<Result<User>> login({
+  Future<Result<AuthSession>> login({
     required String email,
     required String password,
   }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
-  Future<Result<User>> loginWithGoogle({
+  Future<Result<AuthSession>> loginWithGoogle({
     String? idToken,
     String? accessToken,
     String? locale,
   }) async => (failure: const ValidationFailure('unused'), data: null);
 
   @override
-  Future<Result<User>> loginWithApple({
+  Future<Result<AuthSession>> loginWithApple({
     required String idToken,
     String? name,
     String? locale,
@@ -57,7 +58,7 @@ class _FakeAuthRepository implements AuthRepository {
       (failure: const ValidationFailure('unused'), data: null);
 
   @override
-  Future<Result<User>> register({
+  Future<Result<AuthSession>> register({
     required String name,
     required String email,
     required String password,
@@ -71,11 +72,11 @@ class _FakeAuthRepository implements AuthRepository {
       (failure: const ValidationFailure('unused'), data: null);
 
   @override
-  Future<Result<void>> resendEmailVerify() async =>
+  Future<Result<OtpIssueMeta>> resendEmailVerify() async =>
       (failure: const ValidationFailure('unused'), data: null);
 
   @override
-  Future<Result<String>> forgotPassword(String email) async =>
+  Future<Result<ForgotPasswordResult>> forgotPassword(String email) async =>
       (failure: const ValidationFailure('unused'), data: null);
 
   @override

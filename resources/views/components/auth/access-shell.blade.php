@@ -11,6 +11,7 @@
     'grantedTitle' => null,
     'grantedSub' => null,
     'resendUrl' => null,
+    'retryAfterSeconds' => 0,
     'showGoogle' => false,
     'footerForm' => null,
 ])
@@ -34,6 +35,7 @@
     data-mode="{{ $mode }}"
     data-digit-source="{{ $digitSource }}"
     @if ($resendUrl) data-resend-url="{{ $resendUrl }}" @endif
+    data-retry-after="{{ (int) $retryAfterSeconds }}"
 >
     <script type="application/json" data-auth-i18n>
         {!! json_encode([
@@ -46,6 +48,7 @@
             'verified' => __('ui.access_verified'),
             'resend_prompt' => __('ui.access_resend_prompt'),
             'resend' => __('ui.access_resend'),
+            'resend_in' => __('ui.access_resend_in', ['time' => ':time']),
             'resend_ok' => __('auth.code_sent'),
         ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) !!}
     </script>
@@ -145,11 +148,19 @@
             @endif
         </div>
 
-        <p data-footer-theater class="mt-6 hidden text-center text-sm text-slate-400">
-            <span>{{ __('ui.access_resend_prompt') }}</span>
-            <button type="button" data-auth-resend class="ms-1 font-semibold text-indigo-500 transition hover:text-indigo-700">
-                {{ __('ui.access_resend') }}
-            </button>
-        </p>
+        {{-- Resend is always visible on OTP screens (form + theater). Never hide behind theater-only footer. --}}
+        @if ($resendUrl)
+            <div data-footer-resend class="mt-6 text-center text-sm text-slate-400" data-stage-resend>
+                <p class="mb-1">{{ __('ui.access_resend_prompt') }}</p>
+                <button
+                    type="button"
+                    data-auth-resend
+                    class="font-semibold text-indigo-500 transition hover:text-indigo-700 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:text-slate-400"
+                >
+                    {{ __('ui.access_resend') }}
+                </button>
+                <p data-resend-cooldown class="mt-1 hidden tabular-nums text-slate-500" aria-live="polite"></p>
+            </div>
+        @endif
     </div>
 </div>

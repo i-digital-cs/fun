@@ -28,12 +28,30 @@ class PasswordResetController extends Controller
         ]);
 
         $user = User::query()->where('email', strtolower($validated['email']))->first();
+        $otp = [
+            'retry_after_seconds' => $codes->cooldownSeconds(),
+            'resend_available_at' => now()->addSeconds($codes->cooldownSeconds())->toIso8601String(),
+            'expires_in_minutes' => $codes->expiresMinutes(),
+        ];
 
         // Always look successful to avoid email enumeration.
         // Social-only accounts (null password) can also receive a code to set one.
         if ($user !== null) {
-            $codes->issueAndSend($user, EmailAuthPurpose::PasswordReset);
+            try {
+                $result = $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::PasswordReset);
+                $otp = [
+                    'retry_after_seconds' => $result->retryAfterSeconds,
+                    'resend_available_at' => $result->resendAvailableAt->toIso8601String(),
+                    'expires_in_minutes' => $result->expiresInMinutes,
+                ];
+            } catch (DomainException) {
+                $otp = $codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset);
+            }
             $request->session()->put('password_reset_email', $user->email);
+            $request->session()->put('password_reset_otp', $otp);
+        } else {
+            $request->session()->put('password_reset_email', strtolower($validated['email']));
+            $request->session()->put('password_reset_otp', $otp);
         }
 
         $url = route('password.verify');
@@ -42,20 +60,35 @@ class PasswordResetController extends Controller
             return response()->json([
                 'message' => __('auth.reset_code_sent'),
                 'redirect' => $url,
+                ...$otp,
             ]);
         }
 
         return redirect()->to($url)->with('status', __('auth.reset_code_sent'));
     }
 
-    public function showVerify(Request $request): View|RedirectResponse
+    public function showVerify(Request $request, EmailAuthCodeService $codes): View|RedirectResponse
     {
         if (! $request->session()->has('password_reset_email')) {
             return redirect()->route('password.request');
         }
 
+        $email = $request->session()->get('password_reset_email');
+        $user = is_string($email) ? User::query()->where('email', strtolower($email))->first() : null;
+        $otp = $request->session()->get('password_reset_otp');
+        if (! is_array($otp)) {
+            $otp = $user !== null
+                ? $codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset)
+                : [
+                    'retry_after_seconds' => 0,
+                    'resend_available_at' => now()->toIso8601String(),
+                    'expires_in_minutes' => $codes->expiresMinutes(),
+                ];
+        }
+
         return view('auth.verify-reset-code', [
-            'email' => $request->session()->get('password_reset_email'),
+            'email' => $email,
+            'otp' => $otp,
         ]);
     }
 
@@ -164,13 +197,33 @@ class PasswordResetController extends Controller
         }
 
         $user = User::query()->where('email', strtolower($email))->first();
+        $otp = [
+            'retry_after_seconds' => $codes->cooldownSeconds(),
+            'resend_available_at' => now()->addSeconds($codes->cooldownSeconds())->toIso8601String(),
+            'expires_in_minutes' => $codes->expiresMinutes(),
+        ];
 
         if ($user !== null) {
-            $codes->issueAndSend($user, EmailAuthPurpose::PasswordReset);
+            // Never diverge status codes by account existence (enumeration-safe).
+            try {
+                $result = $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::PasswordReset);
+                $otp = [
+                    'retry_after_seconds' => $result->retryAfterSeconds,
+                    'resend_available_at' => $result->resendAvailableAt->toIso8601String(),
+                    'expires_in_minutes' => $result->expiresInMinutes,
+                ];
+            } catch (DomainException) {
+                $otp = $codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset);
+            }
         }
 
+        $request->session()->put('password_reset_otp', $otp);
+
         if ($request->expectsJson()) {
-            return response()->json(['message' => __('auth.reset_code_sent')]);
+            return response()->json([
+                'message' => __('auth.reset_code_sent'),
+                ...$otp,
+            ]);
         }
 
         return back()->with('status', __('auth.reset_code_sent'));

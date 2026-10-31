@@ -81,6 +81,17 @@ class DiscoverController extends StateNotifier<DiscoverState> {
     await loadNationwide();
   }
 
+  /// Force a fresh discover fetch (e.g. after publishing an event).
+  Future<void> refresh() {
+    _bootstrapped = true;
+    return load(filters: state.filters.copyWith(page: 1));
+  }
+
+  /// Mark list stale so the next [ensureLoaded] refetches.
+  void markStale() {
+    _bootstrapped = false;
+  }
+
   Future<void> load({DiscoverFilters? filters, bool append = false}) async {
     final nextFilters = filters ?? state.filters;
     final typedSearch =

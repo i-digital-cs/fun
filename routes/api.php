@@ -79,9 +79,11 @@ Route::middleware('throttle:auth')->group(function () {
 
 Route::middleware('throttle:auth-codes')->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'request']);
-    Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify']);
     Route::post('/reset-password', [PasswordResetController::class, 'reset']);
 });
+
+Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify'])
+    ->middleware('throttle:auth-code-verify');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [MeController::class, 'show']);
@@ -95,7 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy']);
 
     Route::post('/email/verify', [EmailVerificationController::class, 'verify'])
-        ->middleware('throttle:auth-codes');
+        ->middleware('throttle:auth-code-verify');
     Route::post('/email/verify/resend', [EmailVerificationController::class, 'send'])
         ->middleware('throttle:auth-codes');
 

@@ -5,9 +5,11 @@ import 'package:fun_mobile/core/navigation/app_navigation.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/otp_resend_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_code_fields.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/otp_resend_section.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 
 class VerifyEmailPage extends ConsumerStatefulWidget {
@@ -24,6 +26,18 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
   bool _submitting = false;
   bool _resending = false;
   bool _theater = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // If register/login did not seed cooldown (older API), start policy default.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = ref.read(emailVerifyResendProvider);
+      if (state.availableAt == null) {
+        ref.read(emailVerifyResendProvider.notifier).applyRetryAfter(60);
+      }
+    });
+  }
 
   void _startTheater() {
     if (_code.length != 4) return;
@@ -192,13 +206,11 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
                                     : null,
                               ),
                               const SizedBox(height: 8),
-                              TextButton(
-                                onPressed: (_submitting || _resending)
-                                    ? null
-                                    : _resend,
-                                child: _resending
-                                    ? Text(l10n.loading)
-                                    : Text(l10n.resendCode),
+                              OtpResendSection(
+                                tickerKey: 'email',
+                                busy: _resending,
+                                enabled: !_submitting,
+                                onResend: _resend,
                               ),
                               TextButton(
                                 onPressed: _submitting

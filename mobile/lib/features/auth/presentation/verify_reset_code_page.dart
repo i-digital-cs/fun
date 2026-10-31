@@ -4,10 +4,12 @@ import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/widgets/ambient_background.dart';
 import 'package:fun_mobile/core/widgets/gradient_button.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
+import 'package:fun_mobile/features/auth/presentation/otp_resend_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/reset_password_page.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_code_fields.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/otp_resend_section.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,6 +31,17 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
   bool _resending = false;
   bool _theater = false;
   String? _resetToken;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = ref.read(passwordResetResendProvider);
+      if (state.availableAt == null) {
+        ref.read(passwordResetResendProvider.notifier).applyRetryAfter(60);
+      }
+    });
+  }
 
   void _startTheater() {
     if (_code.length != 4 || widget.email.isEmpty) return;
@@ -194,13 +207,11 @@ class _VerifyResetCodePageState extends ConsumerState<VerifyResetCodePage> {
                                     : null,
                               ),
                               const SizedBox(height: 8),
-                              TextButton(
-                                onPressed: (_submitting || _resending)
-                                    ? null
-                                    : _resend,
-                                child: _resending
-                                    ? Text(l10n.loading)
-                                    : Text(l10n.resendCode),
+                              OtpResendSection(
+                                tickerKey: 'reset',
+                                busy: _resending,
+                                enabled: !_submitting,
+                                onResend: _resend,
                               ),
                               TextButton(
                                 onPressed: () => context.go('/forgot-password'),

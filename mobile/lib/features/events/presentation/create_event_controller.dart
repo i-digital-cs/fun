@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/catalog/domain/catalog_repository.dart';
+import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/events/domain/event_item.dart';
 import 'package:fun_mobile/features/events/domain/maps_url_parser.dart';
 import 'package:fun_mobile/features/events/domain/place_suggestion.dart';
@@ -298,6 +299,10 @@ class CreateEventController extends StateNotifier<CreateEventState> {
 
   Future<String?> publish(int id) async {
     final result = await _ref.read(eventsRepositoryProvider).publish(id);
+    if (result.failure == null) {
+      // Newly published events must appear on Discover without a stale list.
+      _ref.read(discoverControllerProvider.notifier).markStale();
+    }
     return result.failure?.message;
   }
 }

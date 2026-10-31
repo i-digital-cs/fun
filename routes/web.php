@@ -99,7 +99,7 @@ Route::middleware('guest')->group(function () {
         ->name('password.email');
     Route::get('/forgot-password/verify', [PasswordResetController::class, 'showVerify'])->name('password.verify');
     Route::post('/forgot-password/verify', [PasswordResetController::class, 'verify'])
-        ->middleware('throttle:auth-codes')
+        ->middleware('throttle:auth-code-verify')
         ->name('password.verify.store');
     Route::post('/forgot-password/resend', [PasswordResetController::class, 'resend'])
         ->middleware('throttle:auth-codes')
@@ -117,7 +117,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::middleware('auth')->group(function () {
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verify', [EmailVerificationController::class, 'verify'])
-        ->middleware('throttle:auth-codes')
+        ->middleware('throttle:auth-code-verify')
         ->name('verification.verify');
     Route::post('/email/verify/resend', [EmailVerificationController::class, 'send'])
         ->middleware('throttle:auth-codes')

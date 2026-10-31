@@ -16,15 +16,40 @@ class PasswordResetTokenService
     {
     }
 
-    public function requestCode(string $email): void
+    /**
+     * Always returns a uniform client payload (no email enumeration).
+     * Cooldown / delivery failures are swallowed for unknown or cooling accounts.
+     *
+     * @return array{retry_after_seconds: int, resend_available_at: string, expires_in_minutes: int}
+     */
+    public function requestCode(string $email): array
     {
         $user = User::query()->where('email', strtolower($email))->first();
+        $cooldown = $this->codes->cooldownSeconds();
+        $expires = $this->codes->expiresMinutes();
 
         // Include social-only accounts (null password) so members can set a
         // password via email OTP when Google/Apple sign-in is unavailable.
         if ($user !== null) {
-            $this->codes->issueAndSend($user, EmailAuthPurpose::PasswordReset);
+            try {
+                $result = $this->codes->issueAndSendIfAllowed($user, EmailAuthPurpose::PasswordReset);
+
+                return [
+                    'retry_after_seconds' => $result->retryAfterSeconds,
+                    'resend_available_at' => $result->resendAvailableAt->toIso8601String(),
+                    'expires_in_minutes' => $result->expiresInMinutes,
+                ];
+            } catch (DomainException) {
+                // Delivery failed — still look successful publicly.
+                return $this->codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset);
+            }
         }
+
+        return [
+            'retry_after_seconds' => $cooldown,
+            'resend_available_at' => now()->addSeconds($cooldown)->toIso8601String(),
+            'expires_in_minutes' => $expires,
+        ];
     }
 
     /**

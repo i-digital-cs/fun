@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -781,10 +780,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get eventSaved => 'تم حفظ الفعالية';
+  String get eventSaved => 'تم حفظ الفعالية كمسودة';
 
   @override
-  String get eventPublished => 'تم نشر الفعالية';
+  String get eventPublished => 'تم نشر الفعالية — أصبحت قابلة للاكتشاف الآن';
 
   @override
   String get optional => 'اختياري';
@@ -1094,6 +1093,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get resendCode => 'إعادة إرسال الرمز';
+
+  @override
+  String get resendCodePrompt => 'لم يصلك الرمز؟';
+
+  @override
+  String resendCodeIn(String time) {
+    return 'إعادة الإرسال خلال $time';
+  }
 
   @override
   String get forgotPassword => 'نسيت كلمة المرور؟';

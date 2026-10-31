@@ -2,13 +2,19 @@ import 'package:dio/dio.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/network/api_client.dart';
+import 'package:fun_mobile/features/auth/domain/otp_issue_meta.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 
 class AuthSessionDto {
-  const AuthSessionDto({required this.token, required this.user});
+  const AuthSessionDto({
+    required this.token,
+    required this.user,
+    this.otp,
+  });
 
   final String token;
   final User user;
+  final OtpIssueMeta? otp;
 }
 
 class AuthRemoteSource {
@@ -116,18 +122,22 @@ class AuthRemoteSource {
     }
   }
 
-  Future<({Failure? failure, void data})> resendEmailVerify() async {
+  Future<({Failure? failure, OtpIssueMeta? data})> resendEmailVerify() async {
     try {
-      await _client.dio.post<void>('/email/verify/resend');
-      return (failure: null, data: null);
+      final response = await _client.dio.post<Map<String, dynamic>>(
+        '/email/verify/resend',
+      );
+      return (
+        failure: null,
+        data: OtpIssueMeta.fromJson(response.data),
+      );
     } on DioException catch (e) {
       return (failure: mapDioException(e), data: null);
     }
   }
 
-  Future<({Failure? failure, String? email})> forgotPassword(
-    String email,
-  ) async {
+  Future<({Failure? failure, String? email, OtpIssueMeta? otp})>
+  forgotPassword(String email) async {
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/forgot-password',
@@ -136,9 +146,10 @@ class AuthRemoteSource {
       return (
         failure: null,
         email: response.data?['email'] as String? ?? email,
+        otp: OtpIssueMeta.fromJson(response.data),
       );
     } on DioException catch (e) {
-      return (failure: mapDioException(e), email: null);
+      return (failure: mapDioException(e), email: null, otp: null);
     }
   }
 
@@ -227,9 +238,13 @@ class AuthRemoteSource {
   }
 
   AuthSessionDto _parseSession(Map<String, dynamic> json) {
+    final otpRaw = json['otp'];
     return AuthSessionDto(
       token: json['token'] as String,
       user: User.fromJson(json['user'] as Map<String, dynamic>),
+      otp: otpRaw is Map<String, dynamic>
+          ? OtpIssueMeta.fromJson(otpRaw)
+          : null,
     );
   }
 }

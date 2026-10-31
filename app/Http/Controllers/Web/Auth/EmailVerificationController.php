@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Auth;
 
 use App\Enums\EmailAuthPurpose;
 use App\Exceptions\DomainException;
+use App\Exceptions\OtpCooldownException;
 use App\Http\Controllers\Controller;
 use App\Services\Auth\EmailAuthCodeService;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,7 @@ use Illuminate\View\View;
 
 class EmailVerificationController extends Controller
 {
-    public function notice(Request $request): View|RedirectResponse
+    public function notice(Request $request, EmailAuthCodeService $codes): View|RedirectResponse
     {
         $user = $request->user();
 
@@ -21,8 +22,17 @@ class EmailVerificationController extends Controller
             return $this->postVerifyRedirectResponse($user);
         }
 
+        $otp = $user !== null
+            ? $codes->cooldownPayload($user, EmailAuthPurpose::EmailVerify)
+            : [
+                'retry_after_seconds' => 0,
+                'resend_available_at' => now()->toIso8601String(),
+                'expires_in_minutes' => $codes->expiresMinutes(),
+            ];
+
         return view('auth.verify-email', [
             'email' => $user?->email ?? session('verification_email'),
+            'otp' => $otp,
         ]);
     }
 
@@ -42,10 +52,36 @@ class EmailVerificationController extends Controller
                 : $redirect;
         }
 
-        $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+        try {
+            $result = $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+        } catch (OtpCooldownException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    'retry_after_seconds' => $exception->retryAfterSeconds,
+                    'resend_available_at' => $exception->resendAvailableAt,
+                ], 429)->withHeaders([
+                    'Retry-After' => (string) $exception->retryAfterSeconds,
+                ]);
+            }
+
+            return back()->withErrors(['code' => $exception->getMessage()]);
+        } catch (DomainException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                    ...$codes->cooldownPayload($user, EmailAuthPurpose::EmailVerify),
+                ], 503);
+            }
+
+            return back()->withErrors(['code' => $exception->getMessage()]);
+        }
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => __('auth.code_sent')]);
+            return response()->json([
+                'message' => __('auth.code_sent'),
+                ...$result->toArray(),
+            ]);
         }
 
         return back()->with('status', __('auth.code_sent'));

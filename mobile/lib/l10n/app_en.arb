@@ -299,8 +299,8 @@
       "count": {"type": "int"}
     }
   },
-  "eventSaved": "Event saved",
-  "eventPublished": "Event published",
+  "eventSaved": "Event saved as draft",
+  "eventPublished": "Event published — it's now discoverable",
   "optional": "Optional",
   "pickDateTime": "Pick date & time",
   "publishOfferBody": "Publish \"{title}\" now so others can discover it?",
@@ -426,6 +426,15 @@
   "verifyEmail": "Verify email",
   "verifyEmailHint": "Enter the 4-digit code we sent to your email.",
   "resendCode": "Resend code",
+  "resendCodePrompt": "Didn't receive it?",
+  "resendCodeIn": "Resend code in {time}",
+  "@resendCodeIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "forgotPassword": "Forgot password?",
   "forgotPasswordSub": "Enter your email and we’ll send a 4-digit code. Works for Google/Apple accounts too — you can set a password.",
   "verifyResetCodeSub": "Check your email for the 4-digit code.",

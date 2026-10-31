@@ -36,8 +36,14 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->ip());
         });
 
+        // OTP issuance / resend (per account when authenticated, else IP).
         RateLimiter::for('auth-codes', function (Request $request) {
             return Limit::perMinute(5)->by((string) ($request->user()?->id ?: $request->ip()));
+        });
+
+        // OTP verification attempts (separate from issuance spam controls).
+        RateLimiter::for('auth-code-verify', function (Request $request) {
+            return Limit::perMinute(10)->by((string) ($request->user()?->id ?: $request->ip()));
         });
 
         RateLimiter::for('uploads', function (Request $request) {
