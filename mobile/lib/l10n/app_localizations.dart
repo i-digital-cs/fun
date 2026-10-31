@@ -1655,13 +1655,13 @@ abstract class AppLocalizations {
   /// No description provided for @eventSaved.
   ///
   /// In en, this message translates to:
-  /// **'Event saved'**
+  /// **'Event saved as draft'**
   String get eventSaved;
 
   /// No description provided for @eventPublished.
   ///
   /// In en, this message translates to:
-  /// **'Event published'**
+  /// **'Event published — it\'s now discoverable'**
   String get eventPublished;
 
   /// No description provided for @optional.
@@ -2233,6 +2233,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resend code'**
   String get resendCode;
+
+  /// No description provided for @resendCodePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive it?'**
+  String get resendCodePrompt;
+
+  /// No description provided for @resendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in {time}'**
+  String resendCodeIn(String time);
 
   /// No description provided for @forgotPassword.
   ///

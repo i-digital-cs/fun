@@ -34,7 +34,11 @@ class RegisteredUserController extends Controller
             $user->forceFill(['locale' => $request->string('locale')->toString()])->save();
         }
 
-        $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+        try {
+            $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+        } catch (\App\Exceptions\DomainException) {
+            // Account exists; user can resend from the verify screen.
+        }
         $request->session()->put('verification_email', $user->email);
 
         $url = route('verification.notice');

@@ -48,7 +48,11 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->email_verified_at === null) {
-            $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+            try {
+                $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+            } catch (\App\Exceptions\DomainException) {
+                // Existing code still valid; verify screen supports resend.
+            }
             $request->session()->put('verification_email', $user->email);
             $url = route('verification.notice');
 

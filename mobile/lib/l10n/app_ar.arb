@@ -274,8 +274,8 @@
   "reportOther": "أخرى",
   "leaveEvent": "مغادرة الفعالية",
   "organizerRating": "{average} ★ ({count} تقييم)",
-  "eventSaved": "تم حفظ الفعالية",
-  "eventPublished": "تم نشر الفعالية",
+  "eventSaved": "تم حفظ الفعالية كمسودة",
+  "eventPublished": "تم نشر الفعالية — أصبحت قابلة للاكتشاف الآن",
   "optional": "اختياري",
   "pickDateTime": "اختر التاريخ والوقت",
   "publishOfferBody": "نشر \"{title}\" الآن ليتمكن الآخرون من اكتشافها؟",
@@ -371,6 +371,15 @@
   "verifyEmail": "تأكيد البريد",
   "verifyEmailHint": "أدخل الرمز المكوّن من 4 أرقام الذي أرسلناه إلى بريدك.",
   "resendCode": "إعادة إرسال الرمز",
+  "resendCodePrompt": "لم يصلك الرمز؟",
+  "resendCodeIn": "إعادة الإرسال خلال {time}",
+  "@resendCodeIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "forgotPassword": "نسيت كلمة المرور؟",
   "forgotPasswordSub": "أدخل بريدك وسنرسل رمزاً من 4 أرقام. يعمل أيضاً لحسابات Google/Apple لتعيين كلمة مرور.",
   "verifyResetCodeSub": "تحقق من بريدك للحصول على الرمز المكوّن من 4 أرقام.",

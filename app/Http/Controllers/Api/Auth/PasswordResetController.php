@@ -18,10 +18,11 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $service->requestCode($validated['email']);
+        $otp = $service->requestCode($validated['email']);
 
         return response()->json([
             'message' => __('auth.reset_code_sent'),
+            ...$otp,
         ]);
     }
 

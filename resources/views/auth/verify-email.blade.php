@@ -14,6 +14,7 @@
         :granted-title="__('ui.access_granted_title')"
         :granted-sub="__('ui.access_granted_sub')"
         :resend-url="route('verification.send')"
+        :retry-after-seconds="(int) ($otp['retry_after_seconds'] ?? 0)"
     />
 @endsection
 

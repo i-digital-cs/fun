@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Enums\EmailAuthPurpose;
+use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\EmailAuthCodeService;
@@ -19,13 +20,21 @@ class RegisterController extends Controller
         EmailAuthCodeService $codes,
     ): JsonResponse {
         $user = $registerUserService->register($request->validated());
-        $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+
+        try {
+            $otp = $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+        } catch (DomainException) {
+            $otp = null;
+        }
+
         $token = $loginUserService->issueApiToken($user);
 
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
             'email_verified' => false,
+            'needs_email_verification' => true,
+            'otp' => $otp?->toArray() ?? $codes->cooldownPayload($user, EmailAuthPurpose::EmailVerify),
             'user' => [
                 'id' => $user->id,
                 'public_id' => $user->public_id,
@@ -36,6 +45,7 @@ class RegisterController extends Controller
                 'sex' => $user->sex?->value,
                 'needs_sex' => $user->needsSex(),
                 'platform_role' => $user->platform_role?->value,
+                'email_verified' => false,
                 'email_verified_at' => null,
             ],
         ], 201);

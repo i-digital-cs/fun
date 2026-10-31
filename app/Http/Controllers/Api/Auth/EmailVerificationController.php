@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Enums\EmailAuthPurpose;
 use App\Exceptions\DomainException;
+use App\Exceptions\OtpCooldownException;
 use App\Http\Controllers\Controller;
 use App\Services\Auth\EmailAuthCodeService;
 use Illuminate\Http\JsonResponse;
@@ -22,11 +23,27 @@ class EmailVerificationController extends Controller
             ]);
         }
 
-        $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+        try {
+            $result = $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+        } catch (OtpCooldownException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'retry_after_seconds' => $exception->retryAfterSeconds,
+                'resend_available_at' => $exception->resendAvailableAt,
+            ], 429)->withHeaders([
+                'Retry-After' => (string) $exception->retryAfterSeconds,
+            ]);
+        } catch (DomainException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                ...$codes->cooldownPayload($user, EmailAuthPurpose::EmailVerify),
+            ], 503);
+        }
 
         return response()->json([
             'message' => __('auth.code_sent'),
             'email' => $user->email,
+            ...$result->toArray(),
         ]);
     }
 

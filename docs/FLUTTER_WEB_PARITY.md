@@ -550,14 +550,14 @@ Google sign-up may leave `sex` null (`needs_sex: true`); user must set it on Pro
 | **API** | `POST /api/email/verify` · `POST /api/email/verify/resend` |
 | **Auth** | Bearer (Sanctum) |
 
-**UI:** 4 digit OTP boxes (auto-advance / paste), Resend, site logo + name. Web uses the same access-code theater animation.
+**UI:** 4 digit OTP boxes (auto-advance / paste), **always-visible Resend** with server-synced countdown (`Resend code in MM:SS` → `Resend code`), site logo + name. Web uses the same access-code theater animation; Resend stays on the form stage (not theater-only).
 
-| Call | Body | Success |
+| Call | Body | Success / cooldown |
 |------|------|---------|
 | Verify | `{ "code": "1234" }` | `email_verified: true` + `user` → then Identity or Home |
-| Resend | `{}` | `{ "message", "email" }` |
+| Resend | `{}` | `{ "message", "email", "issued", "retry_after_seconds", "resend_available_at", "expires_in_minutes" }` · HTTP **429** during cooldown with same cooldown fields + `Retry-After` |
 
-Codes expire in **15 minutes**. Gate Identity / create / join until `email_verified`.
+Codes expire in **15 minutes** (`config/otp.php` `expires_minutes`). Resend cooldown default **60 seconds** (`otp.resend_cooldown_seconds`) — **backend authoritative**; Flutter/web countdown must follow `retry_after_seconds` / `resend_available_at`. Max failed verifies per code: `otp.max_verify_attempts` (default 5). Gate Identity / create / join until `email_verified`.
 
 ---
 
@@ -1340,7 +1340,8 @@ Copy this into PRs:
 
 Close these in Flutter against **current** web + API (no “skip for later” on member features):
 
-1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API); **forgot-password OTP for social-only accounts** (set password when Google/Apple is down) — web+API+Flutter copy (§2.12b)  
+1. **Auth + identity + profile** — full stack with `GET /api/site` branding + version check (§2C); **required sex** (male/female/mix) on register + profile (web+Flutter+API); **forgot-password OTP for social-only accounts** (set password when Google/Apple is down) — web+API+Flutter copy (§2.12b); **OTP resend always visible + server cooldown metadata** (web theater footer bug fixed; Flutter countdown synced to `retry_after_seconds`) — see `docs/flutter/OTP_AND_EVENT_DISCOVERY_REPAIR.md`
+1b. **Event create → discover** — create always **draft**; discover only **published** + date/geo filters; Flutter copy “saved as draft” + publish offer; Discover `markStale()` after publish — not a “missing event” bug when unpublished  
 2. **Shell** — 5-tab + dashboard IA; Profile hub  
 2a. **Public profiles** — `/u/{public_id}` card + API (web+Flutter)  
 3. **Discover** — filters including `when`; **always send Bearer** for `join_action`  

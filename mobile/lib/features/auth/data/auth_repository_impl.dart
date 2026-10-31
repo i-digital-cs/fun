@@ -2,6 +2,7 @@ import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/storage/token_storage.dart';
 import 'package:fun_mobile/features/auth/data/auth_remote_source.dart';
 import 'package:fun_mobile/features/auth/domain/auth_repository.dart';
+import 'package:fun_mobile/features/auth/domain/otp_issue_meta.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -11,7 +12,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenStorage _tokenStorage;
 
   @override
-  Future<Result<User>> login({
+  Future<Result<AuthSession>> login({
     required String email,
     required String password,
   }) async {
@@ -20,11 +21,14 @@ class AuthRepositoryImpl implements AuthRepository {
       return (failure: result.failure, data: null);
     }
     await _tokenStorage.write(result.data!.token);
-    return (failure: null, data: result.data!.user);
+    return (
+      failure: null,
+      data: AuthSession(user: result.data!.user, otp: result.data!.otp),
+    );
   }
 
   @override
-  Future<Result<User>> loginWithGoogle({
+  Future<Result<AuthSession>> loginWithGoogle({
     String? idToken,
     String? accessToken,
     String? locale,
@@ -39,14 +43,15 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     await _tokenStorage.write(result.data!.token);
     final me = await _remote.me();
-    if (me.data != null) {
-      return (failure: null, data: me.data);
-    }
-    return (failure: null, data: result.data!.user);
+    final user = me.data ?? result.data!.user;
+    return (
+      failure: null,
+      data: AuthSession(user: user, otp: result.data!.otp),
+    );
   }
 
   @override
-  Future<Result<User>> loginWithApple({
+  Future<Result<AuthSession>> loginWithApple({
     required String idToken,
     String? name,
     String? locale,
@@ -61,10 +66,11 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     await _tokenStorage.write(result.data!.token);
     final me = await _remote.me();
-    if (me.data != null) {
-      return (failure: null, data: me.data);
-    }
-    return (failure: null, data: result.data!.user);
+    final user = me.data ?? result.data!.user;
+    return (
+      failure: null,
+      data: AuthSession(user: user, otp: result.data!.otp),
+    );
   }
 
   @override
@@ -84,7 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<User>> register({
+  Future<Result<AuthSession>> register({
     required String name,
     required String email,
     required String password,
@@ -104,7 +110,10 @@ class AuthRepositoryImpl implements AuthRepository {
       return (failure: result.failure, data: null);
     }
     await _tokenStorage.write(result.data!.token);
-    return (failure: null, data: result.data!.user);
+    return (
+      failure: null,
+      data: AuthSession(user: result.data!.user, otp: result.data!.otp),
+    );
   }
 
   @override
@@ -136,15 +145,27 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<void>> resendEmailVerify() => _remote.resendEmailVerify();
+  Future<Result<OtpIssueMeta>> resendEmailVerify() async {
+    final result = await _remote.resendEmailVerify();
+    if (result.failure != null) {
+      return (failure: result.failure, data: null);
+    }
+    return (failure: null, data: result.data ?? const OtpIssueMeta());
+  }
 
   @override
-  Future<Result<String>> forgotPassword(String email) async {
+  Future<Result<ForgotPasswordResult>> forgotPassword(String email) async {
     final result = await _remote.forgotPassword(email);
     if (result.failure != null) {
       return (failure: result.failure, data: null);
     }
-    return (failure: null, data: result.email);
+    return (
+      failure: null,
+      data: ForgotPasswordResult(
+        email: result.email ?? email,
+        otp: result.otp,
+      ),
+    );
   }
 
   @override

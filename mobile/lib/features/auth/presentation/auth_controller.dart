@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
 import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
+import 'package:fun_mobile/features/auth/domain/otp_issue_meta.dart';
 import 'package:fun_mobile/features/auth/domain/user.dart';
+import 'package:fun_mobile/features/auth/presentation/otp_resend_controller.dart';
 
 sealed class AuthState {
   const AuthState();
@@ -107,7 +109,8 @@ class AuthController extends StateNotifier<AuthState> {
     if (result.failure != null || result.data == null) {
       return _safeError(result.failure);
     }
-    _applyUser(result.data!, commitSession: commitSession);
+    _rememberEmailVerifyOtp(result.data!.otp);
+    _applyUser(result.data!.user, commitSession: commitSession);
     return null;
   }
 
@@ -126,7 +129,7 @@ class AuthController extends StateNotifier<AuthState> {
     if (result.failure != null || result.data == null) {
       return _safeError(result.failure);
     }
-    state = Authenticated(result.data!);
+    state = Authenticated(result.data!.user);
     return null;
   }
 
@@ -141,8 +144,18 @@ class AuthController extends StateNotifier<AuthState> {
     if (result.failure != null || result.data == null) {
       return _safeError(result.failure);
     }
-    state = Authenticated(result.data!);
+    state = Authenticated(result.data!.user);
     return null;
+  }
+
+  void _rememberEmailVerifyOtp(OtpIssueMeta? otp) {
+    if (otp == null) return;
+    _ref.read(emailVerifyResendProvider.notifier).applyMeta(otp);
+  }
+
+  void _rememberResetOtp(OtpIssueMeta? otp) {
+    if (otp == null) return;
+    _ref.read(passwordResetResendProvider.notifier).applyMeta(otp);
   }
 
   Future<String?> requestAccountDeletion({
@@ -195,7 +208,8 @@ class AuthController extends StateNotifier<AuthState> {
     if (result.failure != null || result.data == null) {
       return _safeError(result.failure);
     }
-    _applyUser(result.data!, commitSession: commitSession);
+    _rememberEmailVerifyOtp(result.data!.otp);
+    _applyUser(result.data!.user, commitSession: commitSession);
     return null;
   }
 
@@ -204,13 +218,26 @@ class AuthController extends StateNotifier<AuthState> {
     if (result.failure != null || result.data == null) {
       return _safeError(result.failure);
     }
+    _ref.read(emailVerifyResendProvider.notifier).clear();
     _applyUser(result.data!, commitSession: commitSession);
     return null;
   }
 
   Future<String?> resendEmailVerify() async {
     final result = await _ref.read(authRepositoryProvider).resendEmailVerify();
-    return _safeError(result.failure);
+    if (result.failure != null) {
+      final failure = result.failure!;
+      if (failure is RateLimitFailure) {
+        _ref
+            .read(emailVerifyResendProvider.notifier)
+            .applyRetryAfter(failure.retryAfterSeconds);
+      }
+      return _safeError(failure);
+    }
+    if (result.data != null) {
+      _rememberEmailVerifyOtp(result.data);
+    }
+    return null;
   }
 
   Future<({String? error, String? email})> forgotPassword(String email) async {
@@ -218,9 +245,16 @@ class AuthController extends StateNotifier<AuthState> {
         .read(authRepositoryProvider)
         .forgotPassword(email);
     if (result.failure != null) {
-      return (error: failureUserMessage(result.failure!), email: null);
+      final failure = result.failure!;
+      if (failure is RateLimitFailure) {
+        _ref
+            .read(passwordResetResendProvider.notifier)
+            .applyRetryAfter(failure.retryAfterSeconds);
+      }
+      return (error: failureUserMessage(failure), email: null);
     }
-    return (error: null, email: result.data);
+    _rememberResetOtp(result.data?.otp);
+    return (error: null, email: result.data?.email);
   }
 
   Future<({String? error, String? resetToken})> verifyResetCode({

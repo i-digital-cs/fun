@@ -45,7 +45,15 @@ Failure mapDioException(DioException error) {
         return ValidationFailure(message, errors);
       }
       if (status == 429) {
-        return const RateLimitFailure();
+        final retryAfter = _retryAfterSeconds(error, data);
+        return RateLimitFailure('Too many requests', retryAfter);
+      }
+      if (status == 503) {
+        final message = _safeServerMessage(data);
+        if (message != null) {
+          return ServerFailure(message);
+        }
+        return const ServerFailure();
       }
       if (status >= 500) {
         return const ServerFailure();
@@ -64,6 +72,17 @@ String? _extractMessage(dynamic data) {
   if (data is Map && data['message'] != null) {
     return data['message'].toString();
   }
+  return null;
+}
+
+int? _retryAfterSeconds(DioException error, dynamic data) {
+  if (data is Map && data['retry_after_seconds'] != null) {
+    final raw = data['retry_after_seconds'];
+    if (raw is int) return raw;
+    return int.tryParse(raw.toString());
+  }
+  final header = error.response?.headers.value('retry-after');
+  if (header != null) return int.tryParse(header);
   return null;
 }
 

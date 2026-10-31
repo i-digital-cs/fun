@@ -22,6 +22,7 @@ function initAuthAccess(root) {
     const footerForm = root.querySelector('[data-footer-form]');
     const footerTheater = root.querySelector('[data-footer-theater]');
     const resendBtn = root.querySelector('[data-auth-resend]');
+    const resendCooldownEl = root.querySelector('[data-resend-cooldown]');
     const otpInputs = [...root.querySelectorAll('[data-otp-input]')];
     const otpHidden = root.querySelector('[data-otp-value]');
 
@@ -30,6 +31,9 @@ function initAuthAccess(root) {
 
     let busy = false;
     let abortVerify = false;
+    let resendSecondsLeft = Math.max(0, parseInt(root.dataset.retryAfter || '0', 10) || 0);
+    let resendTimerId = null;
+    let resendBusy = false;
 
     if (titleEl) titleEl.dataset.default = titleEl.textContent.trim();
     if (subEl) subEl.dataset.default = subEl.textContent.trim();
@@ -100,10 +104,58 @@ function initAuthAccess(root) {
         successEl?.classList.toggle('is-visible', stage === 'success');
     }
 
+    function formatMmSs(totalSeconds) {
+        const s = Math.max(0, totalSeconds | 0);
+        const mm = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        return `${mm}:${ss}`;
+    }
+
+    function paintResendUi() {
+        if (!resendBtn) return;
+        const cooling = resendSecondsLeft > 0 || resendBusy;
+        resendBtn.disabled = cooling;
+        resendBtn.classList.toggle('opacity-60', cooling);
+        if (resendSecondsLeft > 0) {
+            const label = (i18n.resend_in || 'Resend code in :time').replace(
+                ':time',
+                formatMmSs(resendSecondsLeft),
+            );
+            resendBtn.textContent = label;
+            if (resendCooldownEl) {
+                resendCooldownEl.textContent = label;
+                resendCooldownEl.classList.remove('hidden');
+            }
+        } else {
+            resendBtn.textContent = i18n.resend || 'Resend code';
+            resendCooldownEl?.classList.add('hidden');
+        }
+    }
+
+    function startResendCooldown(seconds) {
+        resendSecondsLeft = Math.max(0, Math.ceil(Number(seconds) || 0));
+        if (resendTimerId) {
+            clearInterval(resendTimerId);
+            resendTimerId = null;
+        }
+        paintResendUi();
+        if (resendSecondsLeft <= 0) return;
+        resendTimerId = window.setInterval(() => {
+            resendSecondsLeft = Math.max(0, resendSecondsLeft - 1);
+            paintResendUi();
+            if (resendSecondsLeft <= 0 && resendTimerId) {
+                clearInterval(resendTimerId);
+                resendTimerId = null;
+            }
+        }, 1000);
+    }
+
     function showTheater(show) {
         form?.classList.toggle('hidden', show);
         theater?.classList.toggle('hidden', !show);
         footerForm?.classList.toggle('hidden', show);
+        // Identity cancel lives in data-footer-theater; OTP resend uses
+        // data-footer-resend and stays visible on the form stage.
         footerTheater?.classList.toggle('hidden', !show);
     }
 
@@ -306,6 +358,7 @@ function initAuthAccess(root) {
 
     resendBtn?.addEventListener('click', async () => {
         if (root.dataset.stage === 'success') return;
+        if (resendBusy || resendSecondsLeft > 0) return;
 
         const resendUrl = root.dataset.resendUrl;
         if (!resendUrl) {
@@ -314,6 +367,9 @@ function initAuthAccess(root) {
             showError('');
             return;
         }
+
+        resendBusy = true;
+        paintResendUi();
 
         try {
             const response = await fetch(resendUrl, {
@@ -328,18 +384,39 @@ function initAuthAccess(root) {
                 body: '{}',
             });
             const payload = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(payload.message || 'Resend failed');
+            const retryAfter = Number(
+                payload.retry_after_seconds ??
+                    response.headers.get('Retry-After') ??
+                    0,
+            );
+
+            if (response.status === 429) {
+                startResendCooldown(retryAfter || root.dataset.retryAfter || 60);
+                throw new Error(payload.message || i18n.resend || 'Please wait');
+            }
+
+            if (!response.ok) {
+                // Delivery failure (e.g. 503): keep Resend actionable.
+                if (retryAfter > 0) startResendCooldown(retryAfter);
+                throw new Error(payload.message || 'Resend failed');
+            }
+
             abortVerify = true;
             restoreForm();
             showError('');
             if (titleEl) {
-                // flash status via subtitle
                 setCopy(titleEl.dataset.default || '', payload.message || i18n.resend_ok);
             }
+            startResendCooldown(retryAfter > 0 ? retryAfter : (Number(root.dataset.retryAfter) || 60));
         } catch (err) {
             showError(err.message);
+        } finally {
+            resendBusy = false;
+            paintResendUi();
         }
     });
+
+    startResendCooldown(resendSecondsLeft);
 }
 
 document.querySelectorAll('[data-auth-access]').forEach(initAuthAccess);

@@ -38,7 +38,15 @@ class ConflictFailure extends Failure {
 
 /// HTTP 429.
 class RateLimitFailure extends Failure {
-  const RateLimitFailure([super.message = 'Too many requests']);
+  const RateLimitFailure([
+    super.message = 'Too many requests',
+    this.retryAfterSeconds,
+  ]);
+
+  final int? retryAfterSeconds;
+
+  @override
+  List<Object?> get props => [message, retryAfterSeconds];
 }
 
 class ValidationFailure extends Failure {

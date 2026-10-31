@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -834,10 +833,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get eventSaved => 'Event saved';
+  String get eventSaved => 'Event saved as draft';
 
   @override
-  String get eventPublished => 'Event published';
+  String get eventPublished => 'Event published — it\'s now discoverable';
 
   @override
   String get optional => 'Optional';
@@ -1150,6 +1149,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resendCode => 'Resend code';
+
+  @override
+  String get resendCodePrompt => 'Didn\'t receive it?';
+
+  @override
+  String resendCodeIn(String time) {
+    return 'Resend code in $time';
+  }
 
   @override
   String get forgotPassword => 'Forgot password?';
