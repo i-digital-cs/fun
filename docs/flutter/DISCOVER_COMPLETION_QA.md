@@ -157,30 +157,34 @@ Full-suite / golden: not overwritten; any pre-existing golden failure remains se
 
 ## 13. Emulator test matrix
 
-Device: `emulator-5554` (bidex_api34). Build: `FUNNITY_BUILD_PROOF=discover_completion_20261031`.
+Device: `emulator-5554` (bidex_api34).  
+Builds: `discover_completion_20261031` → `discover_completion_20261031_b` (catalog lat/lng + `_apply` wipe fix).
 
-| Flow | Status | Notes |
-|------|--------|-------|
-| 1 New Cairo → Map → Search → Results → Event → Back | **PENDING runtime** | Exercised after install; see §14 |
-| 2 New Cairo → List → Search → Map | **PENDING runtime** | Shared query SSOT in code |
-| 3 All Egypt → Map → Marker → list → details → Back | **PENDING runtime** | |
-| 4 Pan → Search this area → Return to city | **PENDING runtime** | |
-| 5 GPS outside Egypt → Choose City → New Cairo | **PENDING runtime** | Code path covered by unit tests |
-| 6 Arabic Discover → Map → Event → Back | **UNVERIFIED** | Needs locale switch on device |
+| Flow | Status | Evidence |
+|------|--------|----------|
+| 1 New Cairo → Map results (no Mansoura nationwide dump) | **VERIFIED** | Chip `New Cairo · All distances`; aggregates New Cairo / Obour / 6th of October / Sheikh Zayed; **Mansoura=false**; `08_*.png`, `ui_e5.xml` |
+| 2 New Cairo → List preserves city | **VERIFIED** | List filter `City · New Cairo`; `11_*.png`, `ui_e7.xml` |
+| 3 All Egypt → Map markers | **VERIFIED** | Nationwide aggregates including Mansoura when chip is All Egypt (`ui_e2.xml`) |
+| 4 Return to selected city control | **VERIFIED** | `Return to selected city` present after New Cairo (`ui_e5.xml`) |
+| 5 Out-of-region GPS recovery | **PARTIAL** | Unit tests + code path; device “Use device location” not fully screenshot-gated this pass |
+| 6 Arabic Discover | **UNVERIFIED** | Locale not switched on emulator |
+| City sheet thumbnails | **PARTIAL** | API returns `image_url`; Flutter parses + UI built; uiautomator tap on aggregate flaky (zoom without sheet) |
+| Event details → Back | **UNVERIFIED** | Needs reliable sheet/marker open under automation |
 
-Flows marked PENDING are completed in the same session once the app finishes installing; update checkboxes in §14 screenshots.
+Additional fix verified mid-session: catalog `_parseCatalog` omitted city lat/lng; `_apply` re-selected city and wiped picker centroids → origin-aware lost. Fixed in `catalog_remote_source.dart` + `discover_page.dart`.
 
 ---
 
-## 14. Screenshot evidence
+## 14. Screenshot / dump evidence
 
 Directory: `docs/flutter/parity_evidence/`
 
 | File | Subject |
 |------|---------|
-| `08_discover_new_cairo_map.png` | New Cairo map (to capture) |
-| `09_discover_city_events_thumbs.png` | City sheet with thumbs (to capture) |
-| `10_discover_out_of_region.png` | Out-of-region banner (to capture) |
+| `08_discover_new_cairo_map.png` | New Cairo origin-aware map |
+| `09_discover_city_events_thumbs.png` | Attempted city sheet capture |
+| `11_discover_list_new_cairo.png` | List with New Cairo filter |
+| `ui_e2.xml` … `ui_e9.xml` | Runtime UI dumps |
 | Prior `03`–`07_*` | Earlier Discover / profile evidence |
 
 ---
@@ -189,17 +193,18 @@ Directory: `docs/flutter/parity_evidence/`
 
 | Issue | Severity |
 |-------|----------|
-| OSM tile latency on emulator (gray map briefly) | Low |
-| Some SnackBars still English `failure.message` defaults | Low |
-| Progressive radius may still surface nearby *other* cities inside 100 km (expected geography) | Info |
-| Arabic flow not yet device-verified | Medium |
-| Full `flutter test` golden suite not re-baselined | Known |
+| City-aggregate → bottom sheet unreliable under uiautomator (manual OK expected) | Medium |
+| Arabic Discover not device-verified | Medium |
+| Out-of-region GPS screenshot not captured | Medium |
+| OSM tile latency on emulator | Low |
+| Some SnackBars still English defaults | Low |
+| Full golden suite not re-baselined | Known |
 
 ---
 
 ## 16. Backend handoff
 
-**None required** for these defects. Contracts already return images and origin-aware map meta. Optional later: ensure notification deep links never emit non-`Funity-F` public ids (prior profile task).
+**None required.** Images + origin-aware map meta already on production API.
 
 ---
 
@@ -215,6 +220,7 @@ Directory: `docs/flutter/parity_evidence/`
 - `mobile/lib/features/discover/presentation/widgets/location_picker_sheet.dart`
 - `mobile/lib/features/discover/domain/map_discovery.dart`
 - `mobile/lib/features/discover/data/discover_map_remote.dart`
+- `mobile/lib/features/catalog/data/catalog_remote_source.dart` (city lat/lng in catalog parse)
 - `mobile/lib/l10n/app_en.arb` / `app_ar.arb` (+ generated)
 - `mobile/test/features/discover/discovery_ssot_test.dart` **(new)**
 - `docs/flutter/DISCOVER_COMPLETION_QA.md` **(this file)**
@@ -225,14 +231,8 @@ Public Profile files from the prior task remain in the working tree and were not
 
 ## 18. Final verdict
 
-**CONDITIONAL** until emulator flows 1–5 are screenshot-confirmed in §14.
+**CONDITIONAL**
 
-Criteria for upgrading to **PASS**:
+**Why not PASS:** Arabic flow, reliable city-sheet thumbnail capture, event details→back, and out-of-region GPS screenshot remain incomplete under automation.
 
-- New Cairo camera centers near 30.03/31.47 (not Africa / California).
-- Map search uses same `q` as List.
-- City event sheet shows thumbnails when API provides `image_url`.
-- Out-of-region GPS offers Choose city / Explore Egypt (not Laravel bounds text).
-- Back from event details preserves Discover filters.
-
-**BLOCKED** only if install fails or Discover cannot load any events after origin-aware fix.
+**Why not BLOCKED:** New Cairo origin-aware Discover works on emulator (Mansoura no longer appears under New Cairo chip); Map/List share city/query SSOT; API image contract wired; unit tests green; build `discover_completion_20261031_b` installed.
