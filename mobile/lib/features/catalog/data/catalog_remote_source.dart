@@ -59,6 +59,11 @@ class CatalogRemoteSource {
       return CityItem(
         id: m['id'] as int,
         name: m['name'] as String? ?? m['name_en'] as String? ?? '',
+        nameEn: m['name_en'] as String?,
+        nameAr: m['name_ar'] as String?,
+        latitude: (m['latitude'] as num?)?.toDouble(),
+        longitude: (m['longitude'] as num?)?.toDouble(),
+        subtitle: m['subtitle'] as String?,
       );
     }).toList();
     final distances =

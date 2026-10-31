@@ -131,6 +131,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     // Sync filter-panel city edits into the location controller, but never
     // overwrite an active in-region device-GPS mode unless the user cleared to
     // nationwide or picked a different city in the legacy city dropdown.
+    // Also never re-select the same manual city without coords — that would
+    // wipe centroid lat/lng set by the location picker (Mansoura-under-New-Cairo).
     final deviceActive = before.mode == DiscoveryLocationMode.device &&
         !before.outsideDiscoveryRegion;
     final draftCityChanged = !_draftAllCities &&
@@ -138,11 +140,26 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
         _draftCityId != before.cityId;
     if (_draftAllCities && (before.hasManualCity || deviceActive)) {
       await locNotifier.setNationwide(distanceKm: _draftDistanceKm);
-    } else if (draftCityChanged || (!deviceActive && _draftCityId != null)) {
+    } else if (draftCityChanged) {
       final city = _cities.where((c) => c.id == _draftCityId).firstOrNull;
       if (city != null) {
         await locNotifier.selectManualCity(
           cityId: city.id,
+          name: city.name,
+          distanceKm: _draftDistanceKm,
+          latitude: city.latitude,
+          longitude: city.longitude,
+        );
+      }
+    } else if (!deviceActive &&
+        _draftCityId != null &&
+        !before.hasInRegionOrigin &&
+        before.cityId == _draftCityId) {
+      // Same city but missing origin coords — enrich from catalog when possible.
+      final city = _cities.where((c) => c.id == _draftCityId).firstOrNull;
+      if (city?.latitude != null && city?.longitude != null) {
+        await locNotifier.selectManualCity(
+          cityId: city!.id,
           name: city.name,
           distanceKm: _draftDistanceKm,
           latitude: city.latitude,
