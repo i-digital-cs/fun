@@ -37,7 +37,10 @@ class DiscoverMapRemote {
         ),
       );
       final body = response.data ?? const <String, dynamic>{};
-      final clustered = body['meta'] is Map && body['meta']['clustered'] == true;
+      final meta = body['meta'] is Map
+          ? Map<String, dynamic>.from(body['meta'] as Map)
+          : const <String, dynamic>{};
+      final clustered = meta['clustered'] == true;
       final markers = <MapDiscoveryMarker>[];
       final clusters = <MapDiscoveryCluster>[];
       final cityAggregates = <MapCityAggregate>[];
@@ -75,6 +78,10 @@ class DiscoverMapRemote {
           clusters: clusters,
           cityAggregates: cityAggregates,
           clustered: clustered,
+          isSuggestion: meta['is_suggestion'] == true,
+          selectedRadiusKm: (meta['selected_radius_km'] as num?)?.toInt(),
+          effectiveRadiusKm: (meta['effective_radius_km'] as num?)?.toInt(),
+          originAware: meta['origin_aware'] == true,
         ),
       );
     } on DioException catch (e) {

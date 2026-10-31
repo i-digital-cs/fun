@@ -149,19 +149,27 @@ class DiscoverController extends StateNotifier<DiscoverState> {
     required bool allCities,
     double? latitude,
     double? longitude,
+    String? discoveryMode,
   }) {
-    final hasDevice = latitude != null && longitude != null;
+    final hasOrigin = latitude != null && longitude != null;
+    final mode = discoveryMode ??
+        (allCities && !hasOrigin
+            ? 'nationwide'
+            : hasOrigin
+                ? 'manual'
+                : (cityId != null ? 'manual' : 'nationwide'));
     return load(
       filters: DiscoverFilters(
         q: q,
-        cityId: hasDevice || allCities ? null : cityId,
+        cityId: mode == 'nationwide' ? null : cityId,
         categoryId: categoryId,
-        distanceKm: allCities && !hasDevice ? null : distanceKm,
+        distanceKm: mode == 'nationwide' && !hasOrigin ? null : distanceKm,
         latitude: latitude,
         longitude: longitude,
         when: when,
         page: 1,
-        allCities: allCities && !hasDevice,
+        allCities: mode == 'nationwide' && !hasOrigin,
+        discoveryMode: mode,
       ),
     );
   }

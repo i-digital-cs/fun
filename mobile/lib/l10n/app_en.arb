@@ -159,6 +159,34 @@
   "errorConflict": "That action couldn't be completed. Please try again.",
   "errorProfileLoad": "Couldn't load this profile. Check your connection and try again.",
   "profileUnavailable": "This profile is no longer available.",
+  "discoveryOutOfRegion": "Nearby discovery is unavailable for this location. Choose a city in Egypt or explore All Egypt.",
+  "discoveryOutOfRegionMap": "Nearby discovery is unavailable for this map area. Choose a city in Egypt or explore All Egypt.",
+  "chooseCity": "Choose city",
+  "exploreEgypt": "Explore Egypt",
+  "searchThisArea": "Search this area",
+  "searchingArea": "Searching…",
+  "returnToSelectedCity": "Return to selected city",
+  "cityLevelEventsHint": "City-level location (not an exact venue pin)",
+  "eventsInCity": "Events in {city}",
+  "@eventsInCity": {
+    "placeholders": {
+      "city": { "type": "String" }
+    }
+  },
+  "discoverySuggestionNationwide": "No events within {selected} km. Showing nearest available events across Egypt.",
+  "@discoverySuggestionNationwide": {
+    "placeholders": {
+      "selected": { "type": "int" }
+    }
+  },
+  "discoverySuggestionExpanded": "No events within {selected} km. Showing nearest available within {effective} km.",
+  "@discoverySuggestionExpanded": {
+    "placeholders": {
+      "selected": { "type": "int" },
+      "effective": { "type": "int" }
+    }
+  },
+  "mapFilterActiveHint": "Map shows results for your current filters. Pan then tap Search this area to refresh the viewport.",
   "validationRequired": "This field is required",
   "validationEmail": "Enter a valid email",
   "join": "Join",

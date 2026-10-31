@@ -396,6 +396,52 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileUnavailable => 'هذا الملف لم يعد متاحاً.';
 
   @override
+  String get discoveryOutOfRegion =>
+      'الاكتشاف القريب غير متاح لهذا الموقع. اختر مدينة في مصر أو استكشف كل مصر.';
+
+  @override
+  String get discoveryOutOfRegionMap =>
+      'الاكتشاف القريب غير متاح لهذه المنطقة على الخريطة. اختر مدينة في مصر أو استكشف كل مصر.';
+
+  @override
+  String get chooseCity => 'اختر مدينة';
+
+  @override
+  String get exploreEgypt => 'استكشف مصر';
+
+  @override
+  String get searchThisArea => 'ابحث في هذه المنطقة';
+
+  @override
+  String get searchingArea => 'جاري البحث…';
+
+  @override
+  String get returnToSelectedCity => 'العودة إلى المدينة المحددة';
+
+  @override
+  String get cityLevelEventsHint =>
+      'موقع على مستوى المدينة (ليس موقعاً دقيقاً للفعالية)';
+
+  @override
+  String eventsInCity(String city) {
+    return 'فعاليات في $city';
+  }
+
+  @override
+  String discoverySuggestionNationwide(int selected) {
+    return 'لا توجد فعاليات ضمن $selected كم. عرض أقرب الفعاليات المتاحة في أنحاء مصر.';
+  }
+
+  @override
+  String discoverySuggestionExpanded(int selected, int effective) {
+    return 'لا توجد فعاليات ضمن $selected كم. عرض أقرب الفعاليات ضمن $effective كم.';
+  }
+
+  @override
+  String get mapFilterActiveHint =>
+      'تعرض الخريطة نتائج عوامل التصفية الحالية. حرّك الخريطة ثم اضغط «ابحث في هذه المنطقة» لتحديث العرض.';
+
+  @override
   String get validationRequired => 'هذا الحقل مطلوب';
 
   @override

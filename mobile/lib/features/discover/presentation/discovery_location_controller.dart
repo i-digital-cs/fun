@@ -3,6 +3,7 @@ import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/discover/data/discover_map_remote.dart';
+import 'package:fun_mobile/features/discover/domain/discovery_geo.dart';
 import 'package:fun_mobile/features/events/domain/events_repository.dart';
 
 class DiscoveryLocationState {
@@ -20,6 +21,7 @@ class DiscoveryLocationState {
     this.error,
     this.lastDetectedAt,
     this.isApproximate = false,
+    this.outsideDiscoveryRegion = false,
   });
 
   final DiscoveryLocationMode mode;
@@ -36,6 +38,10 @@ class DiscoveryLocationState {
   final DateTime? lastDetectedAt;
   final bool isApproximate;
 
+  /// Device/manual coords exist but fall outside the Egypt discovery envelope.
+  /// Nearby map search must not pretend the user is in Egypt.
+  final bool outsideDiscoveryRegion;
+
   bool get hasManualCity =>
       mode == DiscoveryLocationMode.manual && cityId != null && cityName != null;
   bool get hasDeviceFix =>
@@ -43,9 +49,23 @@ class DiscoveryLocationState {
       deviceLat != null &&
       deviceLng != null;
 
+  /// Origin coords usable for map/list radius queries inside Egypt.
+  bool get hasInRegionOrigin =>
+      deviceLat != null &&
+      deviceLng != null &&
+      !outsideDiscoveryRegion &&
+      DiscoveryGeo.contains(deviceLat!, deviceLng!);
+
   String get summaryLabel {
     if (mode == DiscoveryLocationMode.device) {
       if (isDetecting) return 'Detecting your location…';
+      if (outsideDiscoveryRegion) {
+        final place = shortLabel ?? locationLabel;
+        if (place != null && place.isNotEmpty) {
+          return 'Current location · $place';
+        }
+        return 'Current location · outside Egypt';
+      }
       if (hasDeviceFix) {
         final place = shortLabel ?? locationLabel;
         if (place != null && place.isNotEmpty) {
@@ -81,6 +101,7 @@ class DiscoveryLocationState {
     String? error,
     DateTime? lastDetectedAt,
     bool? isApproximate,
+    bool? outsideDiscoveryRegion,
     bool clearCity = false,
     bool clearDevice = false,
     bool clearError = false,
@@ -108,17 +129,25 @@ class DiscoveryLocationState {
       isApproximate: clearDevice
           ? false
           : (isApproximate ?? this.isApproximate),
+      outsideDiscoveryRegion: clearDevice
+          ? false
+          : (outsideDiscoveryRegion ?? this.outsideDiscoveryRegion),
     );
   }
 
   /// Filters for Discover / home — never mixes manual city with GPS.
+  ///
+  /// Out-of-region device GPS does **not** become a nearby origin; callers
+  /// should fall back to nationwide browse until the user picks an Egyptian city.
   DiscoverFilters toDiscoverFilters({
     String? q,
     int? categoryId,
     String? when,
     int page = 1,
   }) {
-    if (mode == DiscoveryLocationMode.device && hasDeviceFix) {
+    if (mode == DiscoveryLocationMode.device &&
+        hasDeviceFix &&
+        hasInRegionOrigin) {
       return DiscoverFilters(
         discoveryMode: 'device',
         distanceKm: distanceKm,
@@ -131,10 +160,19 @@ class DiscoveryLocationState {
         allCities: false,
       );
     }
-    // Manual place coords (session) take priority over city_id for origin.
-    if (mode == DiscoveryLocationMode.manual &&
-        deviceLat != null &&
-        deviceLng != null) {
+    if (mode == DiscoveryLocationMode.device && outsideDiscoveryRegion) {
+      return DiscoverFilters(
+        discoveryMode: 'nationwide',
+        allCities: true,
+        distanceKm: distanceKm,
+        q: q,
+        categoryId: categoryId,
+        when: when,
+        page: page,
+      );
+    }
+    // Manual place / city coords take priority for origin-aware radius.
+    if (mode == DiscoveryLocationMode.manual && hasInRegionOrigin) {
       return DiscoverFilters(
         discoveryMode: 'manual',
         cityId: cityId,
@@ -238,8 +276,23 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     required int cityId,
     required String name,
     int? distanceKm,
+    double? latitude,
+    double? longitude,
   }) async {
     final km = distanceKm ?? state.distanceKm;
+    // Prefer city centroid so Map origin-aware search matches List city radius.
+    if (latitude != null &&
+        longitude != null &&
+        DiscoveryGeo.contains(latitude, longitude)) {
+      await selectManualPlace(
+        name: name,
+        latitude: latitude,
+        longitude: longitude,
+        cityId: cityId,
+        distanceKm: km,
+      );
+      return;
+    }
     await _service.clearManualPlace();
     await _service.setManualCity(cityId: cityId, name: name);
     await _service.setDistanceKm(km);
@@ -250,6 +303,7 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
       distanceKm: km,
       clearDevice: true,
       clearError: true,
+      outsideDiscoveryRegion: false,
     );
   }
 
@@ -273,6 +327,7 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
       latitude: latitude,
       longitude: longitude,
     );
+    final inRegion = DiscoveryGeo.contains(latitude, longitude);
     state = DiscoveryLocationState(
       mode: DiscoveryLocationMode.manual,
       cityId: cityId,
@@ -280,6 +335,10 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
       distanceKm: km,
       deviceLat: latitude,
       deviceLng: longitude,
+      outsideDiscoveryRegion: !inRegion,
+      error: inRegion
+          ? null
+          : 'Nearby discovery is unavailable for this location. Choose an Egyptian city or explore All Egypt.',
     );
   }
 
@@ -295,6 +354,7 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
       clearDevice: true,
       distanceKm: km,
       clearError: true,
+      outsideDiscoveryRegion: false,
     );
   }
 
@@ -345,6 +405,15 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
     } catch (_) {
       // Keep coords; label optional.
     }
+    final inRegion = DiscoveryGeo.contains(pos.lat, pos.lng);
+    String? error;
+    if (!inRegion) {
+      error =
+          'Nearby discovery is unavailable for this location. Choose a city in Egypt or explore All Egypt.';
+    } else if (approximate) {
+      error =
+          'Location is approximate (±${pos.accuracyM.round()} m). Retry or pick a city.';
+    }
     state = state.copyWith(
       isDetecting: false,
       deviceLat: pos.lat,
@@ -353,14 +422,13 @@ class DiscoveryLocationController extends StateNotifier<DiscoveryLocationState> 
       locationLabel: displayName,
       shortLabel: shortName,
       isApproximate: approximate,
+      outsideDiscoveryRegion: !inRegion,
       lastDetectedAt: DateTime.now(),
       clearCity: true,
-      clearError: !approximate,
-      error: approximate
-          ? 'Location is approximate (±${pos.accuracyM.round()} m). Retry or pick a city.'
-          : null,
+      clearError: error == null,
+      error: error,
     );
-    return approximate ? state.error : null;
+    return error;
   }
 
   Future<String?> retryDeviceLocation() => enableDeviceLocation();

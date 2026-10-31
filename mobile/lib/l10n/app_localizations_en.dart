@@ -400,6 +400,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileUnavailable => 'This profile is no longer available.';
 
   @override
+  String get discoveryOutOfRegion =>
+      'Nearby discovery is unavailable for this location. Choose a city in Egypt or explore All Egypt.';
+
+  @override
+  String get discoveryOutOfRegionMap =>
+      'Nearby discovery is unavailable for this map area. Choose a city in Egypt or explore All Egypt.';
+
+  @override
+  String get chooseCity => 'Choose city';
+
+  @override
+  String get exploreEgypt => 'Explore Egypt';
+
+  @override
+  String get searchThisArea => 'Search this area';
+
+  @override
+  String get searchingArea => 'Searching…';
+
+  @override
+  String get returnToSelectedCity => 'Return to selected city';
+
+  @override
+  String get cityLevelEventsHint =>
+      'City-level location (not an exact venue pin)';
+
+  @override
+  String eventsInCity(String city) {
+    return 'Events in $city';
+  }
+
+  @override
+  String discoverySuggestionNationwide(int selected) {
+    return 'No events within $selected km. Showing nearest available events across Egypt.';
+  }
+
+  @override
+  String discoverySuggestionExpanded(int selected, int effective) {
+    return 'No events within $selected km. Showing nearest available within $effective km.';
+  }
+
+  @override
+  String get mapFilterActiveHint =>
+      'Map shows results for your current filters. Pan then tap Search this area to refresh the viewport.';
+
+  @override
   String get validationRequired => 'This field is required';
 
   @override

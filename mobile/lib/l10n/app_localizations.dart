@@ -836,6 +836,78 @@ abstract class AppLocalizations {
   /// **'This profile is no longer available.'**
   String get profileUnavailable;
 
+  /// No description provided for @discoveryOutOfRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby discovery is unavailable for this location. Choose a city in Egypt or explore All Egypt.'**
+  String get discoveryOutOfRegion;
+
+  /// No description provided for @discoveryOutOfRegionMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby discovery is unavailable for this map area. Choose a city in Egypt or explore All Egypt.'**
+  String get discoveryOutOfRegionMap;
+
+  /// No description provided for @chooseCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose city'**
+  String get chooseCity;
+
+  /// No description provided for @exploreEgypt.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Egypt'**
+  String get exploreEgypt;
+
+  /// No description provided for @searchThisArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this area'**
+  String get searchThisArea;
+
+  /// No description provided for @searchingArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching…'**
+  String get searchingArea;
+
+  /// No description provided for @returnToSelectedCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to selected city'**
+  String get returnToSelectedCity;
+
+  /// No description provided for @cityLevelEventsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'City-level location (not an exact venue pin)'**
+  String get cityLevelEventsHint;
+
+  /// No description provided for @eventsInCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Events in {city}'**
+  String eventsInCity(String city);
+
+  /// No description provided for @discoverySuggestionNationwide.
+  ///
+  /// In en, this message translates to:
+  /// **'No events within {selected} km. Showing nearest available events across Egypt.'**
+  String discoverySuggestionNationwide(int selected);
+
+  /// No description provided for @discoverySuggestionExpanded.
+  ///
+  /// In en, this message translates to:
+  /// **'No events within {selected} km. Showing nearest available within {effective} km.'**
+  String discoverySuggestionExpanded(int selected, int effective);
+
+  /// No description provided for @mapFilterActiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Map shows results for your current filters. Pan then tap Search this area to refresh the viewport.'**
+  String get mapFilterActiveHint;
+
   /// No description provided for @validationRequired.
   ///
   /// In en, this message translates to:

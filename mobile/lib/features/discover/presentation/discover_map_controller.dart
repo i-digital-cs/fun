@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/core/errors/error_mapper.dart';
+import 'package:fun_mobile/core/errors/failures.dart';
 import 'package:fun_mobile/core/providers/core_providers.dart';
 import 'package:fun_mobile/features/discover/data/discover_map_remote.dart';
 import 'package:fun_mobile/features/discover/domain/map_discovery.dart';
@@ -17,6 +18,11 @@ class DiscoverMapState {
     this.selectedCity,
     this.cityEvents = const [],
     this.showSearchArea = false,
+    this.isSuggestion = false,
+    this.selectedRadiusKm,
+    this.effectiveRadiusKm,
+    this.originAware = false,
+    this.errorCode,
   });
 
   final List<MapDiscoveryMarker> markers;
@@ -24,10 +30,17 @@ class DiscoverMapState {
   final List<MapCityAggregate> cityAggregates;
   final bool isLoading;
   final String? error;
+
+  /// Machine-readable recovery: `out_of_region` | `network` | `server` | null.
+  final String? errorCode;
   final MapDiscoveryMarker? selectedMarker;
   final MapCityAggregate? selectedCity;
   final List<MapCityEvent> cityEvents;
   final bool showSearchArea;
+  final bool isSuggestion;
+  final int? selectedRadiusKm;
+  final int? effectiveRadiusKm;
+  final bool originAware;
 
   DiscoverMapState copyWith({
     List<MapDiscoveryMarker>? markers,
@@ -35,12 +48,18 @@ class DiscoverMapState {
     List<MapCityAggregate>? cityAggregates,
     bool? isLoading,
     String? error,
+    String? errorCode,
     MapDiscoveryMarker? selectedMarker,
     MapCityAggregate? selectedCity,
     List<MapCityEvent>? cityEvents,
     bool clearSelected = false,
     bool clearError = false,
     bool? showSearchArea,
+    bool? isSuggestion,
+    int? selectedRadiusKm,
+    int? effectiveRadiusKm,
+    bool? originAware,
+    bool clearSuggestion = false,
   }) {
     return DiscoverMapState(
       markers: markers ?? this.markers,
@@ -48,11 +67,22 @@ class DiscoverMapState {
       cityAggregates: cityAggregates ?? this.cityAggregates,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      errorCode: clearError ? null : (errorCode ?? this.errorCode),
       selectedMarker:
           clearSelected ? null : (selectedMarker ?? this.selectedMarker),
       selectedCity: clearSelected ? null : (selectedCity ?? this.selectedCity),
       cityEvents: clearSelected ? const [] : (cityEvents ?? this.cityEvents),
       showSearchArea: showSearchArea ?? this.showSearchArea,
+      isSuggestion: clearSuggestion
+          ? false
+          : (isSuggestion ?? this.isSuggestion),
+      selectedRadiusKm: clearSuggestion
+          ? null
+          : (selectedRadiusKm ?? this.selectedRadiusKm),
+      effectiveRadiusKm: clearSuggestion
+          ? null
+          : (effectiveRadiusKm ?? this.effectiveRadiusKm),
+      originAware: originAware ?? this.originAware,
     );
   }
 }
@@ -79,7 +109,12 @@ class DiscoverMapController extends StateNotifier<DiscoverMapState> {
     int? distanceKm,
   }) async {
     final id = ++_requestId;
-    state = state.copyWith(isLoading: true, clearError: true, showSearchArea: false);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      showSearchArea: false,
+      clearSelected: true,
+    );
     final result = await _remote.fetch(
       bounds,
       zoom: zoom,
@@ -94,17 +129,37 @@ class DiscoverMapController extends StateNotifier<DiscoverMapState> {
     );
     if (id != _requestId) return;
     if (result.failure != null) {
+      final failure = result.failure!;
+      final raw = failure.message.toLowerCase();
+      final outOfRegion = raw.contains('supported discovery') ||
+          raw.contains('outside the supported') ||
+          raw.contains('map area is too large');
+      final msg = outOfRegion
+          ? 'Nearby discovery is unavailable for this map area. Choose a city in Egypt or explore All Egypt.'
+          : failureUserMessage(failure);
+      final code = outOfRegion
+          ? 'out_of_region'
+          : failure is NetworkFailure
+              ? 'network'
+              : 'server';
       state = state.copyWith(
         isLoading: false,
-        error: failureUserMessage(result.failure!),
+        error: msg,
+        errorCode: code,
+        clearSuggestion: true,
       );
       return;
     }
+    final data = result.data!;
     state = state.copyWith(
       isLoading: false,
-      markers: result.data!.markers,
-      clusters: result.data!.clusters,
-      cityAggregates: result.data!.cityAggregates,
+      markers: data.markers,
+      clusters: data.clusters,
+      cityAggregates: data.cityAggregates,
+      isSuggestion: data.isSuggestion,
+      selectedRadiusKm: data.selectedRadiusKm,
+      effectiveRadiusKm: data.effectiveRadiusKm,
+      originAware: data.originAware,
       clearError: true,
     );
   }
@@ -113,6 +168,19 @@ class DiscoverMapController extends StateNotifier<DiscoverMapState> {
     if (!state.showSearchArea) {
       state = state.copyWith(showSearchArea: true);
     }
+  }
+
+  void setClientError({
+    required String message,
+    String? errorCode,
+  }) {
+    state = state.copyWith(
+      isLoading: false,
+      error: message,
+      errorCode: errorCode,
+      clearSuggestion: true,
+      showSearchArea: false,
+    );
   }
 
   void selectMarker(MapDiscoveryMarker marker) {
@@ -129,42 +197,40 @@ class DiscoverMapController extends StateNotifier<DiscoverMapState> {
     String? q,
   }) async {
     if (aggregate.isCluster || aggregate.cityId <= 0) {
-      state = DiscoverMapState(
-        markers: state.markers,
-        clusters: state.clusters,
-        cityAggregates: state.cityAggregates,
+      state = state.copyWith(
         selectedCity: aggregate,
-        showSearchArea: state.showSearchArea,
+        selectedMarker: null,
+        cityEvents: const [],
       );
       return;
     }
-    state = DiscoverMapState(
-      markers: state.markers,
-      clusters: state.clusters,
-      cityAggregates: state.cityAggregates,
+    final id = ++_requestId;
+    state = state.copyWith(
       isLoading: true,
       selectedCity: aggregate,
-      showSearchArea: state.showSearchArea,
+      selectedMarker: null,
+      cityEvents: const [],
+      clearError: true,
     );
     final result = await _remote.cityEvents(
       aggregate.cityId,
       categoryId: categoryId,
       q: q,
     );
+    if (id != _requestId) return;
     if (result.failure != null) {
       state = state.copyWith(
         isLoading: false,
         error: failureUserMessage(result.failure!),
+        errorCode: 'server',
       );
       return;
     }
-    state = DiscoverMapState(
-      markers: state.markers,
-      clusters: state.clusters,
-      cityAggregates: state.cityAggregates,
+    state = state.copyWith(
+      isLoading: false,
       selectedCity: aggregate,
       cityEvents: result.data?.events ?? const [],
-      showSearchArea: state.showSearchArea,
+      clearError: true,
     );
   }
 

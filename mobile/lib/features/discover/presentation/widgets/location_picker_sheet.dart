@@ -87,6 +87,8 @@ class _LocationPickerSheetState extends ConsumerState<_LocationPickerSheet> {
           cityId: city.id,
           name: city.name,
           distanceKm: km,
+          latitude: city.latitude,
+          longitude: city.longitude,
         );
     if (mounted) Navigator.of(context).pop();
   }

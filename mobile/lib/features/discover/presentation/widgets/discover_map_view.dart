@@ -5,24 +5,31 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fun_mobile/app/theme/app_colors.dart';
 import 'package:fun_mobile/core/location/discovery_location_service.dart';
+import 'package:fun_mobile/core/widgets/app_network_image.dart';
+import 'package:fun_mobile/features/discover/domain/discovery_geo.dart';
 import 'package:fun_mobile/features/discover/domain/map_discovery.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_map_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/discovery_location_controller.dart';
+import 'package:fun_mobile/features/discover/presentation/discovery_query_controller.dart';
+import 'package:fun_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
 /// Egypt-centered map-first Discover surface (flutter_map + OSM tiles).
+///
+/// Query / category / when come from [discoveryQueryControllerProvider] (SSOT
+/// with List). Location / radius from [discoveryLocationControllerProvider].
+/// Viewport bounds are applied only via Search this area / initial load.
 class DiscoverMapView extends ConsumerStatefulWidget {
   const DiscoverMapView({
     super.key,
-    this.categoryId,
-    this.query,
-    this.when,
+    this.onOpenLocationPicker,
+    this.onExploreEgypt,
   });
 
-  final int? categoryId;
-  final String? query;
-  final String? when;
+  final Future<void> Function()? onOpenLocationPicker;
+  final Future<void> Function()? onExploreEgypt;
 
   @override
   ConsumerState<DiscoverMapView> createState() => _DiscoverMapViewState();
@@ -32,7 +39,6 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
   final _map = MapController();
   bool _loadedOnce = false;
 
-  /// Nationwide / unknown-origin framing — used for first paint and resets.
   static final _egyptBounds = LatLngBounds(
     const LatLng(22.0, 24.9),
     const LatLng(31.75, 35.0),
@@ -85,13 +91,9 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
     if (_loadedOnce || !mounted) return;
     _loadedOnce = true;
     final loc = ref.read(discoveryLocationControllerProvider);
-    if (loc.hasDeviceFix ||
-        (loc.mode == DiscoveryLocationMode.manual &&
-            loc.deviceLat != null &&
-            loc.deviceLng != null)) {
+    if (loc.hasInRegionOrigin) {
       _fitOrigin(loc.deviceLat!, loc.deviceLng!, loc.distanceKm);
     } else {
-      // Manual city without coords, or nationwide — Egypt envelope.
       _map.fitCamera(_egyptInitialFit);
     }
     await _searchCurrentArea();
@@ -110,22 +112,49 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
   Future<void> _searchCurrentArea() async {
     final zoom = _map.camera.zoom.round().clamp(4, 16);
     final loc = ref.read(discoveryLocationControllerProvider);
+    final query = ref.read(discoveryQueryControllerProvider);
+    final bounds = _boundsFromCamera();
+
+    if (!DiscoveryGeo.boundsIntersectEgypt(
+      north: bounds.north,
+      south: bounds.south,
+      east: bounds.east,
+      west: bounds.west,
+    )) {
+      ref.read(discoverMapControllerProvider.notifier).setClientError(
+            message: AppLocalizations.of(context).discoveryOutOfRegionMap,
+            errorCode: 'out_of_region',
+          );
+      return;
+    }
+
     final originAware = (loc.mode == DiscoveryLocationMode.device ||
             loc.mode == DiscoveryLocationMode.manual) &&
-        loc.deviceLat != null &&
-        loc.deviceLng != null;
+        loc.hasInRegionOrigin;
+
     await ref.read(discoverMapControllerProvider.notifier).searchArea(
-          _boundsFromCamera(),
+          bounds,
           zoom: zoom,
-          categoryId: widget.categoryId,
-          q: widget.query,
-          when: widget.when,
+          categoryId: query.categoryId,
+          q: query.normalizedQ,
+          when: query.when,
           includeApproximate: false,
           discoveryMode: originAware ? loc.mode.name : null,
           latitude: originAware ? loc.deviceLat : null,
           longitude: originAware ? loc.deviceLng : null,
           distanceKm: originAware ? loc.distanceKm : null,
         );
+  }
+
+  Future<void> _returnToSelectedOrigin() async {
+    final loc = ref.read(discoveryLocationControllerProvider);
+    if (loc.hasInRegionOrigin) {
+      _fitOrigin(loc.deviceLat!, loc.deviceLng!, loc.distanceKm);
+      await _searchCurrentArea();
+      return;
+    }
+    _map.fitCamera(_egyptInitialFit);
+    await _searchCurrentArea();
   }
 
   void _onMapEvent(MapEvent event) {
@@ -136,39 +165,49 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     ref.listen(discoveryLocationControllerProvider, (prev, next) {
       if (!_loadedOnce || !mounted) return;
       final movedOrigin = prev?.deviceLat != next.deviceLat ||
           prev?.deviceLng != next.deviceLng ||
           prev?.mode != next.mode ||
-          prev?.distanceKm != next.distanceKm;
+          prev?.distanceKm != next.distanceKm ||
+          prev?.outsideDiscoveryRegion != next.outsideDiscoveryRegion;
       if (!movedOrigin) return;
-      if ((next.mode == DiscoveryLocationMode.device ||
-              next.mode == DiscoveryLocationMode.manual) &&
-          next.deviceLat != null &&
-          next.deviceLng != null) {
+      if (next.outsideDiscoveryRegion) {
+        _map.fitCamera(_egyptInitialFit);
+        _searchCurrentArea();
+        return;
+      }
+      if (next.hasInRegionOrigin) {
         _fitOrigin(next.deviceLat!, next.deviceLng!, next.distanceKm);
         _searchCurrentArea();
       } else if (next.mode == DiscoveryLocationMode.nationwide) {
         _map.fitCamera(_egyptInitialFit);
         _searchCurrentArea();
+      } else if (next.mode == DiscoveryLocationMode.manual &&
+          next.cityId != null) {
+        // City without coords — keep Egypt framing; list still filters by city_id.
+        _searchCurrentArea();
       }
+    });
+
+    ref.listen(discoveryQueryControllerProvider, (prev, next) {
+      if (!_loadedOnce || !mounted) return;
+      if (prev == next) return;
+      _searchCurrentArea();
     });
 
     final mapState = ref.watch(discoverMapControllerProvider);
     final loc = ref.watch(discoveryLocationControllerProvider);
     final selected = mapState.selectedMarker;
 
-    // Single origin-sync path via the listen above (_fitOrigin). A second
-    // listen that jumped to zoom 12 fought CameraFit and caused Africa→Egypt flash.
-
     return Stack(
       children: [
         FlutterMap(
           mapController: _map,
           options: MapOptions(
-            // First paint already Egypt-framed (avoids continent flash before
-            // post-frame fitCamera).
             initialCameraFit: _egyptInitialFit,
             minZoom: 4,
             maxZoom: 17,
@@ -179,12 +218,9 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              // OSM requires an identifying UA; flutter_map prefixes
-              // `flutter_map (<package>)`.
               userAgentPackageName: 'com.funnity.app',
               maxZoom: 19,
               errorTileCallback: (tile, error, stackTrace) {
-                // Surface tile failures (gray map) in logcat — not a UX change.
                 assert(() {
                   // ignore: avoid_print
                   print(
@@ -195,11 +231,7 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                 }());
               },
             ),
-            if ((loc.hasDeviceFix ||
-                    (loc.mode == DiscoveryLocationMode.manual &&
-                        loc.deviceLat != null &&
-                        loc.deviceLng != null)) &&
-                loc.distanceKm > 0)
+            if (loc.hasInRegionOrigin && loc.distanceKm > 0)
               CircleLayer(
                 circles: [
                   CircleMarker(
@@ -211,6 +243,7 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                     borderColor: const Color(0x884F46E5),
                   ),
                   if (loc.hasDeviceFix &&
+                      !loc.outsideDiscoveryRegion &&
                       loc.accuracyM != null &&
                       loc.accuracyM! < 5000)
                     CircleMarker(
@@ -253,12 +286,13 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                           return;
                         }
                         _map.move(LatLng(a.latitude, a.longitude), 11);
+                        final query = ref.read(discoveryQueryControllerProvider);
                         ref
                             .read(discoverMapControllerProvider.notifier)
                             .selectCityAggregate(
                               a,
-                              categoryId: widget.categoryId,
-                              q: widget.query,
+                              categoryId: query.categoryId,
+                              q: query.normalizedQ,
                             );
                       },
                       child: Tooltip(
@@ -291,10 +325,7 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                       ),
                     ),
                   ),
-                if ((loc.hasDeviceFix ||
-                        (loc.mode == DiscoveryLocationMode.manual &&
-                            loc.deviceLat != null &&
-                            loc.deviceLng != null)))
+                if (loc.hasInRegionOrigin)
                   Marker(
                     point: LatLng(loc.deviceLat!, loc.deviceLng!),
                     width: 28,
@@ -302,7 +333,8 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                     child: Tooltip(
                       message: loc.shortLabel ??
                           loc.locationLabel ??
-                          'Current location',
+                          loc.cityName ??
+                          'Selected location',
                       child: Container(
                         decoration: BoxDecoration(
                           color: loc.hasDeviceFix
@@ -334,7 +366,28 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
             child: Center(
               child: FilledButton.tonal(
                 onPressed: mapState.isLoading ? null : _searchCurrentArea,
-                child: Text(mapState.isLoading ? 'Searching…' : 'Search this area'),
+                child: Text(
+                  mapState.isLoading ? l10n.searchingArea : l10n.searchThisArea,
+                ),
+              ),
+            ),
+          ),
+        if (!mapState.showSearchArea &&
+            (loc.hasInRegionOrigin ||
+                loc.mode == DiscoveryLocationMode.nationwide))
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Material(
+              elevation: 2,
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.white,
+              child: IconButton(
+                tooltip: loc.hasInRegionOrigin
+                    ? l10n.returnToSelectedCity
+                    : l10n.exploreEgypt,
+                onPressed: mapState.isLoading ? null : _returnToSelectedOrigin,
+                icon: const Icon(Icons.my_location_rounded, size: 20),
               ),
             ),
           ),
@@ -348,11 +401,40 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
           ),
-        if (mapState.error != null)
+        if (mapState.isSuggestion)
           Positioned(
             left: 12,
             right: 12,
             top: mapState.showSearchArea ? 56 : 12,
+            child: Material(
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(12),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  (mapState.effectiveRadiusKm ?? 0) == 0
+                      ? l10n.discoverySuggestionNationwide(
+                          mapState.selectedRadiusKm ?? 25,
+                        )
+                      : l10n.discoverySuggestionExpanded(
+                          mapState.selectedRadiusKm ?? 25,
+                          mapState.effectiveRadiusKm ?? 25,
+                        ),
+                  style: const TextStyle(
+                    color: Color(0xFF78350F),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (mapState.error != null)
+          Positioned(
+            left: 12,
+            right: 12,
+            top: mapState.showSearchArea || mapState.isSuggestion ? 56 : 12,
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(12),
@@ -364,7 +446,9 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      mapState.error!,
+                      mapState.errorCode == 'out_of_region'
+                          ? l10n.discoveryOutOfRegionMap
+                          : mapState.error!,
                       style: const TextStyle(
                         color: Color(0xFF991B1B),
                         fontWeight: FontWeight.w700,
@@ -372,9 +456,30 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: mapState.isLoading ? null : _searchCurrentArea,
-                      child: const Text('Retry'),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (mapState.errorCode == 'out_of_region') ...[
+                          FilledButton.tonal(
+                            onPressed: widget.onOpenLocationPicker,
+                            child: Text(l10n.chooseCity),
+                          ),
+                          OutlinedButton(
+                            onPressed: widget.onExploreEgypt == null
+                                ? null
+                                : () async {
+                                    await widget.onExploreEgypt!();
+                                  },
+                            child: Text(l10n.exploreEgypt),
+                          ),
+                        ] else
+                          FilledButton(
+                            onPressed:
+                                mapState.isLoading ? null : _searchCurrentArea,
+                            child: Text(l10n.retry),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -418,6 +523,10 @@ class _DiscoverMapViewState extends ConsumerState<DiscoverMapView> {
                           title: ev.title,
                           locationPrecision: 'exact',
                           venueLabel: ev.venueLabel,
+                          imageUrl: ev.imageUrl,
+                          startsAt: ev.startsAt,
+                          categoryName: ev.categoryName,
+                          membersCount: ev.membersCount,
                         ),
                       );
                 }
@@ -498,6 +607,40 @@ class _CityAggregateBubble extends StatelessWidget {
   }
 }
 
+Widget _thumb({required String? url, required double size}) {
+  final placeholder = Container(
+    width: size,
+    height: size,
+    color: const Color(0xFFF1F5F9),
+    alignment: Alignment.center,
+    child: const Icon(Icons.event_outlined, color: AppColors.muted, size: 22),
+  );
+  if (url == null || url.trim().isEmpty) return placeholder;
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(10),
+    child: SizedBox(
+      width: size,
+      height: size,
+      child: AppNetworkImage(
+        url: url,
+        logicalWidth: size,
+        logicalHeight: size,
+        maxCacheWidth: 320,
+        maxCacheHeight: 320,
+        placeholder: placeholder,
+        error: placeholder,
+      ),
+    ),
+  );
+}
+
+String? _formatStarts(String? iso) {
+  if (iso == null || iso.isEmpty) return null;
+  final dt = DateTime.tryParse(iso);
+  if (dt == null) return null;
+  return DateFormat('EEE, d MMM · HH:mm').format(dt.toLocal());
+}
+
 class _EventPreviewSheet extends StatelessWidget {
   const _EventPreviewSheet({
     required this.marker,
@@ -511,6 +654,7 @@ class _EventPreviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final when = _formatStarts(marker.startsAt);
     return Material(
       elevation: 8,
       borderRadius: BorderRadius.circular(18),
@@ -522,16 +666,47 @@ class _EventPreviewSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _thumb(url: marker.imageUrl, size: 64),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    marker.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        marker.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (marker.venueLabel != null &&
+                          marker.venueLabel!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          marker.venueLabel!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                      if (when != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          when,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 IconButton(
@@ -540,19 +715,13 @@ class _EventPreviewSheet extends StatelessWidget {
                 ),
               ],
             ),
-            if (marker.venueLabel != null && marker.venueLabel!.isNotEmpty)
-              Text(
-                marker.venueLabel!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
-              ),
             const SizedBox(height: 6),
             Text(
               [
                 if (marker.categoryName != null) marker.categoryName!,
                 if (marker.membersCount > 0) '${marker.membersCount} going',
-                if (marker.locationPrecision == 'approximate') 'Approximate area',
+                if (marker.locationPrecision == 'approximate')
+                  'Approximate area',
               ].join(' · '),
               style: const TextStyle(fontSize: 12, color: AppColors.muted),
             ),
@@ -590,12 +759,13 @@ class _CityEventsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Material(
       elevation: 8,
       borderRadius: BorderRadius.circular(18),
       color: Colors.white,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 280),
+        constraints: const BoxConstraints(maxHeight: 340),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
           child: Column(
@@ -605,7 +775,7 @@ class _CityEventsSheet extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Events in $cityName',
+                      l10n.eventsInCity(cityName),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -620,15 +790,23 @@ class _CityEventsSheet extends StatelessWidget {
                   ),
                 ],
               ),
-              const Text(
-                'City-level location (not an exact venue pin)',
-                style: TextStyle(fontSize: 12, color: AppColors.muted),
+              Text(
+                l10n.cityLevelEventsHint,
+                style: const TextStyle(fontSize: 12, color: AppColors.muted),
               ),
               const SizedBox(height: 8),
               if (loading)
                 const Padding(
                   padding: EdgeInsets.all(16),
                   child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              else if (events.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    l10n.emptyDiscover,
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
                 )
               else
                 Expanded(
@@ -637,27 +815,56 @@ class _CityEventsSheet extends StatelessWidget {
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final ev = events[index];
-                      return ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          ev.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        subtitle: Text(
-                          ev.hasExactCoordinates
-                              ? (ev.venueLabel ?? 'Exact venue')
-                              : 'Exact venue location unavailable — city-level only',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 11),
-                        ),
+                      final when = _formatStarts(ev.startsAt);
+                      return InkWell(
                         onTap: () => onSelect(ev),
-                        trailing: TextButton(
-                          onPressed: () => onOpen(ev),
-                          child: const Text('Open'),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _thumb(url: ev.imageUrl, size: 56),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ev.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      [
+                                        if (when != null) when,
+                                        if (ev.categoryName != null)
+                                          ev.categoryName!,
+                                        if (ev.hasExactCoordinates)
+                                          (ev.venueLabel ?? 'Exact venue')
+                                        else
+                                          'City-level',
+                                      ].join(' · '),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => onOpen(ev),
+                                child: const Text('Open'),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

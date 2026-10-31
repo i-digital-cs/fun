@@ -185,6 +185,11 @@ class MapCityEvent {
     this.longitude,
     this.cityId,
     this.url,
+    this.startsAt,
+    this.categoryName,
+    this.imageUrl,
+    this.membersCount = 0,
+    this.locationPrecision,
   });
 
   final int id;
@@ -195,6 +200,11 @@ class MapCityEvent {
   final double? longitude;
   final int? cityId;
   final String? url;
+  final String? startsAt;
+  final String? categoryName;
+  final String? imageUrl;
+  final int membersCount;
+  final String? locationPrecision;
 
   factory MapCityEvent.fromJson(Map<String, dynamic> json) {
     return MapCityEvent(
@@ -206,6 +216,11 @@ class MapCityEvent {
       longitude: (json['longitude'] as num?)?.toDouble(),
       cityId: (json['city_id'] as num?)?.toInt(),
       url: json['url'] as String?,
+      startsAt: json['starts_at'] as String?,
+      categoryName: json['category_name'] as String?,
+      imageUrl: json['image_url'] as String?,
+      membersCount: (json['members_count'] as num?)?.toInt() ?? 0,
+      locationPrecision: json['location_precision'] as String?,
     );
   }
 }
@@ -216,10 +231,18 @@ class MapDiscoveryPayload {
     this.clusters = const [],
     this.cityAggregates = const [],
     this.clustered = false,
+    this.isSuggestion = false,
+    this.selectedRadiusKm,
+    this.effectiveRadiusKm,
+    this.originAware = false,
   });
 
   final List<MapDiscoveryMarker> markers;
   final List<MapDiscoveryCluster> clusters;
   final List<MapCityAggregate> cityAggregates;
   final bool clustered;
+  final bool isSuggestion;
+  final int? selectedRadiusKm;
+  final int? effectiveRadiusKm;
+  final bool originAware;
 }

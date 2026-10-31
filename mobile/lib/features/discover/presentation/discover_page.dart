@@ -12,6 +12,7 @@ import 'package:fun_mobile/core/location/discovery_location_service.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/discover_header_scroll.dart';
 import 'package:fun_mobile/features/discover/presentation/discovery_location_controller.dart';
+import 'package:fun_mobile/features/discover/presentation/discovery_query_controller.dart';
 import 'package:fun_mobile/features/discover/presentation/widgets/discover_map_view.dart';
 import 'package:fun_mobile/features/discover/presentation/widgets/location_picker_sheet.dart';
 import 'package:fun_mobile/features/events/presentation/widgets/event_card.dart';
@@ -105,16 +106,19 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   void _syncDraftFromState() {
     final filters = ref.read(discoverControllerProvider).filters;
+    final query = ref.read(discoveryQueryControllerProvider);
     setState(() {
-      _search.text = filters.q ?? '';
+      _search.text = query.normalizedQ ?? filters.q ?? '';
       _draftAllCities = filters.allCities;
       _draftCityId = filters.cityId;
-      _draftCategoryId = filters.categoryId;
+      _draftCategoryId = query.categoryId ?? filters.categoryId;
       _draftDistanceKm = filters.distanceKm ?? _distances.firstOrNull ?? 25;
-      _draftWhen = filters.when;
+      _draftWhen = query.when ?? filters.when;
     });
   }
 
+  /// Shared Map+List apply: location SSOT + query SSOT + list reload.
+  /// Map listens to location/query providers and refreshes markers.
   Future<void> _apply() async {
     final locNotifier =
         ref.read(discoveryLocationControllerProvider.notifier);
@@ -125,9 +129,10 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     }
 
     // Sync filter-panel city edits into the location controller, but never
-    // overwrite an active device-GPS mode unless the user cleared to nationwide
-    // or picked a different city in the legacy city dropdown.
-    final deviceActive = before.mode == DiscoveryLocationMode.device;
+    // overwrite an active in-region device-GPS mode unless the user cleared to
+    // nationwide or picked a different city in the legacy city dropdown.
+    final deviceActive = before.mode == DiscoveryLocationMode.device &&
+        !before.outsideDiscoveryRegion;
     final draftCityChanged = !_draftAllCities &&
         _draftCityId != null &&
         _draftCityId != before.cityId;
@@ -140,15 +145,26 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           cityId: city.id,
           name: city.name,
           distanceKm: _draftDistanceKm,
+          latitude: city.latitude,
+          longitude: city.longitude,
         );
       }
     }
 
+    ref.read(discoveryQueryControllerProvider.notifier).apply(
+          q: _search.text,
+          categoryId: _draftCategoryId,
+          when: _draftWhen,
+          clearCategory: _draftCategoryId == null,
+          clearWhen: _draftWhen == null || _draftWhen!.isEmpty,
+        );
+
+    final query = ref.read(discoveryQueryControllerProvider);
     final loc = ref.read(discoveryLocationControllerProvider);
     final filters = loc.toDiscoverFilters(
-      q: _search.text.trim().isEmpty ? null : _search.text.trim(),
-      categoryId: _draftCategoryId,
-      when: _draftWhen,
+      q: query.normalizedQ,
+      categoryId: query.categoryId,
+      when: query.when,
     );
     await ref.read(discoverControllerProvider.notifier).applyFilters(
           q: filters.q,
@@ -159,6 +175,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
           allCities: filters.allCities,
           latitude: filters.latitude,
           longitude: filters.longitude,
+          discoveryMode: filters.discoveryMode,
         );
   }
 
@@ -191,6 +208,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       _draftDistanceKm = km;
       _draftWhen = null;
     });
+    ref.read(discoveryQueryControllerProvider.notifier).clear();
     await ref
         .read(discoveryLocationControllerProvider.notifier)
         .setNationwide(distanceKm: km);
@@ -344,14 +362,97 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                 ),
               ),
             ),
+            // Shared search chrome for Map + List (SSOT via discoveryQuery).
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: TextField(
+                controller: _search,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _apply(),
+                decoration: InputDecoration(
+                  hintText: l10n.searchPlaceholder,
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  suffixIcon: IconButton(
+                    tooltip: l10n.applyFilters,
+                    onPressed: _apply,
+                    icon: const Icon(Icons.tune_rounded, size: 20),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppColors.borderSoft),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppColors.borderSoft),
+                  ),
+                ),
+              ),
+            ),
+            if (loc.outsideDiscoveryRegion)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Material(
+                  color: const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.discoveryOutOfRegion,
+                          style: const TextStyle(
+                            color: Color(0xFF9A3412),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilledButton.tonal(
+                              onPressed: _useMyLocation,
+                              child: Text(l10n.chooseCity),
+                            ),
+                            OutlinedButton(
+                              onPressed: () async {
+                                await ref
+                                    .read(
+                                      discoveryLocationControllerProvider
+                                          .notifier,
+                                    )
+                                    .setNationwide(
+                                      distanceKm: _draftDistanceKm,
+                                    );
+                                await _apply();
+                              },
+                              child: Text(l10n.exploreEgypt),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             Expanded(
               child: _viewMode == _DiscoverViewMode.map
                   ? DiscoverMapView(
-                      categoryId: _draftCategoryId,
-                      query: _search.text.trim().isEmpty
-                          ? null
-                          : _search.text.trim(),
-                      when: _draftWhen,
+                      onOpenLocationPicker: _useMyLocation,
+                      onExploreEgypt: () async {
+                        await ref
+                            .read(discoveryLocationControllerProvider.notifier)
+                            .setNationwide(distanceKm: _draftDistanceKm);
+                        await _apply();
+                      },
                     )
                   : RefreshIndicator(
                 color: AppColors.primary,
@@ -416,8 +517,13 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                               padding: const EdgeInsets.all(12),
                               child: Text(
                                 (state.effectiveRadiusKm ?? 0) == 0
-                                    ? 'No events within ${state.selectedRadiusKm ?? 25} km. Showing nearest available events across Egypt.'
-                                    : 'No events within ${state.selectedRadiusKm ?? 25} km. Showing nearest available within ${state.effectiveRadiusKm} km.',
+                                    ? l10n.discoverySuggestionNationwide(
+                                        state.selectedRadiusKm ?? 25,
+                                      )
+                                    : l10n.discoverySuggestionExpanded(
+                                        state.selectedRadiusKm ?? 25,
+                                        state.effectiveRadiusKm ?? 25,
+                                      ),
                                 style: const TextStyle(
                                   color: Color(0xFF78350F),
                                   fontSize: 12,
