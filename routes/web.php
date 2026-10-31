@@ -400,7 +400,44 @@ Route::get('/events/{event}/requests', function (Event $event) {
 })->whereNumber('event');
 
 // Public event show — last among /events/{id}/… GET patterns.
+// Slug allows Unicode letters (Arabic) for localized SEO URLs.
 Route::get('/events/{event}/{slug?}', [EventController::class, 'show'])
     ->whereNumber('event')
-    ->where('slug', '^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$')
+    ->where('slug', '^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$')
     ->name('events.show');
+
+/*
+|--------------------------------------------------------------------------
+| Locale-prefixed public SEO URLs
+|--------------------------------------------------------------------------
+| English canonicals remain the legacy bare paths above.
+| /ar/... serves Arabic HTML without requiring a session cookie.
+| /en/... 301s to bare paths to avoid duplicate English indexes.
+*/
+Route::prefix('en')->group(function () {
+    Route::get('/', fn () => redirect()->route('home', status: 301));
+    Route::get('/events', fn () => redirect()->route('events.index', status: 301));
+    Route::get('/events/{event}/{slug?}', function (Event $event, ?string $slug = null) {
+        return redirect()->route('events.show', $event->showRouteForLocale('en'), 301);
+    })->whereNumber('event');
+    Route::get('/safety', fn () => redirect()->route('safety.guidelines', status: 301));
+    Route::get('/privacy-policy', fn () => redirect()->route('legal.privacy', status: 301));
+    Route::get('/terms', fn () => redirect()->route('legal.terms', status: 301));
+    Route::get('/support', fn () => redirect()->route('legal.support', status: 301));
+});
+
+Route::prefix('ar')->name('ar.')->group(function () {
+    Route::get('/', HomeController::class)->name('home');
+    Route::get('/events', [EventController::class, 'index'])->name('events.index');
+    Route::get('/events/in/{city:slug}', [SeoLandingController::class, 'city'])->name('events.city');
+    Route::get('/events/activity/{category:slug}', [SeoLandingController::class, 'activity'])->name('events.activity');
+    Route::get('/events/{event}/{slug?}', [EventController::class, 'show'])
+        ->whereNumber('event')
+        ->where('slug', '^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$')
+        ->name('events.show');
+    Route::get('/safety', SafetyGuidelinesController::class)->name('safety.guidelines');
+    Route::get('/privacy-policy', PrivacyPolicyController::class)->name('legal.privacy');
+    Route::get('/terms', TermsOfServiceController::class)->name('legal.terms');
+    Route::get('/support', SupportController::class)->name('legal.support');
+    Route::get('/account-deletion', AccountDeletionHelpController::class)->name('legal.account-deletion');
+});

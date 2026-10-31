@@ -21,6 +21,9 @@ class Seo
      *     absoluteTitle: bool
      * }
      */
+    /**
+     * @param  array<string, string>|null  $hreflang  locale => absolute URL
+     */
     public static function make(
         ?string $title = null,
         ?string $description = null,
@@ -30,6 +33,7 @@ class Seo
         string $robots = 'index,follow',
         ?array $jsonLd = null,
         bool $absoluteTitle = false,
+        ?array $hreflang = null,
     ): array {
         return [
             'title' => $title,
@@ -40,6 +44,7 @@ class Seo
             'robots' => $robots,
             'jsonLd' => $jsonLd,
             'absoluteTitle' => $absoluteTitle,
+            'hreflang' => $hreflang,
         ];
     }
 
@@ -97,7 +102,9 @@ class Seo
     {
         $brand = site_display_name();
         $description = __('design.home_meta_description');
-        $homeUrl = route('home');
+        $locale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+        $homeUrl = LocaleUrl::page('home', $locale);
+        $hreflang = LocaleUrl::alternatesForPage('home');
 
         $jsonLd = [
             '@context' => 'https://schema.org',
@@ -105,15 +112,15 @@ class Seo
                 [
                     '@type' => 'Organization',
                     'name' => $brand,
-                    'alternateName' => ['فانتي', 'فانيتي'],
-                    'url' => $homeUrl,
+                    'alternateName' => ['فانتي', 'فانيتي', 'Funnity — فانيتي'],
+                    'url' => LocaleUrl::page('home', 'en'),
                     'description' => $description,
                     'logo' => self::absoluteUrl(site_logo_url() ?: asset('logo.svg')),
                     'contactPoint' => [
                         '@type' => 'ContactPoint',
                         'contactType' => 'customer support',
                         'email' => __('privacy.contact_email'),
-                        'url' => route('legal.support'),
+                        'url' => LocaleUrl::page('support', $locale),
                     ],
                 ],
                 [
@@ -141,6 +148,7 @@ class Seo
             url: $homeUrl,
             jsonLd: $jsonLd,
             absoluteTitle: true,
+            hreflang: $hreflang,
         );
     }
 
@@ -158,13 +166,15 @@ class Seo
     public static function forDiscover(int $page = 1, bool $hasFilters = false): array
     {
         $robots = ($page > 1 || $hasFilters) ? 'noindex,follow' : 'index,follow';
+        $locale = app()->getLocale() === 'ar' ? 'ar' : 'en';
 
         return self::make(
             title: __('events.discover_document_title'),
             description: __('events.discover_intro'),
             image: site_logo_url() ?: asset('logo.svg'),
-            url: route('events.index'),
+            url: LocaleUrl::page('events.index', $locale),
             robots: $robots,
+            hreflang: $robots === 'index,follow' ? LocaleUrl::alternatesForPage('events.index') : null,
         );
     }
 
@@ -242,7 +252,9 @@ class Seo
         $schemaDescription = filled($event->description)
             ? $event->description
             : $description;
-        $url = event_show_url($event);
+        $locale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+        $url = LocaleUrl::event($event, $locale);
+        $hreflang = LocaleUrl::alternatesForEvent($event);
         $image = $event->coverUrl('detail');
 
         $location = [
@@ -367,7 +379,8 @@ class Seo
                 $public => 'index,follow',
                 default => 'noindex,nofollow',
             },
-            jsonLd: $jsonLd,
+            jsonLd: $public ? $jsonLd : null,
+            hreflang: $public && $searchable ? $hreflang : null,
         );
     }
 

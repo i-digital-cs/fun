@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Services\Seo\LandingPageCatalog;
+use App\Support\LocaleUrl;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
@@ -15,21 +16,38 @@ class SitemapController extends Controller
     {
         $xml = Cache::remember('seo.sitemap.xml', 3600, function (): string {
             $urls = [
-                $this->staticUrl(route('home'), 'daily', '1.0'),
-                $this->staticUrl(route('events.index'), 'hourly', '0.9'),
-                $this->staticUrl(route('safety.guidelines'), 'monthly', '0.4'),
-                $this->staticUrl(route('legal.privacy'), 'monthly', '0.4'),
-                $this->staticUrl(route('legal.terms'), 'monthly', '0.4'),
-                $this->staticUrl(route('legal.support'), 'monthly', '0.3'),
+                $this->localizedStatic(LocaleUrl::alternatesForPage('home'), 'daily', '1.0'),
+                $this->localizedStatic(LocaleUrl::alternatesForPage('events.index'), 'hourly', '0.9'),
+                $this->localizedStatic(LocaleUrl::alternatesForPage('safety'), 'monthly', '0.4'),
+                $this->localizedStatic(LocaleUrl::alternatesForPage('privacy'), 'monthly', '0.4'),
+                $this->localizedStatic(LocaleUrl::alternatesForPage('terms'), 'monthly', '0.4'),
+                $this->localizedStatic(LocaleUrl::alternatesForPage('support'), 'monthly', '0.3'),
                 $this->staticUrl(route('legal.account-deletion'), 'monthly', '0.5'),
             ];
 
             $catalog = app(LandingPageCatalog::class);
             foreach ($catalog->eligibleCities() as $city) {
-                $urls[] = $this->staticUrl(route('events.city', $city), 'daily', '0.7');
+                $en = route('events.city', $city);
+                $ar = url('/ar/events/in/'.$city->slug);
+                $urls[] = $this->localizedStatic([
+                    'en' => $en,
+                    'ar' => $ar,
+                    'x-default' => $en,
+                ], 'daily', '0.7');
             }
             foreach ($catalog->eligibleCategories() as $category) {
-                $urls[] = $this->staticUrl(route('events.activity', $category), 'daily', '0.7');
+                $en = route('events.activity', $category);
+                $ar = url('/ar/events/activity/'.$category->slug);
+                $urls[] = $this->localizedStatic([
+                    'en' => $en,
+                    'ar' => $ar,
+                    'x-default' => $en,
+                ], 'daily', '0.7');
+            }
+
+            $eventColumns = ['id', 'slug', 'title', 'updated_at'];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('events', 'slug_ar')) {
+                $eventColumns[] = 'slug_ar';
             }
 
             Event::query()
@@ -37,13 +55,10 @@ class SitemapController extends Controller
                 ->whereIn('status', [EventStatus::Published, EventStatus::Completed])
                 ->orderByDesc('updated_at')
                 ->limit(5000)
-                ->get(['id', 'slug', 'title', 'updated_at'])
+                ->get($eventColumns)
                 ->each(function (Event $event) use (&$urls): void {
-                    $row = [
-                        'loc' => event_show_url($event),
-                        'changefreq' => 'daily',
-                        'priority' => '0.8',
-                    ];
+                    $alts = LocaleUrl::alternatesForEvent($event);
+                    $row = $this->localizedStatic($alts, 'daily', '0.8');
                     $lastmod = $event->updated_at?->toAtomString();
                     if (is_string($lastmod) && $lastmod !== '') {
                         $row['lastmod'] = $lastmod;
@@ -58,9 +73,26 @@ class SitemapController extends Controller
     }
 
     /**
-     * Static routes have no content row with a reliable modification time.
-     * Omit lastmod rather than stamping the generation time.
-     *
+     * @param  array{ar?: string, en?: string, x-default?: string}  $alternates
+     * @return array{loc: string, changefreq: string, priority: string, alternates?: array<string, string>}
+     */
+    private function localizedStatic(array $alternates, string $changefreq, string $priority): array
+    {
+        $loc = $alternates['en'] ?? $alternates['x-default'] ?? reset($alternates);
+
+        return [
+            'loc' => $loc,
+            'changefreq' => $changefreq,
+            'priority' => $priority,
+            'alternates' => array_filter([
+                'en' => $alternates['en'] ?? null,
+                'ar' => $alternates['ar'] ?? null,
+                'x-default' => $alternates['x-default'] ?? ($alternates['en'] ?? null),
+            ]),
+        ];
+    }
+
+    /**
      * @return array{loc: string, changefreq: string, priority: string}
      */
     private function staticUrl(string $loc, string $changefreq, string $priority): array

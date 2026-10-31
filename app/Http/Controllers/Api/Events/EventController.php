@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Events;
 
+use App\Enums\EventStatus;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Events\DiscoverEventsRequest;
@@ -89,23 +90,48 @@ class EventController extends Controller
         return EventResource::collection($events);
     }
 
-    public function store(StoreEventRequest $request, CreateEventService $service): JsonResponse
-    {
+    public function store(
+        StoreEventRequest $request,
+        CreateEventService $service,
+        TransitionEventStatusService $transitions,
+    ): JsonResponse {
         $this->authorize('create', Event::class);
+
+        $publishIntent = $request->boolean('publish_intent');
 
         try {
             $event = $service->create(
                 $request->user(),
-                $request->safe()->except('image'),
+                $request->safe()->except(['image', 'publish_intent']),
                 $request->file('image')
             );
+
+            if ($publishIntent) {
+                $event = $transitions->publish($request->user(), $event);
+            }
         } catch (DomainException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return (new EventResource(
-            $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members')
-        ))->response()->setStatusCode(201);
+        $event = $event->loadMissing('creator:id,public_id,name,profile_image_path')->loadCount('members');
+        $published = $publishIntent && $event->status === EventStatus::Published;
+
+        $payload = [
+            'data' => (new EventResource($event))->resolve(),
+            'message' => $published
+                ? (filled($event->description)
+                    ? __('events.published_successfully')
+                    : __('events.published_missing_description'))
+                : __('events.draft_saved'),
+            'published' => $published,
+            'url' => event_show_url($event),
+        ];
+
+        if ($published && blank($event->description)) {
+            $payload['seo_warning'] = true;
+        }
+
+        return response()->json($payload, 201);
     }
 
     public function show(

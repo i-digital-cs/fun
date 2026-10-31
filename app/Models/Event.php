@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -44,6 +45,7 @@ class Event extends Model
         'city_id',
         'title',
         'slug',
+        'slug_ar',
         'description',
         'venue',
         'latitude',
@@ -66,13 +68,28 @@ class Event extends Model
             if (blank($event->slug)) {
                 $event->slug = static::uniqueSlug((string) $event->title);
             }
+            if (static::supportsArabicSlug()
+                && blank($event->slug_ar)
+                && static::titleHasArabic((string) $event->title)) {
+                $event->slug_ar = static::uniqueArabicSlug((string) $event->title);
+            }
         });
 
         static::created(function (Event $event): void {
             // Re-resolve with id available so collisions append -{id}.
+            $updates = [];
             $slug = static::uniqueSlug((string) $event->title, (int) $event->id);
             if ($slug !== $event->slug) {
-                $event->forceFill(['slug' => $slug])->saveQuietly();
+                $updates['slug'] = $slug;
+            }
+            if (static::supportsArabicSlug() && static::titleHasArabic((string) $event->title)) {
+                $slugAr = static::uniqueArabicSlug((string) $event->title, (int) $event->id);
+                if ($slugAr !== $event->slug_ar) {
+                    $updates['slug_ar'] = $slugAr;
+                }
+            }
+            if ($updates !== []) {
+                $event->forceFill($updates)->saveQuietly();
             }
         });
 
@@ -80,7 +97,21 @@ class Event extends Model
             if ($event->isDirty('title') || blank($event->slug)) {
                 $event->slug = static::uniqueSlug((string) $event->title, (int) $event->id);
             }
+            if (static::supportsArabicSlug()
+                && ($event->isDirty('title') || (blank($event->slug_ar) && static::titleHasArabic((string) $event->title)))
+                && static::titleHasArabic((string) $event->title)) {
+                $event->slug_ar = static::uniqueArabicSlug((string) $event->title, (int) $event->id);
+            }
         });
+    }
+
+    public static function supportsArabicSlug(): bool
+    {
+        try {
+            return Schema::hasColumn((new static)->getTable(), 'slug_ar');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -101,16 +132,56 @@ class Event extends Model
         return route('events.show', $this->showRoute());
     }
 
+    /**
+     * Locale-aware public slug. Falls back to the legacy `slug` when `slug_ar`
+     * is absent (never invents an English translation of an Arabic title).
+     */
+    public function slugForLocale(string $locale): string
+    {
+        if ($locale === 'ar' && filled($this->slug_ar)) {
+            return (string) $this->slug_ar;
+        }
+
+        return $this->slug ?: static::uniqueSlug((string) $this->title, (int) $this->getKey());
+    }
+
+    public function showRouteForLocale(string $locale): array
+    {
+        return [
+            'event' => (int) $this->getKey(),
+            'slug' => $this->slugForLocale($locale),
+        ];
+    }
+
+    public static function titleHasArabic(string $title): bool
+    {
+        return (bool) preg_match('/\p{Arabic}/u', $title);
+    }
+
+    public static function unicodeSlug(string $title): string
+    {
+        $normalized = trim(mb_strtolower($title, 'UTF-8'));
+        $slug = preg_replace('/[^\p{L}\p{N}]+/u', '-', $normalized) ?? '';
+        $slug = trim($slug, '-');
+
+        return $slug !== '' ? Str::limit($slug, 140, '') : 'event';
+    }
+
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string
     {
-        $base = Str::slug($title);
-        if ($base === '') {
-            $base = 'event';
-        }
-        $base = Str::limit($base, 140, '');
+        return static::uniqueSlugOnColumn('slug', Str::slug($title) ?: 'event', $ignoreId);
+    }
 
+    public static function uniqueArabicSlug(string $title, ?int $ignoreId = null): string
+    {
+        return static::uniqueSlugOnColumn('slug_ar', static::unicodeSlug($title), $ignoreId);
+    }
+
+    private static function uniqueSlugOnColumn(string $column, string $base, ?int $ignoreId = null): string
+    {
+        $base = Str::limit($base === '' ? 'event' : $base, 140, '');
         $slug = $base;
-        $query = static::query()->where('slug', $slug);
+        $query = static::query()->where($column, $slug);
         if ($ignoreId !== null) {
             $query->whereKeyNot($ignoreId);
         }
@@ -122,7 +193,7 @@ class Event extends Model
         if ($ignoreId !== null) {
             $withId = Str::limit($base, 130, '').'-'.$ignoreId;
             $exists = static::query()
-                ->where('slug', $withId)
+                ->where($column, $withId)
                 ->whereKeyNot($ignoreId)
                 ->exists();
             if (! $exists) {
@@ -132,7 +203,7 @@ class Event extends Model
 
         for ($i = 2; $i < 1000; $i++) {
             $candidate = Str::limit($base, 130, '').'-'.$i;
-            $q = static::query()->where('slug', $candidate);
+            $q = static::query()->where($column, $candidate);
             if ($ignoreId !== null) {
                 $q->whereKeyNot($ignoreId);
             }

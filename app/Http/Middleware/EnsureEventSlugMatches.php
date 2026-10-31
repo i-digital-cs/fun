@@ -11,6 +11,7 @@ class EnsureEventSlugMatches
 {
     /**
      * 301 to the canonical /events/{id}/{slug}/… URL when the slug segment is wrong.
+     * Accepts legacy `slug` or localized `slug_ar` as valid inbound segments.
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -27,7 +28,12 @@ class EnsureEventSlugMatches
             ])->saveQuietly();
         }
 
-        if ($slug === $event->slug) {
+        $accepted = [$event->slug];
+        if (filled($event->slug_ar)) {
+            $accepted[] = $event->slug_ar;
+        }
+
+        if (in_array($slug, $accepted, true)) {
             return $next($request);
         }
 
@@ -36,9 +42,11 @@ class EnsureEventSlugMatches
             return $next($request);
         }
 
+        $locale = app()->getLocale();
+        $canonicalSlug = $event->slugForLocale($locale);
         $parameters = $route->parameters();
         $parameters['event'] = $event;
-        $parameters['slug'] = $event->slug;
+        $parameters['slug'] = $canonicalSlug;
 
         return redirect()->route($route->getName(), $parameters, 301);
     }

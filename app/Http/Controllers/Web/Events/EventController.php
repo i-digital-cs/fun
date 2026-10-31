@@ -204,22 +204,37 @@ class EventController extends Controller
         ]);
     }
 
-    public function store(StoreEventRequest $request, CreateEventService $service): RedirectResponse
-    {
+    public function store(
+        StoreEventRequest $request,
+        CreateEventService $service,
+        TransitionEventStatusService $transitions,
+    ): RedirectResponse {
         $this->authorize('create', Event::class);
+
+        $publishIntent = $request->boolean('publish_intent');
 
         try {
             $event = $service->create(
                 $request->user(),
-                $request->safe()->except('image'),
+                $request->safe()->except(['image', 'publish_intent']),
                 $request->file('image')
             );
+
+            if ($publishIntent) {
+                $event = $transitions->publish($request->user(), $event);
+            }
         } catch (DomainException $exception) {
             return back()->withInput()->withErrors(['event' => $exception->getMessage()]);
         }
 
+        $status = $publishIntent
+            ? (filled($event->fresh()->description)
+                ? __('events.published_successfully')
+                : __('events.published_missing_description'))
+            : __('events.draft_saved');
+
         return redirect()->route('events.show', $event->showRoute())
-            ->with('status', __('events.created'));
+            ->with('status', $status);
     }
 
     public function show(
@@ -237,9 +252,21 @@ class EventController extends Controller
             ])->saveQuietly();
         }
 
-        $canonicalSlug = $event->slug;
-        if ($slug !== $canonicalSlug) {
-            return redirect()->route('events.show', $event->showRoute(), 301);
+        $locale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+        $accepted = array_values(array_filter([
+            $event->slug,
+            $event->slug_ar,
+        ]));
+        if ($slug !== null && $slug !== '' && ! in_array($slug, $accepted, true)) {
+            $routeName = request()->route()?->getName() === 'ar.events.show'
+                ? 'ar.events.show'
+                : 'events.show';
+
+            return redirect()->route(
+                $routeName,
+                $event->showRouteForLocale($locale),
+                301
+            );
         }
 
         $event->load(['category', 'city', 'creator:id,public_id,name,profile_image_path'])->loadCount('members');
@@ -277,6 +304,10 @@ class EventController extends Controller
             'ratings' => $ratings,
             'creatorSummary' => $creatorSummary,
             'isFavorited' => $isFavorited,
+            'isAdminPreview' => $user !== null
+                && $user->platform_role?->canModerateEvents() === true
+                && ! $event->isManagedBy($user)
+                && ! in_array($event->status, [EventStatus::Published, EventStatus::Completed], true),
             'categories' => Category::query()
                 ->active()
                 ->orderBy('sort_order')

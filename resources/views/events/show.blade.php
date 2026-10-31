@@ -30,6 +30,11 @@
 @endphp
 
 <article class="mx-auto max-w-4xl space-y-6">
+    @if (! empty($isAdminPreview))
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900" role="status">
+            {{ __('events.admin_draft_preview') }}
+        </div>
+    @endif
     <x-ui.breadcrumbs :items="[
         ['label' => site_display_name(), 'url' => route('home')],
         ['label' => __('events.discover'), 'url' => route('events.index')],

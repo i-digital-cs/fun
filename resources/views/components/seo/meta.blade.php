@@ -7,6 +7,7 @@
     'robots' => 'index,follow',
     'jsonLd' => null,
     'absoluteTitle' => false,
+    'hreflang' => null,
 ])
 
 @php
@@ -24,12 +25,18 @@
     $ogImage = Seo::absoluteUrl($image ?: (site_logo_url() ?: asset('logo.svg')));
     $locale = app()->getLocale() === 'ar' ? 'ar_EG' : 'en_US';
     $localeAlt = app()->getLocale() === 'ar' ? 'en_US' : 'ar_EG';
+    $hreflangMap = is_array($hreflang) ? $hreflang : [];
 @endphp
 
 <title>{{ $documentTitle }}</title>
 <meta name="description" content="{{ $metaDescription }}">
 <meta name="robots" content="{{ $robots }}">
 <link rel="canonical" href="{{ $canonical }}">
+@foreach ($hreflangMap as $hreflangCode => $hreflangHref)
+    @if (filled($hreflangHref))
+        <link rel="alternate" hreflang="{{ $hreflangCode }}" href="{{ $hreflangHref }}">
+    @endif
+@endforeach
 
 <meta property="og:site_name" content="{{ $brand }}">
 <meta property="og:type" content="{{ $type }}">

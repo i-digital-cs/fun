@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\LogApiRequests;
 use App\Http\Middleware\EnforceCanonicalUrl;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetLocaleFromPath;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(EnforceCanonicalUrl::class);
 
         $middleware->web(append: [
+            SetLocaleFromPath::class,
             SetLocale::class,
         ]);
 

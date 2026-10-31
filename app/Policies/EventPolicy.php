@@ -23,7 +23,17 @@ class EventPolicy
             return true;
         }
 
-        return $user !== null && $event->isManagedBy($user);
+        if ($user === null) {
+            return false;
+        }
+
+        // Platform moderators may inspect drafts/cancelled for management.
+        // Guests and unrelated members still cannot see unpublished events.
+        if ($user->platform_role?->canModerateEvents() === true) {
+            return true;
+        }
+
+        return $event->isManagedBy($user);
     }
 
     public function create(User $user): bool

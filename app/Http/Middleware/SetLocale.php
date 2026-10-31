@@ -13,9 +13,18 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $pathLocale = null;
+        $segment = $request->segment(1);
+        if (in_array($segment, ['ar', 'en'], true)) {
+            $pathLocale = $segment;
+            $request->attributes->set('locale_prefix', $segment);
+        }
+
         $sessionLocale = $request->hasSession() ? $request->session()->get('locale') : null;
 
-        $locale = $request->user()?->locale
+        // URL prefix wins so cookieless crawlers get the intended language.
+        $locale = $pathLocale
+            ?? $request->user()?->locale
             ?? $sessionLocale
             ?? $request->getPreferredLanguage(['en', 'ar'])
             ?? config('app.locale');
@@ -25,6 +34,10 @@ class SetLocale
         }
 
         app()->setLocale($locale);
+
+        if ($pathLocale !== null && $request->hasSession()) {
+            $request->session()->put('locale', $pathLocale);
+        }
 
         return $next($request);
     }

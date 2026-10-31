@@ -21,21 +21,22 @@ class OrganicDiscoveryTest extends TestCase
             ->assertSee('<title>'.e(__('design.home_document_title')).'</title>', false)
             ->assertSee(__('design.home_meta_description'), false)
             ->assertSee(__('design.brand_explanation'), false)
-            ->assertSee('"alternateName":["فانتي","فانيتي"]', false)
+            ->assertSee('"alternateName":["فانتي","فانيتي"', false)
             ->assertDontSee('<meta name="keywords"', false)
-            ->assertDontSee('hreflang', false);
+            ->assertSee('hreflang="ar"', false)
+            ->assertSee('hreflang="en"', false)
+            ->assertSee('hreflang="x-default"', false);
     }
 
     public function test_arabic_homepage_uses_arabic_metadata(): void
     {
-        $this->post(route('locale.update'), ['locale' => 'ar']);
-
-        $this->get(route('home'))
+        $this->get('/ar')
             ->assertOk()
             ->assertSee('<title>'.e(__('design.home_document_title', [], 'ar')).'</title>', false)
             ->assertSee(__('design.home_meta_description', [], 'ar'), false)
             ->assertSee('dir="rtl"', false)
-            ->assertDontSee('hreflang', false);
+            ->assertSee('lang="ar"', false)
+            ->assertSee('hreflang="ar"', false);
     }
 
     public function test_discover_page_describes_nearby_events(): void
@@ -45,8 +46,7 @@ class OrganicDiscoveryTest extends TestCase
             ->assertSee(__('events.discover_document_title'), false)
             ->assertSee(__('events.discover_intro'), false)
             ->assertSee('name="robots" content="index,follow"', false)
-            ->assertSee('<link rel="canonical" href="'.e(route('events.index')).'"', false)
-            ->assertDontSee('hreflang', false);
+            ->assertSee('<link rel="canonical" href="'.e(route('events.index')).'"', false);
 
         $this->get(route('events.index', ['q' => 'cairo']))
             ->assertOk()
@@ -73,8 +73,7 @@ class OrganicDiscoveryTest extends TestCase
             ->assertSee('القاهرة', false)
             ->assertSee('name="robots" content="index,follow"', false)
             ->assertSee('<link rel="canonical" href="'.e(route('events.city', $city)).'"', false)
-            ->assertSee('"@type":"ItemList"', false)
-            ->assertDontSee('hreflang', false);
+            ->assertSee('"@type":"ItemList"', false);
 
         $this->get(route('events.city', $thin))->assertNotFound();
 
@@ -143,7 +142,7 @@ class OrganicDiscoveryTest extends TestCase
             ->assertSee('"maximumAttendeeCapacity":10', false)
             ->assertSee('"priceCurrency":"EGP"', false)
             ->assertSee('"availability":"https://schema.org/InStock"', false)
-            ->assertDontSee('hreflang', false)
+            ->assertSee('hreflang="ar"', false)
             ->assertDontSee('<meta name="keywords"', false);
     }
 

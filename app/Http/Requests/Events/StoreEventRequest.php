@@ -35,6 +35,17 @@ class StoreEventRequest extends FormRequest
             'expected_cost' => ['nullable', 'string', 'max:255'],
             'cost_per_person' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            // Explicit publish intent (OPTION A). Default false = save draft.
+            'publish_intent' => ['sometimes', 'boolean'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('publish_intent')) {
+            $this->merge([
+                'publish_intent' => filter_var($this->input('publish_intent'), FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
     }
 }
