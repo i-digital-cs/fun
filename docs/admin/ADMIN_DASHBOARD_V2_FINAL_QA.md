@@ -6,18 +6,31 @@
 
 Rendered-browser verification was performed (desktop EN/AR, tablet, mobile) using production-backed static snapshots after Cursor CDP denied setting HttpOnly session cookies. Data accuracy matched read-only DB queries. Confirmed UX defects were fixed. Automated tests: **11 passed**. Temporary public QA HTML was deleted after capture.
 
+**Acceptance update (same day):** A legitimate authenticated Cursor browser session for `/admin` remains unavailable without cookie bypass (navigating `/admin` redirects to `/login`). Event **605** read-only audit established the draft→published transition via `admin_audit_logs` (not the dashboard analytics). Working tree is now clean on `main`.
+
 ---
 
 ## 1. Git baseline
 
+### Acceptance pass (current)
+
 | Item | Value |
 |------|--------|
-| Branch | `main` (tracks `origin/main`) |
-| HEAD during QA | `9d0014b` — Refactor Admin Dashboard with New Analytics and Reporting Features |
-| Prior baseline | `d3e5df5` |
-| Uncommitted QA fixes | Present (not auto-committed): activity timestamps, chart period labels, locale button, action count sizing, identity priority, tests |
-| Reset / clean / push | **Not used** |
-| Production data writes | **None** (read-only metric checks; in-memory locale only for snapshots) |
+| Branch | `main` (tracks `origin/main`, up to date) |
+| HEAD | `b3212a3a17d9021ce8d7647bf41b76431fe975b1` |
+| Recent | `b3212a3` Merge branch 'main'… · `275766a` Merge remote-tracking… · `ddc07bc` publish_intent workflow |
+| Working tree | **Clean** — nothing to commit |
+| Uncommitted Dashboard/QA diff | **None** at acceptance time (QA fixes are present in tree) |
+| Reset / clean / merge / commit / push by this acceptance task | **Not performed** |
+| Flutter files | **Not modified** |
+| Production data writes | **None** |
+
+### Earlier QA pass (historical)
+
+| Item | Value |
+|------|--------|
+| HEAD during prior QA write-up | `9d0014b` (dashboard refactor) |
+| Uncommitted QA fixes at that moment | Present then; subsequently integrated via later main merges |
 
 ---
 
@@ -161,23 +174,87 @@ Covers auth, sections, KPI/status/actions, zero-baseline percent, DM privacy, RT
 
 ---
 
-## 14. Remaining issues
+## 14. Authenticated browser acceptance
 
-1. **Live Cursor browser login** still blocked for HttpOnly cookies — operator should spot-check `/admin` while logged in.  
-2. **1,389 pending identity** dominates Action Center — accurate but may need product workflow (bulk triage) later.  
-3. **Activity coverage** incomplete vs full product lifecycle (no join/cancel instrumentation).  
-4. **Screenshot PNGs** live in Cursor workstation temp screenshots dir (not committed binaries).  
-5. Uncommitted QA fixes on `main` awaiting explicit commit.  
-6. Optional: failed-jobs admin retry UI still absent (count only).
+| Step | Required evidence | Result |
+|------|-------------------|--------|
+| Open `/admin` with legitimate admin session | Authenticated dashboard HTML in browser | **Not available** — Cursor browser hit `https://funnity.com/login` (no session). Per instructions: did **not** bypass auth or manipulate HttpOnly cookies. |
+| EN → AR | Locale switch while authenticated | **Not executed** (blocked by login) |
+| AR → EN | Locale switch while authenticated | **Not executed** |
+| Period 7d → 30d | KPI/chart refresh | **Not executed** in live session (verified earlier only via static snapshot / service build) |
+| No JS errors | Console clean on live `/admin` | **Not executed** on authenticated page |
+| No auth/session errors | Stay on `/admin` | Redirect to login confirms unauthenticated agent browser |
+
+### Manual acceptance steps (operator)
+
+1. Sign in at `https://funnity.com/login` as a platform admin (`super_admin` or `moderator`).  
+2. Open `https://funnity.com/admin?range=7d`.  
+3. Use the topbar language control: EN → AR, then AR → EN; confirm `dir` / labels flip.  
+4. Click **Last 30 days**; confirm KPI values and chart series change vs 7 days.  
+5. Open browser DevTools → Console; confirm no JS errors.  
+6. Confirm session remains on `/admin` (no unexpected logout).
 
 ---
 
-## 15. Final verdict
+## 15. Event 605 investigation (read-only)
+
+### Current state
+
+| Field | Value |
+|-------|--------|
+| ID | 605 |
+| Title | تجمع ملاكي جيب شروكي |
+| Slug | `tgmaa-mlaky-gyb-shroky` |
+| `slug_ar` | `تجمع-ملاكي-جيب-شروكي` |
+| Status | **`published`** |
+| Owner | user id `1547` (`Funity-F002476`, display name “User”) |
+| `created_at` | 2026-10-30T19:19:04+00:00 |
+| `updated_at` | 2026-10-31T10:35:17+00:00 |
+| `starts_at` | 2026-11-06T21:15:00+00:00 |
+| `search_indexable` | true |
+| Dedicated publish timestamp column | **None** (only `status` + `updated_at`) |
+| Status history tables | **None** (`event_status_histories` / transitions / Spatie activity_log absent) |
+
+### When / how it changed
+
+Evidence from `admin_audit_logs` (audit id **7**):
+
+| Field | Value |
+|-------|--------|
+| Action | `event.updated` |
+| Actor | Super Admin (`platform_role=super_admin`, actor_id **1**) |
+| Subject | `App\Models\Event` #605 |
+| Timestamp | **2026-10-31T10:35:17+00:00** (matches `events.updated_at`) |
+| Meta | `previous_status: draft` → `status: published` |
+| Fields touched | title, description, category_id, city_id, venue, starts_at, ends_at, max_participants, requirements, expected_cost, cost_per_person, **status** |
+
+### Conclusions
+
+1. Event 605 **was** draft during earlier backend verification; it is **published** now.  
+2. The change is **not unknown**: a Super Admin performed an admin event update that set `status` from `draft` to `published` at 10:35:17 UTC on 2026-10-31.  
+3. There is **no evidence** the Dashboard V2 analytics service caused the transition (dashboard is read-only aggregation).  
+4. No separate publish-intent create path is implied by this audit row — it is an **admin edit** (`event.updated`) including `status` among many fields.  
+5. This acceptance task did **not** change the event status.
+
+---
+
+## 16. Remaining limitations
+
+1. **Authenticated Cursor browser acceptance** incomplete — requires operator login (no auth bypass).  
+2. **1,389 pending identity** still dominates Action Center (accurate backlog).  
+3. **Activity coverage** incomplete vs full lifecycle events.  
+4. Screenshot PNGs remain in Cursor workstation temp store (not repo binaries).  
+5. Failed-jobs admin retry UI still absent (count only).  
+6. No dedicated event status-history table beyond `admin_audit_logs` for moderated updates.
+
+---
+
+## 17. Final verdict
 
 ### **CONDITIONAL**
 
-**Why not BLOCKED:** Real browser rendering verified (EN/AR, tablet, mobile), charts healthy, no overflow, metrics matched DB, action links 200, privacy preserved, tests green, defects fixed.
+**Why not BLOCKED:** Dashboard V2 is deployed on `main`, prior visual/data QA and tests succeeded, Event 605 transition is explained by audit evidence, git tree is clean, and no destructive actions were taken.
 
-**Why not PASS:** Live authenticated `/admin` inside Cursor browser was unavailable (HttpOnly cookie injection denied); screenshots used production-data static snapshots with a QA banner, and PNG artifacts are not checked into the repo.
+**Why not PASS:** Required **live authenticated** admin session checks (locale toggle + 7d→30d period change + JS/console on `/admin`) lack evidence in this agent browser — `/admin` redirects to `/login`, and instructions forbid auth bypass / HttpOnly cookie manipulation.
 
-**To reach PASS:** Operator opens `https://funnity.com/admin` while logged in as platform admin, confirms EN↔AR toggle and one period change, and optionally commits the QA fix diff.
+**To reach PASS:** Complete the manual acceptance steps in §14 while logged in as platform admin.
