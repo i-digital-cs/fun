@@ -325,6 +325,8 @@
 }
 .drawer-backdrop.is-open { display: block; }
 
+#btn-menu { display: none; }
+
 @media (max-width: 1024px) {
   .app { grid-template-columns: 1fr; }
   .app.is-collapsed { grid-template-columns: 1fr; }
@@ -343,4 +345,6 @@
   .mobile-nav { display: flex; }
   .content { padding: 20px 16px 96px; }
   .topbar { padding: 0 16px; }
+  #btn-menu { display: inline-flex; }
+  #btn-collapse { display: none; }
 }
