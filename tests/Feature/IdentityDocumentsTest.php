@@ -70,14 +70,21 @@ class IdentityDocumentsTest extends TestCase
 
         $document = $owner->fresh()->identityDocuments()->firstOrFail();
 
-        $this->actingAs($owner)
+        $ownerResponse = $this->actingAs($owner)
             ->get(route('identity.documents.show', $document))
             ->assertOk();
+        $cache = strtolower((string) $ownerResponse->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', $cache);
+        $this->assertStringContainsString('no-store', $cache);
+        $ownerResponse->assertHeader('X-Content-Type-Options', 'nosniff');
 
         $outsider = User::factory()->active()->create();
         $this->actingAs($outsider)
             ->get(route('identity.documents.show', $document))
             ->assertForbidden();
+
+        $this->app['auth']->forgetGuards();
+        $this->getJson(route('identity.documents.show', $document))->assertUnauthorized();
     }
 
     public function test_admin_identity_show_lists_each_document_separately(): void

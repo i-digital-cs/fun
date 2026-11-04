@@ -87,7 +87,7 @@ class ListUserChatsService
                     'city' => $event->city?->localizedName(),
                     'image_url' => $event->coverUrl('card'),
                     'starts_at' => $event->starts_at?->toIso8601String(),
-                    'chat_url' => event_route('events.chat', $event),
+                    'chat_url' => chat_event_url($event),
                     'unread_count' => $unread,
                     'last_message' => $last === null ? null : [
                         'id' => $last->id,

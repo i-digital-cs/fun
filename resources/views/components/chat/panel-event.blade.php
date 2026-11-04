@@ -110,9 +110,27 @@
                         @if (($message->message_type ?? 'text') === 'voice' && $message->media_path)
                             <audio controls preload="metadata" class="mb-1 max-w-full" src="{{ route('events.chat.media', [$event, $message]) }}"></audio>
                         @elseif (($message->message_type ?? 'text') === 'image' && $message->media_path)
-                            <a href="{{ route('events.chat.media', [$event, $message]) }}" target="_blank" rel="noopener" class="mb-1 block">
+                            <button
+                                type="button"
+                                class="mb-1 block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start"
+                                data-media-viewer
+                                data-media-type="image"
+                                data-media-src="{{ route('events.chat.media', [$event, $message]) }}"
+                                data-media-group="event-{{ $event->id }}"
+                            >
                                 <img src="{{ route('events.chat.media', [$event, $message]) }}" alt="" class="max-h-56 w-full max-w-xs rounded-lg object-cover" loading="lazy">
-                            </a>
+                            </button>
+                        @elseif (($message->message_type ?? 'text') === 'video' && $message->media_path)
+                            <button
+                                type="button"
+                                class="mb-1 block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start"
+                                data-media-viewer
+                                data-media-type="video"
+                                data-media-src="{{ route('events.chat.media', [$event, $message]) }}"
+                                data-media-group="event-{{ $event->id }}"
+                            >
+                                <video src="{{ route('events.chat.media', [$event, $message]) }}" class="max-h-56 w-full max-w-xs rounded-lg object-cover" preload="metadata" muted playsinline></video>
+                            </button>
                         @else
                             <p class="chat-message__body whitespace-pre-wrap break-words">{{ $message->body }}</p>
                         @endif

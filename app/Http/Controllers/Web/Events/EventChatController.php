@@ -7,38 +7,25 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Events\Chat\ReactToEventMessageRequest;
 use App\Http\Requests\Events\Chat\StoreEventMessageRequest;
 use App\Http\Resources\EventMessageResource;
-use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventMessage;
-use App\Services\Events\Chat\ListEventMessagesService;
 use App\Services\Events\Chat\ListMessageReactionsService;
-use App\Services\Events\Chat\MarkEventChatReadService;
 use App\Services\Events\Chat\PostEventMessageService;
 use App\Services\Events\Chat\ReactToEventMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class EventChatController extends Controller
 {
-    public function show(
-        Event $event,
-        string $slug,
-        ListEventMessagesService $listService,
-        MarkEventChatReadService $readService,
-    ): View {
+    /**
+     * Legacy /events/{id}/{slug}/chat → canonical Chat V2 workspace.
+     * Authorization runs here so unauthorized users never land on /chats.
+     */
+    public function show(Event $event, string $slug): RedirectResponse
+    {
         $this->authorize('chat', $event);
 
-        $user = request()->user();
-        $messages = $listService->list($user, $event, 50);
-        $readService->mark($user, $event);
-
-        return view('events.chat', [
-            'event' => $event->load(['category', 'city', 'creator:id,public_id,name,profile_image_path']),
-            'messages' => $messages->getCollection()->reverse()->values(),
-            'paginator' => $messages,
-            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
-        ]);
+        return redirect()->to(chat_event_url($event));
     }
 
     public function store(
@@ -57,14 +44,18 @@ class EventChatController extends Controller
             if ($request->hasFile('media')) {
                 $media = app(\App\Services\Chat\ChatMediaService::class);
                 $kind = (string) $request->input('media_kind', 'file');
+                $scopeId = (int) $event->id;
                 $stored = match ($kind) {
                     'voice' => $media->storeVoice(
                         $request->file('media'),
                         (int) $request->user()->id,
-                        $request->integer('duration_ms') ?: null
+                        $request->integer('duration_ms') ?: null,
+                        $scopeId,
+                        'event',
                     ),
-                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
-                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id, $scopeId, 'event'),
+                    'video' => $media->storeVideo($request->file('media'), (int) $request->user()->id, $scopeId, 'event'),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id, $scopeId, 'event'),
                 };
                 $options = array_merge($options, [
                     'message_type' => $stored['message_type'],
@@ -94,7 +85,7 @@ class EventChatController extends Controller
             return (new EventMessageResource($message))->response()->setStatusCode(201);
         }
 
-        return redirect()->to(event_route('events.chat', $event));
+        return redirect()->to(chat_event_url($event));
     }
 
     public function react(

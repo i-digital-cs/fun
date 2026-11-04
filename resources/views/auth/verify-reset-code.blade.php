@@ -13,6 +13,7 @@
         :granted-title="__('ui.access_granted_title')"
         :granted-sub="__('auth.reset_code_accepted')"
         :retry-after-seconds="(int) ($otp['retry_after_seconds'] ?? 0)"
+        email-tip="reset"
     />
 @endsection
 

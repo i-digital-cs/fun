@@ -1,0 +1,528 @@
+{
+  "capturedAt": "2026-11-01T17:23:51.551Z",
+  "preview": "https://funnity.com/preview/living-map-v35?expires=1794158574&signature=38349c59121f3893af317728574e9242769c41d5ba35c10dd3ade57b857adeb1",
+  "markerInstances": {
+    "keys": [
+      "map",
+      "destroy",
+      "getRtlStatus",
+      "getMode",
+      "getOrigin",
+      "refreshFromOrigin",
+      "applyRadius",
+      "searchThisArea"
+    ],
+    "markerLen": 0
+  },
+  "ui": {
+    "center": {
+      "lng": 32.2233726615076,
+      "lat": 31.27007464440908
+    },
+    "zoom": 9.289246679135655,
+    "pitch": 36,
+    "bearing": -6,
+    "bounds": {
+      "north": 31.84682864885052,
+      "south": 30.916468797356046,
+      "east": 33.06926648986504,
+      "west": 31.255236206757786
+    },
+    "stageBox": {
+      "left": 104,
+      "top": 588.890625,
+      "width": 1232,
+      "height": 640
+    },
+    "markerCount": 3,
+    "markers": [
+      {
+        "index": 0,
+        "className": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom",
+        "markerKind": "city-aggregate",
+        "eventId": null,
+        "cityId": "11",
+        "count": "4",
+        "aria": "4 events in Port Said · Approximate locations",
+        "title": "4 events in Port Said · Approximate locations",
+        "cat": null,
+        "rect": {
+          "left": 761,
+          "top": 846.890625,
+          "width": 56,
+          "height": 72
+        },
+        "tipScreen": {
+          "x": 789,
+          "y": 918.890625
+        },
+        "inStage": true,
+        "stageLocal": {
+          "x": 685,
+          "y": 330
+        },
+        "computedTransform": "matrix(1, 0, 0, 1, 656, 257)",
+        "inlineTransform": "translate(-50%, -100%) translate(684px, 329px) rotateX(0deg) rotateZ(0deg)",
+        "display": "inline-block",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "1",
+        "mapPx": null,
+        "lngLatFromTransform": null
+      },
+      {
+        "index": 1,
+        "className": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom",
+        "markerKind": "city-aggregate",
+        "eventId": null,
+        "cityId": "14",
+        "count": "3",
+        "aria": "3 events in Damietta · Approximate locations",
+        "title": "3 events in Damietta · Approximate locations",
+        "cat": null,
+        "rect": {
+          "left": 437,
+          "top": 698.890625,
+          "width": 56,
+          "height": 72
+        },
+        "tipScreen": {
+          "x": 465,
+          "y": 770.890625
+        },
+        "inStage": true,
+        "stageLocal": {
+          "x": 361,
+          "y": 182
+        },
+        "computedTransform": "matrix(1, 0, 0, 1, 276, 109)",
+        "inlineTransform": "translate(-50%, -100%) translate(304px, 181px) rotateX(0deg) rotateZ(0deg)",
+        "display": "inline-block",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "1",
+        "mapPx": null,
+        "lngLatFromTransform": null
+      },
+      {
+        "index": 2,
+        "className": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom",
+        "markerKind": "city-aggregate",
+        "eventId": null,
+        "cityId": "8",
+        "count": "2",
+        "aria": "2 events in Mansoura · Approximate locations",
+        "title": "2 events in Mansoura · Approximate locations",
+        "cat": null,
+        "rect": {
+          "left": -52,
+          "top": 978.890625,
+          "width": 56,
+          "height": 72
+        },
+        "tipScreen": {
+          "x": -24,
+          "y": 1050.890625
+        },
+        "inStage": false,
+        "stageLocal": {
+          "x": -128,
+          "y": 462
+        },
+        "computedTransform": "matrix(1, 0, 0, 1, -269, 389)",
+        "inlineTransform": "translate(-50%, -100%) translate(-241px, 461px) rotateX(0deg) rotateZ(0deg)",
+        "display": "inline-block",
+        "visibility": "visible",
+        "opacity": "1",
+        "zIndex": "1",
+        "mapPx": null,
+        "lngLatFromTransform": null
+      }
+    ],
+    "symbolLayerCount": 25,
+    "circleLayerCount": 1,
+    "symbolLayers": [
+      {
+        "id": "road_one_way_arrow",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation",
+        "visibility": "visible"
+      },
+      {
+        "id": "road_one_way_arrow_opposite",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation",
+        "visibility": "visible"
+      },
+      {
+        "id": "waterway_line_label",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "waterway",
+        "visibility": "visible"
+      },
+      {
+        "id": "water_name_point_label",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "water_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "water_name_line_label",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "water_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "poi_r20",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "poi",
+        "visibility": "visible"
+      },
+      {
+        "id": "poi_r7",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "poi",
+        "visibility": "visible"
+      },
+      {
+        "id": "poi_r1",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "poi",
+        "visibility": "visible"
+      },
+      {
+        "id": "poi_transit",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "poi",
+        "visibility": "visible"
+      },
+      {
+        "id": "highway-name-path",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "highway-name-minor",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "highway-name-major",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "highway-shield-non-us",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "highway-shield-us-interstate",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "road_shield_us",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "transportation_name",
+        "visibility": "visible"
+      },
+      {
+        "id": "airport",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "aerodrome_label",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_other",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_village",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_town",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_state",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_city",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_city_capital",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_country_3",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_country_2",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      },
+      {
+        "id": "label_country_1",
+        "type": "symbol",
+        "source": "openmaptiles",
+        "source-layer": "place",
+        "visibility": "visible"
+      }
+    ],
+    "circleLayers": [
+      {
+        "id": "lm-home-origin-dot",
+        "type": "circle",
+        "source": "lm-home-origin",
+        "visibility": "visible"
+      }
+    ],
+    "sources": [
+      "ne2_shaded",
+      "openmaptiles",
+      "lm-home-origin"
+    ],
+    "livingOverlays": {
+      "radiusCircle": true,
+      "cityPanel": false,
+      "card": false,
+      "locPanel": true
+    },
+    "numberedCandidates": [],
+    "payloadCacheSummary": null
+  },
+  "api": {
+    "url": "https://funnity.com/api/discovery/map?north=31.84682864885052&south=30.916468797356046&east=33.06926648986504&west=31.255236206757786&zoom=9&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=25",
+    "markerCount": 9,
+    "clusterCount": 0,
+    "aggCount": 1,
+    "markers": [
+      {
+        "id": 421,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Friendly tennis match",
+        "venue": "Rooftop Gathering Spot · Port Said",
+        "members": 6,
+        "category": "Tennis",
+        "count": 1
+      },
+      {
+        "id": 423,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Console night with friends",
+        "venue": "Neighborhood Playground · Port Said",
+        "members": 4,
+        "category": "PlayStation",
+        "count": 1
+      },
+      {
+        "id": 413,
+        "lat": 31.4165,
+        "lng": 31.8133,
+        "precision": "approximate",
+        "title": "Evening jog around the lake",
+        "venue": "Desert Road Courts · Damietta",
+        "members": 5,
+        "category": "Running",
+        "count": 1
+      },
+      {
+        "id": 433,
+        "lat": 31.4165,
+        "lng": 31.8133,
+        "precision": "approximate",
+        "title": "Friendly football at the pitch",
+        "venue": "Local Café Terrace · Damietta",
+        "members": 4,
+        "category": "Football",
+        "count": 1
+      },
+      {
+        "id": 482,
+        "lat": 31.0409,
+        "lng": 31.3785,
+        "precision": "approximate",
+        "title": "Courtside rally night",
+        "venue": "Community Sports Club · Mansoura",
+        "members": 2,
+        "category": "Tennis",
+        "count": 1
+      },
+      {
+        "id": 416,
+        "lat": 31.4165,
+        "lng": 31.8133,
+        "precision": "approximate",
+        "title": "Courtside rally night",
+        "venue": "Downtown Arena · Damietta",
+        "members": 3,
+        "category": "Tennis",
+        "count": 1
+      },
+      {
+        "id": 497,
+        "lat": 31.0409,
+        "lng": 31.3785,
+        "precision": "approximate",
+        "title": "Catan + strategy night",
+        "venue": "University Pitch · Mansoura",
+        "members": 6,
+        "category": "Board Games",
+        "count": 1
+      },
+      {
+        "id": 445,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Blockbuster movie outing",
+        "venue": "Rooftop Gathering Spot · Port Said",
+        "members": 2,
+        "category": "Cinema",
+        "count": 1
+      },
+      {
+        "id": 453,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Morning tennis drills",
+        "venue": "Community Sports Club · Port Said",
+        "members": 2,
+        "category": "Tennis",
+        "count": 1
+      }
+    ],
+    "aggregates": [
+      {
+        "type": "city_aggregate",
+        "id": "city_11",
+        "city_id": 11,
+        "city": "Port Said",
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "count": 4,
+        "sample": [
+          421,
+          423,
+          445,
+          453
+        ],
+        "label": "Port Said · 4 city-level",
+        "precision": "city_level"
+      }
+    ],
+    "clusters": [],
+    "meta": {
+      "zoom": 9,
+      "clustered": true,
+      "point_count": 0,
+      "city_aggregate_count": 1,
+      "include_approximate": true,
+      "bounds": {
+        "north": 31.84682864885052,
+        "south": 30.916468797356046,
+        "east": 33.06926648986504,
+        "west": 31.255236206757786
+      },
+      "query_bounds": {
+        "north": 31.84682864885052,
+        "south": 30.916468797356046,
+        "east": 33.06926648986504,
+        "west": 31.255236206757786
+      },
+      "bounds_clamped": false,
+      "nationwide_mode": false,
+      "origin_aware": true,
+      "origin": {
+        "latitude": 31.2653,
+        "longitude": 32.3019,
+        "distance_km": 25,
+        "effective_radius_km": 25,
+        "is_suggestion": false,
+        "discovery_mode": "manual"
+      },
+      "selected_radius_km": 25,
+      "effective_radius_km": 25,
+      "is_suggestion": false,
+      "max_markers": 250
+    }
+  },
+  "apiHitCount": 1,
+  "poiProbe": {
+    "canvas": {
+      "w": 1230,
+      "h": 638
+    },
+    "hits": [
+      {
+        "x": 193,
+        "y": 146,
+        "layers": [
+          "label_city"
+        ],
+        "props": [
+          {
+            "layer": "label_city",
+            "name": "دمياط الجديدة",
+            "class": "city",
+            "ref": null
+          }
+        ]
+      }
+    ]
+  }
+}

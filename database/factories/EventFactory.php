@@ -8,12 +8,11 @@ use App\Models\Category;
 use App\Models\City;
 use App\Models\Event;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Event>
+ * @extends AppFactory<Event>
  */
-class EventFactory extends Factory
+class EventFactory extends AppFactory
 {
     protected $model = Event::class;
 

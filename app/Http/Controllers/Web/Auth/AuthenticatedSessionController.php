@@ -49,7 +49,11 @@ class AuthenticatedSessionController extends Controller
 
         if ($user->email_verified_at === null) {
             try {
-                $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+                $codes->issueAndSendIfAllowed(
+                    $user,
+                    EmailAuthPurpose::EmailVerify,
+                    mailContext: 'login',
+                );
             } catch (\App\Exceptions\DomainException) {
                 // Existing code still valid; verify screen supports resend.
             }

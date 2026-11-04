@@ -68,6 +68,14 @@ class SiteSettingsService
     }
 
     /**
+     * Email-safe brand mark (PNG over HTTPS). Does not replace the website SVG logo.
+     */
+    public function emailLogoUrl(): string
+    {
+        return asset('branding/funnity-mark-email.png');
+    }
+
+    /**
      * Attach the official Funity mark into site settings storage (admin + GET /api/site).
      */
     public function attachOfficialLogo(bool $force = false): SiteSetting

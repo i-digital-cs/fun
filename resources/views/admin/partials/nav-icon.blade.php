@@ -9,6 +9,9 @@
         'pin' => '<path stroke-linecap="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
         'settings' => '<circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>',
         'audit' => '<path stroke-linecap="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+        'megaphone' => '<path stroke-linecap="round" d="M3 11v2a1 1 0 001 1h2l6 4V6L6 10H4a1 1 0 00-1 1z"/><path stroke-linecap="round" d="M15 9.5a3.5 3.5 0 010 5"/><path stroke-linecap="round" d="M7 15v2a2 2 0 002 2"/>',
+        'plug' => '<path stroke-linecap="round" d="M9 7v4M15 7v4M8 11h8v2a4 4 0 01-4 4h0a4 4 0 01-4-4v-2z"/><path stroke-linecap="round" d="M12 17v4"/>',
+        'wallet' => '<rect x="2" y="6" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M2 10h20"/><circle cx="16" cy="14" r="1.5"/>',
     ];
     $path = $icons[$icon] ?? $icons['home'];
 @endphp

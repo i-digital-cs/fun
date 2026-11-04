@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Enums\EmailAuthPurpose;
+use App\Enums\OutboundOtpLane;
 use App\Exceptions\DomainException;
 use App\Exceptions\OtpCooldownException;
 use App\Http\Controllers\Controller;
@@ -53,7 +54,7 @@ class EmailVerificationController extends Controller
         }
 
         try {
-            $result = $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify);
+            $result = $codes->issueAndSend($user, EmailAuthPurpose::EmailVerify, OutboundOtpLane::Member);
         } catch (OtpCooldownException $exception) {
             if ($request->expectsJson()) {
                 return response()->json([

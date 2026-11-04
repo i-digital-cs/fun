@@ -65,6 +65,15 @@ return [
     ],
 
     /*
+    | Mapbox (Living World provider trial — preview only)
+    | Use a public token (pk.*) only. Never put secret tokens (sk.*) in front-end config.
+    | Do not enable paid billing without owner approval.
+    */
+    'mapbox' => [
+        'public_token' => env('MAPBOX_ACCESS_TOKEN', env('MAPBOX_PUBLIC_TOKEN')),
+    ],
+
+    /*
     | Firebase Cloud Messaging (HTTP v1)
     | Place the service-account JSON on the server (outside public/) and point
     | FIREBASE_CREDENTIALS at its absolute path. Without these, in-app DB

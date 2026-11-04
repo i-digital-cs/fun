@@ -14,6 +14,8 @@
     'retryAfterSeconds' => 0,
     'showGoogle' => false,
     'footerForm' => null,
+    /** @var 'verify'|'reset'|null Show inbox/spam tip after an email was requested. */
+    'emailTip' => null,
 ])
 
 @php
@@ -152,6 +154,7 @@
         @if ($resendUrl)
             <div data-footer-resend class="mt-6 text-center text-sm text-slate-400" data-stage-resend>
                 <p class="mb-1">{{ __('ui.access_resend_prompt') }}</p>
+                {{-- Exactly one visible resend control; cooldown copy is painted onto this button. --}}
                 <button
                     type="button"
                     data-auth-resend
@@ -159,8 +162,13 @@
                 >
                     {{ __('ui.access_resend') }}
                 </button>
-                <p data-resend-cooldown class="mt-1 hidden tabular-nums text-slate-500" aria-live="polite"></p>
+                {{-- Screen-reader live region only — must stay visually hidden (duplicate timer bug). --}}
+                <p data-resend-cooldown class="sr-only" aria-live="polite"></p>
             </div>
+        @endif
+
+        @if (in_array($emailTip, ['verify', 'reset'], true))
+            <x-auth.email-delivery-tip :context="$emailTip" />
         @endif
     </div>
 </div>

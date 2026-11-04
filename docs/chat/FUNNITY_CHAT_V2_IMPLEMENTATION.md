@@ -17,7 +17,7 @@
 - Views: `chats/index.blade.php`, `components/chat/panel-*.blade.php`
 - JS: `resources/js/chat-v2.js` (+ existing `dm-chat.js` / `event-chat.js`)
 
-Deep links `/dms/{id}` and `/events/.../chat` remain for compatibility.
+Deep links `/dms/{id}` and `/events/.../chat` **redirect** to Chat V2 (`/chats?c=dm-|event-`). See `docs/web/UNIFIED_CHAT_AUDIT_AND_IMPLEMENTATION.md`.
 
 ## Migration (owner approval required)
 

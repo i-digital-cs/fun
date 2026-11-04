@@ -1,0 +1,43 @@
+{
+  "net": [],
+  "info": {
+    "metrics": {
+      "city": "port-said",
+      "style": "mapbox://styles/mapbox/standard",
+      "markerCount": 4,
+      "perf": {
+        "mapIdleMs": 7165,
+        "fps": 52,
+        "fpsSamples": [
+          26,
+          25,
+          30,
+          54,
+          31,
+          47,
+          52
+        ],
+        "jsHeapMb": 117.3
+      },
+      "camera": {
+        "lng": 32.3019,
+        "lat": 31.2653,
+        "zoom": 14.8,
+        "pitch": 56,
+        "bearing": -18
+      },
+      "blocked": false
+    },
+    "center": {
+      "lng": 32.3019,
+      "lat": 31.2653
+    },
+    "zoom": 13.8,
+    "pitch": 45,
+    "styleLoaded": true,
+    "sample": {
+      "w": 929,
+      "h": 618
+    }
+  }
+}

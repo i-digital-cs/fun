@@ -39,6 +39,16 @@ class NotifyFriendsOfPublishedEvent implements ShouldQueue
             return;
         }
 
+        // Stale queue recovery: do not fan out for events that already ended.
+        if ($event->ends_at !== null && $event->ends_at->isPast()) {
+            Log::info('friend_event_notify_skipped_ended', [
+                'event_id' => $event->id,
+                'ends_at' => $event->ends_at->toIso8601String(),
+            ]);
+
+            return;
+        }
+
         $friendIds = $friendships->acceptedFriendIds($publisher);
         $blockedIds = $blocks->blockedUserIdsFor($publisher);
 
@@ -56,6 +66,15 @@ class NotifyFriendsOfPublishedEvent implements ShouldQueue
 
         foreach ($recipients as $recipient) {
             try {
+                $alreadyNotified = $recipient->notifications()
+                    ->where('type', FriendEventNotification::class)
+                    ->where('data->event_id', $event->id)
+                    ->exists();
+
+                if ($alreadyNotified) {
+                    continue;
+                }
+
                 $recipient->notify(new FriendEventNotification($publisher, $event));
             } catch (Throwable $e) {
                 Log::warning('friend_event_notify_failed', [

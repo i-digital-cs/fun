@@ -1,0 +1,196 @@
+/* Living World procedural 3D feasibility POC */
+
+.lwp-preview {
+    --lw-purple: #7138f5;
+    --lw-orange: #ff762e;
+    position: relative;
+}
+
+.lwp-banner {
+    border-radius: 1rem;
+    border: 1px solid #fcd34d;
+    background: linear-gradient(90deg, #fffbeb, #fef3c7);
+    padding: 0.85rem 1rem;
+    color: #92400e;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.lwp-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+.lwp-head h1 {
+    margin: 0;
+    font-size: clamp(1.15rem, 2.3vw, 1.6rem);
+    font-weight: 800;
+    color: #19213d;
+}
+
+.lwp-head h1 em {
+    font-style: normal;
+    color: var(--lw-purple);
+}
+
+.lwp-head p {
+    margin: 0.3rem 0 0;
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 600;
+    max-width: 40rem;
+}
+
+.lwp-modes {
+    display: inline-flex;
+    gap: 0.3rem;
+    padding: 0.28rem;
+    border-radius: 9999px;
+    background: #fff;
+    border: 1px solid #e8eaf2;
+}
+
+.lwp-modes button {
+    border: 0;
+    background: transparent;
+    border-radius: 9999px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.lwp-modes button[aria-pressed='true'] {
+    background: linear-gradient(135deg, #8b5cf6, #7138f5);
+    color: #fff;
+}
+
+.lwp-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6b6280;
+}
+
+.lwp-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+    gap: 0.85rem;
+}
+
+.lwp-stage {
+    position: relative;
+    height: min(68vh, 620px);
+    min-height: 320px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid #e8eaf2;
+    box-shadow: 0 28px 56px -30px rgba(49, 24, 110, 0.48);
+    background: #e8e4ff;
+}
+
+.lwp-map {
+    position: absolute;
+    inset: 0;
+}
+
+.lwp-disclaimer {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    bottom: 0.55rem;
+    transform: translateX(-50%);
+    max-width: min(94%, 36rem);
+    text-align: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(10px);
+    color: #1a1438;
+}
+
+.lwp-hud {
+    position: absolute;
+    z-index: 6;
+    inset-inline-end: 0.75rem;
+    top: 3.4rem;
+}
+
+.lwp-hud button {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.92);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.lwp-metrics {
+    border-radius: 1.25rem;
+    border: 1px solid #e8eaf2;
+    background: #fff;
+    padding: 0.9rem 1rem;
+    box-shadow: 0 16px 32px -24px rgba(42, 33, 80, 0.4);
+}
+
+.lwp-metrics h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.lwp-metrics dl {
+    margin: 0;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.lwp-metrics dl > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.68rem;
+}
+
+.lwp-metrics dt {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.lwp-metrics dd {
+    margin: 0;
+    font-weight: 800;
+    text-align: end;
+}
+
+.lwp-metrics__note {
+    margin: 0.65rem 0 0;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #92400e;
+    line-height: 1.35;
+}
+
+.lwp-compare {
+    margin-top: 1rem;
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+@media (max-width: 1023px) {
+    .lwp-layout {
+        grid-template-columns: 1fr;
+    }
+    .lwp-stage {
+        height: min(56vh, 480px);
+    }
+}

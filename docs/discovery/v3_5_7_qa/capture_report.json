@@ -1,0 +1,36 @@
+{
+  "preview": "https://funnity.com/preview/living-map-v35?expires=1794212414&signature=4cb89d5d85cb49a7ca07a7cce53809b3163ffefbcb659450237521e281254bf1",
+  "shots": [
+    "01-desktop-initial-spotlight.jpg",
+    "03-desktop-carousel.jpg",
+    "02-desktop-selected-card.jpg",
+    "07-spotlight-dismissed.jpg",
+    "08-aggregate-event-list.jpg",
+    "04-mobile-spotlight.jpg",
+    "05-mobile-carousel.jpg",
+    "06-arabic-rtl.jpg"
+  ],
+  "checks": {
+    "spotlight": {
+      "visible": true,
+      "title": "Console night with friends",
+      "place": "Approximate city location · not an exact venue pin",
+      "meta": "Nov 3, 5:00 PM",
+      "markerLit": true,
+      "markerKind": "city-aggregate",
+      "markerCount": "3",
+      "markerCityId": "11"
+    },
+    "selectedCard": 1,
+    "dismissed": {
+      "spotHidden": true,
+      "litGone": true
+    },
+    "aggRows": 3,
+    "homepageIsolation": true,
+    "rtl": {
+      "lang": "ar",
+      "dir": "rtl"
+    }
+  }
+}

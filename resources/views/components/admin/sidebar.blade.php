@@ -38,6 +38,17 @@
         ],
     ];
 
+    if ($user?->platform_role?->canViewMarketing() === true) {
+        $groups[] = [
+            'label' => __('marketing.nav_group'),
+            'links' => [
+                ['route' => 'admin.marketing.overview', 'match' => 'admin.marketing.overview', 'label' => __('marketing.nav_overview'), 'icon' => 'megaphone'],
+                ['route' => 'admin.marketing.integrations.index', 'match' => 'admin.marketing.integrations.*', 'label' => __('marketing.nav_integrations'), 'icon' => 'plug'],
+                ['route' => 'admin.marketing.budget-policies.index', 'match' => 'admin.marketing.budget-policies.*', 'label' => __('marketing.nav_budget'), 'icon' => 'wallet'],
+            ],
+        ];
+    }
+
     if ($user?->isSuperAdmin()) {
         $groups[] = [
             'label' => __('admin.nav_group_system'),

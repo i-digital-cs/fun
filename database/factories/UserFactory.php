@@ -7,14 +7,13 @@ use App\Enums\PlatformRole;
 use App\Enums\UserSex;
 use App\Models\User;
 use App\Support\UserPublicId;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<User>
+ * @extends AppFactory<User>
  */
-class UserFactory extends Factory
+class UserFactory extends AppFactory
 {
     protected static ?string $password;
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Enums\EmailAuthPurpose;
 use App\Exceptions\DomainException;
+use App\Exceptions\RegistrationBlockedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\EmailAuthCodeService;
@@ -19,10 +20,20 @@ class RegisterController extends Controller
         LoginUserService $loginUserService,
         EmailAuthCodeService $codes,
     ): JsonResponse {
-        $user = $registerUserService->register($request->validated());
+        try {
+            $user = $registerUserService->register($request->validated(), $request);
+        } catch (RegistrationBlockedException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], $exception->status);
+        }
 
         try {
-            $otp = $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+            $otp = $codes->issueAndSendIfAllowed(
+                $user,
+                EmailAuthPurpose::EmailVerify,
+                mailContext: 'register',
+            );
         } catch (DomainException) {
             $otp = null;
         }

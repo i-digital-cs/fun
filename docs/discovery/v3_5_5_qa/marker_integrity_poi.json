@@ -1,0 +1,568 @@
+{
+  "capturedAt": "2026-11-01T17:25:06.910Z",
+  "preview": "https://funnity.com/preview/living-map-v35?expires=1794158574&signature=38349c59121f3893af317728574e9242769c41d5ba35c10dd3ade57b857adeb1",
+  "deep": {
+    "canvas": {
+      "w": 1230,
+      "h": 638
+    },
+    "center": {
+      "lng": 32.2233726615076,
+      "lat": 31.27007464440908
+    },
+    "zoom": 9.289246679135655,
+    "bounds": {
+      "north": 31.84682864885052,
+      "south": 30.916468797356046,
+      "east": 33.06926648986504,
+      "west": 31.255236206757786
+    },
+    "byLayer": {
+      "label_city": 4,
+      "label_town": 6,
+      "label_village": 5,
+      "highway-shield-non-us": 5
+    },
+    "poiAndShieldCount": 3,
+    "poiAndShields": [
+      {
+        "layer": "highway-shield-non-us",
+        "name": "طريق كفر سعد, دمياط",
+        "ref": "37",
+        "class": "trunk",
+        "maki": null,
+        "lngLat": null,
+        "screen": null
+      },
+      {
+        "layer": "highway-shield-non-us",
+        "name": "الطريق الساحلى الدولى",
+        "ref": "10",
+        "class": "trunk",
+        "maki": null,
+        "lngLat": null,
+        "screen": null
+      },
+      {
+        "layer": "highway-shield-non-us",
+        "name": "طريق الاسماعيليه, بورسعيد",
+        "ref": "15",
+        "class": "trunk",
+        "maki": null,
+        "lngLat": null,
+        "screen": null
+      }
+    ],
+    "customLayers": [
+      "lm-home-radius-fill",
+      "lm-home-radius-line",
+      "lm-home-origin-dot"
+    ],
+    "customSources": {
+      "lm-home-origin": {
+        "type": "geojson"
+      }
+    },
+    "markers": [
+      {
+        "i": 0,
+        "kind": "city-aggregate",
+        "count": "4",
+        "cityId": "11",
+        "eventId": null,
+        "aria": "4 events in Port Said · Approximate locations",
+        "tipCanvas": {
+          "x": 684,
+          "y": 329
+        },
+        "lngLat": {
+          "lng": 32.30135,
+          "lat": 31.26523
+        },
+        "inCanvas": true,
+        "className": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom"
+      },
+      {
+        "i": 1,
+        "kind": "city-aggregate",
+        "count": "3",
+        "cityId": "14",
+        "eventId": null,
+        "aria": "3 events in Damietta · Approximate locations",
+        "tipCanvas": {
+          "x": 360,
+          "y": 181
+        },
+        "lngLat": {
+          "lng": 31.88264,
+          "lat": 31.42337
+        },
+        "inCanvas": true,
+        "className": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom"
+      },
+      {
+        "i": 2,
+        "kind": "city-aggregate",
+        "count": "2",
+        "cityId": "8",
+        "eventId": null,
+        "aria": "2 events in Mansoura · Approximate locations",
+        "tipCanvas": {
+          "x": -129,
+          "y": 461
+        },
+        "lngLat": {
+          "lng": 31.49137,
+          "lat": 31.05103
+        },
+        "inCanvas": false,
+        "className": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom"
+      }
+    ],
+    "originData": {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  32.565391176845615,
+                  31.2653
+                ],
+                [
+                  32.56412239480964,
+                  31.28737593250666
+                ],
+                [
+                  32.5603282677663,
+                  31.309239261715344
+                ],
+                [
+                  32.55404533523312,
+                  31.33067943181407
+                ],
+                [
+                  32.54533410528497,
+                  31.35148996224439
+                ],
+                [
+                  32.53427847182832,
+                  31.371470436222072
+                ],
+                [
+                  32.52098490665696,
+                  31.390428430860272
+                ],
+                [
+                  32.50558143407051,
+                  31.408181370307126
+                ],
+                [
+                  32.48821639793036,
+                  31.424558284051024
+                ],
+                [
+                  32.469057033027234,
+                  31.439401453460075
+                ],
+                [
+                  32.44828785451873,
+                  31.45256793069877
+                ],
+                [
+                  32.42610888094747,
+                  31.463930915393775
+                ],
+                [
+                  32.402733707953196,
+                  31.473380975790832
+                ],
+                [
+                  32.37838745123003,
+                  31.48082710264239
+                ],
+                [
+                  32.35330457853922,
+                  31.486197585676404
+                ],
+                [
+                  32.327726651656484,
+                  31.48944070420545
+                ],
+                [
+                  32.3019,
+                  31.490525225225227
+                ],
+                [
+                  32.27607334834352,
+                  31.48944070420545
+                ],
+                [
+                  32.25049542146078,
+                  31.486197585676404
+                ],
+                [
+                  32.225412548769974,
+                  31.48082710264239
+                ],
+                [
+                  32.20106629204681,
+                  31.473380975790832
+                ],
+                [
+                  32.17769111905254,
+                  31.463930915393775
+                ],
+                [
+                  32.155512145481275,
+                  31.45256793069877
+                ],
+                [
+                  32.13474296697277,
+                  31.439401453460075
+                ],
+                [
+                  32.11558360206965,
+                  31.424558284051024
+                ],
+                [
+                  32.0982185659295,
+                  31.408181370307126
+                ],
+                [
+                  32.082815093343044,
+                  31.390428430860272
+                ],
+                [
+                  32.069521528171684,
+                  31.371470436222072
+                ],
+                [
+                  32.058465894715034,
+                  31.35148996224439
+                ],
+                [
+                  32.04975466476689,
+                  31.33067943181407
+                ],
+                [
+                  32.043471732233705,
+                  31.309239261715344
+                ],
+                [
+                  32.03967760519037,
+                  31.28737593250666
+                ],
+                [
+                  32.03840882315439,
+                  31.2653
+                ],
+                [
+                  32.03967760519037,
+                  31.24322406749334
+                ],
+                [
+                  32.043471732233705,
+                  31.221360738284655
+                ],
+                [
+                  32.04975466476689,
+                  31.19992056818593
+                ],
+                [
+                  32.058465894715034,
+                  31.17911003775561
+                ],
+                [
+                  32.069521528171684,
+                  31.159129563777928
+                ],
+                [
+                  32.082815093343044,
+                  31.140171569139728
+                ],
+                [
+                  32.0982185659295,
+                  31.122418629692874
+                ],
+                [
+                  32.11558360206965,
+                  31.106041715948976
+                ],
+                [
+                  32.13474296697277,
+                  31.091198546539925
+                ],
+                [
+                  32.155512145481275,
+                  31.07803206930123
+                ],
+                [
+                  32.17769111905254,
+                  31.066669084606225
+                ],
+                [
+                  32.20106629204681,
+                  31.057219024209168
+                ],
+                [
+                  32.225412548769974,
+                  31.04977289735761
+                ],
+                [
+                  32.25049542146078,
+                  31.044402414323596
+                ],
+                [
+                  32.27607334834352,
+                  31.04115929579455
+                ],
+                [
+                  32.3019,
+                  31.040074774774773
+                ],
+                [
+                  32.327726651656484,
+                  31.04115929579455
+                ],
+                [
+                  32.35330457853922,
+                  31.044402414323596
+                ],
+                [
+                  32.37838745123003,
+                  31.04977289735761
+                ],
+                [
+                  32.402733707953196,
+                  31.057219024209168
+                ],
+                [
+                  32.42610888094747,
+                  31.066669084606225
+                ],
+                [
+                  32.44828785451873,
+                  31.07803206930123
+                ],
+                [
+                  32.469057033027234,
+                  31.091198546539925
+                ],
+                [
+                  32.48821639793036,
+                  31.106041715948976
+                ],
+                [
+                  32.50558143407051,
+                  31.122418629692874
+                ],
+                [
+                  32.52098490665696,
+                  31.140171569139728
+                ],
+                [
+                  32.53427847182832,
+                  31.159129563777928
+                ],
+                [
+                  32.54533410528497,
+                  31.17911003775561
+                ],
+                [
+                  32.55404533523312,
+                  31.19992056818593
+                ],
+                [
+                  32.5603282677663,
+                  31.221360738284655
+                ],
+                [
+                  32.56412239480964,
+                  31.24322406749334
+                ],
+                [
+                  32.565391176845615,
+                  31.2653
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "kind": "origin"
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              32.3019,
+              31.2653
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "api": {
+    "url": "https://funnity.com/api/discovery/map?north=31.84682864885052&south=30.916468797356046&east=33.06926648986504&west=31.255236206757786&zoom=9&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=25",
+    "markers": [
+      {
+        "id": 421,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Friendly tennis match",
+        "venue": "Rooftop Gathering Spot · Port Said",
+        "members": 6,
+        "category": "Tennis",
+        "count": 1
+      },
+      {
+        "id": 423,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Console night with friends",
+        "venue": "Neighborhood Playground · Port Said",
+        "members": 4,
+        "category": "PlayStation",
+        "count": 1
+      },
+      {
+        "id": 413,
+        "lat": 31.4165,
+        "lng": 31.8133,
+        "precision": "approximate",
+        "title": "Evening jog around the lake",
+        "venue": "Desert Road Courts · Damietta",
+        "members": 5,
+        "category": "Running",
+        "count": 1
+      },
+      {
+        "id": 433,
+        "lat": 31.4165,
+        "lng": 31.8133,
+        "precision": "approximate",
+        "title": "Friendly football at the pitch",
+        "venue": "Local Café Terrace · Damietta",
+        "members": 4,
+        "category": "Football",
+        "count": 1
+      },
+      {
+        "id": 482,
+        "lat": 31.0409,
+        "lng": 31.3785,
+        "precision": "approximate",
+        "title": "Courtside rally night",
+        "venue": "Community Sports Club · Mansoura",
+        "members": 2,
+        "category": "Tennis",
+        "count": 1
+      },
+      {
+        "id": 416,
+        "lat": 31.4165,
+        "lng": 31.8133,
+        "precision": "approximate",
+        "title": "Courtside rally night",
+        "venue": "Downtown Arena · Damietta",
+        "members": 3,
+        "category": "Tennis",
+        "count": 1
+      },
+      {
+        "id": 497,
+        "lat": 31.0409,
+        "lng": 31.3785,
+        "precision": "approximate",
+        "title": "Catan + strategy night",
+        "venue": "University Pitch · Mansoura",
+        "members": 6,
+        "category": "Board Games",
+        "count": 1
+      },
+      {
+        "id": 445,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Blockbuster movie outing",
+        "venue": "Rooftop Gathering Spot · Port Said",
+        "members": 2,
+        "category": "Cinema",
+        "count": 1
+      },
+      {
+        "id": 453,
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "precision": "approximate",
+        "title": "Morning tennis drills",
+        "venue": "Community Sports Club · Port Said",
+        "members": 2,
+        "category": "Tennis",
+        "count": 1
+      }
+    ],
+    "aggregates": [
+      {
+        "type": "city_aggregate",
+        "city_id": 11,
+        "city": "Port Said",
+        "lat": 31.2653,
+        "lng": 32.3019,
+        "count": 4,
+        "sample": [
+          421,
+          423,
+          445,
+          453
+        ],
+        "label": "Port Said · 4 city-level"
+      }
+    ],
+    "clusters": [],
+    "meta": {
+      "zoom": 9,
+      "clustered": true,
+      "point_count": 0,
+      "city_aggregate_count": 1,
+      "include_approximate": true,
+      "bounds": {
+        "north": 31.84682864885052,
+        "south": 30.916468797356046,
+        "east": 33.06926648986504,
+        "west": 31.255236206757786
+      },
+      "query_bounds": {
+        "north": 31.84682864885052,
+        "south": 30.916468797356046,
+        "east": 33.06926648986504,
+        "west": 31.255236206757786
+      },
+      "bounds_clamped": false,
+      "nationwide_mode": false,
+      "origin_aware": true,
+      "origin": {
+        "latitude": 31.2653,
+        "longitude": 32.3019,
+        "distance_km": 25,
+        "effective_radius_km": 25,
+        "is_suggestion": false,
+        "discovery_mode": "manual"
+      },
+      "selected_radius_km": 25,
+      "effective_radius_km": 25,
+      "is_suggestion": false,
+      "max_markers": 250
+    }
+  }
+}

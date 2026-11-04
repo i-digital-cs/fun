@@ -1,0 +1,51 @@
+{
+  "preview": "https://funnity.com/preview/living-map-v4?expires=1793781721&signature=a4d8aded201641f3446fece144691500db85a784a8cb0d55a0c14b92781d8202",
+  "shots": [
+    "01-desktop-discover.jpg",
+    "02-desktop-scene-stage.jpg",
+    "03-desktop-carousel.jpg",
+    "04-desktop-navigate.jpg",
+    "05-mobile-discover.jpg"
+  ],
+  "checks": {
+    "discover": {
+      "stageMode": "discover",
+      "artSrc": "https://funnity.com/images/living-map/v4/port-said-cinematic.jpg",
+      "artNatural": {
+        "w": 1920,
+        "h": 1080
+      },
+      "pinCount": 4,
+      "pinKinds": [
+        "aggregate",
+        "event",
+        "event",
+        "event"
+      ],
+      "spotlightVisible": true,
+      "spotlightTitle": "Console night with friends",
+      "disclaimer": "Illustrated city view · artistic placement · not exact street positions",
+      "disclaimerHidden": false,
+      "carouselCards": 3,
+      "status": "Ready"
+    },
+    "apiHits": [
+      {
+        "url": "https://funnity.com/api/discovery/map?north=31.42&south=31.1&east=32.45&west=32.15&zoom=11&include_approximate=1&limit=60&discovery_mode=manual&latitude=31.2653&longitude=32.3019&distance_km=25",
+        "status": 200
+      },
+      {
+        "url": "https://funnity.com/api/discovery/city-events?city_id=11",
+        "status": 200
+      }
+    ],
+    "navigate": {
+      "stageMode": "navigate",
+      "sceneHidden": true,
+      "mapHidden": false,
+      "hasCanvas": true,
+      "mapMarkers": 4,
+      "disclaimerHidden": true
+    }
+  }
+}

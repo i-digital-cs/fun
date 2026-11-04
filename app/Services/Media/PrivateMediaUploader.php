@@ -9,16 +9,20 @@ use Illuminate\Support\Str;
 
 class PrivateMediaUploader
 {
+    public function __construct(
+        private readonly MediaUploadValidator $validator,
+    ) {}
+
     /**
      * @return array{disk: string, path: string, mime_type: string, size: int}
      */
     public function storeIdentityDocument(UploadedFile $file, int $userId, string $type): array
     {
+        $meta = $this->validator->assertCategory($file, 'identity');
         $disk = MediaDisk::private();
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-        $safeExtension = preg_replace('/[^a-z0-9]/', '', $extension) ?: 'bin';
+        $safeType = preg_replace('/[^a-z0-9_]/', '', strtolower($type)) ?: 'doc';
         $directory = sprintf('identity/%d', $userId);
-        $filename = sprintf('%s_%s.%s', $type, Str::uuid()->toString(), $safeExtension);
+        $filename = sprintf('%s_%s.%s', $safeType, Str::uuid()->toString(), $meta['extension']);
 
         $path = $file->storeAs($directory, $filename, [
             'disk' => $disk,
@@ -32,8 +36,8 @@ class PrivateMediaUploader
         return [
             'disk' => $disk,
             'path' => $path,
-            'mime_type' => (string) ($file->getMimeType() ?: 'application/octet-stream'),
-            'size' => (int) $file->getSize(),
+            'mime_type' => $meta['mime'],
+            'size' => $meta['bytes'],
         ];
     }
 

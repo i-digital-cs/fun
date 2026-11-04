@@ -163,7 +163,7 @@ class PostEventMessageService
             return;
         }
 
-        $chatUrl = event_route('events.chat', $event);
+        $chatUrl = chat_event_url($event);
         $title = $event->title;
 
         foreach ($recipients as $recipient) {

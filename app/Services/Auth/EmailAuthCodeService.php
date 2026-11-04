@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Enums\EmailAuthPurpose;
+use App\Enums\OutboundOtpLane;
 use App\Exceptions\DomainException;
 use App\Exceptions\OtpCooldownException;
 use App\Mail\AuthCodeMail;
@@ -17,8 +18,10 @@ use Throwable;
 
 class EmailAuthCodeService
 {
-    public function __construct(private readonly SiteSettingsService $siteSettings)
-    {
+    public function __construct(
+        private readonly SiteSettingsService $siteSettings,
+        private readonly OutboundOtpBudget $outboundBudget,
+    ) {
     }
 
     public function cooldownSeconds(): int
@@ -63,11 +66,15 @@ class EmailAuthCodeService
      * @throws OtpCooldownException when a prior successful send is still cooling down
      * @throws DomainException when mail delivery fails (no cooldown applied)
      */
-    public function issueAndSend(User $user, EmailAuthPurpose $purpose): EmailAuthIssueResult
-    {
+    public function issueAndSend(
+        User $user,
+        EmailAuthPurpose $purpose,
+        OutboundOtpLane $lane = OutboundOtpLane::AbuseProne,
+        string $mailContext = 'verify',
+    ): EmailAuthIssueResult {
         $lock = Cache::lock($this->issueLockKey($user, $purpose), 10);
 
-        return $lock->block(5, function () use ($user, $purpose): EmailAuthIssueResult {
+        return $lock->block(5, function () use ($user, $purpose, $lane, $mailContext): EmailAuthIssueResult {
             $remaining = $this->cooldownRemaining($user, $purpose);
             if ($remaining > 0) {
                 $availableAt = $this->resendAvailableAt($user, $purpose);
@@ -78,17 +85,21 @@ class EmailAuthCodeService
                 );
             }
 
-            return $this->createAndDeliver($user, $purpose);
+            return $this->createAndDeliver($user, $purpose, $lane, $mailContext);
         });
     }
 
     /**
      * Auto-send for register/login: skip silently when cooldown is active.
      */
-    public function issueAndSendIfAllowed(User $user, EmailAuthPurpose $purpose): EmailAuthIssueResult
-    {
+    public function issueAndSendIfAllowed(
+        User $user,
+        EmailAuthPurpose $purpose,
+        OutboundOtpLane $lane = OutboundOtpLane::AbuseProne,
+        string $mailContext = 'verify',
+    ): EmailAuthIssueResult {
         try {
-            return $this->issueAndSend($user, $purpose);
+            return $this->issueAndSend($user, $purpose, $lane, $mailContext);
         } catch (OtpCooldownException $exception) {
             return new EmailAuthIssueResult(
                 issued: false,
@@ -147,8 +158,16 @@ class EmailAuthCodeService
         Cache::forget($this->cooldownCacheKey($user, $purpose));
     }
 
-    private function createAndDeliver(User $user, EmailAuthPurpose $purpose): EmailAuthIssueResult
-    {
+    private function createAndDeliver(
+        User $user,
+        EmailAuthPurpose $purpose,
+        OutboundOtpLane $lane,
+        string $mailContext = 'verify',
+    ): EmailAuthIssueResult {
+        if (! $this->outboundBudget->allow($lane)) {
+            throw new DomainException(__('auth.code_delivery_failed'));
+        }
+
         EmailAuthCode::query()
             ->where('user_id', $user->id)
             ->where('purpose', $purpose)
@@ -171,19 +190,24 @@ class EmailAuthCodeService
                 code: $plain,
                 purpose: $purpose->value,
                 siteName: $this->siteSettings->displayName(),
-                logoUrl: $this->siteSettings->logoUrl(),
+                logoUrl: $this->siteSettings->emailLogoUrl(),
+                expiresMinutes: $expiresMinutes,
+                mailContext: $mailContext,
             ));
         } catch (Throwable $exception) {
             Log::warning('OTP email delivery failed', [
                 'user_id' => $user->id,
                 'purpose' => $purpose->value,
                 'exception' => $exception::class,
+                'message' => $exception->getMessage(),
             ]);
 
             // Leave code in place for a later successful delivery, but do not
             // start cooldown so the user can resend immediately.
             throw new DomainException(__('auth.code_delivery_failed'));
         }
+
+        $this->outboundBudget->record($lane);
 
         $cooldown = $this->cooldownSeconds();
         $availableAt = now()->addSeconds($cooldown);

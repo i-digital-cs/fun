@@ -58,7 +58,7 @@ class UserMessageReacted implements ShouldBroadcastNow
             'event_id' => $this->event->id,
             'event_title' => $this->event->title,
             'event_url' => event_show_url($this->event),
-            'chat_url' => event_route('events.chat', $this->event),
+            'chat_url' => chat_event_url($this->event),
             'message_id' => $this->message->id,
             'reaction' => $this->reaction,
             'actor' => [

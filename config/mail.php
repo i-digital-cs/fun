@@ -49,6 +49,26 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        /*
+        | Isolated Brevo SMTP mailer for deliverability experiments only.
+        | Do not set MAIL_MAILER=brevo — production traffic must keep using the default mailer.
+        */
+        'brevo' => [
+            'transport' => 'smtp',
+            // tls (port 587) → smtp + STARTTLS; ssl (port 465) → smtps
+            'scheme' => env('BREVO_MAIL_SCHEME', strtolower((string) env('BREVO_MAIL_ENCRYPTION', 'tls')) === 'ssl' ? 'smtps' : 'smtp'),
+            'host' => env('BREVO_MAIL_HOST', 'smtp-relay.brevo.com'),
+            'port' => env('BREVO_MAIL_PORT', 587),
+            'username' => env('BREVO_MAIL_USERNAME'),
+            'password' => env('BREVO_MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'from' => [
+                'address' => env('BREVO_MAIL_FROM_ADDRESS', 'info@funnity.com'),
+                'name' => env('BREVO_MAIL_FROM_NAME', 'Funnity'),
+            ],
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

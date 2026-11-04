@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Middleware\EnsureMarketingAccess;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\LogApiRequests;
 use App\Http\Middleware\EnforceCanonicalUrl;
@@ -39,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'account.active' => EnsureAccountIsActive::class,
             'platform.admin' => EnsurePlatformAdmin::class,
+            'marketing.access' => EnsureMarketingAccess::class,
             'verified.email' => EnsureEmailIsVerified::class,
             'event.slug' => \App\Http\Middleware\EnsureEventSlugMatches::class,
         ]);

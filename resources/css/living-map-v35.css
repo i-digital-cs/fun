@@ -1,0 +1,1137 @@
+/**
+ * Living Map V3.5.1 — exact visual components (preview only).
+ * Scoped under .lm-shell--v35 so production V3.4 Home stays unchanged.
+ */
+
+.lm-shell--v35 {
+    --lm-purple: #7138f5;
+    --lm-orange: #ff762e;
+    --lm-ink: #1f1840;
+    --lm-soft: #f0ecff;
+    --lm-sky: #5ba8ff;
+    font-feature-settings: "kern" 1;
+}
+
+html[lang^="ar"] .lm-shell--v35,
+html[lang="ar"] .lm-shell--v35 {
+    font-family: Tajawal, "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+}
+
+.lm-shell--v35 .lm-head__title em {
+    font-style: normal;
+    background: linear-gradient(120deg, #8b5cf6, #7138f5 55%, #ff762e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.lm-shell--v35 .lm-modes {
+    padding: 0.34rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 16px 36px -22px rgba(49, 24, 110, 0.45);
+    backdrop-filter: blur(16px);
+}
+
+.lm-shell--v35 .lm-modes button[aria-pressed="true"] {
+    background: linear-gradient(135deg, #8b5cf6, #7138f5);
+    color: #fff;
+}
+
+.lm-shell--v35 .lm-stage {
+    height: min(68vh, 640px);
+    min-height: 360px;
+    border-radius: 1.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    background: linear-gradient(155deg, #cfe4ff 0%, #e8e0ff 42%, #ffe6d2 100%);
+    box-shadow: 0 36px 70px -34px rgba(49, 24, 110, 0.55);
+}
+
+.lm-shell--v35 .lm-atmosphere {
+    background:
+        radial-gradient(95% 70% at 78% 6%, rgba(255, 255, 255, 0.48), transparent 58%),
+        radial-gradient(70% 55% at 8% 92%, rgba(113, 56, 245, 0.14), transparent 52%),
+        linear-gradient(to top, rgba(31, 24, 64, 0.16), transparent 34%);
+}
+
+/* ========== COMPONENT 2 — Location filter card ========== */
+.lm-shell--v35 .lm-loc-panel--v35 {
+    width: min(15.75rem, calc(100% - 5.5rem));
+    max-width: calc(100% - 4.5rem);
+    border-radius: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(1.25);
+    box-shadow:
+        0 22px 44px -22px rgba(31, 24, 64, 0.5),
+        0 2px 0 rgba(255, 255, 255, 0.9) inset;
+    padding: 0.8rem 0.85rem 0.9rem;
+    z-index: 8;
+    overflow: hidden;
+}
+
+.lm-shell--v35 .lm-loc-panel__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+}
+
+.lm-shell--v35 .lm-loc-panel__icon {
+    flex-shrink: 0;
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 9999px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, #f1ebff, #e4dbff);
+    box-shadow: 0 8px 18px -12px rgba(113, 56, 245, 0.65);
+}
+
+.lm-shell--v35 .lm-loc-panel__icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.lm-shell--v35 .lm-loc-panel__city-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    text-align: start;
+}
+
+.lm-shell--v35 .lm-loc-panel__city {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--lm-ink);
+    line-height: 1.15;
+}
+
+.lm-shell--v35 .lm-loc-panel__chev {
+    display: inline-flex;
+    color: #7138f5;
+    flex-shrink: 0;
+}
+
+.lm-shell--v35 .lm-loc-panel__gps-ico {
+    display: inline-flex;
+    line-height: 0;
+}
+
+.lm-shell--v35 .lm-loc-panel__sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.64rem;
+    font-weight: 650;
+    color: #7c7399;
+    line-height: 1.35;
+}
+
+.lm-shell--v35 .lm-loc-panel__dist {
+    margin: 0.3rem 0 0;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.18rem 0.5rem;
+    font-size: 0.64rem;
+    font-weight: 800;
+    color: #7138f5;
+    background: linear-gradient(135deg, #f3eeff, #ebe4ff);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.lm-shell--v35 .lm-loc-panel__dist[hidden] {
+    display: none !important;
+}
+
+.lm-shell--v35 .lm-loc-panel__gps {
+    margin-top: 0.65rem;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border: 0;
+    cursor: pointer;
+    border-radius: 9999px;
+    padding: 0.48rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #9b6cff 0%, #7138f5 48%, #5b7cff 100%);
+    box-shadow: 0 10px 20px -12px rgba(113, 56, 245, 0.8);
+}
+
+.lm-shell--v35 .lm-loc-panel__gps:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.lm-shell--v35 .lm-slider {
+    margin-top: 0.7rem;
+}
+
+.lm-shell--v35 .lm-slider__input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 0.36rem;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #c4b5fd, #7138f5);
+    outline: none;
+    cursor: pointer;
+}
+
+.lm-shell--v35 .lm-slider__input:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.lm-shell--v35 .lm-slider__input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: #fff;
+    border: 3px solid #7138f5;
+    box-shadow: 0 6px 14px -6px rgba(113, 56, 245, 0.7);
+    cursor: pointer;
+}
+
+.lm-shell--v35 .lm-slider__input::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: #fff;
+    border: 3px solid #7138f5;
+    box-shadow: 0 6px 14px -6px rgba(113, 56, 245, 0.7);
+    cursor: pointer;
+}
+
+.lm-shell--v35 .lm-slider__labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.4rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #8b82a8;
+    gap: 0.1rem;
+}
+
+.lm-shell--v35 .lm-slider__labels span {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: visible;
+    transition: color 0.15s ease;
+}
+
+.lm-shell--v35 .lm-slider__labels span.is-active {
+    color: #7138f5;
+    font-weight: 900;
+}
+
+.lm-shell--v35 .lm-hud button {
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 1.05rem;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 14px 28px -16px rgba(15, 23, 42, 0.5);
+}
+
+/*
+ * ========== COMPONENT 3 — Premium glowing teardrop pins ==========
+ * CRITICAL (V3.5.4): Never animate/override `transform` on the MapLibre marker
+ * root (.maplibregl-marker / .lm-marker). MapLibre owns that transform for
+ * geographic placement. Float/hover/selected transforms live on .lm-marker__visual.
+ */
+.lm-shell--v35 .lm-marker,
+.lm-shell--v35 .lm-marker--teardrop {
+    position: relative;
+    width: 56px;
+    height: 72px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.lm-shell--v35 .lm-marker__visual {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transform-origin: 50% 100%;
+    filter: drop-shadow(0 14px 18px rgba(31, 24, 64, 0.32));
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+}
+
+.lm-shell--v35 .lm-marker:hover .lm-marker__visual,
+.lm-shell--v35 .lm-marker:focus-visible .lm-marker__visual {
+    transform: translateY(-5px) scale(1.1);
+}
+
+.lm-shell--v35 .lm-marker:focus-visible {
+    outline: none;
+}
+
+.lm-shell--v35 .lm-marker.is-selected {
+    z-index: 4;
+}
+
+.lm-shell--v35 .lm-marker.is-selected .lm-marker__visual {
+    transform: translateY(-10px) scale(1.18);
+    filter: drop-shadow(0 18px 22px rgba(31, 24, 64, 0.4));
+}
+
+.lm-shell--v35 .lm-marker svg {
+    display: block;
+    width: 56px;
+    height: 72px;
+}
+
+.lm-shell--v35 .lm-marker__count {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    place-items: center;
+    font: 800 1.05rem/1 "IBM Plex Sans", Tajawal, ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    pointer-events: none;
+    z-index: 2;
+    color: #7138f5;
+    text-shadow: none;
+}
+
+.lm-shell--v35 .lm-marker-halo {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 40px;
+    height: 18px;
+    margin-left: -20px;
+    border-radius: 9999px;
+    background: radial-gradient(ellipse at center, var(--lm-glow, rgba(113, 56, 245, 0.65)), transparent 72%);
+    filter: blur(1.5px);
+    pointer-events: none;
+    animation: lmV35Glow 2.2s ease-in-out infinite;
+}
+
+.lm-shell--v35 .lm-marker.is-selected .lm-marker-halo {
+    width: 56px;
+    margin-left: -28px;
+    height: 22px;
+}
+
+.lm-shell--v35 .lm-marker.is-float .lm-marker__visual {
+    animation: lmFloat 2.8s ease-in-out infinite;
+}
+
+.lm-shell--v35 .lm-marker.is-selected.is-float .lm-marker__visual {
+    animation: lmFloatSelected 2.4s ease-in-out infinite;
+}
+
+@keyframes lmV35Glow {
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(0.92);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes lmFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes lmFloatSelected {
+    0%,
+    100% {
+        transform: translateY(-10px) scale(1.18);
+    }
+    50% {
+        transform: translateY(-16px) scale(1.18);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lm-shell--v35 .lm-marker-halo,
+    .lm-shell--v35 .lm-marker.is-float .lm-marker__visual,
+    .lm-shell--v35 .lm-marker.is-selected.is-float .lm-marker__visual,
+    .lm-shell--v35 .lm-cluster-pin::after,
+    .lm-shell--v35 .lm-collection::after,
+    .lm-shell--v35 .lm-approx-pin__ring {
+        animation: none !important;
+    }
+}
+
+/* Approximate city groups — glowing count circles (not venue teardrops) */
+.lm-shell--v35 .lm-collection,
+.lm-shell--v35 .lm-cluster-pin {
+    position: relative;
+    width: 3.2rem;
+    height: 3.2rem;
+    min-width: 0;
+    max-width: none;
+    border-radius: 9999px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 3px solid #fff;
+    color: #fff;
+    cursor: pointer;
+    font: 800 0.95rem/1 Tajawal, ui-sans-serif, system-ui, sans-serif;
+    background: linear-gradient(145deg, #a78bfa, #7138f5);
+    box-shadow:
+        0 0 0 8px rgba(113, 56, 245, 0.2),
+        0 16px 28px -12px rgba(113, 56, 245, 0.55);
+    transition: transform 0.2s ease;
+}
+
+.lm-shell--v35 .lm-collection:hover,
+.lm-shell--v35 .lm-cluster-pin:hover,
+.lm-shell--v35 .lm-collection.is-selected,
+.lm-shell--v35 .lm-cluster-pin.is-selected {
+    transform: scale(1.1);
+}
+
+.lm-shell--v35 .lm-collection__name {
+    font-size: 0.9rem;
+    max-width: none;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.lm-shell--v35 .lm-collection__meta,
+.lm-shell--v35 .lm-collection__cta {
+    display: none;
+}
+
+.lm-shell--v35 .lm-cluster-pin {
+    background: linear-gradient(145deg, #60a5fa, #2563eb);
+    box-shadow:
+        0 0 0 8px rgba(37, 99, 235, 0.22),
+        0 16px 28px -12px rgba(37, 99, 235, 0.55);
+}
+
+.lm-shell--v35 .lm-cluster-pin::after,
+.lm-shell--v35 .lm-collection::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    opacity: 0.25;
+    animation: lmV35Glow 2.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.lm-shell--v35 .lm-collection--approx {
+    background: linear-gradient(145deg, #fb923c, #ff762e);
+    box-shadow:
+        0 0 0 8px rgba(255, 118, 46, 0.2),
+        0 16px 28px -12px rgba(255, 118, 46, 0.5);
+}
+
+/* Approximate city-level events — glowing category discs (not venue teardrops) */
+.lm-shell--v35 .lm-approx-pin {
+    position: relative;
+    width: 2.85rem;
+    height: 2.85rem;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.lm-shell--v35 .lm-approx-pin:hover,
+.lm-shell--v35 .lm-approx-pin:focus-visible,
+.lm-shell--v35 .lm-approx-pin.is-selected {
+    transform: scale(1.14);
+    outline: none;
+    z-index: 2;
+}
+
+.lm-shell--v35 .lm-approx-pin__disc {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(
+        circle at 32% 28%,
+        color-mix(in srgb, var(--lm-pin, #7138f5) 72%, #fff) 0%,
+        var(--lm-pin, #7138f5) 55%,
+        var(--lm-pin, #7138f5) 100%
+    );
+    border: 2.5px solid #fff;
+    box-shadow:
+        0 0 0 7px color-mix(in srgb, var(--lm-pin, #7138f5) 25%, transparent),
+        0 14px 24px -10px rgba(15, 23, 42, 0.45);
+}
+
+.lm-shell--v35 .lm-approx-pin__disc svg {
+    filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.25));
+}
+
+.lm-shell--v35 .lm-approx-pin__ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 9999px;
+    border: 2px solid var(--lm-pin, #7138f5);
+    opacity: 0.28;
+    animation: lmV35Glow 2.3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@supports not (color: color-mix(in srgb, red, blue)) {
+    .lm-shell--v35 .lm-approx-pin__disc {
+        box-shadow:
+            0 0 0 7px rgba(113, 56, 245, 0.22),
+            0 14px 24px -10px rgba(15, 23, 42, 0.45);
+    }
+}
+
+/* ========== COMPONENT 1 — Floating event card ========== */
+.lm-shell--v35 .lm-card--v35 {
+    width: min(23rem, calc(100% - 1.25rem));
+    border-radius: 1.7rem;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px) saturate(1.25);
+    border: 1px solid rgba(255, 255, 255, 0.98);
+    box-shadow:
+        0 8px 16px -12px rgba(31, 24, 64, 0.18),
+        0 28px 56px -22px rgba(31, 24, 64, 0.48),
+        0 1px 0 rgba(255, 255, 255, 0.95) inset;
+    padding: 0;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__inner {
+    display: flex;
+    gap: 0.95rem;
+    align-items: stretch;
+    padding: 0.85rem;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__thumb {
+    flex-shrink: 0;
+    width: 6.15rem;
+    height: 6.15rem;
+    border-radius: 1.2rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f1ebff, #fff);
+    box-shadow: 0 10px 18px -14px rgba(31, 24, 64, 0.45);
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__fallback {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-size: 1.7rem;
+    background: linear-gradient(135deg, var(--s, #f1ebff), #fff);
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__content {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-block: 0.1rem;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__live {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.18rem 0.5rem;
+    font-size: 0.58rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #ff9a5a, #ff762e);
+    box-shadow: 0 8px 16px -10px rgba(255, 118, 46, 0.7);
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__live[hidden] {
+    display: none !important;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__cat {
+    display: inline-flex;
+    border-radius: 9999px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.58rem;
+    font-weight: 800;
+}
+
+.lm-shell--v35 .lm-card--v35 h3 {
+    margin: 0.4rem 0 0.28rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--lm-ink);
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__place {
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #6b6280;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__place-ico {
+    flex-shrink: 0;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__foot {
+    margin-top: auto;
+    padding-top: 0.45rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__people {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #64748b;
+    min-height: 1.2rem;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__go {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 9999px;
+    display: inline-grid;
+    place-items: center;
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(145deg, #9b6cff, #7138f5 55%, #5b4dff);
+    box-shadow:
+        0 12px 22px -10px rgba(113, 56, 245, 0.9),
+        0 1px 0 rgba(255, 255, 255, 0.35) inset;
+    flex-shrink: 0;
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__go:hover {
+    transform: scale(1.06);
+}
+
+.lm-shell--v35 .lm-card--v35 .lm-card__pointer {
+    position: absolute;
+    left: 50%;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+    margin-left: -8px;
+    background: rgba(255, 255, 255, 0.95);
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+    transform: rotate(45deg);
+    box-shadow: 3px 3px 8px -5px rgba(31, 24, 64, 0.35);
+}
+
+/* ========== Aggregate city event list ========== */
+.lm-shell--v35 .lm-city-panel {
+    z-index: 9;
+    width: min(19.5rem, calc(100% - 5.25rem));
+    max-height: min(46%, 20rem);
+    border-radius: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow:
+        0 24px 48px -24px rgba(31, 24, 64, 0.55),
+        0 1px 0 rgba(255, 255, 255, 0.95) inset;
+}
+
+.lm-shell--v35 .lm-city-panel__head {
+    padding: 0.75rem 0.85rem;
+    background: linear-gradient(180deg, rgba(241, 235, 255, 0.75), transparent);
+    border-bottom: 1px solid rgba(238, 240, 247, 0.95);
+}
+
+.lm-shell--v35 .lm-city-panel__head p {
+    letter-spacing: 0.04em;
+}
+
+.lm-shell--v35 .lm-city-panel__head strong {
+    font-size: 0.95rem;
+}
+
+.lm-shell--v35 .lm-city-panel__head span {
+    color: #7138f5;
+    font-weight: 700;
+}
+
+.lm-shell--v35 .lm-city-panel__head button {
+    background: linear-gradient(145deg, #f1ebff, #e8e0ff);
+    color: #7138f5;
+    box-shadow: 0 6px 12px -10px rgba(113, 56, 245, 0.7);
+}
+
+.lm-shell--v35 .lm-city-panel__list {
+    padding: 0.35rem 0.4rem 0.5rem;
+}
+
+.lm-shell--v35 .lm-city-panel__row {
+    border-radius: 0.95rem;
+    padding: 0.48rem 0.5rem;
+    gap: 0.6rem;
+    transition: background 0.15s ease;
+}
+
+.lm-shell--v35 .lm-city-panel__row:focus-visible {
+    outline: 2px solid rgba(113, 56, 245, 0.55);
+    outline-offset: 1px;
+}
+
+.lm-shell--v35 .lm-city-panel__thumb {
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 0.85rem;
+    box-shadow: 0 8px 14px -12px rgba(31, 24, 64, 0.45);
+}
+
+.lm-shell--v35 .lm-city-panel__body strong {
+    font-size: 0.78rem;
+}
+
+.lm-shell--v35 .lm-city-panel__body em {
+    font-size: 0.62rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========== V3.5.7 — Premium event spotlight ========== */
+.lm-shell--v35 .lm-spotlight {
+    position: absolute;
+    z-index: 7;
+    inset-inline-end: 0.85rem;
+    bottom: 0.85rem;
+    width: min(24.5rem, calc(100% - 6rem));
+    border-radius: 1.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.98);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px) saturate(1.25);
+    box-shadow:
+        0 8px 18px -14px rgba(31, 24, 64, 0.22),
+        0 28px 52px -26px rgba(49, 24, 110, 0.48),
+        0 1px 0 rgba(255, 255, 255, 0.98) inset;
+    padding: 0.85rem 0.9rem 0.95rem;
+    pointer-events: auto;
+}
+
+.lm-shell--v35 .lm-spotlight[hidden] {
+    display: none !important;
+}
+
+.lm-shell--v35 .lm-spotlight__grab {
+    display: none;
+}
+
+.lm-shell--v35 .lm-spotlight__dismiss {
+    position: absolute;
+    inset-block-start: 0.65rem;
+    inset-inline-end: 0.65rem;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background: linear-gradient(145deg, #f3eeff, #ebe4ff);
+    color: #7138f5;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    line-height: 1;
+    box-shadow: 0 6px 12px -10px rgba(113, 56, 245, 0.55);
+}
+
+.lm-shell--v35 .lm-spotlight__topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding-inline-end: 2.1rem;
+    margin-bottom: 0.65rem;
+}
+
+.lm-shell--v35 .lm-spotlight__eyebrow {
+    margin: 0;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #ff762e;
+}
+
+.lm-shell--v35 .lm-spotlight__cat {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.18rem 0.55rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+.lm-shell--v35 .lm-spotlight__body {
+    display: flex;
+    gap: 0.9rem;
+    align-items: stretch;
+}
+
+.lm-shell--v35 .lm-spotlight__media {
+    flex-shrink: 0;
+    width: 7.1rem;
+    height: 7.1rem;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f1ebff, #fff);
+    box-shadow: 0 12px 22px -14px rgba(31, 24, 64, 0.5);
+}
+
+.lm-shell--v35 .lm-spotlight__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lm-shell--v35 .lm-spotlight__fallback {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-size: 1.85rem;
+    background: linear-gradient(135deg, var(--s, #f1ebff), #fff);
+}
+
+.lm-shell--v35 .lm-spotlight__copy {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.22rem;
+}
+
+.lm-shell--v35 .lm-spotlight__title {
+    margin: 0;
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: var(--lm-ink);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lm-shell--v35 .lm-spotlight__meta {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #53486b;
+    line-height: 1.35;
+}
+
+.lm-shell--v35 .lm-spotlight__place {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #7138f5;
+    line-height: 1.35;
+}
+
+.lm-shell--v35 .lm-spotlight__cta {
+    margin-top: 0.8rem;
+    width: 100%;
+    border: 0;
+    cursor: pointer;
+    border-radius: 9999px;
+    padding: 0.72rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #ff9a5a 0%, #ff762e 48%, #f97316 100%);
+    box-shadow: 0 14px 24px -14px rgba(255, 118, 46, 0.9);
+}
+
+.lm-shell--v35 .lm-spotlight__cta:hover {
+    filter: brightness(1.03);
+}
+
+.lm-shell--v35 .lm-spotlight__cta:focus-visible,
+.lm-shell--v35 .lm-spotlight__dismiss:focus-visible {
+    outline: 2px solid rgba(113, 56, 245, 0.55);
+    outline-offset: 2px;
+}
+
+/* Spotlight → associated marker (visual only; coords unchanged) */
+.lm-shell--v35 .lm-marker.is-spotlight {
+    z-index: 5;
+}
+
+.lm-shell--v35 .lm-marker.is-spotlight .lm-marker__visual {
+    transform: translateY(-8px) scale(1.14);
+    filter:
+        drop-shadow(0 0 8px rgba(255, 118, 46, 0.95))
+        drop-shadow(0 0 2px rgba(255, 118, 46, 1))
+        drop-shadow(0 16px 22px rgba(31, 24, 64, 0.42));
+}
+
+.lm-shell--v35 .lm-marker.is-spotlight .lm-marker-halo {
+    width: 58px;
+    margin-left: -29px;
+    height: 24px;
+    background: radial-gradient(ellipse at center, rgba(255, 118, 46, 0.7), transparent 72%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lm-shell--v35 .lm-marker.is-spotlight .lm-marker__visual {
+        transition: none;
+    }
+}
+
+/* Carousel keep premium */
+.lm-shell--v35 .lm-carousel-wrap {
+    margin-top: 1.15rem;
+}
+
+.lm-shell--v35 .lm-carousel__head h2 {
+    font-size: 1.15rem;
+    letter-spacing: -0.015em;
+}
+
+.lm-shell--v35 .lm-rail {
+    gap: 1rem;
+    padding-bottom: 0.65rem;
+    scroll-behavior: smooth;
+}
+
+.lm-shell--v35 .lm-rail__card {
+    width: min(17.5rem, 82vw);
+    min-height: 17.25rem;
+    border-radius: 1.4rem;
+    box-shadow: 0 20px 40px -26px rgba(31, 24, 64, 0.45);
+    display: flex;
+    flex-direction: column;
+}
+
+.lm-shell--v35 .lm-rail__card:focus-visible {
+    outline: 2px solid rgba(113, 56, 245, 0.55);
+    outline-offset: 2px;
+}
+
+.lm-shell--v35 .lm-rail__media {
+    height: 9.8rem;
+    flex-shrink: 0;
+}
+
+.lm-shell--v35 .lm-rail__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.lm-shell--v35 .lm-rail__body strong {
+    min-height: 2.5em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    overflow: hidden;
+}
+
+.lm-shell--v35 .lm-rail__meta {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lm-shell--v35 .lm-rail__foot {
+    margin-top: auto;
+}
+
+.lm-shell--v35 .lm-rail__go {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #8b5cf6, #7138f5);
+}
+
+.lm-shell--v35 .lm-rail__empty {
+    padding: 1.4rem 0.5rem;
+    font-size: 0.85rem;
+    color: #6b6280;
+    font-weight: 650;
+}
+
+@media (max-width: 639px) {
+    .lm-shell--v35 .lm-stage {
+        height: min(52vh, 400px);
+        min-height: 280px;
+    }
+
+    .lm-shell--v35 .lm-loc-panel--v35 {
+        width: min(13.25rem, calc(100% - 4.25rem));
+        padding: 0.65rem 0.7rem 0.75rem;
+        inset-inline-start: 0.55rem;
+        top: 0.55rem;
+    }
+
+    .lm-shell--v35 .lm-loc-panel__gps {
+        padding: 0.4rem 0.55rem;
+        font-size: 0.66rem;
+    }
+
+    .lm-shell--v35 .lm-slider__labels {
+        font-size: 0.55rem;
+    }
+
+    /* Compact bottom-sheet spotlight */
+    .lm-shell--v35 .lm-spotlight {
+        inset-inline: 0;
+        bottom: 0;
+        width: 100%;
+        max-width: none;
+        border-radius: 1.45rem 1.45rem 0 0;
+        padding: 0.45rem 0.85rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+        box-shadow:
+            0 -8px 28px -16px rgba(31, 24, 64, 0.45),
+            0 1px 0 rgba(255, 255, 255, 0.98) inset;
+    }
+
+    .lm-shell--v35 .lm-spotlight__grab {
+        display: block;
+        width: 2.6rem;
+        height: 0.3rem;
+        margin: 0.15rem auto 0.55rem;
+        border-radius: 9999px;
+        background: #d8d2e8;
+    }
+
+    .lm-shell--v35 .lm-spotlight__dismiss {
+        width: 2.25rem;
+        height: 2.25rem;
+        inset-block-start: 0.7rem;
+        inset-inline-end: 0.7rem;
+    }
+
+    .lm-shell--v35 .lm-spotlight__media {
+        width: 5.35rem;
+        height: 5.35rem;
+        border-radius: 1.05rem;
+    }
+
+    .lm-shell--v35 .lm-spotlight__title {
+        font-size: 1.02rem;
+    }
+
+    .lm-shell--v35 .lm-spotlight__cta {
+        padding: 0.78rem 1rem;
+        font-size: 0.82rem;
+        min-height: 2.75rem;
+    }
+
+    .lm-shell--v35 .lm-card--v35 {
+        inset-inline: 0.55rem !important;
+        bottom: 0.7rem !important;
+        top: auto !important;
+        left: 0.55rem !important;
+        width: auto !important;
+    }
+
+    .lm-shell--v35 .lm-card--v35 .lm-card__pointer {
+        display: none;
+    }
+
+    .lm-shell--v35 .lm-rail__card {
+        min-height: 16.5rem;
+    }
+}
+
+.lm-v35-preview {
+    position: relative;
+    isolation: isolate;
+}
+
+.lm-v35-preview__glow {
+    pointer-events: none;
+    position: absolute;
+    inset: -2rem -1rem auto;
+    height: 22rem;
+    background:
+        radial-gradient(50% 60% at 20% 30%, rgba(113, 56, 245, 0.14), transparent 70%),
+        radial-gradient(45% 55% at 80% 20%, rgba(91, 168, 255, 0.16), transparent 70%);
+    z-index: 0;
+}
+
+.lm-v35-preview > * {
+    position: relative;
+    z-index: 1;
+}
+
+.lm-v35-banner {
+    border-radius: 1.1rem;
+    border: 1px solid #fcd34d;
+    background: linear-gradient(90deg, #fffbeb, #fef3c7);
+    padding: 0.9rem 1.05rem;
+    color: #92400e;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    margin-bottom: 1.1rem;
+}

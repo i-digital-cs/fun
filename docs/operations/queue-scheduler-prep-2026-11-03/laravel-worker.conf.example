@@ -1,0 +1,18 @@
+; Funnity Supervisor example — INACTIVE / NOT APPLICABLE on current host
+; Evidence 2026-11-03: `supervisorctl` not installed; no systemd --user.
+; Prefer cron-fallback-queue-worker.sh on cPanel today.
+; Align with hardened flags: database connection, default queue, timeout (60) < retry_after (90).
+; Quarantine hold_* queues are not consumed (--queue=default only).
+
+[program:funnity-queue-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=/usr/local/bin/php /home/d14098/funnity.com/artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=60 --max-time=3600 --memory=128
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=d14098
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/home/d14098/funnity.com/storage/logs/supervisor-queue-worker.log
+stopwaitsecs=70

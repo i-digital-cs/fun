@@ -67,9 +67,27 @@
                     @if (($message->message_type ?? 'text') === 'voice' && $message->media_path)
                         <audio controls preload="metadata" class="max-w-full" src="{{ route('dms.media', $message) }}"></audio>
                     @elseif (($message->message_type ?? 'text') === 'image' && $message->media_path)
-                        <a href="{{ route('dms.media', $message) }}" target="_blank" rel="noopener">
+                        <button
+                            type="button"
+                            class="block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start"
+                            data-media-viewer
+                            data-media-type="image"
+                            data-media-src="{{ route('dms.media', $message) }}"
+                            data-media-group="dm-{{ $message->conversation_id }}"
+                        >
                             <img src="{{ route('dms.media', $message) }}" alt="" class="max-h-56 w-full max-w-xs rounded-lg object-cover" loading="lazy">
-                        </a>
+                        </button>
+                    @elseif (($message->message_type ?? 'text') === 'video' && $message->media_path)
+                        <button
+                            type="button"
+                            class="block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start"
+                            data-media-viewer
+                            data-media-type="video"
+                            data-media-src="{{ route('dms.media', $message) }}"
+                            data-media-group="dm-{{ $message->conversation_id }}"
+                        >
+                            <video src="{{ route('dms.media', $message) }}" class="max-h-56 w-full max-w-xs rounded-lg object-cover" preload="metadata" muted playsinline></video>
+                        </button>
                     @else
                         <p class="chat-row__body whitespace-pre-wrap break-words" dir="auto">{{ $message->body }}</p>
                     @endif

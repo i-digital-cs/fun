@@ -1233,6 +1233,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get codeSent => 'تم إرسال الرمز';
 
   @override
+  String get emailTipVerifyTitle => 'مش لاقي الرسالة؟';
+
+  @override
+  String get emailTipVerifyBody =>
+      'راجع البريد الوارد (Inbox) ومجلد الرسائل غير المرغوب فيها (Spam / Junk). أحيانًا رسائل التحقق بتوصل هناك.';
+
+  @override
+  String get emailTipResetTitle => 'مش لاقي الرسالة؟';
+
+  @override
+  String get emailTipResetBody =>
+      'راجع البريد الوارد (Inbox) ومجلد الرسائل غير المرغوب فيها (Spam / Junk). أحيانًا رسائل إعادة تعيين كلمة المرور بتوصل هناك.';
+
+  @override
   String get favorites => 'المفضلة';
 
   @override

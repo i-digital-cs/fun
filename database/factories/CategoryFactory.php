@@ -3,13 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Category;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<Category>
+ * @extends AppFactory<Category>
  */
-class CategoryFactory extends Factory
+class CategoryFactory extends AppFactory
 {
     protected $model = Category::class;
 

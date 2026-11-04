@@ -3,6 +3,7 @@
 namespace App\Services\Chat;
 
 use App\Exceptions\DomainException;
+use App\Services\Media\MediaUploadValidator;
 use App\Support\MediaDisk;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -21,6 +22,8 @@ class ChatMediaService
     public const MIN_VOICE_BYTES = 256;
 
     public const MAX_IMAGE_BYTES = 8_388_608; // 8 MB
+
+    public const MAX_VIDEO_BYTES = 52_428_800; // 50 MB
 
     public const MAX_FILE_BYTES = 10_485_760; // 10 MB
 
@@ -49,51 +52,70 @@ class ChatMediaService
         'image/gif',
     ];
 
+    /** @var list<string> */
+    public const VIDEO_MIMES = [
+        'video/mp4',
+        'video/webm',
+        'video/quicktime',
+    ];
+
+    public function __construct(
+        private readonly MediaUploadValidator $validator,
+    ) {}
+
     /**
      * @return array{path: string, mime: string, bytes: int, duration_ms: int|null, message_type: string}
      */
-    public function storeVoice(UploadedFile $file, int $userId, ?int $durationMs = null): array
+    public function storeVoice(UploadedFile $file, int $userId, ?int $durationMs = null, ?int $scopeId = null, string $scope = 'user'): array
     {
-        $this->assertSafeUpload($file, self::MAX_VOICE_BYTES, self::VOICE_MIMES, self::MIN_VOICE_BYTES);
+        $meta = $this->validator->assertCategory($file, 'chat_voice');
 
         if ($durationMs !== null && ($durationMs < 1 || $durationMs > self::MAX_VOICE_MS)) {
             throw new DomainException(__('chat.voice_too_long'));
         }
 
-        return $this->store($file, $userId, 'voice', $durationMs, 'voice');
+        return $this->store($file, $userId, 'voice', $durationMs, 'voice', $meta, $scopeId, $scope);
     }
 
     /**
      * @return array{path: string, mime: string, bytes: int, duration_ms: int|null, message_type: string}
      */
-    public function storeImage(UploadedFile $file, int $userId): array
+    public function storeImage(UploadedFile $file, int $userId, ?int $scopeId = null, string $scope = 'user'): array
     {
-        $this->assertSafeUpload($file, self::MAX_IMAGE_BYTES, self::IMAGE_MIMES);
+        $meta = $this->validator->assertCategory($file, 'chat_image');
 
-        return $this->store($file, $userId, 'image', null, 'image');
+        return $this->store($file, $userId, 'image', null, 'image', $meta, $scopeId, $scope);
     }
 
     /**
      * @return array{path: string, mime: string, bytes: int, duration_ms: int|null, message_type: string}
      */
-    public function storeFile(UploadedFile $file, int $userId): array
+    public function storeVideo(UploadedFile $file, int $userId, ?int $scopeId = null, string $scope = 'user'): array
     {
-        $mime = $this->baseMime((string) ($file->getMimeType() ?: ''));
+        $meta = $this->validator->assertCategory($file, 'chat_video');
+
+        return $this->store($file, $userId, 'video', null, 'video', $meta, $scopeId, $scope);
+    }
+
+    /**
+     * @return array{path: string, mime: string, bytes: int, duration_ms: int|null, message_type: string}
+     */
+    public function storeFile(UploadedFile $file, int $userId, ?int $scopeId = null, string $scope = 'user'): array
+    {
+        $mime = $this->validator->detectMime($file);
         if (str_starts_with($mime, 'image/')) {
-            return $this->storeImage($file, $userId);
+            return $this->storeImage($file, $userId, $scopeId, $scope);
         }
-        if (str_starts_with($mime, 'audio/')) {
-            return $this->storeVoice($file, $userId);
+        if (in_array($mime, self::VIDEO_MIMES, true)) {
+            return $this->storeVideo($file, $userId, $scopeId, $scope);
         }
-
-        $blocked = ['application/x-msdownload', 'application/x-executable', 'application/x-sh', 'text/x-shellscript'];
-        if (in_array($mime, $blocked, true) || preg_match('/\.(exe|bat|cmd|sh|php|js|msi|apk)$/i', $file->getClientOriginalName() ?? '')) {
-            throw new DomainException(__('chat.attachment_forbidden'));
+        if (str_starts_with($mime, 'audio/') || in_array($mime, ['video/webm', 'video/ogg'], true)) {
+            return $this->storeVoice($file, $userId, null, $scopeId, $scope);
         }
 
-        $this->assertSafeUpload($file, self::MAX_FILE_BYTES, null);
+        $meta = $this->validator->assertCategory($file, 'chat_file');
 
-        return $this->store($file, $userId, 'file', null, 'file');
+        return $this->store($file, $userId, 'file', null, 'file', $meta, $scopeId, $scope);
     }
 
     /**
@@ -105,7 +127,7 @@ class ChatMediaService
         $diskName = MediaDisk::private();
         $disk = Storage::disk($diskName);
         abort_unless($disk->exists($path), 404);
-        abort_unless(str_starts_with($path, 'chat/'), 404);
+        abort_unless($this->isAllowedChatObjectKey($path), 404);
 
         $mime = $this->baseMime($mime) ?: 'application/octet-stream';
         $size = (int) $disk->size($path);
@@ -117,6 +139,7 @@ class ChatMediaService
 
         $request ??= request();
         $rangeHeader = (string) $request->header('Range', '');
+        $cache = (string) config('media.private_cache_control', 'private, no-store, no-transform');
 
         if ($rangeHeader !== '' && preg_match('/bytes=(\d*)-(\d*)/', $rangeHeader, $m)) {
             $start = $m[1] !== '' ? (int) $m[1] : 0;
@@ -138,7 +161,7 @@ class ChatMediaService
                 'Content-Range' => "bytes {$start}-{$end}/{$size}",
                 'Accept-Ranges' => 'bytes',
                 'Content-Disposition' => 'inline',
-                'Cache-Control' => 'private, no-store',
+                'Cache-Control' => $cache,
             ]);
         }
 
@@ -154,7 +177,7 @@ class ChatMediaService
             'Content-Length' => (string) $size,
             'Accept-Ranges' => 'bytes',
             'Content-Disposition' => 'inline',
-            'Cache-Control' => 'private, no-store',
+            'Cache-Control' => $cache,
         ]);
     }
 
@@ -173,8 +196,11 @@ class ChatMediaService
 
         $headers['X-Content-Type-Options'] = 'nosniff';
         $headers['X-Accel-Buffering'] = 'no';
-        // Hint caches/proxies not to recompress; also helps some Apache filter configs.
-        $headers['Cache-Control'] = trim(($headers['Cache-Control'] ?? 'private, no-store').', no-transform');
+        $cache = (string) ($headers['Cache-Control'] ?? 'private, no-store');
+        if (! str_contains($cache, 'no-transform')) {
+            $cache .= ', no-transform';
+        }
+        $headers['Cache-Control'] = $cache;
 
         return response()->stream($callback, $status, $headers);
     }
@@ -220,34 +246,7 @@ class ChatMediaService
     }
 
     /**
-     * @param  list<string>|null  $allowedMimes
-     */
-    private function assertSafeUpload(
-        UploadedFile $file,
-        int $maxBytes,
-        ?array $allowedMimes,
-        int $minBytes = 1,
-    ): void {
-        if (! $file->isValid()) {
-            throw new DomainException(__('chat.attachment_invalid'));
-        }
-        $size = (int) $file->getSize();
-        if ($size < $minBytes) {
-            throw new DomainException(__('chat.voice_empty'));
-        }
-        if ($size > $maxBytes) {
-            throw new DomainException(__('chat.attachment_too_large'));
-        }
-        $baseMime = $this->baseMime((string) ($file->getMimeType() ?: ''));
-        if ($allowedMimes !== null && ! in_array($baseMime, $allowedMimes, true)) {
-            if (str_contains($baseMime, 'heic') || str_contains($baseMime, 'heif')) {
-                throw new DomainException(__('chat.attachment_heic'));
-            }
-            throw new DomainException(__('chat.attachment_type'));
-        }
-    }
-
-    /**
+     * @param  array{mime: string, extension: string, bytes: int}  $meta
      * @return array{path: string, mime: string, bytes: int, duration_ms: int|null, message_type: string}
      */
     private function store(
@@ -256,19 +255,27 @@ class ChatMediaService
         string $kind,
         ?int $durationMs,
         string $messageType,
+        array $meta,
+        ?int $scopeId,
+        string $scope,
     ): array {
         if (! ChatV2Capabilities::directMessageExtensions() && ! ChatV2Capabilities::eventMessageExtensions()) {
             throw new DomainException(__('chat.media_unavailable'));
         }
 
         $disk = MediaDisk::private();
-        $ext = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-        $ext = preg_replace('/[^a-z0-9]/', '', $ext) ?: 'bin';
-        // Prefer extension that matches MIME so players trust the payload.
-        $mime = $this->baseMime((string) ($file->getMimeType() ?: 'application/octet-stream'));
-        $ext = $this->extensionForMime($mime, $ext);
+        $ext = $meta['extension'] ?: 'bin';
+        $mime = $meta['mime'];
 
-        $directory = sprintf('chat/%d/%s', $userId, $kind);
+        // Prefer scoped layout; keep legacy chat/{userId}/{kind}/ for callers without scope.
+        if ($scope === 'direct' && $scopeId) {
+            $directory = sprintf('chat/direct/%d', $scopeId);
+        } elseif ($scope === 'event' && $scopeId) {
+            $directory = sprintf('chat/events/%d', $scopeId);
+        } else {
+            $directory = sprintf('chat/%d/%s', $userId, $kind);
+        }
+
         $filename = Str::uuid()->toString().'.'.$ext;
 
         $path = $file->storeAs($directory, $filename, [
@@ -299,6 +306,15 @@ class ChatMediaService
         ];
     }
 
+    private function isAllowedChatObjectKey(string $path): bool
+    {
+        if (str_contains($path, '..') || str_contains($path, "\0")) {
+            return false;
+        }
+
+        return str_starts_with($path, 'chat/');
+    }
+
     private function baseMime(string $mime): string
     {
         return strtolower(trim(explode(';', $mime, 2)[0]));
@@ -319,22 +335,6 @@ class ChatMediaService
             'video/ogg' => 'audio/ogg',
             'audio/m4a', 'audio/x-m4a', 'audio/aac' => 'audio/mp4',
             default => $mime,
-        };
-    }
-
-    private function extensionForMime(string $mime, string $fallback): string
-    {
-        return match ($mime) {
-            'audio/webm', 'video/webm' => 'webm',
-            'audio/ogg', 'video/ogg' => 'ogg',
-            'audio/mpeg' => 'mp3',
-            'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/aac' => 'm4a',
-            'audio/wav', 'audio/wave', 'audio/x-wav' => 'wav',
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/webp' => 'webp',
-            'image/gif' => 'gif',
-            default => $fallback !== '' ? $fallback : 'bin',
         };
     }
 }

@@ -1,0 +1,99 @@
+{
+  "previewBase": "https://funnity.com/preview/living-world-v5?expires=1793869738&signature=a7dfb847e02ed5d4e339f0867c64503b75d1b9d9c6210b4b8ef6c936105a6a60",
+  "cities": {
+    "cairo": {
+      "renderedFeatures": 123,
+      "uniqueApprox": 120,
+      "withRenderHeight": 121,
+      "missingOrZeroHeight": 2,
+      "colourTagged": 9,
+      "heightMin": 1,
+      "heightP50": 26,
+      "heightP90": 105,
+      "heightMax": 187,
+      "heightMean": 40.7,
+      "distinctHeightValues": 53,
+      "visualFallbackM": 11,
+      "note": "Mixed OSM-derived render_height present in viewport.",
+      "city": "cairo",
+      "perf": {
+        "styleMs": 7,
+        "idleMs": 2301,
+        "fpsSample": null
+      }
+    },
+    "port-said": {
+      "renderedFeatures": 10,
+      "uniqueApprox": 9,
+      "withRenderHeight": 10,
+      "missingOrZeroHeight": 0,
+      "colourTagged": 0,
+      "heightMin": 5,
+      "heightP50": 5,
+      "heightP90": 30,
+      "heightMax": 37,
+      "heightMean": 14.5,
+      "distinctHeightValues": 5,
+      "visualFallbackM": 11,
+      "note": "Mixed OSM-derived render_height present in viewport.",
+      "city": "port-said",
+      "perf": {
+        "styleMs": 7,
+        "idleMs": 2301,
+        "fpsSample": null
+      }
+    },
+    "alexandria": {
+      "renderedFeatures": 28,
+      "uniqueApprox": 28,
+      "withRenderHeight": 28,
+      "missingOrZeroHeight": 0,
+      "colourTagged": 0,
+      "heightMin": 3,
+      "heightP50": 11,
+      "heightP90": 41,
+      "heightMax": 55,
+      "heightMean": 16.9,
+      "distinctHeightValues": 13,
+      "visualFallbackM": 11,
+      "note": "Mixed OSM-derived render_height present in viewport.",
+      "city": "alexandria",
+      "perf": {
+        "styleMs": 7,
+        "idleMs": 2301,
+        "fpsSample": null
+      }
+    }
+  },
+  "shots": [
+    "01-cairo-desktop.jpg",
+    "02-cairo-stage.jpg",
+    "01-port-said-desktop.jpg",
+    "02-port-said-stage.jpg",
+    "01-alexandria-desktop.jpg",
+    "02-alexandria-stage.jpg",
+    "03-egypt-overview-continuity.jpg",
+    "04-mobile-cairo.jpg"
+  ],
+  "mobile": {
+    "renderedFeatures": 62,
+    "uniqueApprox": 62,
+    "withRenderHeight": 61,
+    "missingOrZeroHeight": 1,
+    "colourTagged": 8,
+    "heightMin": 1,
+    "heightP50": 33,
+    "heightP90": 110,
+    "heightMax": 166,
+    "heightMean": 47.8,
+    "distinctHeightValues": 39,
+    "visualFallbackM": 11,
+    "note": "Mixed OSM-derived render_height present in viewport.",
+    "city": "cairo",
+    "perf": {
+      "styleMs": 7,
+      "idleMs": 1000,
+      "fpsSample": null
+    }
+  }
+}

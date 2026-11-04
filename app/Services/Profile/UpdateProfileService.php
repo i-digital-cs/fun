@@ -3,6 +3,7 @@
 namespace App\Services\Profile;
 
 use App\Enums\EmailAuthPurpose;
+use App\Enums\OutboundOtpLane;
 use App\Enums\UserSex;
 use App\Exceptions\DomainException;
 use App\Models\User;
@@ -74,7 +75,7 @@ class UpdateProfileService
 
         if (($data['photo'] ?? null) instanceof UploadedFile) {
             $this->deleteLocalPhoto($user);
-            $payload['profile_image_path'] = $this->storePhoto($data['photo']);
+            $payload['profile_image_path'] = $this->storePhoto($user, $data['photo']);
         }
 
         if ($emailChanged) {
@@ -84,7 +85,12 @@ class UpdateProfileService
         $user->forceFill($payload)->save();
 
         if ($emailChanged) {
-            $this->codes->issueAndSend($user->fresh(), EmailAuthPurpose::EmailVerify);
+            $this->codes->issueAndSend(
+                $user->fresh(),
+                EmailAuthPurpose::EmailVerify,
+                OutboundOtpLane::Member,
+                mailContext: 'email_change',
+            );
         }
 
         return [
@@ -93,14 +99,14 @@ class UpdateProfileService
         ];
     }
 
-    private function storePhoto(UploadedFile $file): string
+    private function storePhoto(User $user, UploadedFile $file): string
     {
+        $meta = app(\App\Services\Media\MediaUploadValidator::class)->assertCategory($file, 'profile');
         $disk = MediaDisk::public();
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'jpg');
-        $safeExtension = preg_replace('/[^a-z0-9]/', '', $extension) ?: 'jpg';
-        $filename = sprintf('avatar_%s.%s', Str::uuid()->toString(), $safeExtension);
+        $directory = sprintf('profiles/%d', (int) $user->id);
+        $filename = sprintf('%s.%s', Str::uuid()->toString(), $meta['extension']);
 
-        $path = $file->storeAs('avatars', $filename, [
+        $path = $file->storeAs($directory, $filename, [
             'disk' => $disk,
             'visibility' => 'public',
         ]);

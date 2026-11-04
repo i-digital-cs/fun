@@ -52,7 +52,7 @@ class MessageReactedNotification extends Notification
             'reaction' => $this->reaction,
             'actor_id' => $this->actor->id,
             'actor_name' => $this->actor->name,
-            'url' => event_route('events.chat', $this->event),
+            'url' => chat_event_url($this->event),
             'api_path' => '/events/'.$this->event->id.'/chat',
         ];
     }

@@ -30,7 +30,11 @@ class LoginController extends Controller
 
         if (! $emailVerified) {
             try {
-                $otp = $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+                $otp = $codes->issueAndSendIfAllowed(
+                    $user,
+                    EmailAuthPurpose::EmailVerify,
+                    mailContext: 'login',
+                );
             } catch (DomainException) {
                 $otp = null;
             }

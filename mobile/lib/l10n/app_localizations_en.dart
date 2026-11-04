@@ -1242,6 +1242,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get codeSent => 'Code sent';
 
   @override
+  String get emailTipVerifyTitle => "Can't find our email?";
+
+  @override
+  String get emailTipVerifyBody =>
+      'Check your Inbox and Spam/Junk folders. Verification emails may occasionally land there.';
+
+  @override
+  String get emailTipResetTitle => "Can't find our email?";
+
+  @override
+  String get emailTipResetBody =>
+      'Check your Inbox and Spam/Junk folders. Password reset emails may occasionally land there.';
+
+  @override
   String get favorites => 'Favorites';
 
   @override

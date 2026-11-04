@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "city-aggregate",
+    "count": "4",
+    "cityId": "11",
+    "aria": "4 events in Port Said · Approximate locations",
+    "title": "4 events in Port Said · Approximate locations",
+    "transform": "translate(-50%, -100%) translate(684px, 329px) rotateX(0deg) rotateZ(0deg)"
+  },
+  {
+    "kind": "city-aggregate",
+    "count": "3",
+    "cityId": "",
+    "aria": "3 events in Damietta · Approximate locations",
+    "title": "3 events in Damietta · Approximate locations",
+    "transform": "translate(-50%, -100%) translate(304px, 181px) rotateX(0deg) rotateZ(0deg)"
+  },
+  {
+    "kind": "city-aggregate",
+    "count": "2",
+    "cityId": "",
+    "aria": "2 events in Mansoura · Approximate locations",
+    "title": "2 events in Mansoura · Approximate locations",
+    "transform": "translate(-50%, -100%) translate(-241px, 461px) rotateX(0deg) rotateZ(0deg)"
+  }
+]

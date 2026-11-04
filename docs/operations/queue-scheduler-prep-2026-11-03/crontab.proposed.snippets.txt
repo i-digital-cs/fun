@@ -1,0 +1,30 @@
+# =============================================================================
+# Funnity proposed crontab snippets — DO NOT INSTALL until checklist steps 1–7 pass
+# Host: /usr/local/bin/php (CLI) only — never /usr/bin/php for artisan
+# Hardened: 2026-11-04
+# =============================================================================
+
+# --- PHASE 1 ONLY: Queue worker (exactly one line) ---
+# Prerequisites (enforced by ACTIVATION_CHECKLIST.md):
+#   1) jobs 3 & 4 quarantined to hold_stale_2026_10_27
+#   2) neither remains on default
+#   3) no unexpected default jobs (or explicitly approved)
+#   4) no existing Funnity queue:work process
+#
+# * * * * * /bin/bash /home/d14098/funnity.com/docs/operations/queue-scheduler-prep-2026-11-03/cron-fallback-queue-worker.sh >> /dev/null 2>&1
+#
+# Logs (script-managed; cron stdout discarded):
+#   storage/logs/queue-cron.log
+#   storage/logs/queue-cron-skip.log
+
+# --- PHASE 2: Laravel scheduler — DISABLED FOR THIS ACTIVATION ---
+# Do NOT install. account:purge-deletions is destructive when due.
+# Requires a separate future owner approval.
+#
+# * * * * * cd /home/d14098/funnity.com && /usr/local/bin/php artisan schedule:run >> /home/d14098/funnity.com/storage/logs/scheduler.log 2>&1
+
+# --- Never install without explicit redesign ---
+# schedule:work
+# queue:work without flock / without --queue=default
+# queue:listen
+# second copy of the Phase 1 worker line

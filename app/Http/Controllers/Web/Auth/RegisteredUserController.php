@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Enums\EmailAuthPurpose;
+use App\Exceptions\RegistrationBlockedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\EmailAuthCodeService;
@@ -24,7 +25,19 @@ class RegisteredUserController extends Controller
         RegisterUserService $registerUserService,
         EmailAuthCodeService $codes,
     ): RedirectResponse|JsonResponse {
-        $user = $registerUserService->register($request->validated());
+        try {
+            $user = $registerUserService->register($request->validated(), $request);
+        } catch (RegistrationBlockedException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                ], $exception->status);
+            }
+
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation', 'cf-turnstile-response', 'turnstile_token']))
+                ->withErrors(['email' => $exception->getMessage()]);
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -35,7 +48,11 @@ class RegisteredUserController extends Controller
         }
 
         try {
-            $codes->issueAndSendIfAllowed($user, EmailAuthPurpose::EmailVerify);
+            $codes->issueAndSendIfAllowed(
+                $user,
+                EmailAuthPurpose::EmailVerify,
+                mailContext: 'register',
+            );
         } catch (\App\Exceptions\DomainException) {
             // Account exists; user can resend from the verify screen.
         }

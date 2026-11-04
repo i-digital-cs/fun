@@ -8,6 +8,7 @@ import 'package:fun_mobile/features/auth/presentation/auth_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/otp_resend_controller.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_access_theater.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/auth_site_branding.dart';
+import 'package:fun_mobile/features/auth/presentation/widgets/email_delivery_tip.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_code_fields.dart';
 import 'package:fun_mobile/features/auth/presentation/widgets/otp_resend_section.dart';
 import 'package:fun_mobile/l10n/app_localizations.dart';
@@ -213,6 +214,10 @@ class _VerifyEmailPageState extends ConsumerState<VerifyEmailPage> {
                                 busy: _resending,
                                 enabled: !_submitting,
                                 onResend: _resend,
+                              ),
+                              const SizedBox(height: 12),
+                              const EmailDeliveryTip(
+                                contextType: EmailDeliveryTipContext.verify,
                               ),
                               TextButton(
                                 onPressed: _submitting

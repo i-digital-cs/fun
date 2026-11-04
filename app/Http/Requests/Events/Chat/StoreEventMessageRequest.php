@@ -21,8 +21,8 @@ class StoreEventMessageRequest extends FormRequest
             'body' => ['nullable', 'string', 'max:'.PostEventMessageService::MAX_LENGTH],
             'client_uuid' => ['sometimes', 'nullable', 'string', 'max:36'],
             'reply_to_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'media' => ['sometimes', 'nullable', 'file', 'max:10240'],
-            'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,file'],
+            'media' => ['sometimes', 'nullable', 'file', 'max:51200'],
+            'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,video,file'],
             'duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
         ];
     }

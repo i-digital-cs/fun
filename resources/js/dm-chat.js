@@ -8,6 +8,10 @@
  * draft — recovery after reload is not supported.
  */
 
+import { initMediaViewer } from './media-viewer';
+
+initMediaViewer();
+
 function whenEchoReady(callback) {
     if (window.Echo) {
         callback(window.Echo);
@@ -138,17 +142,37 @@ function appendDmRow(log, payload, currentUserId, opts = {}) {
             dur.textContent = `${Math.max(1, Math.round(Number(payload.media_duration_ms) / 1000))}s`;
             bubble.appendChild(dur);
         }
-    } else if (payload.message_type === 'image' && (payload.media_url || opts.previewUrl)) {
-        const a = document.createElement('a');
-        a.href = payload.media_url || opts.previewUrl;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        const img = document.createElement('img');
-        img.src = payload.media_url || opts.previewUrl;
-        img.alt = '';
-        img.className = 'max-h-56 w-full max-w-xs rounded-lg object-cover';
-        a.appendChild(img);
-        bubble.appendChild(a);
+    } else if (
+        (payload.message_type === 'image' || payload.message_type === 'video') &&
+        (payload.media_url || opts.previewUrl)
+    ) {
+        const src = payload.media_url || opts.previewUrl;
+        const type = payload.message_type === 'video' ? 'video' : 'image';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start';
+        btn.setAttribute('data-media-viewer', '');
+        btn.setAttribute('data-media-type', type);
+        btn.setAttribute('data-media-src', src);
+        if (payload.conversation_id) {
+            btn.setAttribute('data-media-group', `dm-${payload.conversation_id}`);
+        }
+        if (type === 'video') {
+            const video = document.createElement('video');
+            video.src = src;
+            video.className = 'max-h-56 w-full max-w-xs rounded-lg object-cover';
+            video.preload = 'metadata';
+            video.muted = true;
+            video.playsInline = true;
+            btn.appendChild(video);
+        } else {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = '';
+            img.className = 'max-h-56 w-full max-w-xs rounded-lg object-cover';
+            btn.appendChild(img);
+        }
+        bubble.appendChild(btn);
     } else {
         const body = document.createElement('p');
         body.className = 'chat-row__body whitespace-pre-wrap break-words';

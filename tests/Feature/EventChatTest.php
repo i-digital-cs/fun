@@ -156,11 +156,15 @@ class EventChatTest extends TestCase
 
         $this->actingAs($owner)
             ->get(event_route('events.chat', $event))
+            ->assertRedirect(chat_event_url($event));
+
+        $this->actingAs($owner)
+            ->get(chat_event_url($event))
             ->assertOk()
-            ->assertSee(__('chat.title'))
+            ->assertSee('data-chat-v2', false)
+            ->assertSee('id="event-chat"', false)
             ->assertSee('Kickoff at eight')
             ->assertSee(__('chat.send'))
-            ->assertSee('chat-row--mine', false)
             ->assertSee('https://example.com/avatar.jpg');
     }
 

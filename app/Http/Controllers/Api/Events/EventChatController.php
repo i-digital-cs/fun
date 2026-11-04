@@ -57,10 +57,18 @@ class EventChatController extends Controller
             if ($request->hasFile('media')) {
                 $media = app(\App\Services\Chat\ChatMediaService::class);
                 $kind = (string) $request->input('media_kind', 'file');
+                $scopeId = (int) $event->id;
                 $stored = match ($kind) {
-                    'voice' => $media->storeVoice($request->file('media'), (int) $request->user()->id, $request->integer('duration_ms') ?: null),
-                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
-                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                    'voice' => $media->storeVoice(
+                        $request->file('media'),
+                        (int) $request->user()->id,
+                        $request->integer('duration_ms') ?: null,
+                        $scopeId,
+                        'event',
+                    ),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id, $scopeId, 'event'),
+                    'video' => $media->storeVideo($request->file('media'), (int) $request->user()->id, $scopeId, 'event'),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id, $scopeId, 'event'),
                 };
                 $options = array_merge($options, [
                     'message_type' => $stored['message_type'],

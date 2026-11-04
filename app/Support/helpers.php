@@ -264,6 +264,35 @@ if (! function_exists('event_route')) {
     }
 }
 
+if (! function_exists('chat_dm_url')) {
+    /**
+     * Canonical web DM workspace URL (/chats?c=dm-{id}).
+     */
+    function chat_dm_url(int|\App\Models\DirectConversation $conversation): string
+    {
+        $id = $conversation instanceof \App\Models\DirectConversation
+            ? (int) $conversation->id
+            : $conversation;
+
+        return route('chats.index', ['c' => 'dm-'.$id]);
+    }
+}
+
+if (! function_exists('chat_event_url')) {
+    /**
+     * Canonical web event-chat workspace URL (/chats?c=event-{id}).
+     * Does not open a DM — preserves event conversation context.
+     */
+    function chat_event_url(int|\App\Models\Event $event): string
+    {
+        $id = $event instanceof \App\Models\Event
+            ? (int) $event->id
+            : $event;
+
+        return route('chats.index', ['c' => 'event-'.$id]);
+    }
+}
+
 if (! function_exists('user_initials')) {
     function user_initials(?string $name): string
     {

@@ -2402,6 +2402,30 @@ abstract class AppLocalizations {
   /// **'Code sent'**
   String get codeSent;
 
+  /// No description provided for @emailTipVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t find our email?'**
+  String get emailTipVerifyTitle;
+
+  /// No description provided for @emailTipVerifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your Inbox and Spam/Junk folders. Verification emails may occasionally land there.'**
+  String get emailTipVerifyBody;
+
+  /// No description provided for @emailTipResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t find our email?'**
+  String get emailTipResetTitle;
+
+  /// No description provided for @emailTipResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your Inbox and Spam/Junk folders. Password reset emails may occasionally land there.'**
+  String get emailTipResetBody;
+
   /// No description provided for @favorites.
   ///
   /// In en, this message translates to:

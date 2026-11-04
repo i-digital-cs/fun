@@ -23,8 +23,15 @@ export function readI18n(root) {
         approximateCityLocation: get('ApproximateCityLocation', 'Approximate city location'),
         approximateCityLocations: get('ApproximateCityLocations', 'Approximate city locations'),
         exactVenue: get('ExactVenue', 'Exact venue'),
+        exactEventPin: get('ExactEventPin', ':title · Exact venue'),
         cityLevelLocation: get('CityLevelLocation', 'City-level location'),
-        livingCitySub: get('LivingCitySub', 'Living City · approximate city-level events'),
+        livingCitySub: get('LivingCitySub', 'Events around :city · Approximate locations'),
+        eventsAround: get('EventsAround', 'Events around :city · Approximate locations'),
+        aggregateEventsInCity: get(
+            'AggregateEventsInCity',
+            ':count events in :city · Approximate locations'
+        ),
+        cityClusterCount: get('CityClusterCount', ':count cities'),
         loadingCityEvents: get('LoadingCityEvents', 'Loading events…'),
         cityEventsFailed: get('CityEventsFailed', 'Could not load city events'),
         discoveryUnavailable: get('DiscoveryUnavailable', 'Discovery API unavailable'),
@@ -34,7 +41,7 @@ export function readI18n(root) {
         notEnoughForTour: get('NotEnoughForTour', 'Not enough events for a tour'),
         noEligibleEvents: get('NoEligibleEvents', 'No eligible events'),
         eventsInLabel: get('EventsInLabel', 'Events in'),
-        listHeading: get('ListHeading', 'Nearby events'),
+        listHeading: get('ListHeading', 'Events near you'),
         listEmpty: get('ListEmpty', 'No events in this view yet.'),
         listLoading: get('ListLoading', 'Loading events…'),
         going: get('Going', ':count going'),
@@ -42,6 +49,21 @@ export function readI18n(root) {
         zoomExpandCluster: get('ZoomExpandCluster', 'Zoom to expand clustered cities'),
         ambientShowcase: get('AmbientShowcase', 'Ambient showcase'),
         closeCity: get('CloseCity', 'Close'),
+        useMyLocation: get('UseMyLocation', 'Use my location'),
+        detectingLocation: get('DetectingLocation', 'Detecting your location…'),
+        gpsDenied: get('GpsDenied', 'Location permission denied.'),
+        gpsUnavailable: get('GpsUnavailable', 'Could not detect your location.'),
+        distanceApprox: get('DistanceApprox', '~:km km'),
+        km: get('Km', 'km'),
+        allDistances: get('AllDistances', 'All distances'),
+        liveNow: get('LiveNow', 'Live Now'),
+        withinKm: get('WithinKm', 'within :km km'),
+        eventSpotlight: get('EventSpotlight', 'Event spotlight'),
+        dismissSpotlight: get('DismissSpotlight', 'Dismiss spotlight'),
+        spotlightApproxNote: get(
+            'SpotlightApproxNote',
+            'Approximate city location · not an exact venue pin'
+        ),
     };
 }
 

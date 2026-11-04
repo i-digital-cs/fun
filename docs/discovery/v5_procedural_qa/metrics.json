@@ -1,0 +1,125 @@
+{
+  "preview": "https://funnity.com/preview/living-world-procedural?expires=1793783932&signature=5a8fd36ac731fc040e5a9ee8c4d310390b739f9edee8f594533fb73ff6394bb2",
+  "v5": "https://funnity.com/preview/living-world-v5?expires=1793783933&signature=da5b34db523aeb93315dd9b40f74ec02d795969cb3502af4baa92e45dae25bd5",
+  "shots": [
+    "01-procedural-desktop.jpg",
+    "02-procedural-stage.jpg",
+    "03-extrusion-stage.jpg",
+    "04-extrusion-desktop.jpg",
+    "05-v5-cairo-stage.jpg",
+    "06-mobile-procedural.jpg"
+  ],
+  "modes": {
+    "procedural": {
+      "mode": "procedural",
+      "procedural": {
+        "buildingCount": 100,
+        "treeCount": 21,
+        "buildMs": 56,
+        "sourceFeatureCount": 114,
+        "candidateCount": 100,
+        "maxBuildings": 100,
+        "enableShadows": true,
+        "enableTrees": true,
+        "lastError": null,
+        "visible": true
+      },
+      "perf": {
+        "styleMs": 4,
+        "mapIdleMs": 1774,
+        "fps": 58,
+        "fpsSamples": [
+          11,
+          45,
+          58
+        ],
+        "jsHeapMb": 73.1,
+        "mode": "procedural"
+      },
+      "extrusionCount": 0,
+      "camera": {
+        "lng": 31.2357,
+        "lat": 30.0444,
+        "zoom": 15.35,
+        "pitch": 58,
+        "bearing": -28
+      },
+      "mobile": false
+    },
+    "extrusion": {
+      "mode": "extrusion",
+      "procedural": {
+        "buildingCount": 100,
+        "treeCount": 21,
+        "buildMs": 56,
+        "sourceFeatureCount": 114,
+        "candidateCount": 100,
+        "maxBuildings": 100,
+        "enableShadows": true,
+        "enableTrees": true,
+        "lastError": null,
+        "visible": false
+      },
+      "perf": {
+        "styleMs": 4,
+        "mapIdleMs": 1774,
+        "fps": 6,
+        "fpsSamples": [
+          11,
+          45,
+          58,
+          40,
+          6
+        ],
+        "jsHeapMb": 73.1,
+        "mode": "extrusion"
+      },
+      "extrusionCount": 73,
+      "camera": {
+        "lng": 31.2357,
+        "lat": 30.0444,
+        "zoom": 15.35,
+        "pitch": 58,
+        "bearing": -28
+      },
+      "mobile": false
+    }
+  },
+  "mobile": {
+    "mode": "procedural",
+    "procedural": {
+      "buildingCount": 45,
+      "treeCount": 0,
+      "buildMs": 42,
+      "sourceFeatureCount": 103,
+      "candidateCount": 45,
+      "maxBuildings": 45,
+      "enableShadows": false,
+      "enableTrees": false,
+      "lastError": null,
+      "visible": true
+    },
+    "perf": {
+      "styleMs": 5,
+      "mapIdleMs": 1123,
+      "fps": 60,
+      "fpsSamples": [
+        38,
+        59,
+        60
+      ],
+      "jsHeapMb": 51,
+      "mode": "procedural"
+    },
+    "extrusionCount": 0,
+    "camera": {
+      "lng": 31.2357,
+      "lat": 30.0444,
+      "zoom": 15.35,
+      "pitch": 58,
+      "bearing": -28
+    },
+    "mobile": true
+  },
+  "errors": []
+}

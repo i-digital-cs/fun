@@ -5,38 +5,30 @@ namespace App\Http\Controllers\Web\Friends;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DirectMessageResource;
-use App\Models\Category;
 use App\Models\DirectConversation;
 use App\Models\User;
 use App\Services\Chat\ChatMediaService;
 use App\Services\Friends\DirectMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class DirectMessageController extends Controller
 {
+    /**
+     * Legacy /dms/{id} → canonical Chat V2 workspace.
+     */
     public function show(
         Request $request,
         DirectConversation $conversation,
         DirectMessageService $dms,
-    ): View|RedirectResponse {
+    ): RedirectResponse {
         try {
-            $messages = $dms->listMessages($request->user(), $conversation, 100);
-            $dms->markRead($request->user(), $conversation);
+            $dms->assertParticipant($request->user(), $conversation);
         } catch (DomainException $e) {
             abort(403, $e->getMessage());
         }
 
-        $otherId = $conversation->otherUserId((int) $request->user()->id);
-        $other = User::query()->findOrFail($otherId);
-
-        return view('dms.show', [
-            'conversation' => $conversation,
-            'messages' => $messages->reverse()->values(),
-            'other' => $other,
-            'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name_en')->get(),
-        ]);
+        return redirect()->to(chat_dm_url($conversation));
     }
 
     public function store(
@@ -49,8 +41,8 @@ class DirectMessageController extends Controller
             'body' => ['nullable', 'string', 'max:2000'],
             'client_uuid' => ['sometimes', 'nullable', 'string', 'max:36'],
             'reply_to_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'media' => ['sometimes', 'nullable', 'file', 'max:10240'],
-            'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,file'],
+            'media' => ['sometimes', 'nullable', 'file', 'max:51200'],
+            'media_kind' => ['sometimes', 'nullable', 'string', 'in:voice,image,video,file'],
             'duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
             'media_duration_ms' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:120000'],
         ]);
@@ -87,14 +79,18 @@ class DirectMessageController extends Controller
                 $durationMs = isset($validated['duration_ms'])
                     ? (int) $validated['duration_ms']
                     : (isset($validated['media_duration_ms']) ? (int) $validated['media_duration_ms'] : null);
+                $scopeId = (int) $conversation->id;
                 $stored = match ($kind) {
                     'voice' => $media->storeVoice(
                         $request->file('media'),
                         (int) $request->user()->id,
-                        $durationMs
+                        $durationMs,
+                        $scopeId,
+                        'direct',
                     ),
-                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
-                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id, $scopeId, 'direct'),
+                    'video' => $media->storeVideo($request->file('media'), (int) $request->user()->id, $scopeId, 'direct'),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id, $scopeId, 'direct'),
                 };
                 $options = array_merge($options, [
                     'message_type' => $stored['message_type'],
@@ -123,7 +119,7 @@ class DirectMessageController extends Controller
             return (new DirectMessageResource($message))->response()->setStatusCode(201);
         }
 
-        return back();
+        return redirect()->to(chat_dm_url($conversation));
     }
 
     public function open(Request $request, User $user, DirectMessageService $dms): RedirectResponse
@@ -134,6 +130,6 @@ class DirectMessageController extends Controller
             return back()->withErrors(['friend' => $e->getMessage()]);
         }
 
-        return redirect()->route('dms.show', $conversation);
+        return redirect()->to(chat_dm_url($conversation));
     }
 }

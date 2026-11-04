@@ -1,3 +1,7 @@
+import { initMediaViewer } from './media-viewer';
+
+initMediaViewer();
+
 function escapeHtml(value) {
     return String(value)
         .replaceAll('&', '&amp;')
@@ -222,7 +226,11 @@ function appendMessage(container, message, emptyEl, currentUserId, options = {})
     if (message.message_type === 'voice' && message.media_url) {
         bodyHtml = `<audio controls preload="none" class="mb-1 max-w-full" src="${escapeHtml(message.media_url)}"></audio>`;
     } else if (message.message_type === 'image' && message.media_url) {
-        bodyHtml = `<a href="${escapeHtml(message.media_url)}" target="_blank" rel="noopener" class="mb-1 block"><img src="${escapeHtml(message.media_url)}" alt="" class="max-h-48 rounded-lg object-cover" loading="lazy"></a>`;
+        const group = message.event_id ? ` data-media-group="event-${escapeHtml(String(message.event_id))}"` : '';
+        bodyHtml = `<button type="button" class="mb-1 block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start" data-media-viewer data-media-type="image" data-media-src="${escapeHtml(message.media_url)}"${group}><img src="${escapeHtml(message.media_url)}" alt="" class="max-h-48 rounded-lg object-cover" loading="lazy"></button>`;
+    } else if (message.message_type === 'video' && message.media_url) {
+        const group = message.event_id ? ` data-media-group="event-${escapeHtml(String(message.event_id))}"` : '';
+        bodyHtml = `<button type="button" class="mb-1 block max-w-xs cursor-zoom-in border-0 bg-transparent p-0 text-start" data-media-viewer data-media-type="video" data-media-src="${escapeHtml(message.media_url)}"${group}><video src="${escapeHtml(message.media_url)}" class="max-h-48 rounded-lg object-cover" preload="metadata" muted playsinline></video></button>`;
     }
 
     el.dataset.body = message.body || '';

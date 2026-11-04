@@ -49,6 +49,31 @@
                    class="w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
         </div>
         <input type="hidden" name="locale" value="{{ app()->getLocale() }}">
+        @if (config('registration.honeypot_enabled'))
+            {{-- Off-screen honeypot: humans/Flutter leave empty; many bots fill it. --}}
+            <div class="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden" aria-hidden="true">
+                <label for="{{ config('registration.honeypot_field', 'website') }}">Website</label>
+                <input
+                    type="text"
+                    id="{{ config('registration.honeypot_field', 'website') }}"
+                    name="{{ config('registration.honeypot_field', 'website') }}"
+                    value=""
+                    tabindex="-1"
+                    autocomplete="off"
+                >
+            </div>
+        @endif
+        @if (config('turnstile.enabled_web') && filled(config('turnstile.site_key')))
+            <div class="pt-1">
+                <div
+                    class="cf-turnstile"
+                    data-sitekey="{{ config('turnstile.site_key') }}"
+                    data-action="{{ config('turnstile.expected_action', 'register') }}"
+                    data-theme="light"
+                    data-size="flexible"
+                ></div>
+            </div>
+        @endif
         <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 font-extrabold text-white shadow-lg shadow-orange-500/30 transition hover:shadow-xl hover:shadow-orange-500/45 hover:brightness-105">
             {{ __('ui.register') }}
         </button>
@@ -63,5 +88,8 @@
 @endsection
 
 @push('scripts')
+    @if (config('turnstile.enabled_web') && filled(config('turnstile.site_key')))
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     @vite(['resources/js/auth-access.js'])
 @endpush

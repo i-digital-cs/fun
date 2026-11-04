@@ -11,6 +11,9 @@ use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardControll
 use App\Http\Controllers\Web\Admin\EventModerationController;
 use App\Http\Controllers\Web\Admin\IdentityDocumentModerationController;
 use App\Http\Controllers\Web\Admin\ReportModerationController;
+use App\Http\Controllers\Web\Admin\Marketing\MarketingBudgetPolicyController;
+use App\Http\Controllers\Web\Admin\Marketing\MarketingIntegrationController;
+use App\Http\Controllers\Web\Admin\Marketing\MarketingOverviewController;
 use App\Http\Controllers\Web\Admin\SiteSettingsController;
 use App\Http\Controllers\Web\Admin\UserModerationController;
 use App\Http\Controllers\Web\Auth\AuthenticatedSessionController;
@@ -58,6 +61,31 @@ Route::get('/preview/living-map-v3', \App\Http\Controllers\Web\Preview\LivingMap
     ->middleware('throttle:30,1')
     ->name('preview.living-map-v3');
 
+/** Living Map V3.5 visual prototype — isolated; does NOT replace production Home. */
+Route::get('/preview/living-map-v35', \App\Http\Controllers\Web\Preview\LivingMapV35PreviewController::class)
+    ->middleware('throttle:30,1')
+    ->name('preview.living-map-v35');
+
+/** Living Map V4.0 cinematic hybrid prototype — isolated; does NOT replace production Home. */
+Route::get('/preview/living-map-v4', \App\Http\Controllers\Web\Preview\LivingMapV4PreviewController::class)
+    ->middleware('throttle:30,1')
+    ->name('preview.living-map-v4');
+
+/** Living World V5 geographic cinematic feasibility — isolated; does NOT replace production Home. */
+Route::get('/preview/living-world-v5', \App\Http\Controllers\Web\Preview\LivingWorldV5PreviewController::class)
+    ->middleware('throttle:30,1')
+    ->name('preview.living-world-v5');
+
+/** Living World procedural 3D feasibility POC — isolated Cairo; does NOT replace production Home. */
+Route::get('/preview/living-world-procedural', \App\Http\Controllers\Web\Preview\LivingWorldProceduralPreviewController::class)
+    ->middleware('throttle:30,1')
+    ->name('preview.living-world-procedural');
+
+/** Mapbox Standard 3D provider trial — isolated; does NOT replace production Home. */
+Route::get('/preview/mapbox-standard-trial', \App\Http\Controllers\Web\Preview\MapboxStandardTrialPreviewController::class)
+    ->middleware('throttle:30,1')
+    ->name('preview.mapbox-standard-trial');
+
 Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
@@ -86,7 +114,7 @@ Route::get('/u/{publicId}', [PublicProfileController::class, 'show'])
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [RegisteredUserController::class, 'store'])
-        ->middleware('throttle:auth');
+        ->middleware('throttle:auth-register');
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:auth');
@@ -378,6 +406,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/categories/{category}/deactivate', [AdminCategoryController::class, 'deactivate'])->name('categories.deactivate');
         Route::post('/categories/{category}/activate', [AdminCategoryController::class, 'activate'])->name('categories.activate');
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+        Route::middleware('marketing.access')->prefix('marketing')->name('marketing.')->group(function () {
+            Route::get('/', MarketingOverviewController::class)->name('overview');
+            Route::get('/integrations', [MarketingIntegrationController::class, 'index'])->name('integrations.index');
+            Route::get('/budget-policies', [MarketingBudgetPolicyController::class, 'index'])->name('budget-policies.index');
+            Route::post('/budget-policies', [MarketingBudgetPolicyController::class, 'store'])->name('budget-policies.store');
+            Route::put('/budget-policies/{budget_policy}', [MarketingBudgetPolicyController::class, 'update'])->name('budget-policies.update');
+            Route::post('/budget-policies/{budget_policy}/disable', [MarketingBudgetPolicyController::class, 'disable'])->name('budget-policies.disable');
+            Route::post('/budget-policies/{budget_policy}/enable', [MarketingBudgetPolicyController::class, 'enable'])->name('budget-policies.enable');
+        });
     });
     });
 });

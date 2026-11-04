@@ -1,0 +1,59 @@
+{
+  "preview": "https://funnity.com/preview/living-map-v35?expires=1794163661&signature=a65759f91a870d0ad3ea64e9aaf175ccc7b78336b98f4b4499576fa97a877269",
+  "shots": [
+    "01-desktop-initial-spotlight.jpg",
+    "02-desktop-carousel.jpg",
+    "03-selected-event-card.jpg",
+    "08-empty-state.jpg",
+    "05-mobile-initial.jpg",
+    "06-mobile-carousel.jpg",
+    "07-arabic-rtl-desktop.jpg"
+  ],
+  "checks": {
+    "markers": [
+      {
+        "kind": "city-aggregate",
+        "count": "4",
+        "cityId": "11",
+        "aria": "4 events in Port Said · Approximate locations",
+        "transform": "translate(-50%, -100%) translate(852px, 228px) rotateX(0deg) rotateZ(0deg)"
+      },
+      {
+        "kind": "city-aggregate",
+        "count": "6",
+        "cityId": "",
+        "aria": "6 events in Zagazig · Approximate locations",
+        "transform": "translate(-50%, -100%) translate(517px, 462px) rotateX(0deg) rotateZ(0deg)"
+      },
+      {
+        "kind": "city-aggregate",
+        "count": "3",
+        "cityId": "14",
+        "aria": "3 events in Damietta · Approximate locations",
+        "transform": "translate(-50%, -100%) translate(679px, 167px) rotateX(0deg) rotateZ(0deg)"
+      },
+      {
+        "kind": "city-aggregate",
+        "count": "3",
+        "cityId": "",
+        "aria": "3 events in Ismailia · Approximate locations",
+        "transform": "translate(-50%, -100%) translate(850px, 490px) rotateX(0deg) rotateZ(0deg)"
+      },
+      {
+        "kind": "city-aggregate",
+        "count": "2",
+        "cityId": "8",
+        "aria": "2 events in Mansoura · Approximate locations",
+        "transform": "translate(-50%, -100%) translate(503px, 276px) rotateX(0deg) rotateZ(0deg)"
+      }
+    ],
+    "spotlightVisible": true,
+    "selectedCard": 1,
+    "homepageIsolationFetch": true,
+    "rtl": {
+      "lang": "ar",
+      "dir": "rtl"
+    },
+    "homepageIsolation": true
+  }
+}

@@ -389,6 +389,7 @@ class DiscoverMapService
                 'longitude' => $lng,
                 'title' => (string) $event->title,
                 'starts_at' => optional($event->starts_at)?->toIso8601String(),
+                'ends_at' => optional($event->ends_at)?->toIso8601String(),
                 'category_id' => $event->category_id ? (int) $event->category_id : null,
                 'category_name' => $event->category?->localizedName(),
                 // Prefer uploaded card image; otherwise branded category stock cover
@@ -636,6 +637,7 @@ class DiscoverMapService
                     'id' => $event->id,
                     'title' => $event->title,
                     'starts_at' => $event->starts_at?->toIso8601String(),
+                    'ends_at' => $event->ends_at?->toIso8601String(),
                     'venue_label' => $event->locationLabel(),
                     'has_exact_coordinates' => $exact,
                     'location_precision' => $exact ? 'exact' : 'city_level',
@@ -730,6 +732,7 @@ class DiscoverMapService
             'longitude' => $point['longitude'],
             'title' => $point['title'],
             'starts_at' => $point['starts_at'],
+            'ends_at' => $point['ends_at'] ?? null,
             'category_id' => $point['category_id'],
             'category_name' => $point['category_name'],
             'image_url' => $point['image_url'],

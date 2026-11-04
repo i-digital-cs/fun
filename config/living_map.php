@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Living Map V3 — prototype configuration.
- * Production Home/Discover remain on Leaflet until owner approval.
+ * Living Map V3.4 — MapLibre premium discovery map configuration.
+ * Home/Discover cutover gated by LIVING_MAP_REPLACE_* env flags.
  */
 return [
     /*

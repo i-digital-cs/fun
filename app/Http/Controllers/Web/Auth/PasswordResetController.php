@@ -7,10 +7,12 @@ use App\Exceptions\DomainException;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Auth\EmailAuthCodeService;
+use App\Support\EmailNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
@@ -27,7 +29,8 @@ class PasswordResetController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $user = User::query()->where('email', strtolower($validated['email']))->first();
+        $email = EmailNormalizer::normalize($validated['email']);
+        $user = User::query()->where('email', $email)->first();
         $otp = [
             'retry_after_seconds' => $codes->cooldownSeconds(),
             'resend_available_at' => now()->addSeconds($codes->cooldownSeconds())->toIso8601String(),
@@ -44,13 +47,17 @@ class PasswordResetController extends Controller
                     'resend_available_at' => $result->resendAvailableAt->toIso8601String(),
                     'expires_in_minutes' => $result->expiresInMinutes,
                 ];
-            } catch (DomainException) {
+            } catch (DomainException $exception) {
+                Log::warning('password_reset_delivery_masked', [
+                    'user_id' => $user->id,
+                    'exception' => $exception::class,
+                ]);
                 $otp = $codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset);
             }
             $request->session()->put('password_reset_email', $user->email);
             $request->session()->put('password_reset_otp', $otp);
         } else {
-            $request->session()->put('password_reset_email', strtolower($validated['email']));
+            $request->session()->put('password_reset_email', $email);
             $request->session()->put('password_reset_otp', $otp);
         }
 
@@ -74,7 +81,7 @@ class PasswordResetController extends Controller
         }
 
         $email = $request->session()->get('password_reset_email');
-        $user = is_string($email) ? User::query()->where('email', strtolower($email))->first() : null;
+        $user = is_string($email) ? User::query()->where('email', EmailNormalizer::normalize($email))->first() : null;
         $otp = $request->session()->get('password_reset_otp');
         if (! is_array($otp)) {
             $otp = $user !== null
@@ -106,7 +113,7 @@ class PasswordResetController extends Controller
             'code' => ['required', 'string', 'size:4'],
         ]);
 
-        $user = User::query()->where('email', strtolower($email))->first();
+        $user = User::query()->where('email', EmailNormalizer::normalize($email))->first();
 
         if ($user === null) {
             return $request->expectsJson()
@@ -196,7 +203,7 @@ class PasswordResetController extends Controller
                 : redirect()->route('password.request');
         }
 
-        $user = User::query()->where('email', strtolower($email))->first();
+        $user = User::query()->where('email', EmailNormalizer::normalize($email))->first();
         $otp = [
             'retry_after_seconds' => $codes->cooldownSeconds(),
             'resend_available_at' => now()->addSeconds($codes->cooldownSeconds())->toIso8601String(),
@@ -212,7 +219,11 @@ class PasswordResetController extends Controller
                     'resend_available_at' => $result->resendAvailableAt->toIso8601String(),
                     'expires_in_minutes' => $result->expiresInMinutes,
                 ];
-            } catch (DomainException) {
+            } catch (DomainException $exception) {
+                Log::warning('password_reset_delivery_masked', [
+                    'user_id' => $user->id,
+                    'exception' => $exception::class,
+                ]);
                 $otp = $codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset);
             }
         }

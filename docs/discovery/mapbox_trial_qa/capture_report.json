@@ -1,0 +1,100 @@
+{
+  "preview": "https://funnity.com/preview/mapbox-standard-trial?expires=1793871556&signature=bd13c9992fcfca1159661c2b75e7fc9d2d733346f0fdf9d2b64e997c6b03cfe2",
+  "shots": [
+    "00-token-gate-or-initial.jpg",
+    "01-cairo-desktop.jpg",
+    "02-cairo-stage.jpg",
+    "01-alexandria-desktop.jpg",
+    "02-alexandria-stage.jpg",
+    "01-port-said-desktop.jpg",
+    "02-port-said-stage.jpg",
+    "03-mobile-cairo.jpg"
+  ],
+  "metrics": {},
+  "cities": {
+    "cairo": {
+      "city": "cairo",
+      "style": "mapbox://styles/mapbox/standard",
+      "markerCount": 10,
+      "perf": {
+        "mapIdleMs": 8396,
+        "fps": 33,
+        "fpsSamples": [
+          33
+        ],
+        "jsHeapMb": 124.9
+      },
+      "camera": {
+        "lng": 31.2357,
+        "lat": 30.0444,
+        "zoom": 15.2,
+        "pitch": 60,
+        "bearing": -28
+      },
+      "blocked": false
+    },
+    "alexandria": {
+      "city": "alexandria",
+      "style": "mapbox://styles/mapbox/standard",
+      "markerCount": 5,
+      "perf": {
+        "mapIdleMs": 8396,
+        "fps": 47,
+        "fpsSamples": [
+          33,
+          34,
+          2,
+          22,
+          15,
+          14,
+          47
+        ],
+        "jsHeapMb": 124.9
+      },
+      "camera": {
+        "lng": 29.9187,
+        "lat": 31.2001,
+        "zoom": 15,
+        "pitch": 58,
+        "bearing": -22
+      },
+      "blocked": false
+    },
+    "port-said": {
+      "city": "port-said",
+      "style": "mapbox://styles/mapbox/standard",
+      "markerCount": 4,
+      "perf": {
+        "mapIdleMs": 8396,
+        "fps": 45,
+        "fpsSamples": [
+          15,
+          14,
+          47,
+          46,
+          27,
+          37,
+          44,
+          45
+        ],
+        "jsHeapMb": 124.9
+      },
+      "camera": {
+        "lng": 32.3019,
+        "lat": 31.2653,
+        "zoom": 14.8,
+        "pitch": 56,
+        "bearing": -18
+      },
+      "blocked": false
+    }
+  },
+  "errors": [],
+  "tokenGateVisible": false,
+  "notes": {
+    "tokenGateVisible": false,
+    "portSaidBlankFirstPass": true,
+    "portSaidBlankCause": "Likely insufficient wait for Standard tiles after flyTo; retry with longer idle succeeded. No HTTP 4xx from Mapbox APIs observed.",
+    "mapboxHttpErrors": 0
+  }
+}

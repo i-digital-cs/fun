@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             CitySeeder::class,
             CategorySeeder::class,
             DemoCommunitySeeder::class,
+            MarketingPlatformSeeder::class,
         ]);
     }
 }

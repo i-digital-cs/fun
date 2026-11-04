@@ -115,7 +115,10 @@ function initAuthAccess(root) {
         if (!resendBtn) return;
         const cooling = resendSecondsLeft > 0 || resendBusy;
         resendBtn.disabled = cooling;
+        resendBtn.setAttribute('aria-disabled', cooling ? 'true' : 'false');
         resendBtn.classList.toggle('opacity-60', cooling);
+        // Single visible control: countdown OR "Resend code" on the button only.
+        // data-resend-cooldown is sr-only (aria-live); never show a second visual timer.
         if (resendSecondsLeft > 0) {
             const label = (i18n.resend_in || 'Resend code in :time').replace(
                 ':time',
@@ -124,11 +127,15 @@ function initAuthAccess(root) {
             resendBtn.textContent = label;
             if (resendCooldownEl) {
                 resendCooldownEl.textContent = label;
-                resendCooldownEl.classList.remove('hidden');
             }
         } else {
-            resendBtn.textContent = i18n.resend || 'Resend code';
-            resendCooldownEl?.classList.add('hidden');
+            const label = resendBusy
+                ? (i18n.resend || 'Resend code')
+                : (i18n.resend || 'Resend code');
+            resendBtn.textContent = label;
+            if (resendCooldownEl) {
+                resendCooldownEl.textContent = '';
+            }
         }
     }
 

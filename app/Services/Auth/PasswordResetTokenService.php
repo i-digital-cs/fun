@@ -5,7 +5,9 @@ namespace App\Services\Auth;
 use App\Enums\EmailAuthPurpose;
 use App\Exceptions\DomainException;
 use App\Models\User;
+use App\Support\EmailNormalizer;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PasswordResetTokenService
@@ -24,7 +26,8 @@ class PasswordResetTokenService
      */
     public function requestCode(string $email): array
     {
-        $user = User::query()->where('email', strtolower($email))->first();
+        $normalized = EmailNormalizer::normalize($email);
+        $user = User::query()->where('email', $normalized)->first();
         $cooldown = $this->codes->cooldownSeconds();
         $expires = $this->codes->expiresMinutes();
 
@@ -39,8 +42,14 @@ class PasswordResetTokenService
                     'resend_available_at' => $result->resendAvailableAt->toIso8601String(),
                     'expires_in_minutes' => $result->expiresInMinutes,
                 ];
-            } catch (DomainException) {
-                // Delivery failed — still look successful publicly.
+            } catch (DomainException $exception) {
+                // Preserve anti-enumeration: public response stays generic.
+                // Log category only — no email, OTP, or SMTP secrets.
+                Log::warning('password_reset_delivery_masked', [
+                    'user_id' => $user->id,
+                    'exception' => $exception::class,
+                ]);
+
                 return $this->codes->cooldownPayload($user, EmailAuthPurpose::PasswordReset);
             }
         }
@@ -57,7 +66,7 @@ class PasswordResetTokenService
      */
     public function verifyCode(string $email, string $code): string
     {
-        $user = User::query()->where('email', strtolower($email))->first();
+        $user = User::query()->where('email', EmailNormalizer::normalize($email))->first();
 
         if ($user === null) {
             throw new DomainException(__('auth.invalid_code'));

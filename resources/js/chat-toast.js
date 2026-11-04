@@ -136,7 +136,7 @@ function showMessageReactedToast(payload, host) {
     const eventTitle = payload.event_title || '';
     const title = payload.title || host.dataset.labelReaction || 'New reaction';
     const body = payload.body || '';
-    const eventUrl = payload.chat_url || `/events/${eventId || ''}/chat`;
+    const eventUrl = payload.chat_url || (eventId ? `/chats?c=event-${eventId}` : '/chats');
     const labelNew = host.dataset.labelReaction || title;
     const labelJustNow = host.dataset.labelJustNow || 'Just now';
     const actor = payload.actor || {};
@@ -212,7 +212,7 @@ function showDmToast(payload, host) {
     const name = user.name || payload.sender_name || '';
     const initials = user.initials || (name ? name.trim().charAt(0).toUpperCase() : '?');
     const photo = user.profile_image_path || '';
-    const chatUrl = payload.chat_url || (conversationId ? `/dms/${conversationId}` : '/chats?tab=direct');
+    const chatUrl = payload.chat_url || (conversationId ? `/chats?c=dm-${conversationId}` : '/chats');
     const labelNew = host.dataset.labelDm || host.dataset.labelNew || 'New message';
     const labelJustNow = host.dataset.labelJustNow || 'Just now';
 
@@ -294,7 +294,7 @@ function showChatToast(payload, host) {
     const photo = user.profile_image_path || '';
     const body = payload.body || '';
     const eventTitle = payload.event_title || '';
-    const chatUrl = payload.chat_url || `/events/${eventId}/chat`;
+    const chatUrl = payload.chat_url || (eventId ? `/chats?c=event-${eventId}` : '/chats');
     const labelNew = host.dataset.labelNew || 'New message';
     const labelJustNow = host.dataset.labelJustNow || 'Just now';
 

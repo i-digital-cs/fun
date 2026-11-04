@@ -1,0 +1,80 @@
+{
+  "preview": "https://funnity.com/preview/living-map-v35?expires=1794158149&signature=6e978ecdc3cf1ac7c1f00af04c561e15030979213b22125f66b630fce0379fce",
+  "shots": [
+    "01-desktop-initial.jpg",
+    "06-location-filter.jpg",
+    "03-approximate-city-aggregate.jpg",
+    "04-aggregate-event-list.jpg",
+    "05-floating-event-card.jpg",
+    "07-mobile-layout.jpg",
+    "08-arabic-rtl.jpg"
+  ],
+  "audit": {
+    "center": {
+      "lng": 32.2233726615076,
+      "lat": 31.27007464440908
+    },
+    "zoom": 9.289246679135655,
+    "bounds": {
+      "north": 31.84682864885052,
+      "south": 30.916468797356046,
+      "east": 33.06926648986504,
+      "west": 31.255236206757786
+    },
+    "markers": [
+      {
+        "index": 0,
+        "kind": "unknown",
+        "count": "4",
+        "cityId": "",
+        "aria": "",
+        "title": "",
+        "screen": {
+          "x": 685,
+          "y": 294
+        },
+        "classes": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom",
+        "lngLat": null
+      },
+      {
+        "index": 1,
+        "kind": "unknown",
+        "count": "3",
+        "cityId": "",
+        "aria": "",
+        "title": "",
+        "screen": {
+          "x": 361,
+          "y": 146
+        },
+        "classes": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom",
+        "lngLat": null
+      },
+      {
+        "index": 2,
+        "kind": "unknown",
+        "count": "2",
+        "cityId": "",
+        "aria": "",
+        "title": "",
+        "screen": {
+          "x": -128,
+          "y": 426
+        },
+        "classes": "lm-marker lm-marker--teardrop lm-marker--agg is-float maplibregl-marker maplibregl-marker-anchor-bottom",
+        "lngLat": null
+      }
+    ]
+  },
+  "interactions": {
+    "aggregateCount": 3,
+    "aggregateList": true,
+    "floatingCard": true,
+    "exactMarker": false,
+    "rtl": {
+      "htmlLang": "ar",
+      "dir": "rtl"
+    },
+    "homepageIsolation": true
+  }
+}

@@ -392,7 +392,7 @@ class DirectMessageService
                 ] : null,
                 'last_message_at' => $c->last_message_at?->toIso8601String(),
                 'unread_count' => $unread,
-                'url' => route('dms.show', $c),
+                'url' => chat_dm_url($c),
                 'api_path' => '/dms/'.$c->id.'/messages',
             ];
         })->filter()->values();
@@ -408,7 +408,7 @@ class DirectMessageService
             return;
         }
 
-        $chatUrl = route('dms.show', $conversation);
+        $chatUrl = chat_dm_url($conversation);
 
         try {
             broadcast(new UserDirectMessageReceived(

@@ -38,7 +38,7 @@ class DirectMessageController extends Controller
         return response()->json([
             'data' => [
                 'id' => $conversation->id,
-                'url' => route('dms.show', $conversation),
+                'url' => chat_dm_url($conversation),
                 'api_path' => '/dms/'.$conversation->id.'/messages',
             ],
         ], 201);
@@ -85,14 +85,18 @@ class DirectMessageController extends Controller
             if ($request->hasFile('media')) {
                 $media = app(\App\Services\Chat\ChatMediaService::class);
                 $kind = (string) $request->input('media_kind', 'file');
+                $scopeId = (int) $conversation->id;
                 $stored = match ($kind) {
                     'voice' => $media->storeVoice(
                         $request->file('media'),
                         (int) $request->user()->id,
-                        $request->integer('duration_ms') ?: ($request->integer('media_duration_ms') ?: null)
+                        $request->integer('duration_ms') ?: ($request->integer('media_duration_ms') ?: null),
+                        $scopeId,
+                        'direct',
                     ),
-                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id),
-                    default => $media->storeFile($request->file('media'), (int) $request->user()->id),
+                    'image' => $media->storeImage($request->file('media'), (int) $request->user()->id, $scopeId, 'direct'),
+                    'video' => $media->storeVideo($request->file('media'), (int) $request->user()->id, $scopeId, 'direct'),
+                    default => $media->storeFile($request->file('media'), (int) $request->user()->id, $scopeId, 'direct'),
                 };
                 $options = array_merge($options, [
                     'message_type' => $stored['message_type'],

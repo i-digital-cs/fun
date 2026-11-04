@@ -70,8 +70,10 @@ Route::get('/users/{publicId}', [ApiPublicProfileController::class, 'show'])
     ->where('publicId', \App\Support\UserPublicId::routePattern())
     ->middleware('throttle:60,1');
 
+Route::post('/register', [RegisterController::class, 'store'])
+    ->middleware('throttle:auth-register');
+
 Route::middleware('throttle:auth')->group(function () {
-    Route::post('/register', [RegisterController::class, 'store']);
     Route::post('/login', [LoginController::class, 'store']);
     Route::post('/auth/google', [ApiGoogleAuthController::class, 'store']);
     Route::post('/auth/apple', [ApiAppleAuthController::class, 'store']);

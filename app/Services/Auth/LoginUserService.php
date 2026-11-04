@@ -33,11 +33,19 @@ class LoginUserService
             throw new DomainException(__('auth.failed'));
         }
 
+        if ($user->isDeactivated()) {
+            throw new DomainException(__('auth.deactivated'));
+        }
+
         return $user;
     }
 
     public function issueApiToken(User $user, string $deviceName = 'api'): string
     {
+        if ($user->isDeactivated()) {
+            throw new DomainException(__('auth.deactivated'));
+        }
+
         return $user->createToken($deviceName)->plainTextToken;
     }
 }

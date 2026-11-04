@@ -3,13 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\City;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<City>
+ * @extends AppFactory<City>
  */
-class CityFactory extends Factory
+class CityFactory extends AppFactory
 {
     protected $model = City::class;
 

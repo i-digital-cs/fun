@@ -1,0 +1,187 @@
+{
+  "preview": "https://funnity.com/preview/living-map-v35?expires=1794212659&signature=4e43cb1fc3474ba50241031929a93b4ce8f91657e84250701ab55504e5f63d64",
+  "capturedAt": "2026-11-02T08:25:14.246Z",
+  "shots": [
+    "acceptance-00-dismissed-storage-reload.jpg",
+    "acceptance-01-fresh-desktop-load.jpg",
+    "acceptance-02-desktop-spotlight-visible.jpg",
+    "acceptance-03-spotlight-marker-highlight.jpg",
+    "acceptance-04-aggregate-event-list.jpg",
+    "acceptance-05-floating-event-card.jpg",
+    "acceptance-06-desktop-carousel.jpg",
+    "acceptance-10-spotlight-dismissed.jpg",
+    "acceptance-07-mobile-spotlight.jpg",
+    "acceptance-08-mobile-carousel.jpg",
+    "acceptance-09-arabic-rtl.jpg"
+  ],
+  "investigation": {
+    "withDismissedStorage": {
+      "exists": true,
+      "hiddenAttr": true,
+      "computedDisplay": "none",
+      "title": "",
+      "place": "",
+      "meta": "",
+      "cat": "",
+      "markerLit": false,
+      "markerKind": null,
+      "markerCount": null,
+      "markerCityId": null,
+      "sessionDismissed": "1",
+      "clippedByStage": false,
+      "spotRect": null,
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "freshLoad": {
+      "exists": true,
+      "hiddenAttr": false,
+      "computedDisplay": "block",
+      "title": "Console night with friends",
+      "place": "Approximate city location · not an exact venue pin",
+      "meta": "Nov 3, 5:00 PM",
+      "cat": "🎮 PlayStation",
+      "markerLit": true,
+      "markerKind": "city-aggregate",
+      "markerCount": "3",
+      "markerCityId": "11",
+      "sessionDismissed": null,
+      "clippedByStage": false,
+      "spotRect": {
+        "w": 392,
+        "h": 230,
+        "top": 609,
+        "left": 929
+      },
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "mobileFresh": {
+      "exists": true,
+      "hiddenAttr": false,
+      "computedDisplay": "block",
+      "title": "Console night with friends",
+      "place": "Approximate city location · not an exact venue pin",
+      "meta": "Nov 3, 5:00 PM",
+      "cat": "🎮 PlayStation",
+      "markerLit": true,
+      "markerKind": "city-aggregate",
+      "markerCount": "3",
+      "markerCityId": "11",
+      "sessionDismissed": null,
+      "clippedByStage": false,
+      "spotRect": {
+        "w": 348,
+        "h": 213,
+        "top": 356,
+        "left": 21
+      },
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "rtlFresh": {
+      "exists": true,
+      "hiddenAttr": false,
+      "computedDisplay": "block",
+      "title": "Courtside rally night",
+      "place": "موقع تقريبي على مستوى المدينة · ليس موقعاً دقيقاً",
+      "meta": "Nov 1, 10:45 AM",
+      "cat": "🎾 Tennis",
+      "markerLit": false,
+      "markerKind": null,
+      "markerCount": null,
+      "markerCityId": null,
+      "sessionDismissed": null,
+      "clippedByStage": false,
+      "spotRect": {
+        "w": 392,
+        "h": 230,
+        "top": 609,
+        "left": 119
+      },
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "rtl": {
+      "lang": "ar",
+      "dir": "rtl"
+    }
+  },
+  "interactions": {
+    "aggregateList": {
+      "visible": true,
+      "rows": 3
+    },
+    "floatingFromList": 1,
+    "carouselSelect": {
+      "cardOpen": true,
+      "selectedAgg": false,
+      "title": "Courtside rally night"
+    },
+    "dismiss": {
+      "exists": true,
+      "hiddenAttr": true,
+      "computedDisplay": "none",
+      "title": "Console night with friends",
+      "place": "Approximate city location · not an exact venue pin",
+      "meta": "Nov 3, 5:00 PM",
+      "cat": "🎮 PlayStation",
+      "markerLit": false,
+      "markerKind": null,
+      "markerCount": null,
+      "markerCityId": null,
+      "sessionDismissed": "1",
+      "clippedByStage": false,
+      "spotRect": null,
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "afterDismissReload": {
+      "exists": true,
+      "hiddenAttr": false,
+      "computedDisplay": "block",
+      "title": "Console night with friends",
+      "place": "Approximate city location · not an exact venue pin",
+      "meta": "Nov 3, 5:00 PM",
+      "cat": "🎮 PlayStation",
+      "markerLit": true,
+      "markerKind": "city-aggregate",
+      "markerCount": "3",
+      "markerCityId": "11",
+      "sessionDismissed": null,
+      "clippedByStage": false,
+      "spotRect": {
+        "w": 392,
+        "h": 230,
+        "top": 609,
+        "left": 929
+      },
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "keyboardRail": {
+      "before": 2,
+      "after": 298,
+      "moved": true
+    },
+    "mobileDismiss": {
+      "exists": true,
+      "hiddenAttr": true,
+      "computedDisplay": "none",
+      "title": "Console night with friends",
+      "place": "Approximate city location · not an exact venue pin",
+      "meta": "Nov 3, 5:00 PM",
+      "cat": "🎮 PlayStation",
+      "markerLit": false,
+      "markerKind": null,
+      "markerCount": null,
+      "markerCityId": null,
+      "sessionDismissed": "1",
+      "clippedByStage": false,
+      "spotRect": null,
+      "carouselCards": 17,
+      "aggMarkers": 5
+    },
+    "homepageIsolation": true
+  }
+}

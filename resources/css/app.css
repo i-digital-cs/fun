@@ -4115,3 +4115,143 @@ html[data-page-loading='1'] {
     outline: 2px solid #ff762e;
     outline-offset: 2px;
 }
+
+/* Premium in-page media viewer (chat / gallery) */
+html.fun-media-viewer-open {
+    overflow: hidden;
+}
+
+.fun-media-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+}
+
+.fun-media-viewer[hidden] {
+    display: none !important;
+}
+
+.fun-media-viewer__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(15 23 42 / 0.82);
+    backdrop-filter: blur(10px);
+}
+
+.fun-media-viewer__stage {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    max-width: min(96vw, 1100px);
+    max-height: 92vh;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+}
+
+.fun-media-viewer__frame {
+    position: relative;
+    display: grid;
+    place-items: center;
+    max-width: 100%;
+    max-height: calc(92vh - 4.5rem);
+    overflow: hidden;
+}
+
+.fun-media-viewer__img,
+.fun-media-viewer__video {
+    max-width: 100%;
+    max-height: calc(92vh - 4.5rem);
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.45);
+    transition: transform 0.15s ease;
+    transform-origin: center center;
+}
+
+.fun-media-viewer__video {
+    background: #0f172a;
+    width: min(100%, 960px);
+    aspect-ratio: 16 / 9;
+}
+
+.fun-media-viewer__loading,
+.fun-media-viewer__error {
+    color: #e2e8f0;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.fun-media-viewer__close,
+.fun-media-viewer__nav,
+.fun-media-viewer__toolbar button {
+    border: 0;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.12);
+    color: #f8fafc;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.fun-media-viewer__close:hover,
+.fun-media-viewer__nav:hover,
+.fun-media-viewer__toolbar button:hover {
+    background: rgb(255 255 255 / 0.22);
+}
+
+.fun-media-viewer__close:focus-visible,
+.fun-media-viewer__nav:focus-visible,
+.fun-media-viewer__toolbar button:focus-visible {
+    outline: 2px solid #ff762e;
+    outline-offset: 2px;
+}
+
+.fun-media-viewer__close {
+    position: absolute;
+    top: 0.25rem;
+    inset-inline-end: 0.25rem;
+    z-index: 2;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.fun-media-viewer__nav {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 2.75rem;
+    height: 2.75rem;
+    transform: translateY(-50%);
+}
+
+.fun-media-viewer__nav--prev {
+    inset-inline-start: 0.25rem;
+}
+
+.fun-media-viewer__nav--next {
+    inset-inline-end: 0.25rem;
+}
+
+.fun-media-viewer__toolbar {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.fun-media-viewer__toolbar button {
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding-inline: 0.75rem;
+    font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fun-media-viewer__img {
+        transition: none;
+    }
+}

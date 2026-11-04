@@ -145,7 +145,7 @@ export function buildFunnityStyle(baseStyle) {
     style.name = 'Funnity Living Map';
     style.metadata = {
         ...(style.metadata || {}),
-        'funnity:theme': 'living-map-v3.2',
+        'funnity:theme': 'living-map-v3.4',
         'funnity:base': 'openfreemap-liberty',
         'funnity:rtl': 'requires maplibre setRTLTextPlugin',
     };
