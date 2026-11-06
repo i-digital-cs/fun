@@ -70,7 +70,7 @@
         </div>
     </div>
 
-    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3" data-event-qv-list>
         @foreach ($eventItems as $event)
             <x-events.card
                 :event="$event"
@@ -130,7 +130,7 @@
                 </h3>
                 <p class="mt-1 text-sm text-[#64748B]">{{ __('events.worth_the_trip_sub') }}</p>
             </div>
-            <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3" data-event-qv-list>
                 @foreach ($worthItems as $event)
                     <x-events.card
                         :event="$event"

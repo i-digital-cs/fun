@@ -559,15 +559,34 @@ export async function createLivingMap(root) {
         if (searchAreaBtn) searchAreaBtn.hidden = true;
     };
 
-    const highlightDiscoverCard = (eventId) => {
+    let selectGen = 0;
+
+    const highlightDiscoverCard = (eventId, { scroll = true } = {}) => {
         if (!isDiscover) return;
         document.querySelectorAll('[data-discover-result-card]').forEach((el) => {
             el.classList.toggle('is-active', String(el.dataset.eventId) === String(eventId));
         });
+        if (!scroll) return;
+        // Never scroll the document while Quick View locks the page — only the list pane.
+        if (document.documentElement.dataset.eventQvOpen === '1') return;
         const active = document.querySelector(
             `[data-discover-result-card][data-event-id="${eventId}"]`
         );
-        active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        const pane = document.getElementById('discover-results');
+        if (active && pane && pane.contains(active)) {
+            const paneRect = pane.getBoundingClientRect();
+            const cardRect = active.getBoundingClientRect();
+            if (cardRect.top < paneRect.top || cardRect.bottom > paneRect.bottom) {
+                const nextTop =
+                    pane.scrollTop + (cardRect.top - paneRect.top) - pane.clientHeight / 2 + cardRect.height / 2;
+                pane.scrollTo({
+                    top: Math.max(0, nextTop),
+                    behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+                });
+            }
+            return;
+        }
+        active?.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
     };
 
     const loadPayload = (bounds, zoom, opts = {}) =>
@@ -834,13 +853,209 @@ export async function createLivingMap(root) {
         spotlightMarkerEl = null;
     };
 
+    /** Track last placement so move/zoom/resize can reflow without inventing coords. */
+    let cardPlacement = null; // { mode: 'anchored'|'docked', lngLat?: [number, number] }
+
+    const resetCardChrome = (card) => {
+        if (!card) return;
+        // Clear both normal + !important inline overrides (mobile Blade uses top:auto !important).
+        ['left', 'top', 'right', 'bottom', 'width', 'max-height', 'overflow', 'inset'].forEach((prop) => {
+            card.style.removeProperty(prop);
+        });
+        const media = card.querySelector('[data-lm-card-media]');
+        if (media) {
+            media.style.display = '';
+            media.style.maxHeight = '';
+            media.querySelector('img, .lm-card__fallback')?.style.removeProperty('height');
+            media.querySelector('img, .lm-card__fallback')?.style.removeProperty('max-height');
+        }
+    };
+
+    const isNarrowViewport = () =>
+        typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
+
+    /** Home/short stages and Discover mobile use a fixed-size strip — never overflow:auto. */
+    const enableCompactPreview = (card) => {
+        if (!card) return;
+        card.classList.add('is-compact');
+        const media = card.querySelector('[data-lm-card-media]');
+        if (media) {
+            media.style.display = '';
+            media.style.maxHeight = '';
+            media.querySelector('img, .lm-card__fallback')?.style.removeProperty('height');
+            media.querySelector('img, .lm-card__fallback')?.style.removeProperty('max-height');
+        }
+        card.style.overflow = 'hidden';
+        card.style.removeProperty('max-height');
+    };
+
+    const disableCompactPreview = (card) => {
+        if (!card) return;
+        card.classList.remove('is-compact');
+    };
+
     const closeCard = () => {
         const card = root.querySelector('[data-lm-card]');
         if (!card) return;
-        card.classList.remove('is-open');
+        cardPlacement = null;
+        card.classList.remove('is-open', 'is-docked', 'is-anchored', 'is-approx', 'is-compact');
+        resetCardChrome(card);
         setTimeout(() => {
-            card.hidden = true;
+            if (!card.classList.contains('is-open')) card.hidden = true;
         }, 240);
+    };
+
+    const stageLocalRect = (el, stageRect, pad = 0) => {
+        if (!el || el.hidden || (el.hasAttribute && el.hasAttribute('hidden'))) return null;
+        const r = el.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) return null;
+        // Skip controls that do not intersect the stage at all.
+        if (r.bottom < stageRect.top || r.top > stageRect.bottom || r.right < stageRect.left || r.left > stageRect.right) {
+            return null;
+        }
+        return {
+            left: r.left - stageRect.left - pad,
+            top: r.top - stageRect.top - pad,
+            right: r.right - stageRect.left + pad,
+            bottom: r.bottom - stageRect.top + pad,
+        };
+    };
+
+    /**
+     * Free rectangle inside the map stage after reserving HUD / loc / search / city panel.
+     * Uses edge insets (not candidate guessing) so full-width mobile docks clear controls.
+     */
+    const freeCardBand = () => {
+        if (!stage) return null;
+        const stageRect = stage.getBoundingClientRect();
+        const margin = Math.max(8, Math.min(14, Math.round(stageRect.width * 0.03)));
+        let top = margin;
+        let right = stageRect.width - margin;
+        let bottom = stageRect.height - margin;
+        let left = margin;
+
+        const eat = (box) => {
+            if (!box) return;
+            const midX = stageRect.width / 2;
+            const midY = stageRect.height / 2;
+            const cx = (box.left + box.right) / 2;
+            const cy = (box.top + box.bottom) / 2;
+            // Prefer carving from the edge the control sits on.
+            const fromTop = box.bottom;
+            const fromBottom = stageRect.height - box.top;
+            const fromStart = box.right;
+            const fromEnd = stageRect.width - box.left;
+            if (cy < midY && fromTop < stageRect.height * 0.55) {
+                top = Math.max(top, box.bottom + 6);
+            } else if (cy >= midY && fromBottom < stageRect.height * 0.55) {
+                bottom = Math.min(bottom, box.top - 6);
+            }
+            // Narrow side columns (HUD) — shrink horizontal free band only when control is tall/side.
+            if (box.bottom - box.top > stageRect.height * 0.2) {
+                if (cx < midX && fromStart < stageRect.width * 0.45) {
+                    left = Math.max(left, box.right + 6);
+                } else if (cx >= midX && fromEnd < stageRect.width * 0.45) {
+                    right = Math.min(right, box.left - 6);
+                }
+            }
+        };
+
+        eat(stageLocalRect(root.querySelector('[data-lm-loc-panel]'), stageRect, 6));
+        eat(stageLocalRect(root.querySelector('.lm-hud'), stageRect, 6));
+        eat(stageLocalRect(root.querySelector('[data-lm-city-panel]:not([hidden])'), stageRect, 6));
+        eat(stageLocalRect(searchAreaBtn, stageRect, 8));
+        // MapLibre attribution / compass often sit bottom-end.
+        eat(stageLocalRect(stage.querySelector('.maplibregl-ctrl-bottom-right'), stageRect, 4));
+        eat(stageLocalRect(stage.querySelector('.maplibregl-ctrl-bottom-left'), stageRect, 4));
+        // Discover mobile: keep member bottom tab bar clear of the preview.
+        if (isDiscover && isNarrowViewport()) {
+            const tabbar =
+                document.querySelector('[data-dashboard-mobile-nav]') ||
+                document.querySelector('nav[aria-label="Primary"]');
+            const tabBox = stageLocalRect(tabbar, stageRect, 8);
+            if (tabBox) eat(tabBox);
+            else bottom = Math.min(bottom, stageRect.height - margin - 56);
+        }
+
+        if (bottom - top < 96) {
+            // Extremely short free band — fall back to stage margins only.
+            top = margin;
+            bottom = stageRect.height - margin;
+            left = margin;
+            right = stageRect.width - margin;
+        }
+        return {
+            stageW: stageRect.width,
+            stageH: stageRect.height,
+            left,
+            top,
+            right,
+            bottom,
+            width: Math.max(0, right - left),
+            height: Math.max(0, bottom - top),
+            margin,
+        };
+    };
+
+    const applyCardBox = (card, x, y, w, maxH = null) => {
+        // Use !important so free-band coords win over mobile Blade rules:
+        // `@media (max-width:639px){ .lm-card { top:auto !important; bottom:.55rem; ... } }`
+        // Set `inset` as one shorthand — browsers collapse top/left/right/bottom into
+        // `inset`, and removeProperty('inset') would wipe the placement.
+        card.style.setProperty('width', `${Math.max(120, w)}px`, 'important');
+        card.style.setProperty(
+            'inset',
+            `${Math.max(0, y)}px auto auto ${Math.max(0, x)}px`,
+            'important'
+        );
+        if (maxH != null) card.style.setProperty('max-height', `${Math.max(96, maxH)}px`, 'important');
+        else card.style.removeProperty('max-height');
+    };
+
+    const compactCardMedia = (card, bandH) => {
+        const media = card.querySelector('[data-lm-card-media]');
+        if (!media) return;
+        // Scale hero media to leave room for title + CTA inside the free band.
+        let mediaH = 0;
+        if (bandH < 170) mediaH = 0;
+        else if (bandH < 220) mediaH = 48;
+        else if (bandH < 280) mediaH = 64;
+        else if (bandH < 360) mediaH = 72;
+        else mediaH = 0; // leave default
+        if (mediaH === 0 && bandH < 170) {
+            media.style.display = 'none';
+            media.style.maxHeight = '';
+            return;
+        }
+        media.style.display = '';
+        if (mediaH > 0) {
+            media.style.maxHeight = `${mediaH}px`;
+            media.querySelector('img, .lm-card__fallback')?.style.setProperty('height', `${mediaH}px`);
+            media.querySelector('img, .lm-card__fallback')?.style.setProperty('max-height', `${mediaH}px`);
+        } else {
+            media.style.maxHeight = '';
+            media.querySelector('img, .lm-card__fallback')?.style.removeProperty('height');
+            media.querySelector('img, .lm-card__fallback')?.style.removeProperty('max-height');
+        }
+    };
+
+    const measureCardSize = (card, preferredW) => {
+        // !important — mobile Blade sets `.lm-card { width: auto !important }` which
+        // otherwise expands the card before we can measure the intended width.
+        card.style.setProperty('width', `${preferredW}px`, 'important');
+        const h = Math.ceil(card.getBoundingClientRect().height || 0);
+        const w = Math.ceil(card.getBoundingClientRect().width || preferredW);
+        const minH = card.classList.contains('is-compact') ? 64 : 96;
+        return { w: Math.min(w, preferredW), h: Math.max(h, minH) };
+    };
+
+    const clampIntoBand = (x, y, w, h, band) => {
+        const maxX = Math.max(band.left, band.right - w);
+        const maxY = Math.max(band.top, band.bottom - h);
+        return {
+            x: Math.min(Math.max(x, band.left), maxX),
+            y: Math.min(Math.max(y, band.top), maxY),
+        };
     };
 
     const markerInStage = (el) => {
@@ -999,6 +1214,10 @@ export async function createLivingMap(root) {
         }
         spotlightEvent = item;
         spotlightEl.hidden = false;
+        spotlightEl.setAttribute('data-event-id', String(item.id || ''));
+        spotlightEl
+            .querySelector('[data-lm-spotlight-open]')
+            ?.setAttribute('data-event-id', String(item.id || ''));
         // Connect spotlight to its real map marker when that marker is on-screen.
         // Defer one frame so aggregate fitBounds / paint layout settle.
         requestAnimationFrame(() => highlightSpotlightMarker(item));
@@ -1032,45 +1251,188 @@ export async function createLivingMap(root) {
         });
     };
 
-    const placeCard = (point) => {
+    /**
+     * Home/Public — compact bottom preview.
+     * Never fits a tall card beside a marker on the short (~280px) stage; marker stays visible.
+     * Exact vs city differs only by camera (handled in selectEvent), not by card chrome.
+     */
+    const dockCardHome = () => {
         const card = root.querySelector('[data-lm-card]');
         if (!card || !stage) return;
-        const rect = stage.getBoundingClientRect();
-        const w = Math.min(isV35 ? 368 : 280, rect.width - 24);
-        const lift = isV35 ? 150 : 220;
-        const floorPad = isV35 ? 36 : 240;
-        let x = Math.min(Math.max(point.x - w / 2, 12), rect.width - w - 12);
-        let y = Math.min(Math.max(point.y - lift, 56), rect.height - floorPad);
-        // Keep card above pin; if clipped at top, flip below.
-        if (y < 56 && isV35) {
-            y = Math.min(point.y + 18, rect.height - 140);
-        }
-        // V3.5: keep card clear of the location filter (top-start).
-        if (isV35 && rect.width >= 640) {
-            const loc = root.querySelector('[data-lm-loc-panel]');
-            const locW = (loc?.offsetWidth || 280) + 16;
-            const locH = (loc?.offsetHeight || 220) + 12;
-            if (x < locW && y < locH) {
-                // Prefer right of filter; else sit below it near the pin.
-                const preferRight = point.x > locW * 0.55 || rect.width - locW > w + 40;
-                if (preferRight) {
-                    x = Math.min(Math.max(Math.max(point.x - w / 2, locW + 10), 12), rect.width - w - 12);
-                    if (x < locW && y < locH) y = Math.min(Math.max(locH + 8, point.y - 40), rect.height - 140);
-                } else {
-                    y = Math.min(Math.max(locH + 8, point.y - 40), rect.height - 140);
-                }
-            }
-        }
-        card.style.width = `${w}px`;
-        card.style.left = `${x}px`;
-        card.style.top = `${y}px`;
-        card.style.right = 'auto';
+        cardPlacement = { mode: 'docked' };
+
+        const layout = () => {
+            card.classList.add('is-docked');
+            card.classList.remove('is-anchored');
+            enableCompactPreview(card);
+
+            const stageRect = stage.getBoundingClientRect();
+            const margin = isNarrowViewport() ? 8 : 12;
+            const preferredW = Math.min(
+                isNarrowViewport() ? stageRect.width - margin * 2 : 360,
+                Math.max(160, stageRect.width - margin * 2)
+            );
+            const { w, h } = measureCardSize(card, preferredW);
+            const x = (stageRect.width - w) / 2;
+            const y = stageRect.height - h - margin;
+            const maxX = Math.max(margin, stageRect.width - w - margin);
+            const maxY = Math.max(margin, stageRect.height - h - margin);
+            applyCardBox(
+                card,
+                Math.min(Math.max(x, margin), maxX),
+                Math.min(Math.max(y, margin), maxY),
+                w,
+                null
+            );
+            card.style.overflow = 'hidden';
+        };
+
+        layout();
+        requestAnimationFrame(layout);
     };
 
-    const openEventCard = (item, theme) => {
+    /**
+     * Home exact selection still calls placeCard after camera — route to compact dock
+     * so the marker remains visible in the open map area above the strip.
+     */
+    const placeCardHome = () => {
+        dockCardHome();
+    };
+
+    /**
+     * Discover — marker-anchored preview when free-band height allows; otherwise compact dock.
+     * Never uses overflow:auto scrollbars inside the preview.
+     */
+    const placeCardDiscover = (point) => {
+        const card = root.querySelector('[data-lm-card]');
+        if (!card || !stage || !point) return;
+        const band = freeCardBand();
+        if (!band || band.width < 120 || band.height < 72) {
+            dockCardDiscover();
+            return;
+        }
+
+        const useCompact = isNarrowViewport() || band.height < 240;
+        if (useCompact) enableCompactPreview(card);
+        else disableCompactPreview(card);
+
+        card.classList.add('is-anchored');
+        card.classList.remove('is-docked');
+
+        const preferredW = Math.min(
+            useCompact ? (band.width < 420 ? band.width : 360) : isV35 ? (band.width < 420 ? band.width : 360) : 280,
+            band.width
+        );
+
+        const layoutOnce = () => {
+            if (useCompact) enableCompactPreview(card);
+            else {
+                disableCompactPreview(card);
+                compactCardMedia(card, band.height);
+            }
+            const { w, h: rawH } = measureCardSize(card, preferredW);
+            // Compact strip should always fit; if not, fall back to dock (no scrollbar).
+            if (rawH > band.height + 2) {
+                dockCardDiscover();
+                return;
+            }
+            const h = rawH;
+            card.style.maxHeight = '';
+            card.style.overflow = 'hidden';
+            const gap = 12;
+            const preferAboveY = point.y - h - gap;
+            const preferBelowY = point.y + gap;
+            const preferX = point.x - w / 2;
+            let y = preferAboveY;
+            if (preferAboveY < band.top && preferBelowY + h <= band.bottom) {
+                y = preferBelowY;
+            } else if (preferAboveY < band.top) {
+                y = band.top;
+            }
+            const clamped = clampIntoBand(preferX, y, w, h, band);
+            applyCardBox(card, clamped.x, clamped.y, w, null);
+        };
+
+        layoutOnce();
+        requestAnimationFrame(layoutOnce);
+    };
+
+    /**
+     * Discover — free-band dock for city/none (and mobile fallback). No invented coords.
+     */
+    const dockCardDiscover = () => {
+        const card = root.querySelector('[data-lm-card]');
+        if (!card || !stage) return;
+        cardPlacement = { mode: 'docked' };
+
+        const layout = () => {
+            const band = freeCardBand();
+            if (!band || band.width < 120 || band.height < 72) return;
+            card.classList.add('is-docked');
+            card.classList.remove('is-anchored');
+            enableCompactPreview(card);
+
+            const preferredW = Math.min(
+                isNarrowViewport() ? band.width : Math.min(360, band.width),
+                band.width
+            );
+            const { w, h } = measureCardSize(card, preferredW);
+            card.style.maxHeight = '';
+            card.style.overflow = 'hidden';
+            const x = band.left + (band.width - w) / 2;
+            const y = band.bottom - h;
+            const clamped = clampIntoBand(x, y, w, h, band);
+            applyCardBox(card, clamped.x, clamped.y, w, null);
+        };
+
+        layout();
+        requestAnimationFrame(layout);
+    };
+
+    /**
+     * Anchor or dock the floating card.
+     * Mode from createLivingMap `mode` (`discover` | `home` | `public`), not URL/height.
+     */
+    const placeCard = (point) => {
+        if (isDiscover) placeCardDiscover(point);
+        else placeCardHome(point);
+    };
+
+    /**
+     * Panel-local preview when the event has no trusted exact coordinates.
+     * Never invents a map anchor.
+     */
+    const dockCardInPanel = () => {
+        if (isDiscover) dockCardDiscover();
+        else dockCardHome();
+    };
+
+    const syncCardPosition = () => {
+        if (!cardPlacement || !map) return;
+        const card = root.querySelector('[data-lm-card]');
+        if (!card || card.hidden || !card.classList.contains('is-open')) return;
+        if (cardPlacement.mode === 'anchored' && Array.isArray(cardPlacement.lngLat)) {
+            try {
+                placeCard(map.project(cardPlacement.lngLat));
+            } catch {
+                /* map may be mid-destroy */
+            }
+            return;
+        }
+        if (cardPlacement.mode === 'docked') {
+            dockCardInPanel();
+        }
+    };
+
+    const openEventCard = (item, theme, opts = {}) => {
         const card = root.querySelector('[data-lm-card]');
         if (!card) return;
+        const exact =
+            opts.exact === true ||
+            item.location_precision === 'exact' ||
+            item.has_exact_coordinates === true;
         card.hidden = false;
+        card.classList.toggle('is-approx', !exact);
         const media = card.querySelector('[data-lm-card-media]');
         const imageUrl = typeof item.image_url === 'string' ? item.image_url.trim() : '';
         const paintFallback = () => {
@@ -1099,16 +1461,32 @@ export async function createLivingMap(root) {
             if (live) liveEl.textContent = i18n.liveNow || 'Live Now';
         }
 
+        const precisionEl = card.querySelector('[data-lm-card-precision]');
+        if (precisionEl) {
+            if (exact) {
+                precisionEl.hidden = true;
+                precisionEl.textContent = '';
+            } else {
+                precisionEl.hidden = false;
+                precisionEl.textContent =
+                    i18n.preciseLocationUnavailable ||
+                    i18n.cityLevelPreview ||
+                    i18n.approximateCityLocation ||
+                    'Precise map location unavailable';
+            }
+        }
+
         const distKm = eventDistanceKm(item);
         const distLabel = formatDistanceLabel(distKm, i18n);
         const placeEl = card.querySelector('[data-lm-card-place]');
         if (placeEl) {
             const placeBits = [];
             if (item.venue_label) placeBits.push(item.venue_label);
+            else if (item.city_name) placeBits.push(item.city_name);
             else if (origin.label) placeBits.push(origin.label);
             if (distLabel) placeBits.push(distLabel);
-            if (item.location_precision && item.location_precision !== 'exact') {
-                placeBits.push(i18n.approximateCityLocation);
+            if (!exact) {
+                placeBits.push(i18n.cityLevelPreview || i18n.approximateCityLocation);
             }
             const when = formatEventWhen(item);
             if (when) placeBits.push(when);
@@ -1155,8 +1533,8 @@ export async function createLivingMap(root) {
         if (item.venue_label) bits.push(item.venue_label);
         if (distLabel) bits.push(distLabel);
         if (when) bits.push(when);
-        if (item.location_precision && item.location_precision !== 'exact') {
-            bits.push(i18n.approximateCityLocation);
+        if (!exact) {
+            bits.push(i18n.preciseLocationUnavailable || i18n.approximateCityLocation);
         }
         if (item.members_count != null && Number(item.members_count) > 0) {
             bits.push(fillTemplate(i18n.going, { count: item.members_count }));
@@ -1168,9 +1546,19 @@ export async function createLivingMap(root) {
         }
         const link = card.querySelector('[data-lm-card-link]');
         if (link) {
-            if (!isV35) link.textContent = i18n.viewEvent;
+            const detailsLabel = i18n.viewDetails || i18n.viewEvent || 'View details';
+            if (!isV35) {
+                link.textContent = detailsLabel;
+            } else if (!exact) {
+                link.textContent = detailsLabel;
+            } else {
+                link.textContent = '›';
+            }
             link.href = item.url || (item.id ? `/events/${item.id}` : root.dataset.eventsUrl || '/events');
-            link.setAttribute('aria-label', i18n.viewEvent);
+            link.setAttribute('aria-label', detailsLabel);
+            link.setAttribute('data-event-id', String(item.id || ''));
+            link.setAttribute('data-no-loader', '1');
+            // Quick View intercepts [data-lm-card-link] (see event-quick-view.js).
         }
         requestAnimationFrame(() => card.classList.add('is-open'));
     };
@@ -1261,7 +1649,9 @@ export async function createLivingMap(root) {
                     <span class="lm-rail__meta" dir="auto">${escapeHtml(metaBits.join(' · '))}</span>
                     <div class="lm-rail__foot">
                       <span class="lm-rail__going">${escapeHtml(going)}</span>
-                      <a class="lm-rail__go" href="${escapeHtml(href)}" aria-label="${escapeHtml(
+                      <a class="lm-rail__go" href="${escapeHtml(href)}" data-event-id="${escapeHtml(
+                          String(item.id)
+                      )}" data-no-loader="1" aria-label="${escapeHtml(
                           i18n.viewEvent
                       )}">${isRtl ? '‹' : '›'}</a>
                     </div>
@@ -1292,7 +1682,7 @@ export async function createLivingMap(root) {
                 const item = listEvents.find((e) => String(e.id) === card.dataset.lmListEvent);
                 if (!item) return;
                 if (viewMode === 'list') setViewMode('map');
-                selectEvent(item);
+                selectEvent(enrichItemExactCoords(item));
             };
             card.addEventListener('click', (e) => {
                 if (e.target.closest('a.lm-rail__go')) return;
@@ -1399,25 +1789,53 @@ export async function createLivingMap(root) {
         }
     };
 
+    /**
+     * List/API rows sometimes omit lat/lng even when an exact pin is on the map.
+     * Enrich from the painted exact-event queue only — never invent coordinates.
+     */
+    const enrichItemExactCoords = (item) => {
+        if (!item?.id) return item;
+        const hasCoords =
+            Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
+        if (
+            hasCoords &&
+            (item.location_precision === 'exact' || item.has_exact_coordinates === true)
+        ) {
+            return item;
+        }
+        const fromTour = eventTourQueue.find((e) => String(e.id) === String(item.id));
+        if (
+            fromTour &&
+            Number.isFinite(Number(fromTour.latitude)) &&
+            Number.isFinite(Number(fromTour.longitude))
+        ) {
+            item.latitude = Number(fromTour.latitude);
+            item.longitude = Number(fromTour.longitude);
+            item.has_exact_coordinates = true;
+            item.location_precision = 'exact';
+        } else if (pinByEventId.has(String(item.id)) && hasCoords) {
+            // Pin registry is exact-only; promote precision when coords already present.
+            item.has_exact_coordinates = true;
+            item.location_precision = 'exact';
+        }
+        return item;
+    };
+
     const selectEvent = async (item, el = null, opts = {}) => {
+        const gen = ++selectGen;
         stopTour(false);
+        enrichItemExactCoords(item);
         selectedEventId = item.id;
         const theme = themeFor(item.category_name);
         const exact =
             item.location_precision === 'exact' || item.has_exact_coordinates === true;
-        let pin = el || pinByEventId.get(String(item.id)) || null;
-        // Approximate events share a city aggregate teardrop — highlight that marker.
-        if (!pin && isV35 && !exact) {
-            pin = findAggElForEvent(item);
+        // Exact-event pins only — never treat a city aggregate / cluster as this event's marker.
+        const mappedPin = pinByEventId.get(String(item.id)) || null;
+        let pin = el && pinByEventId.get(String(item.id)) === el ? el : mappedPin;
+        if (pin?.classList.contains('lm-marker--agg')) {
+            pin = null;
         }
-        // Keep city aggregate selected when opening an approx event from the city list (no exact pin).
-        const keepAgg =
-            isV35 &&
-            !pin &&
-            selectedEl?.classList.contains('lm-marker--agg') &&
-            (activeCityEvents.some((e) => String(e.id) === String(item.id)) ||
-                (item.city_id != null && selectedEl.dataset.cityId === String(item.city_id)));
-        if (selectedEl && selectedEl !== pin && !keepAgg) {
+        if (selectedEl && selectedEl !== pin) {
             selectedEl.classList.remove('is-selected', 'is-pulse');
             if (selectedEl.classList.contains('lm-marker') && !selectedEl.classList.contains('lm-marker--agg')) {
                 const t = themeFor(selectedEl.dataset.cat);
@@ -1439,7 +1857,7 @@ export async function createLivingMap(root) {
                 }
             }
         }
-        if (!keepAgg) selectedEl = pin;
+        selectedEl = pin;
         if (pin?.classList.contains('lm-marker') && !pin.classList.contains('lm-marker--agg')) {
             pin.dataset.cat = item.category_name || '';
             pin.style.color = theme.color;
@@ -1465,40 +1883,88 @@ export async function createLivingMap(root) {
         }
         // Spotlight yields to the interactive floating card.
         if (isV35) hideSpotlight();
-        openEventCard(item, theme);
+        const hasExactCoords =
+            exact && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
+        openEventCard(item, theme, { exact: hasExactCoords });
         highlightList(item.id);
-        if (isDiscover) highlightDiscoverCard(item.id);
+        if (isDiscover) highlightDiscoverCard(item.id, { scroll: opts.scrollList !== false });
         // V3.5 location filter owns city label — do not overwrite with event title.
         if (!isV35) {
-            setFocus(item.title || '', exact ? i18n.exactVenue : i18n.approximateCityLocation);
+            setFocus(
+                item.title || '',
+                hasExactCoords
+                    ? i18n.exactVenue
+                    : i18n.preciseLocationUnavailable || i18n.approximateCityLocation
+            );
         } else if (statusEl) {
             statusEl.textContent = item.title || '';
         }
         const skipCamera = opts.skipCamera === true;
-        if (!skipCamera && exact && item.latitude != null && item.longitude != null) {
-            markProgrammaticMove(1700);
-            await animateCamera(
-                map,
-                {
-                    center: [item.longitude, item.latitude],
-                    zoom: Math.max(map.getZoom(), 12.6),
-                    pitch: prefersReducedMotion() ? 0 : isV35 ? 44 : 52,
-                    bearing: (map.getBearing() + 14) % 360,
-                },
-                1500
-            );
-            placeCard(map.project([item.longitude, item.latitude]));
-        } else if (item.latitude != null && item.longitude != null) {
-            // Approximate pins stay at city scale — still anchor the floating card to the pin.
-            placeCard(map.project([item.longitude, item.latitude]));
-        } else if (activeCityId && payloadCache) {
-            const city = (payloadCache.city_aggregates || []).find(
-                (c) => String(c.city_id) === String(activeCityId)
-            );
-            if (city?.latitude != null) placeCard(map.project([city.longitude, city.latitude]));
+        // Camera + marker-anchored card only at trusted event-specific coordinates.
+        // Missing exact coords → dock a labeled preview inside the map panel (no invented pin).
+        if (hasExactCoords) {
+            if (!skipCamera) {
+                markProgrammaticMove(1700);
+                await animateCamera(
+                    map,
+                    {
+                        center: [item.longitude, item.latitude],
+                        zoom: Math.max(map.getZoom(), 12.6),
+                        pitch: prefersReducedMotion() ? 0 : isV35 ? 44 : 52,
+                        bearing: (map.getBearing() + 14) % 360,
+                    },
+                    1500
+                );
+            }
+            if (gen !== selectGen) return;
+            if (isDiscover) {
+                cardPlacement = {
+                    mode: 'anchored',
+                    lngLat: [Number(item.longitude), Number(item.latitude)],
+                };
+                placeCard(map.project(cardPlacement.lngLat));
+            } else {
+                // Home/Public: camera focuses the pin; compact dock keeps the marker visible.
+                dockCardHome();
+            }
+        } else {
+            dockCardInPanel();
         }
         const idx = activeCityEvents.findIndex((e) => String(e.id) === String(item.id));
         if (idx >= 0) cityEventCursor = idx;
+    };
+
+    /**
+     * Fallback item from Discover SSR card markup.
+     * Uses only exact event lat/lng from data-lat/data-lng — never city centers.
+     */
+    const itemFromDiscoverCard = (card) => {
+        const id = card.dataset.eventId || card.dataset.id;
+        if (!id) return null;
+        const lat = card.dataset.lat != null && card.dataset.lat !== '' ? Number(card.dataset.lat) : null;
+        const lng = card.dataset.lng != null && card.dataset.lng !== '' ? Number(card.dataset.lng) : null;
+        const geo = card.dataset.geo || '';
+        const exact = geo === 'exact' && Number.isFinite(lat) && Number.isFinite(lng);
+        const title =
+            card.querySelector('h3 a, h3')?.textContent?.trim() ||
+            card.getAttribute('aria-label') ||
+            '';
+        return {
+            id: Number(id) || id,
+            title,
+            latitude: exact ? lat : null,
+            longitude: exact ? lng : null,
+            has_exact_coordinates: exact,
+            // 'exact' | city-level SSR (`data-geo=city`) | none — never promote city to exact.
+            location_precision: exact ? 'exact' : geo === 'city' ? 'city' : 'none',
+            city_id: card.dataset.cityId || null,
+            city_name: card.dataset.cityName || null,
+            venue_label:
+                [...card.querySelectorAll('p')].find((p) =>
+                    /\btext-slate-600\b/.test(p.className || '')
+                )?.textContent?.trim() || null,
+            url: card.querySelector('a[href*="/events/"]')?.getAttribute('href') || `/events/${id}`,
+        };
     };
 
     const enterCity = async (item, el) => {
@@ -2185,7 +2651,11 @@ export async function createLivingMap(root) {
     map.on('movestart', (e) => {
         if (e.originalEvent) stopTour();
     });
+    map.on('move', () => {
+        if (cardPlacement?.mode === 'anchored') syncCardPosition();
+    });
     map.on('moveend', () => {
+        syncCardPosition();
         if (!isDiscover || !searchAreaBtn) return;
         if (Date.now() < programmaticMoveUntil) return;
         searchAreaBtn.hidden = false;
@@ -2242,9 +2712,11 @@ export async function createLivingMap(root) {
 
     const onDiscoverCardClick = (e) => {
         if (!isDiscover) return;
+        if (e.defaultPrevented) return;
         const card = e.target.closest('[data-discover-result-card]');
         if (!card) return;
         const link = e.target.closest('a[href]');
+        // View details is owned by Event Quick View (capture). Do not fight it.
         if (
             link &&
             /\/events\/\d+/.test(link.getAttribute('href') || '') &&
@@ -2261,11 +2733,35 @@ export async function createLivingMap(root) {
         if (!id) return;
         const fromList = listEvents.find((x) => String(x.id) === String(id));
         const fromPins = eventTourQueue.find((x) => String(x.id) === String(id));
-        const item = fromList || fromPins;
-        if (item) {
-            selectEvent(item, pinByEventId.get(String(id))).catch(() => {});
-            highlightDiscoverCard(id);
+        const fromSsr = itemFromDiscoverCard(card);
+        const item = fromList || fromPins || fromSsr;
+        if (!item) return;
+        // Discover SSR carries trusted data-lat/lng; map/list API rows may omit them.
+        // Enrich only — never invent coords that are absent from both sources.
+        if (
+            fromSsr?.has_exact_coordinates &&
+            Number.isFinite(Number(fromSsr.latitude)) &&
+            Number.isFinite(Number(fromSsr.longitude)) &&
+            !(
+                Number.isFinite(Number(item.latitude)) &&
+                Number.isFinite(Number(item.longitude))
+            )
+        ) {
+            item.latitude = fromSsr.latitude;
+            item.longitude = fromSsr.longitude;
+            item.has_exact_coordinates = true;
+            item.location_precision = 'exact';
         }
+        const hasExactCoords =
+            (item.location_precision === 'exact' || item.has_exact_coordinates === true) &&
+            Number.isFinite(Number(item.latitude)) &&
+            Number.isFinite(Number(item.longitude));
+        // Prefer the pin registered for this exact event id only.
+        const pin = pinByEventId.get(String(id)) || null;
+        selectEvent(item, pin, {
+            skipCamera: !hasExactCoords,
+        }).catch(() => {});
+        highlightDiscoverCard(id);
     };
     document.addEventListener('click', onDiscoverCardClick);
 
@@ -2372,7 +2868,14 @@ export async function createLivingMap(root) {
     spotlightEl?.querySelector('[data-lm-spotlight-open]')?.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!spotlightEvent) return;
-        // Open details without camera navigation (spotlight must not auto-fly).
+        spotlightEl?.setAttribute('data-event-id', String(spotlightEvent.id || ''));
+        const openBtn = spotlightEl.querySelector('[data-lm-spotlight-open]');
+        openBtn?.setAttribute('data-event-id', String(spotlightEvent.id || ''));
+        // Prefer centered Quick View when available; fall back to floating card.
+        if (typeof window.funnityOpenEventQuickView === 'function') {
+            window.funnityOpenEventQuickView(spotlightEvent.id, { trigger: openBtn }).catch(() => {});
+            return;
+        }
         selectEvent(spotlightEvent, null, { skipCamera: true }).catch((err) => console.warn(err));
     });
     spotlightEl?.addEventListener('click', (e) => e.stopPropagation());
@@ -2458,6 +2961,8 @@ export async function createLivingMap(root) {
         } catch {
             /* ignore */
         }
+        // Reflow docked/anchored preview after orientation / breakpoint changes.
+        window.requestAnimationFrame(() => syncCardPosition());
     };
     window.addEventListener('resize', onResize);
 

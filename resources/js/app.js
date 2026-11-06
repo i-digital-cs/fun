@@ -6,6 +6,7 @@ import { initChatToasts } from './chat-toast';
 import { initPageLoader } from './page-loader';
 import { initDiscoveryLocationUi } from './discovery-location';
 import { initMediaViewer } from './media-viewer';
+import { initEventQuickView } from './event-quick-view';
 
 window.Echo = null;
 
@@ -26,6 +27,9 @@ document.documentElement.dataset.discoveryLocationReady = '1';
 
 initMediaViewer();
 document.documentElement.dataset.mediaViewerReady = '1';
+
+initEventQuickView();
+document.documentElement.dataset.eventQuickViewReady = '1';
 
 // Living Map Discover replaces Leaflet — do not dual-init.
 if (

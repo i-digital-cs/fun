@@ -65,7 +65,7 @@
             </div>
         </div>
     @else
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-event-qv-list>
             @foreach ($events as $event)
                 <x-events.card
                     :event="$event"

@@ -1,12 +1,21 @@
 /**
  * System page loader (Uiverse circle loader).
  * Shows on same-origin navigation and form submits; hide on pageshow.
+ *
+ * Must ignore SPA / overlay triggers (e.g. Event Quick View) — those call
+ * preventDefault() in a later bubble listener or in capture. Showing the
+ * full-page loader without a document navigation leaves it stuck forever.
  */
 function shouldIgnoreLink(anchor) {
     if (!anchor || !anchor.href) return true;
     if (anchor.target && anchor.target !== '_self') return true;
     if (anchor.hasAttribute('download')) return true;
     if (anchor.dataset.noLoader === '1' || anchor.dataset.noLoader === 'true') return true;
+    // Event Quick View intercepts these in-page (no document navigation).
+    if (anchor.hasAttribute('data-event-qv-open')) return true;
+    if (anchor.hasAttribute('data-lm-card-link')) return true;
+    if (anchor.classList?.contains('lm-rail__go')) return true;
+    if (anchor.classList?.contains('lm-card__go') || anchor.classList?.contains('lm-card__cta')) return true;
     if (anchor.getAttribute('href')?.startsWith('#')) return true;
     if (anchor.getAttribute('href')?.startsWith('mailto:')) return true;
     if (anchor.getAttribute('href')?.startsWith('tel:')) return true;
@@ -43,7 +52,8 @@ export function hidePageLoader() {
 
 export function initPageLoader() {
     const host = document.getElementById('fun-page-loader');
-    if (!host) return;
+    if (!host || host.dataset.loaderBound === '1') return;
+    host.dataset.loaderBound = '1';
 
     hidePageLoader();
 
@@ -64,6 +74,7 @@ export function initPageLoader() {
         if (form.getAttribute('target') && form.getAttribute('target') !== '_self') return;
         // AJAX forms (chat, live search) skip full-page loader
         if (form.id === 'chat-form' || form.closest('[data-live-search]')) return;
+        // Forms inside Event Quick View still navigate (join) — keep loader.
         showPageLoader();
     });
 

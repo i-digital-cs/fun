@@ -78,6 +78,9 @@ return [
     'event_spotlight' => 'Event spotlight',
     'dismiss_spotlight' => 'Dismiss spotlight',
     'spotlight_approx_note' => 'Approximate city location · not an exact venue pin',
+    'precise_location_unavailable' => 'Precise map location unavailable',
+    'city_level_preview' => 'City-level only · map pin not shown',
+    'view_details' => 'View details',
 
     // V4.0 hybrid cinematic preview
     'v4_subtitle' => 'Cinematic city discovery · illustrated Port Said · real events only.',

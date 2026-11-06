@@ -286,6 +286,38 @@
                 pointer-events: none;
             }
             .lm-card.is-open { opacity: 1; transform: none; pointer-events: auto; }
+            /* Phase 3D — panel-docked preview when exact coords are missing */
+            .lm-card.is-docked {
+                box-shadow:
+                    0 18px 40px -22px rgba(42, 33, 80, 0.55),
+                    0 0 0 1px rgba(113, 56, 245, 0.12);
+            }
+            .lm-card.is-docked .lm-card__pointer { display: none; }
+            .lm-card__precision {
+                display: none;
+                margin: 0.35rem 0 0;
+                padding: 0.28rem 0.55rem;
+                border-radius: 9999px;
+                width: fit-content;
+                max-width: 100%;
+                font-size: 0.62rem;
+                font-weight: 750;
+                line-height: 1.25;
+                color: #6b21a8;
+                background: rgba(241, 235, 255, 0.95);
+                border: 1px solid rgba(113, 56, 245, 0.18);
+            }
+            .lm-card.is-docked .lm-card__precision,
+            .lm-card.is-approx .lm-card__precision { display: inline-flex; }
+            .lm-card.is-docked .lm-card__go {
+                width: auto;
+                min-width: 2.35rem;
+                padding-inline: 0.85rem;
+                border-radius: 9999px;
+                font-size: 0.72rem;
+                font-weight: 800;
+                letter-spacing: 0.01em;
+            }
             .lm-card img { width: 100%; height: 7.25rem; object-fit: cover; display: block; }
             .lm-card__fallback {
                 height: 7.25rem; display: flex; align-items: center; justify-content: center; font-size: 2.4rem;
@@ -558,7 +590,10 @@
      data-i18n-within-km="{{ __('living_map.within_km') }}"
      data-i18n-event-spotlight="{{ __('living_map.event_spotlight') }}"
      data-i18n-dismiss-spotlight="{{ __('living_map.dismiss_spotlight') }}"
-     data-i18n-spotlight-approx-note="{{ __('living_map.spotlight_approx_note') }}">
+     data-i18n-spotlight-approx-note="{{ __('living_map.spotlight_approx_note') }}"
+     data-i18n-precise-location-unavailable="{{ __('living_map.precise_location_unavailable') }}"
+     data-i18n-city-level-preview="{{ __('living_map.city_level_preview') }}"
+     data-i18n-view-details="{{ __('living_map.view_details') }}">
 
     @if ($showBanner)
         <div class="lm-banner mb-4" role="status">{{ __('living_map.banner_preview') }}</div>
@@ -761,6 +796,7 @@
                                 <span class="lm-card__cat" data-lm-card-cat></span>
                             </div>
                             <h3 data-lm-card-title dir="auto"></h3>
+                            <p class="lm-card__precision" data-lm-card-precision dir="auto" hidden></p>
                             <p class="lm-card__place" data-lm-card-place dir="auto"></p>
                             <div class="lm-card__foot">
                                 <div class="lm-card__people" data-lm-card-people></div>
@@ -774,6 +810,7 @@
                     <div class="lm-card__body">
                         <span class="lm-card__cat" data-lm-card-cat></span>
                         <h3 data-lm-card-title dir="auto"></h3>
+                        <p class="lm-card__precision" data-lm-card-precision dir="auto" hidden></p>
                         <p class="lm-card__meta" data-lm-card-meta dir="auto"></p>
                         <a class="lm-card__cta" data-lm-card-link href="#">{{ __('living_map.view_event') }}</a>
                     </div>

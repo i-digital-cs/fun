@@ -1,0 +1,22 @@
+{
+  "production_asset": "living-map-v3-CkUup4RW.js",
+  "production_md5": "c660ca8dc330e5a78b02e14935edc4de",
+  "isolated_preview_bundle": "living-map-v3-DB2GKVLr.js",
+  "isolated_preview_css": "living-map-v3-BhOn-Q4e.css",
+  "before_home_exact": {
+    "h": 256,
+    "mediaH": 116,
+    "placement": "anchored",
+    "overflowY": "hidden",
+    "fullyInside": true
+  },
+  "after_home_exact_isolated_overlay": {
+    "h": 105,
+    "mediaH": 72,
+    "placement": "docked+is-compact",
+    "overflowY": "hidden",
+    "fullyInside": true,
+    "pinAboveCard": true
+  },
+  "note": "After visuals used session-only CSS/class overlay; public/build not modified. Full after requires owner publish of DB2GKVLr + CSS dep."
+}

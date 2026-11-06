@@ -253,15 +253,16 @@ class EventController extends Controller
         }
 
         $locale = app()->getLocale() === 'ar' ? 'ar' : 'en';
+        $routeName = request()->route()?->getName() === 'ar.events.show'
+            ? 'ar.events.show'
+            : 'events.show';
         $accepted = array_values(array_filter([
             $event->slug,
             $event->slug_ar,
         ]));
-        if ($slug !== null && $slug !== '' && ! in_array($slug, $accepted, true)) {
-            $routeName = request()->route()?->getName() === 'ar.events.show'
-                ? 'ar.events.show'
-                : 'events.show';
 
+        // Bare /events/{id} and wrong-slug URLs 301 to the canonical slug URL (SEO).
+        if ($slug === null || $slug === '' || ! in_array($slug, $accepted, true)) {
             return redirect()->route(
                 $routeName,
                 $event->showRouteForLocale($locale),
@@ -319,6 +320,35 @@ class EventController extends Controller
                 ])
                 ->get(),
             'seo' => Seo::forEvent($event),
+        ]);
+    }
+
+    /**
+     * HTML fragment for Event Quick View overlays (listing UX).
+     * Full shared links still use {@see show()} — never a second detail implementation.
+     */
+    public function quickView(
+        Event $event,
+        ResolveEventJoinActionService $joinActionService,
+        ToggleEventFavoriteService $favorites,
+    ): View {
+        $this->authorize('view', $event);
+
+        if (blank($event->slug)) {
+            $event->forceFill([
+                'slug' => Event::uniqueSlug((string) $event->title, (int) $event->id),
+            ])->saveQuietly();
+        }
+
+        $event->load(['category', 'city', 'creator:id,public_id,name,profile_image_path'])->loadCount('members');
+
+        $user = auth()->user();
+
+        return view('events.partials.quick-view-panel', [
+            'event' => $event,
+            'joinAction' => $joinActionService->resolve($user, $event),
+            'isFavorited' => $user !== null && $favorites->isFavorited($user, $event),
+            'canonicalUrl' => event_show_url($event),
         ]);
     }
 

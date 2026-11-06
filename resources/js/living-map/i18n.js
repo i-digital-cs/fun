@@ -64,6 +64,15 @@ export function readI18n(root) {
             'SpotlightApproxNote',
             'Approximate city location · not an exact venue pin'
         ),
+        preciseLocationUnavailable: get(
+            'PreciseLocationUnavailable',
+            'Precise map location unavailable'
+        ),
+        cityLevelPreview: get(
+            'CityLevelPreview',
+            'City-level only · map pin not shown'
+        ),
+        viewDetails: get('ViewDetails', 'View details'),
     };
 }
 

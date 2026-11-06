@@ -21,12 +21,12 @@
         'border-slate-200/80 hover:border-indigo-300 hover:shadow-sm' => ! $selected,
     ]) }}
 >
-    <a href="{{ event_show_url($event) }}" class="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-slate-100" tabindex="-1" aria-hidden="true">
+    <a href="{{ event_show_url($event) }}" data-event-qv-open data-event-id="{{ $event->id }}" data-no-loader="1" class="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-slate-100" tabindex="-1" aria-hidden="true">
         <x-events.cover-img :event="$event" size="card" class="h-full w-full object-cover" />
     </a>
     <div class="min-w-0 flex-1">
         <h3 class="truncate text-[13px] font-bold leading-snug text-slate-900">
-            <a href="{{ event_show_url($event) }}" dir="{{ bidi_dir($event->title) }}" class="bidi-text hover:text-indigo-700">{{ $event->title }}</a>
+            <a href="{{ event_show_url($event) }}" data-event-qv-open data-event-id="{{ $event->id }}" data-no-loader="1" dir="{{ bidi_dir($event->title) }}" class="bidi-text hover:text-indigo-700">{{ $event->title }}</a>
         </h3>
         @if ($schedule)
             <p class="mt-0.5 truncate text-[11px] text-slate-500">{{ $schedule }}</p>
@@ -50,7 +50,7 @@
             @if ($members > 0)
                 <span class="text-[10px] text-slate-500">{{ $members }}</span>
             @endif
-            <a href="{{ event_show_url($event) }}" class="ms-auto text-[10px] font-semibold text-indigo-600 hover:text-indigo-800">
+            <a href="{{ event_show_url($event) }}" data-event-qv-open data-event-id="{{ $event->id }}" data-no-loader="1" class="ms-auto text-[10px] font-semibold text-indigo-600 hover:text-indigo-800">
                 {{ __('events.view_details') }}
             </a>
         </div>

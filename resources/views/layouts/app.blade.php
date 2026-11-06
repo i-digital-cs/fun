@@ -66,6 +66,7 @@
 
     <x-ui.cancel-filters />
     <x-ui.confirm-dialog />
+    <x-events.quick-view />
     <x-ui.page-loader />
     @auth
         <x-ui.chat-toast-host />

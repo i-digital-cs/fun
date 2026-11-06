@@ -3,6 +3,7 @@
  * Home/public: living_map.replace_home_mini_map
  * Discover: living_map.replace_discover_map (mode=discover)
  */
+import '../css/living-map-preview.css';
 import { createLivingMap } from './living-map/create-living-map.js';
 
 async function boot() {

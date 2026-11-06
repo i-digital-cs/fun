@@ -78,6 +78,9 @@ return [
     'event_spotlight' => 'فعالية مميزة',
     'dismiss_spotlight' => 'إغلاق التمييز',
     'spotlight_approx_note' => 'موقع تقريبي على مستوى المدينة · ليس موقعاً دقيقاً',
+    'precise_location_unavailable' => 'الموقع الدقيق على الخريطة غير متاح',
+    'city_level_preview' => 'مستوى المدينة فقط · لا تُعرض دبوس على الخريطة',
+    'view_details' => 'عرض التفاصيل',
 
     // V4.0 hybrid cinematic preview
     'v4_subtitle' => 'اكتشاف سينمائي للمدينة · بورسعيد مرسومة · فعاليات حقيقية فقط.',

@@ -437,6 +437,12 @@ Route::get('/events/{event}/requests', function (Event $event) {
     return redirect()->to(event_route('events.requests', $event), 301);
 })->whereNumber('event');
 
+// Event Quick View HTML fragment (listing overlay) — before optional-slug show.
+Route::get('/events/{event}/quick-view', [EventController::class, 'quickView'])
+    ->whereNumber('event')
+    ->middleware('throttle:60,1')
+    ->name('events.quick-view');
+
 // Public event show — last among /events/{id}/… GET patterns.
 // Slug allows Unicode letters (Arabic) for localized SEO URLs.
 Route::get('/events/{event}/{slug?}', [EventController::class, 'show'])

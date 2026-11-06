@@ -625,6 +625,57 @@ html[lang="ar"] .lm-shell--v35 {
     gap: 0.3rem;
 }
 
+.lm-shell--v35 .lm-card--v35 .lm-card__precision {
+    display: none;
+    margin: 0.32rem 0 0.15rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 9999px;
+    width: fit-content;
+    max-width: 100%;
+    font-size: 0.62rem;
+    font-weight: 750;
+    line-height: 1.25;
+    color: #6b21a8;
+    background: rgba(241, 235, 255, 0.96);
+    border: 1px solid rgba(113, 56, 245, 0.18);
+}
+
+.lm-shell--v35 .lm-card--v35.is-docked .lm-card__precision,
+.lm-shell--v35 .lm-card--v35.is-approx .lm-card__precision {
+    display: inline-flex;
+}
+
+.lm-shell--v35 .lm-card--v35.is-docked {
+    box-shadow:
+        0 10px 18px -14px rgba(31, 24, 64, 0.22),
+        0 28px 52px -24px rgba(31, 24, 64, 0.5),
+        0 0 0 1px rgba(113, 56, 245, 0.14),
+        0 1px 0 rgba(255, 255, 255, 0.95) inset;
+}
+
+.lm-shell--v35 .lm-card--v35.is-docked .lm-card__pointer {
+    display: none;
+}
+
+.lm-shell--v35 .lm-card--v35.is-docked .lm-card__go {
+    width: auto;
+    min-width: 2.35rem;
+    padding-inline: 0.85rem;
+    font-size: 0.72rem;
+}
+
+/* Phase 3E — keep measured popups inside the free band (JS sets max-height). */
+.lm-shell--v35 .lm-card--v35.is-docked,
+.lm-shell--v35 .lm-card--v35.is-anchored {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.lm-shell--v35 .lm-card--v35.is-docked .lm-card__thumb,
+.lm-shell--v35 .lm-card--v35.is-anchored .lm-card__thumb {
+    flex-shrink: 0;
+}
+
 .lm-shell--v35 .lm-card--v35 .lm-card__place-ico {
     flex-shrink: 0;
 }
@@ -1087,7 +1138,8 @@ html[lang="ar"] .lm-shell--v35 {
         min-height: 2.75rem;
     }
 
-    .lm-shell--v35 .lm-card--v35 {
+    /* Only force bottom sheet before JS places the card (Phase 3E free-band owns .is-docked/.is-anchored). */
+    .lm-shell--v35 .lm-card--v35:not(.is-docked):not(.is-anchored) {
         inset-inline: 0.55rem !important;
         bottom: 0.7rem !important;
         top: auto !important;
@@ -1095,7 +1147,9 @@ html[lang="ar"] .lm-shell--v35 {
         width: auto !important;
     }
 
-    .lm-shell--v35 .lm-card--v35 .lm-card__pointer {
+    .lm-shell--v35 .lm-card--v35.is-docked .lm-card__pointer,
+    .lm-shell--v35 .lm-card--v35.is-anchored .lm-card__pointer,
+    .lm-shell--v35 .lm-card--v35:not(.is-docked):not(.is-anchored) .lm-card__pointer {
         display: none;
     }
 

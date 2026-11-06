@@ -16,9 +16,55 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
+        // Optional same-origin returnTo → session intended (guest CTAs / Quick View).
+        if (! $request->session()->has('url.intended')) {
+            $safe = $this->safeIntendedUrl($request->query('returnTo'));
+            if ($safe !== null) {
+                $request->session()->put('url.intended', $safe);
+            }
+        }
+
         return view('auth.login');
+    }
+
+    /**
+     * Accept only relative app paths or absolute URLs on APP_URL host.
+     */
+    private function safeIntendedUrl(mixed $candidate): ?string
+    {
+        if (! is_string($candidate) || $candidate === '') {
+            return null;
+        }
+
+        $candidate = trim($candidate);
+
+        if (str_starts_with($candidate, '/') && ! str_starts_with($candidate, '//')) {
+            if (str_contains($candidate, "\n") || str_contains($candidate, "\r")) {
+                return null;
+            }
+
+            return url($candidate);
+        }
+
+        if (! str_starts_with($candidate, 'https://') && ! str_starts_with($candidate, 'http://')) {
+            return null;
+        }
+
+        $app = parse_url((string) config('app.url'));
+        $target = parse_url($candidate);
+        if (! is_array($app) || ! is_array($target)) {
+            return null;
+        }
+
+        $appHost = strtolower((string) ($app['host'] ?? ''));
+        $targetHost = strtolower((string) ($target['host'] ?? ''));
+        if ($appHost === '' || $targetHost === '' || $appHost !== $targetHost) {
+            return null;
+        }
+
+        return $candidate;
     }
 
     public function store(

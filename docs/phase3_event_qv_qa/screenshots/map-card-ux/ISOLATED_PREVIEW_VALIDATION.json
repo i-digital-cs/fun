@@ -1,0 +1,17 @@
+{
+  "verdict": "READY",
+  "production_untouched": "living-map-v3-CkUup4RW.js",
+  "isolated_bundle": "living-map-v3-DB2GKVLr.js",
+  "isolated_css": "living-map-v3-BhOn-Q4e.css",
+  "home_desktop": "PASS compact dock ~102h media72 pinAbove no scrollbar",
+  "home_mobile": {
+    "320": "PASS",
+    "375": "PASS",
+    "390": "PASS",
+    "430": "PASS"
+  },
+  "discover_desktop": "PASS exact anchored (non-compact when band tall) / city compact dock; no overflow:auto",
+  "discover_mobile_390": "PASS compact exact/city; dismissible; QV opens",
+  "quick_view": "PASS centered app-DEdeXHxl",
+  "css_dependency": "manifest css array present; v3.js imports living-map-preview.css"
+}
